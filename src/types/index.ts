@@ -1,0 +1,37 @@
+// types.ts
+export type EditType = 'text' | 'date' | 'area' | 'upload' | 'select' | 'check' | 'gen' | 'sign';
+
+
+// Base field types that can be extracted from SVG element IDs
+export type FieldType = 
+  | 'text' 
+  | 'textarea' 
+  | 'checkbox' 
+  | 'date' 
+  | 'upload' 
+  | 'number' 
+  | 'email' 
+  | 'tel' 
+  | 'url' 
+  | 'password' 
+  | 'range' 
+  | 'color'
+  | 'file';
+
+// Select field options (auto-generated from .select_X elements)
+export interface SelectOption {
+  value: string;                 // The text content from SVG element
+  label: string;                 // Same as value or formatted
+  svgElementId: string;          // Full SVG element ID
+}
+
+export interface FormField {
+  id: string;                    // Base field ID (e.g., "Product_Name", "Gender")
+  name: string;                  // Display name (e.g., "Product Name", "Gender")
+  type: string;               // Field type extracted from extension
+  svgElementId?: string;   
+  defaultValue?: string | number | boolean;
+  currentValue?: string | number | boolean;
+  max?: number;                  // Max value for number OR max length for text
+  options?: SelectOption[];      // If options exist, it's automatically a select field
+}
