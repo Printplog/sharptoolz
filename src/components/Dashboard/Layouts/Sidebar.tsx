@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Wallet, Settings, ClipboardList, Hammer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+
 const navigationItems = [
   {
     icon: <LayoutDashboard className="h-5 w-5" />,
@@ -28,7 +29,9 @@ const navigationItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="hidden w-64 bg-white/10 h-full lg:flex flex-col px-4 py-10">
+    <aside className={cn(
+      "w-64 bg-gray-950 h-full lg:flex hidden flex-col px-4 py-10 z-[999]",
+    )}>
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
           <ClipboardList />

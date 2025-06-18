@@ -1,4 +1,4 @@
-import type { LoginPayload, RegisterPayload, User } from "@/types";
+import type { LoginPayload, RegisterPayload, Template, User } from "@/types";
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
@@ -25,3 +25,13 @@ export const refreshToken = async (): Promise<User> => {
   const res = await apiClient.post('/accounts/refresh-token/');
   return res.data;
 };
+
+export const addTemplate = async (data: Partial<Template>): Promise<unknown> => {
+  const res = await apiClient.post('/templates/', data);
+  return res.data;
+}
+
+export const getTemplates = async (): Promise<Template[]> => {
+  const res = await apiClient.get('/templates/');
+  return res.data;
+}

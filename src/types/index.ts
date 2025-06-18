@@ -56,3 +56,12 @@ export interface FormField {
   max?: number;                  // Max value for number OR max length for text
   options?: SelectOption[];      // If options exist, it's automatically a select field
 }
+
+export type Template = {
+  id?: string;
+  name: string;
+  svg: string;
+  type: "tool";
+  created_at: string;
+  updated_at: string;
+}
