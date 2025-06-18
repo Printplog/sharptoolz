@@ -9,7 +9,7 @@ import {
 
 export default function Dashboard() {
   return (
-      <div className="p-4 md:p-8 space-y-6">
+      <div className="space-y-6">
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Documents */}

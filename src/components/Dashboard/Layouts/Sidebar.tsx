@@ -28,7 +28,7 @@ const navigationItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-white/10 h-full flex flex-col px-4 py-10">
+    <aside className="hidden w-64 bg-white/10 h-full lg:flex flex-col px-4 py-10">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
           <ClipboardList />

@@ -1,8 +1,29 @@
-// types.ts
-export type EditType = 'text' | 'date' | 'area' | 'upload' | 'select' | 'check' | 'gen' | 'sign';
 
+export type User = {
+  id: string;
+  email: string;
+  role?: string[];
+};
 
-// Base field types that can be extracted from SVG element IDs
+export type AuthState = {
+  user: User | null;
+  isAuthenticated: boolean;
+  setUser: (userData: User) => void;
+  logout: () => void;
+};
+
+export type LoginPayload = {
+    username: string;
+    password: string;
+}
+
+export type RegisterPayload = {
+    email: string;
+    username: string;
+    password: string;
+    confirmPassword: string;
+}
+
 export type FieldType = 
   | 'text' 
   | 'textarea' 
