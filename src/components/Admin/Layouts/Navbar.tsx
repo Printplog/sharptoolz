@@ -21,7 +21,7 @@ export default function Navbar() {
     .slice(0, 2);
 
   return (
-    <div className="flex items-center justify-between h-16 px-6">
+    <div className="flex items-center justify-between py-5">
       {/* Left Side - Title */}
       <h2 className="text-xl font-semibold">Dashboard</h2>
 
