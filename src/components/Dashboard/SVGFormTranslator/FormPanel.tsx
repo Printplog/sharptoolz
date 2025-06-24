@@ -68,7 +68,7 @@ export default function FormPanel() {
       </div>
 
       <div className="space-y-4">
-        {fields.map((field) => (
+        {fields?.map((field) => (
           <FormFieldComponent key={field.id} field={field} />
         ))}
       </div>
