@@ -6,30 +6,37 @@ export default function updateSvgFromFields(svgRaw: string, fields: FormField[])
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgRaw, "image/svg+xml");
 
+  // Convert to map for easy lookup
+  const fieldMap = Object.fromEntries(fields.map(f => [f.id, f]));
+
   fields.forEach((field) => {
     if (!field.svgElementId) return;
 
     const el = doc.getElementById(field.svgElementId);
     if (!el) return;
 
-    const value = String(field.currentValue ?? "");
+    // Support dependency values
+    let value: string = "";
+
+    if ("dependsOn" in field && field.dependsOn && fieldMap[field.dependsOn]) {
+      value = String(fieldMap[field.dependsOn].currentValue ?? "");
+    } else {
+      value = String(field.currentValue ?? "");
+    }
 
     switch (field.type) {
       case "upload": {
-        // Handle uploaded image: update href of <image>
         const hrefNS = "http://www.w3.org/1999/xlink";
         el.setAttributeNS(hrefNS, "href", value);
         break;
       }
 
       case "select": {
-        // Hide all select options first
         field.options?.forEach((opt) => {
           const optEl = doc.getElementById(opt.svgElementId || "");
           if (optEl) optEl.setAttribute("opacity", "0");
         });
 
-        // Show only selected option
         const selectedOption = field.options?.find(
           (opt) => String(opt.value) === value
         );
@@ -41,7 +48,6 @@ export default function updateSvgFromFields(svgRaw: string, fields: FormField[])
       }
 
       default: {
-        // Default behavior: update text content
         el.textContent = value;
       }
     }

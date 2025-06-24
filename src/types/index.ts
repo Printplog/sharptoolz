@@ -1,6 +1,7 @@
 
 export type User = {
   id: string;
+  username: string;
   email: string;
   role?: string[];
 };
@@ -55,13 +56,37 @@ export interface FormField {
   currentValue?: string | number | boolean;
   max?: number;                  // Max value for number OR max length for text
   options?: SelectOption[];      // If options exist, it's automatically a select field
+  dependsOn?: string;
 }
 
 export type Template = {
   id?: string;
   name: string;
   svg: string;
+  form_fields: FormField[]
   type: "tool";
   created_at: string;
   updated_at: string;
 }
+
+export type CreateDocument = {
+  tracking_id: string;
+  svg: string;
+}
+
+
+export type PurchasedTemplate = {
+  id: string; // UUID
+  buyer: number; 
+  template: string; 
+
+  svg: string;
+  form_fields: FormField[]; // adjust type if fields are structured
+  test: boolean;
+
+  tracking_id: string | null;
+  status: string;
+
+  created_at: string; // ISO datetime string
+  updated_at: string;
+};

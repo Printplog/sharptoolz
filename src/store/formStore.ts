@@ -3,10 +3,14 @@ import { create } from "zustand";
 import type { FormField } from "@/types";
 import updateSvgFromFields from "@/lib/utils/updateSvgFromFormData";
 
-interface FormStore {
+interface ToolStore {
+  name: string;
   fields: FormField[];
   svgRaw: string;
+  status: string;
+  statusMessage: string;
 
+  setName: (name: string) => void;
   setFields: (fields: FormField[]) => void;
   updateField: (fieldId: string, value: string | number | boolean) => void;
   uploadFile: (fieldId: string, file: File) => void;
@@ -14,11 +18,20 @@ interface FormStore {
   getFieldValue: (fieldId: string) => string | number | boolean | undefined;
   setSvgRaw: (svg: string) => void;
   downloadSvg: (fileName?: string) => void;
+
+  setStatus: (status: string) => void;
+  setStatusMessage: (message: string) => void;
+  setStatusWithMessage: (status: string, message: string) => void;
 }
 
-const useFormStore = create<FormStore>((set, get) => ({
+const  useToolStore = create<ToolStore>((set, get) => ({
+  name: "",
   fields: [],
   svgRaw: "",
+  status: "",
+  statusMessage: "",
+
+  setName: (name) => set({ name }),
 
   setFields: (fields) => {
     const initializedFields = fields.map((field) => ({
@@ -26,37 +39,26 @@ const useFormStore = create<FormStore>((set, get) => ({
       currentValue: field.defaultValue ?? "",
     }));
 
-    set(() => ({
-      fields: initializedFields,
-    }));
+    set({ fields: initializedFields });
   },
 
   updateField: (fieldId, value) => {
-    set((state) => {
-      const updatedFields = state.fields.map((field) =>
+    set((state) => ({
+      fields: state.fields.map((field) =>
         field.id === fieldId ? { ...field, currentValue: value } : field
-      );
-
-      return {
-        fields: updatedFields,
-      };
-    });
+      ),
+    }));
   },
 
   uploadFile: (fieldId, file) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
-
-      set((state) => {
-        const updatedFields = state.fields.map((field) =>
+      set((state) => ({
+        fields: state.fields.map((field) =>
           field.id === fieldId ? { ...field, currentValue: dataUrl } : field
-        );
-
-        return {
-          fields: updatedFields,
-        };
-      });
+        ),
+      }));
     };
     reader.readAsDataURL(file);
   },
@@ -92,6 +94,12 @@ const useFormStore = create<FormStore>((set, get) => ({
 
     URL.revokeObjectURL(url);
   },
+
+  setStatus: (status) => set({ status }),
+  setStatusMessage: (message) => set({ statusMessage: message }),
+  setStatusWithMessage: (status, message) =>
+    set({ status, statusMessage: message }),
 }));
 
-export default useFormStore;
+
+export default useToolStore;

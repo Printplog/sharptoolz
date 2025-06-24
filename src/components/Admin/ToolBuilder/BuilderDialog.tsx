@@ -165,7 +165,7 @@ export default function BuilderDialog() {
                 <Button
                   type="submit"
                   className="text-sm font-medium"
-                  disabled={!file || !form.formState.isValid}
+                  disabled={!file || !form.formState.isDirty}
                 >
                   Build Tool
                 </Button>

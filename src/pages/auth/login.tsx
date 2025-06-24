@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import type { LoginPayload } from "@/types";
 import { login } from "@/api/apiEndpoints";
@@ -27,6 +27,8 @@ type LoginSchema = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
+  const [params] = useSearchParams()
+  const next = params.get("next") || "/dashboard"
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -40,7 +42,7 @@ export default function Login() {
     mutationFn: (data: LoginPayload) => login(data),
     onSuccess: () => {
         toast.success("Login Success")
-        navigate("/dashboard")
+        navigate(next)
     },
     onError: (error: Error) => {
         toast.error(errorMessage(error))

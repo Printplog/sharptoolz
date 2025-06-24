@@ -16,6 +16,11 @@ const navigationItems = [
     to: "/tools"
   },
   {
+    icon: <ClipboardList className="h-5 w-5" />,
+    label: "Documents",
+    to: "/documents",
+  },
+  {
     icon: <Wallet className="h-5 w-5" />,
     label: "Wallet",
     to: "/wallet"

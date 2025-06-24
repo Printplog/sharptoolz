@@ -3,44 +3,51 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FormPanel from "./FormPanel";
 import { useEffect, useState } from "react";
 import parseSvgToFormFields from "@/lib/utils/parseSvgToFormFields";
-import useFormStore from "@/store/formStore";
+import useToolStore from "@/store/formStore";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { getTemplate } from "@/api/apiEndpoints";
+import type { FormField } from "@/types";
 
 export default function SvgFormTranslator() {
   const [svgText, setSvgText] = useState<string>("");
   const [livePreview, setLivePreview] = useState<string>("");
 
-  const setFields = useFormStore((state) => state.setFields);
-  const setSvgRaw = useFormStore((state) => state.setSvgRaw);
-  const fields = useFormStore((s) => s.fields);
-  // const formData = useFormStore((s) => s.formData);
+  const setFields = useToolStore((state) => state.setFields);
+  const setSvgRaw = useToolStore((state) => state.setSvgRaw);
+  const setName = useToolStore((state) => state.setName);
+  const fields = useToolStore((s) => s.fields);
+  const { id } = useParams<{ id: string }>()
 
   // Fetch /card.svg on mount
+  const { data } = useQuery({
+    queryKey: ["template"],
+    queryFn: () => getTemplate(id as string)
+  })
+
   useEffect(() => {
-    fetch("/card.svg")
-      .then((res) => res.text())
-      .then((data) => setSvgText(data))
-      .catch((err) => console.error("Failed to load SVG:", err));
-  }, []);
+    setSvgText(data?.svg as string)
+  }, [data]);
 
   useEffect(() => {
     if (!svgText) return;
     const parsedFields = parseSvgToFormFields(svgText);
     setSvgRaw(svgText);
-    setFields(parsedFields);
+    setName(data?.name as string)
+    setFields(data?.form_fields as FormField[]);
     console.log(parsedFields);
-  }, [svgText, setFields, setSvgRaw]);
+  }, [svgText, setFields, setSvgRaw, data, setName ]);
 
   useEffect(() => {
     if (!svgText) return;
     const updatedSvg = updateSvgFromFormData(svgText, fields);
     setLivePreview(updatedSvg);
-    console.log(fields);
   }, [fields, svgText]);
 
   return (
     <div>
-      <Tabs defaultValue="editor" className="w-full">
+      <Tabs defaultValue="editor" className="w-full px-0">
         <TabsList className="bg-white/10 w-full">
           <TabsTrigger value="editor">Editor</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>

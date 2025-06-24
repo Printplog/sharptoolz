@@ -1,4 +1,4 @@
-import { LayoutDashboard, Wallet, Settings, Hammer } from "lucide-react";
+import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,11 @@ const navigationItems = [
     icon: Hammer,
     label: "Tools",
     to: "/tools",
+  },
+  {
+    icon: ClipboardList,
+    label: "Documents",
+    to: "/documents",
   },
   {
     icon: Wallet,
@@ -31,7 +36,7 @@ export default function BottomBar() {
   return (
     <nav className="fixed bottom-0 z-50 w-full bg-background border-t border-white/10 flex justify-around items-center py-4 lg:hidden">
       {navigationItems.map((item) => {
-        const isActive = pathname === item.to;
+        const isActive = pathname.includes(item.to);
         const Icon = item.icon;
 
         return (

@@ -31,7 +31,7 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <SectionPadding className="py-20 relative overflow-hidden">
+    <SectionPadding className="py-20 relative overflow-hidden" id='why-us'>
         <LightBlur className='right-[-150px] top-1/2 -translate-y-1/2 ' />
       <div className="z-[1] relative">
         {/* Header */}

@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import SectionPadding from '../../layouts/SectionPadding';
 import { ClipboardList } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Link, useLocation } from 'react-router-dom';
 
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = useLocation().pathname
   
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/services", label: "Services" },
-    { href: "/about", label: "About Us" },
-    { href: "/why-us", label: "Why Us" },
+    { href: "/all-tools", label: "All Tools" },
+    { href: "/#why-us", label: "Why Us" },
     { href: "/testimonials", label: "Testimonials" },
     { href: "/contact", label: "Contact" },
   ];
@@ -29,24 +31,28 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center space-x-8">
           {navLinks.map((link, index) => (
-            <a
-              key={link.href}
-              href={link.href}
+            <Link
+              key={index}
+              to={link.href}
               className={`transition-colors font-medium ${
-                index === 0
+                link.href === pathname
                   ? "text-primary"
                   : "text-foreground/80 hover:text-primary"
               }`}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
+
+        <Link to="/auth/login">
+        <Button className="font-semibold hidden lg:block rounded-full w-fit px-[25px]">Login</Button>
+        </Link>
 
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="lg:hidden p-2 rounded-md hover:bg-accent"
+          className="lg:hidden p-2 rounded-md hover:bg-black/20"
           aria-label="Toggle menu"
         >
           <svg
@@ -75,22 +81,22 @@ export default function Navbar() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="absolute top-full left-0 right-0 lg:hidden bg-background backdrop-blur-lg border-b shadow-lg z-[20]">
+          <div className="absolute top-full left-0 right-0 lg:hidden bg-background backdrop-blur-lg border-b shadow-lg z-[20] border-black">
             <SectionPadding className="py-4">
               <div className="flex flex-col space-y-4">
                 {navLinks.map((link, index) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
+                  <Link
+                    key={index}
+                    to={link.href}
                     onClick={() => setIsMenuOpen(false)}
                     className={`transition-colors font-medium py-2 ${
-                      index === 0
+                      link.href === pathname
                         ? "text-primary"
                         : "text-foreground hover:text-primary"
                     }`}
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </SectionPadding>

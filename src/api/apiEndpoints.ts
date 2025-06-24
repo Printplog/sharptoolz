@@ -1,4 +1,4 @@
-import type { LoginPayload, RegisterPayload, Template, User } from "@/types";
+import type { LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
@@ -33,5 +33,15 @@ export const addTemplate = async (data: Partial<Template>): Promise<unknown> => 
 
 export const getTemplates = async (): Promise<Template[]> => {
   const res = await apiClient.get('/templates/');
+  return res.data;
+}
+
+export const getTemplate = async (id: string): Promise<Template> => {
+  const res = await apiClient.get(`/templates/${id}/`);
+  return res.data;
+}
+
+export const purchaseTemplate = async (data: Partial<PurchasedTemplate>): Promise<unknown> => {
+  const res = await apiClient.post('/purchased-templates/', data);
   return res.data;
 }
