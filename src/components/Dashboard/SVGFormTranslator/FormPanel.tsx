@@ -1,5 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Upload, RotateCcw, Download, Loader2 } from "lucide-react";
+import {
+  Upload,
+  RotateCcw,
+  Download,
+  Loader2,
+  ArrowUpRightFromCircle,
+  Copy,
+} from "lucide-react";
 import useToolStore from "@/store/formStore";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -29,8 +36,8 @@ export default function FormPanel() {
   const { mutate: create, isPending: createPending } = useMutation({
     mutationFn: (data: Partial<PurchasedTemplate>) => purchaseTemplate(data),
     onSuccess: (data) => {
-      toast.success("Doc created successfully, you can download it now")
-      navigate(`/documents/${data?.id}`)
+      toast.success("Doc created successfully, you can download it now");
+      navigate(`/documents/${data?.id}`);
     },
     onError: (error: Error) => {
       toast(errorMessage(error));
@@ -39,9 +46,10 @@ export default function FormPanel() {
   });
 
   const { mutate: update, isPending: updatePending } = useMutation({
-    mutationFn: (data: Partial<PurchasedTemplate>) => updatePurchasedTemplate(data),
+    mutationFn: (data: Partial<PurchasedTemplate>) =>
+      updatePurchasedTemplate(data),
     onSuccess: () => {
-      toast.success("Doc updated successfully")
+      toast.success("Doc updated successfully");
     },
     onError: (error: Error) => {
       toast(errorMessage(error));
@@ -91,12 +99,52 @@ export default function FormPanel() {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="" className="text-primary">
-          Document Name
-        </label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
-      </div>
+      {isPurchased && (
+        <div className="">
+          <div className="">
+            {getFieldValue("Tracking_ID") && (
+              <div className="flex justify-between items-center gap-2 mb-2">
+                <div className="flex gap-2 items-center">
+                  <span className="text-white font-medium">Tracking ID:</span>
+                  <span className="text-primary py-1 px-3 border border-primary bg-primary/10 rounded-full text-sm">
+                    {getFieldValue("Tracking_ID")}
+                  </span>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="ml-1"
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        getFieldValue("Tracking_ID") as string
+                      );
+                      toast.success("Tracking ID copied!");
+                    }}
+                    aria-label="Copy Tracking ID"
+                  >
+                    <Copy />
+                  </Button>
+                </div>
+                <Button asChild size="sm" className="ml-2">
+                  <a
+                    href={`https://order-tracker-demo.vercel.app/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Track the shipment here
+                    <ArrowUpRightFromCircle className="ml-2" />
+                  </a>
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="" className="text-primary">
+              Document Name
+            </label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         {fields?.map((field) => (
@@ -118,7 +166,11 @@ export default function FormPanel() {
               : isPurchased
               ? "Update Document"
               : "Create Document"}
-            {createPending || updatePending ? <Loader2 className="animate-spin" /> : <Upload className="w-4 h-4 ml-1" /> }
+            {createPending || updatePending ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4 ml-1" />
+            )}
           </>
         </Button>
         <Button onClick={downloadDoc} className="py-6 px-10">
