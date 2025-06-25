@@ -16,6 +16,7 @@ import { purchaseTemplate, updatePurchasedTemplate } from "@/api/apiEndpoints";
 import type { PurchasedTemplate } from "@/types";
 import errorMessage from "@/lib/utils/errorMessage";
 import { Input } from "@/components/ui/input";
+import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 
 export default function FormPanel() {
   const {
@@ -66,9 +67,9 @@ export default function FormPanel() {
     const tracking_id = getFieldValue("Tracking_ID");
     const data = {
       id: id,
-      ...(isPurchased ? {} : { name: name, }),
+      ...(isPurchased ? {} : { name: name }),
       ...(isPurchased ? {} : { template: id }),
-      svg: svgRaw,
+      svg: updateSvgFromFormData(svgRaw, fields),
       tracking_id: tracking_id as string,
       status: status,
       status_message: statusMessage,
@@ -81,9 +82,8 @@ export default function FormPanel() {
       toast.warning(
         `You're yet to create the ${name}. Create the ${name} first, then download.`
       );
-      return 
+      return;
     }
-
   };
 
   return (
@@ -105,26 +105,28 @@ export default function FormPanel() {
         <div className="mb-10 pb-4 border-b border-white/10">
           <div className="">
             {getFieldValue("Tracking_ID") && (
-              <div className="flex flex-col min-[500px]:flex-row justify-between min-[500px]:items-center gap-2 mb-2">
-                <div className="flex gap-2 items-center">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                   <span className="text-white font-medium">Tracking ID:</span>
-                  <span className="text-primary py-1 px-3 border border-primary bg-primary/10 rounded-full text-sm">
-                    {getFieldValue("Tracking_ID")}
-                  </span>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="ml-1"
-                    onClick={() => {
-                      navigator.clipboard.writeText(
-                        getFieldValue("Tracking_ID") as string
-                      );
-                      toast.success("Tracking ID copied!");
-                    }}
-                    aria-label="Copy Tracking ID"
-                  >
-                    <Copy />
-                  </Button>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-primary py-1 px-3 border border-primary bg-primary/10 rounded-full text-sm shrink overflow-hidden">
+                      {getFieldValue("Tracking_ID")}
+                    </span>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="ml-1"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          getFieldValue("Tracking_ID") as string
+                        );
+                        toast.success("Tracking ID copied!");
+                      }}
+                      aria-label="Copy Tracking ID"
+                    >
+                      <Copy />
+                    </Button>
+                  </div>
                 </div>
                 <Button asChild size="sm" className="">
                   <a
@@ -132,7 +134,7 @@ export default function FormPanel() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Track the shipment here
+                    Track
                     <ArrowUpRightFromCircle className="ml-2" />
                   </a>
                 </Button>
