@@ -66,7 +66,7 @@ export default function FormPanel() {
     const tracking_id = getFieldValue("Tracking_ID");
     const data = {
       id: id,
-      name: name,
+      ...(isPurchased ? {} : { name: name, }),
       ...(isPurchased ? {} : { template: id }),
       svg: svgRaw,
       tracking_id: tracking_id as string,
@@ -81,11 +81,13 @@ export default function FormPanel() {
       toast.warning(
         `You're yet to create the ${name}. Create the ${name} first, then download.`
       );
+      return 
     }
+
   };
 
   return (
-    <div className="bg-white/10 border border-white/20 rounded-lg p-6 space-y-6">
+    <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-white">Form Fields</h2>
         <Button
@@ -100,10 +102,10 @@ export default function FormPanel() {
       </div>
 
       {isPurchased && (
-        <div className="">
+        <div className="mb-10 pb-4 border-b border-white/10">
           <div className="">
             {getFieldValue("Tracking_ID") && (
-              <div className="flex justify-between items-center gap-2 mb-2">
+              <div className="flex flex-col min-[500px]:flex-row justify-between min-[500px]:items-center gap-2 mb-2">
                 <div className="flex gap-2 items-center">
                   <span className="text-white font-medium">Tracking ID:</span>
                   <span className="text-primary py-1 px-3 border border-primary bg-primary/10 rounded-full text-sm">
@@ -124,7 +126,7 @@ export default function FormPanel() {
                     <Copy />
                   </Button>
                 </div>
-                <Button asChild size="sm" className="ml-2">
+                <Button asChild size="sm" className="">
                   <a
                     href={`https://order-tracker-demo.vercel.app/`}
                     target="_blank"

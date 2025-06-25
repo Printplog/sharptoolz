@@ -18,8 +18,8 @@ export default function Documents() {
             <DocumentCard doc={doc} />
           </div>
         ))}
-        {isLoading && <IsLoading />}
       </div>
+      {isLoading && <IsLoading />}
     </div>
   );
 }

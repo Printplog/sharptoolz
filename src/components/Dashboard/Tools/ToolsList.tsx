@@ -33,23 +33,6 @@ export default function ToolsList() {
     tool.name.toLowerCase().includes(query.toLowerCase())
   );
 
-  if (isLoading)
-    return (
-      <div className="space-y-10">
-        <div className="flex justify-center">
-          <div className="flex flex-col sm:flex-row items-center gap-3 bg-white/5 border border-white/10 px-4 py-5 w-full max-w-3xl rounded-xl">
-            <Input
-              type="text"
-              placeholder="Search tools..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full px-4 py-2 h-fit border border-gray-30"
-            />
-          </div>
-        </div>
-        <IsLoading />
-      </div>
-    );
 
   return (
     <div className="space-y-10">
@@ -128,6 +111,7 @@ export default function ToolsList() {
           </p>
         )}
       </div>
+      {isLoading && <IsLoading />}
     </div>
   );
 }
