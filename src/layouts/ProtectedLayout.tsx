@@ -21,11 +21,11 @@ export default function ProtectedLayout({
   });
 
   useEffect(() => {
-    if (data) {
-      setUser(data);
-    } else if (isError) {
+    if (isError) {
       toast.error("Session expired, login to continue");
       navigate("/auth/login");
+    } else if (data) {
+      setUser(data);
     }
   }, [data, setUser, navigate, isError]);
 

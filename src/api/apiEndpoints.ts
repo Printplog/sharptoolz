@@ -41,7 +41,22 @@ export const getTemplate = async (id: string): Promise<Template> => {
   return res.data;
 }
 
-export const purchaseTemplate = async (data: Partial<PurchasedTemplate>): Promise<unknown> => {
+export const purchaseTemplate = async (data: Partial<PurchasedTemplate>): Promise<{id: string}> => {
   const res = await apiClient.post('/purchased-templates/', data);
+  return res.data;
+}
+
+export const updatePurchasedTemplate = async (data: Partial<PurchasedTemplate>): Promise<unknown> => {
+  const res = await apiClient.patch(`/purchased-templates/${data.id}/`, data);
+  return res.data;
+}
+
+export const getPurchasedTemplates = async (): Promise<PurchasedTemplate[]> => {
+  const res = await apiClient.get(`/purchased-templates/`);
+  return res.data;
+}
+
+export const getPurchasedTemplate = async (id: string): Promise<PurchasedTemplate> => {
+  const res = await apiClient.get(`/purchased-templates/${id}/`);
   return res.data;
 }

@@ -23,7 +23,7 @@ export default function Navbar() {
 
 
   return (
-    <header className="flex items-center justify-between py-5 bg-black/30 px-5 sticky top-0 backdrop-blur-2xl z-[9]">
+    <header className="flex items-center justify-between py-5 border-b border-white/10 bg-white/5 px-5 sticky top-0 backdrop-blur-2xl z-[9]">
       {/* Left Side - Title */}
       <div className="flex items-center gap-5">
         <h2 className="text-xl font-semibold">Dashboard</h2>

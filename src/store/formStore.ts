@@ -26,7 +26,7 @@ interface ToolStore {
 
 const  useToolStore = create<ToolStore>((set, get) => ({
   name: "",
-  fields: [],
+  fields: [] as FormField[],
   svgRaw: "",
   status: "",
   statusMessage: "",
@@ -34,7 +34,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
   setName: (name) => set({ name }),
 
   setFields: (fields) => {
-    const initializedFields = fields.map((field) => ({
+    const initializedFields = fields?.map((field) => ({
       ...field,
       currentValue: field.defaultValue ?? "",
     }));
@@ -44,7 +44,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
 
   updateField: (fieldId, value) => {
     set((state) => ({
-      fields: state.fields.map((field) =>
+      fields: state.fields?.map((field) =>
         field.id === fieldId ? { ...field, currentValue: value } : field
       ),
     }));
@@ -55,7 +55,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
       set((state) => ({
-        fields: state.fields.map((field) =>
+        fields: state.fields?.map((field) =>
           field.id === fieldId ? { ...field, currentValue: dataUrl } : field
         ),
       }));
@@ -65,15 +65,15 @@ const  useToolStore = create<ToolStore>((set, get) => ({
 
   resetForm: () => {
     set((state) => ({
-      fields: state.fields.map((field) => ({
+      fields: state.fields?.map((field) => ({
         ...field,
-        currentValue: field.defaultValue ?? "",
+        currentValue: field?.defaultValue ?? "",
       })),
     }));
   },
 
   getFieldValue: (fieldId) => {
-    return get().fields.find((f) => f.id === fieldId)?.currentValue;
+    return get().fields?.find((f) => f.id === fieldId)?.currentValue;
   },
 
   setSvgRaw: (svg) => set({ svgRaw: svg }),

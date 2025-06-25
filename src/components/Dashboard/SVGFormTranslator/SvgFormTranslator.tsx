@@ -6,9 +6,9 @@ import parseSvgToFormFields from "@/lib/utils/parseSvgToFormFields";
 import useToolStore from "@/store/formStore";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
-import { getTemplate } from "@/api/apiEndpoints";
-import type { FormField } from "@/types";
+import { useLocation, useParams } from "react-router-dom";
+import { getPurchasedTemplate, getTemplate } from "@/api/apiEndpoints";
+import type { FormField, PurchasedTemplate, Template } from "@/types";
 
 export default function SvgFormTranslator() {
   const [svgText, setSvgText] = useState<string>("");
@@ -19,12 +19,17 @@ export default function SvgFormTranslator() {
   const setName = useToolStore((state) => state.setName);
   const fields = useToolStore((s) => s.fields);
   const { id } = useParams<{ id: string }>()
+  const pathname = useLocation().pathname
 
   // Fetch /card.svg on mount
-  const { data } = useQuery({
-    queryKey: ["template"],
-    queryFn: () => getTemplate(id as string)
-  })
+  const isPurchased = pathname.includes("document");
+  const { data } = useQuery<PurchasedTemplate | Template>({
+    queryKey: [isPurchased ? "purchased-template" : "template"],
+    queryFn: () =>
+      isPurchased
+        ? getPurchasedTemplate(id as string)
+        : getTemplate(id as string),
+  });
 
   useEffect(() => {
     setSvgText(data?.svg as string)

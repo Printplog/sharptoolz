@@ -79,6 +79,7 @@ export type PurchasedTemplate = {
   id: string; // UUID
   buyer: number; 
   template: string; 
+  name: string;
 
   svg: string;
   form_fields: FormField[]; // adjust type if fields are structured

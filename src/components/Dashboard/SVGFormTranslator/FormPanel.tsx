@@ -1,47 +1,71 @@
 import { Button } from "@/components/ui/button";
-import { Upload, RotateCcw, Download } from "lucide-react";
+import { Upload, RotateCcw, Download, Loader2 } from "lucide-react";
 import useToolStore from "@/store/formStore";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import FormFieldComponent from "./FormField";
 import { useMutation } from "@tanstack/react-query";
-import { purchaseTemplate } from "@/api/apiEndpoints";
+import { purchaseTemplate, updatePurchasedTemplate } from "@/api/apiEndpoints";
 import type { PurchasedTemplate } from "@/types";
 import errorMessage from "@/lib/utils/errorMessage";
-
-
+import { Input } from "@/components/ui/input";
 
 export default function FormPanel() {
-  const { fields, resetForm, name, svgRaw, status, statusMessage, getFieldValue } = useToolStore();
+  const {
+    fields,
+    resetForm,
+    name,
+    svgRaw,
+    status,
+    statusMessage,
+    getFieldValue,
+    setName,
+  } = useToolStore();
   const { id } = useParams();
   const navigate = useNavigate();
   const pathname = useLocation().pathname;
+  const isPurchased = pathname.includes("document");
 
-  const { mutate, isPending } = useMutation({
+  const { mutate: create, isPending: createPending } = useMutation({
     mutationFn: (data: Partial<PurchasedTemplate>) => purchaseTemplate(data),
-    onSuccess: () => {
-
+    onSuccess: (data) => {
+      toast.success("Doc created successfully, you can download it now")
+      navigate(`/documents/${data?.id}`)
     },
-    onError: (error: Error) =>  {
-      toast(errorMessage(error))
-      console.log(error)
-    }
-  })
+    onError: (error: Error) => {
+      toast(errorMessage(error));
+      console.log(error);
+    },
+  });
+
+  const { mutate: update, isPending: updatePending } = useMutation({
+    mutationFn: (data: Partial<PurchasedTemplate>) => updatePurchasedTemplate(data),
+    onSuccess: () => {
+      toast.success("Doc updated successfully")
+    },
+    onError: (error: Error) => {
+      toast(errorMessage(error));
+      console.log(error);
+    },
+  });
 
   const createDocument = () => {
+    const mutateFn = isPurchased ? update : create;
     if (pathname.includes("all-tools")) {
       navigate("/auth/login?next=" + encodeURIComponent(`/tools/${id}`));
       return;
     }
-    const tracking_id = getFieldValue("Tracking_ID")
+    const tracking_id = getFieldValue("Tracking_ID");
     const data = {
-      template: id,
+      id: id,
+      name: name,
+      ...(isPurchased ? {} : { template: id }),
       svg: svgRaw,
       tracking_id: tracking_id as string,
       status: status,
       status_message: statusMessage,
-    }
-    mutate(data)
+    };
+    mutateFn(data);
   };
 
   const downloadDoc = () => {
@@ -67,6 +91,13 @@ export default function FormPanel() {
         </Button>
       </div>
 
+      <div className="flex flex-col gap-2">
+        <label htmlFor="" className="text-primary">
+          Document Name
+        </label>
+        <Input value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
+
       <div className="space-y-4">
         {fields?.map((field) => (
           <FormFieldComponent key={field.id} field={field} />
@@ -80,8 +111,14 @@ export default function FormPanel() {
           className="py-6 px-10 hover:bg-black/50 hover:text-white"
         >
           <>
-            { isPending ? "Creating Document..." :  "Create Document"}
-            <Upload className="w-4 h-4 ml-1" />
+            {createPending || updatePending
+              ? isPurchased
+                ? "Updating Document"
+                : "Creating Document"
+              : isPurchased
+              ? "Update Document"
+              : "Create Document"}
+            {createPending || updatePending ? <Loader2 className="animate-spin" /> : <Upload className="w-4 h-4 ml-1" /> }
           </>
         </Button>
         <Button onClick={downloadDoc} className="py-6 px-10">

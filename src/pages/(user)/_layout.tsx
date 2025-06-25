@@ -9,7 +9,7 @@ export default function DashboardLayout() {
     <ProtectedLayout>
       <div className="flex h-screen text-white">
         <Sidebar />
-        <main className="flex-1 overflow-auto bg-background/70 pb-30">
+        <main className="flex-1 overflow-auto bg-background pb-30">
           <Navbar />
           <div className="px-3 sm:px-6 md:px-10 py-5">
             <Outlet />

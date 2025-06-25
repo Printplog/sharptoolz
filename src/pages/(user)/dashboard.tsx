@@ -13,7 +13,7 @@ export default function Dashboard() {
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Documents */}
-          <Card className="bg-white/10 border border-white/20 backdrop-blur-sm">
+          <Card className="bg-white/5 border border-white/10 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
               <div className="p-2 rounded-full bg-primary/20 text-primary">
@@ -27,7 +27,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Wallet Balance */}
-          <Card className="bg-white/10 border border-white/20 backdrop-blur-sm">
+          <Card className="bg-white/5 border border-white/10 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
               <div className="p-2 rounded-full bg-green-500/20 text-green-500">
@@ -41,7 +41,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Active Users */}
-          <Card className="bg-white/10 border border-white/20 backdrop-blur-sm">
+          <Card className="bg-white/5 border border-white/10 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Active Users</CardTitle>
               <div className="p-2 rounded-full bg-blue-500/20 text-blue-500">
@@ -55,7 +55,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Downloads */}
-          <Card className="bg-white/10 border border-white/20 backdrop-blur-sm">
+          <Card className="bg-white/5 border border-white/10 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Downloads</CardTitle>
               <div className="p-2 rounded-full bg-purple-500/20 text-purple-500">
@@ -72,7 +72,7 @@ export default function Dashboard() {
         {/* Chart & Recent Activity Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Monthly Activity Chart Placeholder */}
-          <Card className="lg:col-span-2 bg-white/10 border border-white/20 backdrop-blur-sm">
+          <Card className="lg:col-span-2 bg-white/5 border border-white/10 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Monthly Activity</CardTitle>
             </CardHeader>
@@ -85,7 +85,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Recent Activity */}
-          <Card className="bg-white/10 border border-white/20 backdrop-blur-sm">
+          <Card className="bg-white/5 border border-white/10 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
