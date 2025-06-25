@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getTemplates } from "@/api/apiEndpoints";
 import { Link, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import IsLoading from "@/components/IsLoading";
 
 export interface Template {
   id?: string;
@@ -32,6 +32,24 @@ export default function ToolsList() {
   const filteredTools = tools.filter((tool) =>
     tool.name.toLowerCase().includes(query.toLowerCase())
   );
+
+  if (isLoading)
+    return (
+      <div className="space-y-10">
+        <div className="flex justify-center">
+          <div className="flex flex-col sm:flex-row items-center gap-3 bg-white/5 border border-white/10 px-4 py-5 w-full max-w-3xl rounded-xl">
+            <Input
+              type="text"
+              placeholder="Search tools..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full px-4 py-2 h-fit border border-gray-30"
+            />
+          </div>
+        </div>
+        <IsLoading />
+      </div>
+    );
 
   return (
     <div className="space-y-10">
@@ -90,7 +108,9 @@ export default function ToolsList() {
               </div>
 
               <Link
-                to={`/${pathname.includes("tools") ? "tools" : "all-tools"}/${tool.id}`}
+                to={`/${pathname.includes("tools") ? "tools" : "all-tools"}/${
+                  tool.id
+                }`}
                 className="w-full mt-2"
               >
                 <button className="w-full px-4 py-2 rounded-md bg-primary text-background font-medium hover:bg-primary/90 transition">
@@ -106,16 +126,6 @@ export default function ToolsList() {
           <p className="col-span-full text-center text-gray-500">
             No tools found.
           </p>
-        )}
-
-        {/* Loading */}
-        {isLoading && (
-          <div className="col-span-full flex justify-center items-center py-10">
-            <Loader2 className="animate-spin h-8 w-8 text-primary" />
-            <span className="ml-3 text-primary font-medium">
-              Loading tools...
-            </span>
-          </div>
         )}
       </div>
     </div>
