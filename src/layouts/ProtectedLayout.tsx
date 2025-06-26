@@ -7,11 +7,20 @@ import { LoaderIcon } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 
-export default function ProtectedLayout({
-  children,
-}: {
+// Obfuscated role code mapping
+const ROLE_MAP = {
+  "ZK7T-93XY": "admin",
+  "LQ5D-21VM": "user",
+} as const;
+
+type RoleCode = keyof typeof ROLE_MAP;
+
+interface ProtectedLayoutProps {
   children: React.ReactNode;
-}) {
+  isAdmin?: boolean;
+}
+
+export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutProps) {
   const navigate = useNavigate();
   const { setUser } = useAuthStore();
 
@@ -25,17 +34,29 @@ export default function ProtectedLayout({
     if (isError) {
       toast.error("Session expired, login to continue");
       navigate("/auth/login");
-    } else if (data) {
-      setUser(data);
+      return;
     }
-  }, [data, setUser, navigate, isError]);
 
-//   useEffect(() => {
-//     if (!isAuthenticated) {
-//       toast.error("Please login to continue");
-//       navigate("/auth/login");
-//     }
-//   }, [isAuthenticated, isLoading, navigate]);
+    if (data) {
+      setUser(data);
+      console.log(data)
+      const roleCode = data.role as RoleCode;
+      const role = ROLE_MAP[roleCode];
+
+      if (!role) {
+        toast.error("Unauthorized role code");
+        navigate("/auth/login");
+        return;
+      }
+
+      // 🚫 Restrict user from admin route if needed
+      if (isAdmin && role !== "admin") {
+        toast.error("You are not authorized to access this page");
+        navigate("/dashboard"); // or navigate("/") or show 403 page
+        return;
+      }
+    }
+  }, [data, setUser, isError, isAdmin, navigate]);
 
   if (isLoading) {
     return (
@@ -46,9 +67,5 @@ export default function ProtectedLayout({
     );
   }
 
-  return (
-    <div className="">
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 }
