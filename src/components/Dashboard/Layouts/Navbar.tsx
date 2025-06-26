@@ -39,14 +39,14 @@ export default function Navbar() {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-background border-white/20 text-white">
-            <DropdownMenuItem asChild  className="hover:bg-white/5 bg-white/10">
+            <DropdownMenuItem asChild  className="cursor-pointer focus:bg-white/10 focus:text-white/80">
               <Link to="/" className="flex items-center">
-                <LayoutDashboard className="mr-2 h-4 w-4" />
+                <LayoutDashboard className="mr-2 h-4 w-4 text-primary" />
                 <span>View Main Site</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => mutate()} className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
+            <DropdownMenuItem onClick={() => mutate()} className="cursor-pointer focus:bg-white/10 focus:text-white/80">
+              <LogOut className="mr-2 h-4 w-4 text-primary" />
               <span>Logout</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

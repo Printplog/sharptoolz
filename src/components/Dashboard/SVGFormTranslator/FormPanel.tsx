@@ -72,7 +72,7 @@ export default function FormPanel() {
       ...(isPurchased ? {} : { template: id }),
       svg: updateSvgFromFormData(svgRaw, fields),
       tracking_id: tracking_id as string,
-      ...(status === "" ? {} : { status: status }),
+      ...(!status ? {} : { status: status }),
       status_message: statusMessage,
     };
     mutateFn(data);

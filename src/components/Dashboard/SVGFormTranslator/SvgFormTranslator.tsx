@@ -41,9 +41,7 @@ export default function SvgFormTranslator() {
     const parsedFields = parseSvgToFormFields(svgText);
     setSvgRaw(svgText);
     setName(data?.name as string)
-    if ('status' in (data ?? {})) {
-      setStatus((data as PurchasedTemplate).status as string);
-    }
+    setStatus((data as PurchasedTemplate)?.status ?? '');
     setFields(data?.form_fields as FormField[]);
     console.log(parsedFields);
   }, [svgText, setFields, setSvgRaw, data, setName, setStatus ]);
