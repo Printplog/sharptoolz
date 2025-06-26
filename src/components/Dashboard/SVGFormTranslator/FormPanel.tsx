@@ -11,7 +11,7 @@ import useToolStore from "@/store/formStore";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import FormFieldComponent from "./FormField";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { purchaseTemplate, updatePurchasedTemplate } from "@/api/apiEndpoints";
 import type { PurchasedTemplate } from "@/types";
 import errorMessage from "@/lib/utils/errorMessage";
@@ -34,6 +34,7 @@ export default function FormPanel() {
   const navigate = useNavigate();
   const pathname = useLocation().pathname;
   const isPurchased = pathname.includes("documents");
+  const queryClient = useQueryClient();
 
   const { mutate: create, isPending: createPending } = useMutation({
     mutationFn: (data: Partial<PurchasedTemplate>) => purchaseTemplate(data),
@@ -52,6 +53,9 @@ export default function FormPanel() {
       updatePurchasedTemplate(data),
     onSuccess: () => {
       toast.success("Doc updated successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["purchased-template"],
+      });
     },
     onError: (error: Error) => {
       toast.error(errorMessage(error));
@@ -73,8 +77,9 @@ export default function FormPanel() {
       svg: updateSvgFromFormData(svgRaw, fields),
       tracking_id: tracking_id as string,
       ...(!status ? {} : { status: status }),
-      status_message: statusMessage,
+      error_message: statusMessage,
     };
+    console.log(data)
     mutateFn(data);
   };
 

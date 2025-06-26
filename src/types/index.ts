@@ -84,6 +84,7 @@ export type PurchasedTemplate = {
   svg: string;
   form_fields: FormField[]; // adjust type if fields are structured
   test: boolean;
+  error_message: string | null; // Error message if any, null if no error
 
   tracking_id: string | null;
   status: string;

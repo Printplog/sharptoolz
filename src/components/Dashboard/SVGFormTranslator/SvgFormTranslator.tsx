@@ -2,29 +2,27 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FormPanel from "./FormPanel";
 import { useEffect, useState } from "react";
-import parseSvgToFormFields from "@/lib/utils/parseSvgToFormFields";
+// import parseSvgToFormFields from "@/lib/utils/parseSvgToFormFields";
 import useToolStore from "@/store/formStore";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "react-router-dom";
 import { getPurchasedTemplate, getTemplate } from "@/api/apiEndpoints";
 import type { FormField, PurchasedTemplate, Template } from "@/types";
+import { Loader2Icon } from "lucide-react";
 
 export default function SvgFormTranslator() {
   const [svgText, setSvgText] = useState<string>("");
   const [livePreview, setLivePreview] = useState<string>("");
 
-  const setFields = useToolStore((state) => state.setFields);
-  const setSvgRaw = useToolStore((state) => state.setSvgRaw);
-  const setName = useToolStore((state) => state.setName);
-  const setStatus = useToolStore((state) => state.setStatus);
-  const fields = useToolStore((s) => s.fields);
-  const { id } = useParams<{ id: string }>()
-  const pathname = useLocation().pathname
+  const { setFields, setSvgRaw, setName, setStatus, fields, setStatusMessage } =
+    useToolStore();
+  const { id } = useParams<{ id: string }>();
+  const pathname = useLocation().pathname;
 
   // Fetch /card.svg on mount
   const isPurchased = pathname.includes("documents");
-  const { data } = useQuery<PurchasedTemplate | Template>({
+  const { data, isLoading } = useQuery<PurchasedTemplate | Template>({
     queryKey: [isPurchased ? "purchased-template" : "template"],
     queryFn: () =>
       isPurchased
@@ -33,24 +31,47 @@ export default function SvgFormTranslator() {
   });
 
   useEffect(() => {
-    setSvgText(data?.svg as string)
+    setSvgText(data?.svg as string);
   }, [data]);
 
   useEffect(() => {
     if (!svgText) return;
-    const parsedFields = parseSvgToFormFields(svgText);
-    setSvgRaw(svgText);
-    setName(data?.name as string)
-    setStatus((data as PurchasedTemplate)?.status ?? '');
-    setFields(data?.form_fields as FormField[]);
-    console.log(parsedFields);
-  }, [svgText, setFields, setSvgRaw, data, setName, setStatus ]);
+    if (!isLoading && data) {
+      // const parsedFields = parseSvgToFormFields(svgText);
+      setSvgRaw(svgText);
+      setName(data?.name as string);
+      setStatus((data as PurchasedTemplate)?.status);
+      setStatusMessage((data as PurchasedTemplate)?.error_message as string);
+      setFields(data?.form_fields as FormField[]);
+      console.log(data);
+    }
+  }, [
+    svgText,
+    setFields,
+    setSvgRaw,
+    data,
+    setName,
+    setStatus,
+    setStatusMessage,
+    isLoading,
+  ]);
 
   useEffect(() => {
     if (!svgText) return;
     const updatedSvg = updateSvgFromFormData(svgText, fields);
     setLivePreview(updatedSvg);
   }, [fields, svgText]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-5 items-center justify-center h-screen">
+        <Loader2Icon className="size-6 animate-spin text-primary" />
+        <h2 className="text-lg text-primary ">
+          {isPurchased ? "Loading Document..." : "Loading Tool..."}
+        </h2>
+      </div>
+    );
+  }
 
   return (
     <div>

@@ -144,7 +144,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {field.name}
           </label>
-          <Select value={status as string} onValueChange={(e) => setStatus(e) }>
+          <Select value={status} onValueChange={(e) => setStatus(e)}>
             <SelectTrigger className="bg-white/10 border-white/20 w-full text-white data-[placeholder]:text-white/80">
               <SelectValue placeholder={`--Select ${field.name}--`} className="text-white placeholder:text-white " />
             </SelectTrigger>
@@ -170,7 +170,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
               <label htmlFor="error">
                 Error Message
               </label>
-              <Textarea id="error" value={statusMessage} onChange={(e) => setStatusMessage(e.target.value)} className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[80px]" />
+              <Textarea id="error" value={statusMessage} onChange={(e) => setStatusMessage(e.target.value)}  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[80px]" />
             </div>
           )}
         </div>
