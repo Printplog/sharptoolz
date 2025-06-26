@@ -64,7 +64,7 @@ export default function SvgFormTranslator() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-5 items-center justify-center h-screen">
+      <div className="flex flex-col gap-5 items-center justify-center h-100">
         <Loader2Icon className="size-6 animate-spin text-primary" />
         <h2 className="text-lg text-primary ">
           {isPurchased ? "Loading Document..." : "Loading Tool..."}
