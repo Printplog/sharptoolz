@@ -68,7 +68,7 @@ export default function ToolsList() {
             >
               {tool.svg ? (
                 <div
-                  className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden mask-b-to-[85%]"
+                  className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden mask-b-to-[80%]"
                   dangerouslySetInnerHTML={{ __html: tool.svg }}
                   aria-label="SVG Preview"
                 />
@@ -91,7 +91,7 @@ export default function ToolsList() {
               </div>
 
               <Link
-                to={`/${pathname.includes("tools") ? "tools" : "all-tools"}/${
+                to={`/${pathname.includes("all-tools") ? "all-tools" : "tools"}/${
                   tool.id
                 }`}
                 className="w-full mt-2"

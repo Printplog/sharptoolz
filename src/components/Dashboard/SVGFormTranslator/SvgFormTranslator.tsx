@@ -17,12 +17,13 @@ export default function SvgFormTranslator() {
   const setFields = useToolStore((state) => state.setFields);
   const setSvgRaw = useToolStore((state) => state.setSvgRaw);
   const setName = useToolStore((state) => state.setName);
+  const setStatus = useToolStore((state) => state.setStatus);
   const fields = useToolStore((s) => s.fields);
   const { id } = useParams<{ id: string }>()
   const pathname = useLocation().pathname
 
   // Fetch /card.svg on mount
-  const isPurchased = pathname.includes("document");
+  const isPurchased = pathname.includes("documents");
   const { data } = useQuery<PurchasedTemplate | Template>({
     queryKey: [isPurchased ? "purchased-template" : "template"],
     queryFn: () =>
@@ -40,9 +41,12 @@ export default function SvgFormTranslator() {
     const parsedFields = parseSvgToFormFields(svgText);
     setSvgRaw(svgText);
     setName(data?.name as string)
+    if ('status' in (data ?? {})) {
+      setStatus((data as PurchasedTemplate).status as string);
+    }
     setFields(data?.form_fields as FormField[]);
     console.log(parsedFields);
-  }, [svgText, setFields, setSvgRaw, data, setName ]);
+  }, [svgText, setFields, setSvgRaw, data, setName, setStatus ]);
 
   useEffect(() => {
     if (!svgText) return;

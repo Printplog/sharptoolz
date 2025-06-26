@@ -28,11 +28,12 @@ export default function FormPanel() {
     statusMessage,
     getFieldValue,
     setName,
+    downloadSvg
   } = useToolStore();
   const { id } = useParams();
   const navigate = useNavigate();
   const pathname = useLocation().pathname;
-  const isPurchased = pathname.includes("document");
+  const isPurchased = pathname.includes("documents");
 
   const { mutate: create, isPending: createPending } = useMutation({
     mutationFn: (data: Partial<PurchasedTemplate>) => purchaseTemplate(data),
@@ -41,7 +42,7 @@ export default function FormPanel() {
       navigate(`/documents/${data?.id}`);
     },
     onError: (error: Error) => {
-      toast(errorMessage(error));
+      toast.error(errorMessage(error));
       console.log(error);
     },
   });
@@ -53,7 +54,7 @@ export default function FormPanel() {
       toast.success("Doc updated successfully");
     },
     onError: (error: Error) => {
-      toast(errorMessage(error));
+      toast.error(errorMessage(error));
       console.log(error);
     },
   });
@@ -71,7 +72,7 @@ export default function FormPanel() {
       ...(isPurchased ? {} : { template: id }),
       svg: updateSvgFromFormData(svgRaw, fields),
       tracking_id: tracking_id as string,
-      status: status,
+      ...(status === "" ? {} : { status: status }),
       status_message: statusMessage,
     };
     mutateFn(data);
@@ -84,6 +85,7 @@ export default function FormPanel() {
       );
       return;
     }
+    downloadSvg(name)
   };
 
   return (

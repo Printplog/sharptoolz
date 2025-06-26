@@ -21,7 +21,7 @@ export default function DocumentCard({ doc }: Props) {
       >
         {doc.svg ? (
           <div
-            className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden mask-b-to-[85%]"
+            className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden mask-b-to-[80%]"
             dangerouslySetInnerHTML={{ __html: doc.svg }}
             aria-label="SVG Preview"
           />
