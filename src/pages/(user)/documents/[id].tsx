@@ -4,7 +4,7 @@ import SvgFormTranslator from "@/components/Dashboard/SVGFormTranslator/SvgFormT
 export default function EditDocument() {
   return (
     <div>
-        <SvgFormTranslator />
+        <SvgFormTranslator isPurchased={true} />
     </div>
   )
 }
