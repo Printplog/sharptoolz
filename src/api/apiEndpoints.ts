@@ -31,6 +31,11 @@ export const addTemplate = async (data: Partial<Template>): Promise<unknown> => 
   return res.data;
 }
 
+export const updateTemplate = async (id: string, data: Partial<Template>): Promise<unknown> => {
+  const res = await apiClient.patch(`/templates/${id}/`, data);
+  return res.data;
+}
+
 export const getTemplates = async (): Promise<Template[]> => {
   const res = await apiClient.get('/templates/');
   return res.data;
@@ -45,6 +50,7 @@ export const purchaseTemplate = async (data: Partial<PurchasedTemplate>): Promis
   const res = await apiClient.post('/purchased-templates/', data);
   return res.data;
 }
+
 
 export const updatePurchasedTemplate = async (data: Partial<PurchasedTemplate>): Promise<unknown> => {
   const res = await apiClient.patch(`/purchased-templates/${data.id}/`, data);

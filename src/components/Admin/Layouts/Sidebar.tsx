@@ -7,7 +7,7 @@ const navigationItems = [
   {
     icon: <LayoutDashboard className="h-5 w-5" />,
     label: "Dashboard",
-    to: "/admin"
+    to: "/admin/dashboard"
   },
   {
     icon: <Hammer className="h-5 w-5" />,

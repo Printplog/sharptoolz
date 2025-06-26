@@ -40,7 +40,7 @@ export default function ToolCard({ tool }: Props) {
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-2 mt-2">
-          <Link to={`/tools/${tool.id}`}>
+          <Link to={`/admin/tools/${tool.id}`}>
             <Button size="sm" variant="outline" className="h-8 w-8 p-0">
               <Pencil className="h-4 w-4" />
             </Button>
