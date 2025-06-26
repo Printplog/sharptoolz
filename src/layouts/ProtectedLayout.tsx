@@ -5,6 +5,7 @@ import { fetchCurrentUser } from "@/api/apiEndpoints";
 import { useAuthStore } from "@/store/authStore";
 import { LoaderIcon } from "lucide-react";
 import { toast } from "sonner";
+import Logo from "@/components/Logo";
 
 export default function ProtectedLayout({
   children,
@@ -39,7 +40,7 @@ export default function ProtectedLayout({
   if (isLoading) {
     return (
       <div className="flex flex-col gap-5 items-center justify-center h-screen">
-        <img src="/logo.png" alt="Logo" className="h-20" />
+        <Logo />
         <LoaderIcon className="size-6 animate-spin text-primary" />
       </div>
     );
