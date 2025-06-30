@@ -18,6 +18,7 @@ export type Path =
   | `/documents/:id`
   | `/tools`
   | `/tools/:id`
+  | `/wallet`
 
 export type Params = {
   '/admin/tools/:id': { id: string }
