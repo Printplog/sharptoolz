@@ -1,4 +1,4 @@
-import type { LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
+import type { CryptoPaymentData, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
@@ -66,3 +66,8 @@ export const getPurchasedTemplate = async (id: string): Promise<PurchasedTemplat
   const res = await apiClient.get(`/purchased-templates/${id}/`);
   return res.data;
 }
+
+export const createCryptoPayment = async (ticker: string): Promise<CryptoPaymentData> => {
+  const res = await apiClient.post('/create-payment/', ticker);
+  return res.data;
+};

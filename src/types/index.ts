@@ -92,3 +92,29 @@ export type PurchasedTemplate = {
   created_at: string; // ISO datetime string
   updated_at: string;
 };
+
+
+export type CryptoPaymentData = {
+  tx_id: string;
+  ticker: string;
+  amount: number;
+  payment_address: string;
+}
+
+export type Transaction = {
+  id: string;
+  tx_id: string;
+  type: 'deposit' | 'payment';
+  amount: number;
+  status: 'pending' | 'completed' | 'failed';
+  description: string;
+  tx_hash: string;
+  address: string;
+  created_at: string;
+};
+
+export type WalletData = {
+  id: string;
+  balance: number;
+  transactions: Transaction[];
+};
