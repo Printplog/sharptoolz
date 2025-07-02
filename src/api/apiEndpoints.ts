@@ -71,3 +71,8 @@ export const createCryptoPayment = async (ticker: string): Promise<CryptoPayment
   const res = await apiClient.post('/create-payment/', ticker);
   return res.data;
 };
+
+export const cancelCryptoPayment = async (id: string): Promise<CryptoPaymentData> => {
+  const res = await apiClient.post('/cancel-payment/',  {id});
+  return res.data;
+};
