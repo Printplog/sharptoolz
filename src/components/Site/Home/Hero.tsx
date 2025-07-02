@@ -9,7 +9,7 @@ export default function Hero() {
     <SectionPadding className="flex flex-col gap-3 items-center justify-center py-10 relative">
       <LightBlur className="left-[-150px] top-0" />
       <h2 className="text-6xl sm:text-6xl md:text-7xl font-fancy text-center md:w-[80%] font-semibold">
-        Create Professional Sample Documents in Seconds
+        Create Professional Sample Documents in Seconds text
       </h2>
       <p className="w-[90%] md:w-[70%] text-center text-foreground/80">
         Generate professional-looking sample documents instantly. Perfect for
