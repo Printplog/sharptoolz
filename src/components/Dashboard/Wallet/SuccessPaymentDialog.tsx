@@ -1,6 +1,6 @@
 // src/components/Dashboard/Wallet/SuccessPaymentDialog.tsx
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useWalletStore } from '@/store/walletStore';
 import {
   Dialog,
@@ -15,22 +15,29 @@ const SuccessPaymentDialog = () => {
   const { wallet } = useWalletStore();
   const lastTx = wallet?.transactions?.[0];
   const [open, setOpen] = useState(false);
+  const prevTxStatusRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (
       lastTx &&
-      lastTx.status === 'completed' &&
       typeof window !== 'undefined'
     ) {
       const wasShown = sessionStorage.getItem(`tx-${lastTx.id}-shown`);
-      if (!wasShown) {
+
+      // Only show if it changed from not completed to completed
+      if (
+        lastTx.status === 'completed' &&
+        prevTxStatusRef.current !== 'completed' &&
+        !wasShown
+      ) {
         setOpen(true);
         sessionStorage.setItem(`tx-${lastTx.id}-shown`, '1');
-      } else {
-        setOpen(false);
       }
+
+      // Update ref after check
+      prevTxStatusRef.current = lastTx.status;
     }
-  }, [lastTx?.status]);
+  }, [lastTx?.id, lastTx?.status]);
 
   const closeDialog = () => setOpen(false);
 
@@ -51,7 +58,7 @@ const SuccessPaymentDialog = () => {
         </div>
 
         <div className="text-4xl font-bold text-green-300 text-center font-mono py-3">
-          ₦{lastTx?.amount.toLocaleString()}
+          ₦{lastTx.amount.toLocaleString()}
         </div>
 
         <div className="bg-green-500/10 text-green-300/90 text-xs px-3 py-2 rounded-md border border-green-500/20 mb-3 text-center">
