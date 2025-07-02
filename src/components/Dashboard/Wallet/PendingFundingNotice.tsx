@@ -94,7 +94,7 @@ const PendingFundingNotice: React.FC = () => {
           disabled={isPending}
           className="w-full disabled:bg-red-300 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 transition-colors text-sm font-medium"
         >
-            {isPending ? "Cancelling..." : "Cancel Transaction"}
+            {isPending ? "Cancelling..." : "Cancel Payment"}
         </button>
       </div>
     </div>
