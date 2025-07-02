@@ -13,7 +13,7 @@ export function useWalletSocket() {
   const setWallet = useWalletStore((state) => state.setWallet);
 
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  const wsUrl = `${protocol}://127.0.0.1:8000/ws/wallet/`;
+  const wsUrl = `${protocol}://api.sharptoolz.com/ws/wallet/`;
 
   // Memoize the callback to prevent unnecessary re-renders
   const handleMessage = useCallback((msg: WalletEvent) => {
