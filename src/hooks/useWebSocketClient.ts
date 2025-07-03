@@ -122,6 +122,7 @@ export function useWebSocketClient<T = unknown>({
         socketRef.current.close(1000, 'Component unmounting');
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connect]);
 
   return { sendMessage, connect };
