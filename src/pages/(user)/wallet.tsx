@@ -8,6 +8,7 @@ import { useWalletSocket } from "@/hooks/useWalletSocket";
 import PendingFundingNotice from "@/components/Dashboard/Wallet/PendingFundingNotice";
 import SuccessPaymentDialog from "@/components/Dashboard/Wallet/SuccessPaymentDialog";
 import { toast } from "sonner";
+import LoadingWallet from "@/components/Dashboard/Wallet/LoadingWallet";
 
 const WalletPage: React.FC = () => {
   const [showAddFundsDialog, setShowAddFundsDialog] = useState<boolean>(false);
@@ -25,6 +26,8 @@ const WalletPage: React.FC = () => {
   const handleCloseAddFunds = (open: boolean): void => {
     setShowAddFundsDialog(open);
   };
+
+  if (!wallet) return <LoadingWallet />;
 
   return (
     <div className="space-y-6">
