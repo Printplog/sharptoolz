@@ -45,7 +45,7 @@ const WalletPage: React.FC = () => {
 
       {/* Balance Card */}
       <BalanceCard
-        balance={Number(wallet?.balance)}
+        balance={Number(wallet?.balance)} 
         onTopUp={handleOpenAddFunds}
       />
 
