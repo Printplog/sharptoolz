@@ -12,7 +12,7 @@ export default function AuthLayout() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="w-full max-w-md border border-white/10 bg-white/10 text-white p-8 rounded-xl flex flex-col items-center gap-10"
+        className="w-full max-w-md border border-white/10 bg-white/5 text-white p-8 rounded-xl flex flex-col items-center gap-6"
       >
         <motion.button
           whileHover={{ scale: 1.05 }}

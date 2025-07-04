@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import SectionPadding from '../../layouts/SectionPadding';
-import { ClipboardList } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Link, useLocation } from 'react-router-dom';
+import Logo from '../Logo';
 
 
 export default function Navbar() {
@@ -21,12 +21,7 @@ export default function Navbar() {
     <nav className="relative z-[999]">
       <SectionPadding className="flex justify-between items-center py-4 lg:py-10">
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
-            <ClipboardList />
-          </div>
-          <span className="font-bold text-xl text-foreground">DocsMaker</span>
-        </div>
+        <Logo />
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center space-x-8">
