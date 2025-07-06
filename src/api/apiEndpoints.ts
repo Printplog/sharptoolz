@@ -82,8 +82,10 @@ export const cancelCryptoPayment = async (id: string): Promise<CryptoPaymentData
   return res.data;
 };
 
-export const downloadDoc = async (data: DownloadData): Promise<CryptoPaymentData> => {
-  const res = await apiClient.post('/download-doc/',  data);
+export const downloadDoc = async (data: DownloadData) => {
+  const res = await apiClient.post('/download-doc/',  data, {
+    responseType: "blob",
+  });
   return res.data;
 };
 

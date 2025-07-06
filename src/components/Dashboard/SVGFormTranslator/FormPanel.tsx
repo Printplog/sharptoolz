@@ -29,7 +29,6 @@ export default function FormPanel() {
     statusMessage,
     getFieldValue,
     setName,
-    downloadSvg
   } = useToolStore();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -82,16 +81,6 @@ export default function FormPanel() {
     };
     console.log(data)
     mutateFn(data);
-  };
-
-  const downloadDoc = () => {
-    if (pathname.includes("all-tools") || pathname.includes("tools")) {
-      toast.warning(
-        `You're yet to create the ${name}. Create the ${name} first, then download.`
-      );
-      return;
-    }
-    downloadSvg(name)
   };
 
   return (
@@ -185,8 +174,8 @@ export default function FormPanel() {
             )}
           </>
         </Button>
-        <Link to="?dialog=download-doc">
-          <Button className="py-6 px-10">
+        <Link to="?dialog=download-doc" className="w-full sm:w-auto">
+          <Button className="py-6 px-10 w-full">
             <>
               Download Document
               <Download className="w-4 h-4 ml-1" />

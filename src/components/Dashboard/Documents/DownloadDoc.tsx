@@ -9,8 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-// import { toast } from "sonner";
+import { toast } from "sonner";
 import { CustomDialog } from "@/components/ui/CustomDialog";
+import { useMutation } from "@tanstack/react-query";
+import type { DownloadData } from "@/types";
+import { downloadDoc } from "@/api/apiEndpoints";
+import errorMessage from "@/lib/utils/errorMessage";
 
 interface DownloadDocDialogProps {
   svg: string;
@@ -19,11 +23,26 @@ interface DownloadDocDialogProps {
 export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
   svg,
 }) => {
-  
   const [type, setType] = React.useState<"pdf" | "png">("pdf");
-  const [loading, setLoading] = React.useState(false);
 
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: DownloadData) => downloadDoc(data),
 
+    onSuccess: (blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `document.${type}`; // or keep dynamic
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Download complete");
+    },
+
+    onError: (error: Error) => {
+      toast.error(errorMessage(error));
+    },
+  });
 
   return (
     <CustomDialog dialogName="download-doc">
@@ -53,8 +72,8 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
         </div>
 
         <DialogFooter>
-          <Button disabled={loading}>
-            {loading ? "Generating..." : `Download as ${type.toUpperCase()}`}
+          <Button onClick={() => mutate({ svg, type })} disabled={isPending}>
+            {isPending ? "Downloading..." : `Download as ${type.toUpperCase()}`}
           </Button>
         </DialogFooter>
       </DialogContent>
