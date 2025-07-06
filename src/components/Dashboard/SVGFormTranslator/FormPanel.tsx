@@ -8,7 +8,7 @@ import {
   Copy,
 } from "lucide-react";
 import useToolStore from "@/store/formStore";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import FormFieldComponent from "./FormField";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import type { PurchasedTemplate } from "@/types";
 import errorMessage from "@/lib/utils/errorMessage";
 import { Input } from "@/components/ui/input";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
+import { DownloadDocDialog } from "../Documents/DownloadDoc";
 
 export default function FormPanel() {
   const {
@@ -184,13 +185,17 @@ export default function FormPanel() {
             )}
           </>
         </Button>
-        <Button onClick={downloadDoc} className="py-6 px-10">
-          <>
-            Download Document
-            <Download className="w-4 h-4 ml-1" />
-          </>
-        </Button>
+        <Link to="?dialog=download-doc">
+          <Button className="py-6 px-10">
+            <>
+              Download Document
+              <Download className="w-4 h-4 ml-1" />
+            </>
+          </Button>
+        </Link>
+        <DownloadDocDialog svg={svgRaw} />
       </div>
     </div>
   );
 }
+

@@ -118,3 +118,9 @@ export type WalletData = {
   balance: number;
   transactions: Transaction[];
 };
+
+
+export type DownloadData = {
+  svg: string;
+  type: 'pdf' | 'png';
+}

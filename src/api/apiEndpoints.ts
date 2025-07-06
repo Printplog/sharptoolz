@@ -1,4 +1,4 @@
-import type { CryptoPaymentData, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
+import type { CryptoPaymentData, DownloadData, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
@@ -57,6 +57,11 @@ export const updatePurchasedTemplate = async (data: Partial<PurchasedTemplate>):
   return res.data;
 }
 
+export const deletePurchasedTemplate = async (id: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/purchased-templates/${id}/`);
+  return res.data;
+}
+
 export const getPurchasedTemplates = async (): Promise<PurchasedTemplate[]> => {
   const res = await apiClient.get(`/purchased-templates/`);
   return res.data;
@@ -76,3 +81,10 @@ export const cancelCryptoPayment = async (id: string): Promise<CryptoPaymentData
   const res = await apiClient.post('/cancel-payment/',  {id});
   return res.data;
 };
+
+export const downloadDoc = async (data: DownloadData): Promise<CryptoPaymentData> => {
+  const res = await apiClient.post('/download-doc/',  data);
+  return res.data;
+};
+
+

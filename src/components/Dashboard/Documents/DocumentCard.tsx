@@ -1,13 +1,35 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Loader, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PurchasedTemplate } from "@/types";
 import { Link } from "react-router-dom";
+import { ConfirmAction } from "@/components/ConfirmAction";
+import { deletePurchasedTemplate } from "@/api/apiEndpoints";
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Props = {
   doc: PurchasedTemplate;
 };
 
 export default function DocumentCard({ doc }: Props) {
+  const queryClient = useQueryClient()
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (id: string) => deletePurchasedTemplate(id),
+    onSuccess: () => {
+      toast.success("Document deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["purchased-templates"] })
+    }
+  })
+
+  
+
+  const handleDelete = async () => {
+    mutate(doc.id);
+  };
+
+  
+
   return (
     <div className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5">
       {/* SVG Preview */}
@@ -43,18 +65,24 @@ export default function DocumentCard({ doc }: Props) {
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-2 mt-2">
-          <Link to={`/documents/${doc.id}`} className="">
-            <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+          <Link  to={ !isPending ? `/documents/${doc.id}` : "#"} className="">
+            <Button disabled={isPending} size="sm" variant="outline" className="h-8 w-8 p-0">
               <Pencil className="h-4 w-4" />
             </Button>
           </Link>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 w-8 p-0 text-red-500 hover:text-red-400"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <ConfirmAction
+            trigger={
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isPending}
+                className="h-8 w-8 p-0 text-red-500 hover:text-red-400"
+              >
+                {isPending ? <Loader className="h-4 w-4 animate-spin " /> : <Trash2 className="h-4 w-4" />}
+              </Button>
+            }
+            onConfirm={handleDelete}
+          />
         </div>
       </div>
     </div>

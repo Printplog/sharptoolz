@@ -27,7 +27,7 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
   const { data, isError, isLoading } = useQuery({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
-    retry: false,
+    retry: 2,
   });
 
   useEffect(() => {
