@@ -22,9 +22,7 @@ import { DownloadDocDialog } from "../Documents/DownloadDoc";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
 
-
-
-export default function FormPanel({ test }: {test: boolean}) {
+export default function FormPanel({ test }: { test: boolean }) {
   const {
     fields,
     resetForm,
@@ -55,17 +53,22 @@ export default function FormPanel({ test }: {test: boolean}) {
   });
 
   const { mutate: update, isPending: updatePending } = useMutation({
-    mutationFn: (data: Partial<PurchasedTemplate>) =>
-      updatePurchasedTemplate(data),
-    onSuccess: () => {
-      toast.success("Doc updated successfully");
+    mutationFn: async (
+      data: Partial<PurchasedTemplate> & { toastMessage?: string }
+    ) => {
+      const { toastMessage, ...payload } = data;
+      await updatePurchasedTemplate(payload); // assume this is an async call
+      return { toastMessage }; // return it so we can access it in onSuccess
+    },
+    onSuccess: (data) => {
+      toast.success(data.toastMessage || "Doc updated successfully");
       queryClient.invalidateQueries({
         queryKey: ["purchased-template"],
       });
     },
     onError: (error: Error) => {
       toast.error(errorMessage(error));
-      console.log(error);
+      console.error(error);
     },
   });
 
@@ -76,6 +79,7 @@ export default function FormPanel({ test }: {test: boolean}) {
       return;
     }
     const tracking_id = getFieldValue("Tracking_ID");
+    const toastMessage = test === isTest ? "Document updated successfully" : "Document is now watermark free";
     const data = {
       id: id,
       ...(!isPurchased ? {} : { name: name }),
@@ -85,6 +89,7 @@ export default function FormPanel({ test }: {test: boolean}) {
       ...(!status ? {} : { status: status }),
       error_message: statusMessage,
       test: isTest,
+      toastMessage: toastMessage,
     };
     console.log(data);
     mutateFn(data);
@@ -170,7 +175,7 @@ export default function FormPanel({ test }: {test: boolean}) {
       </div>
 
       <div className="pt-4 border-t border-white/20 flex flex-col sm:flex-row justify-end gap-5 ">
-        {(isPurchased && test)  && (
+        {isPurchased && test && (
           <Button
             variant={"outline"}
             disabled={createPending || updatePending}
@@ -214,7 +219,7 @@ export default function FormPanel({ test }: {test: boolean}) {
             className="py-6 px-10 hover:bg-black/50 hover:text-white"
           >
             <>
-              {(updatePending)  ? "Updating Document" : "Update Document"}
+              {updatePending ? "Updating Document" : "Update Document"}
               {updatePending ? (
                 <Loader2 className="animate-spin" />
               ) : (
@@ -225,7 +230,10 @@ export default function FormPanel({ test }: {test: boolean}) {
         )}
 
         <Link to="?dialog=download-doc" className="w-full sm:w-auto">
-          <Button disabled={createPending || updatePending} className="py-6 px-10 w-full">
+          <Button
+            disabled={createPending || updatePending}
+            className="py-6 px-10 w-full"
+          >
             <>
               Download Document
               <Download className="w-4 h-4 ml-1" />
@@ -237,8 +245,8 @@ export default function FormPanel({ test }: {test: boolean}) {
           <DialogContent className="max-w-sm text-center space-y-4">
             <h2 className="text-lg font-semibold">Create Document</h2>
             <p>
-              Do you want to create a <strong>test document</strong> (with
-              watermark) or pay for the final version?
+              Do you want to create a <strong className="text-primary">test document</strong> (with
+              watermark) or pay <strong className="text-primary">$5</strong>  for the final version?
             </p>
             <div className="flex justify-center gap-4 mt-4">
               <Button
