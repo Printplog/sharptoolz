@@ -6,6 +6,7 @@ import {
   Loader2,
   ArrowUpRightFromCircle,
   Copy,
+  PenLine,
 } from "lucide-react";
 import useToolStore from "@/store/formStore";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
@@ -179,9 +180,9 @@ export default function FormPanel({ test }: {test: boolean}) {
             className="py-6 px-10 hover:bg-black/50 hover:text-white"
           >
             <>
-              {createPending ? "Removing Watermark" : "Remove Watermark"}
-              {createPending ? (
-                <Loader2 className="animate-spin" />
+              {updatePending ? "Removing Watermark" : "Remove Watermark"}
+              {updatePending ? (
+                <PenLine className="animate-spin" />
               ) : (
                 <Upload className="w-4 h-4 ml-1" />
               )}
@@ -213,7 +214,7 @@ export default function FormPanel({ test }: {test: boolean}) {
             className="py-6 px-10 hover:bg-black/50 hover:text-white"
           >
             <>
-              {updatePending ? "Updating Document" : "Update Document"}
+              {(updatePending)  ? "Updating Document" : "Update Document"}
               {updatePending ? (
                 <Loader2 className="animate-spin" />
               ) : (
