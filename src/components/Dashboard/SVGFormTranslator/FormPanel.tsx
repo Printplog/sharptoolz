@@ -18,8 +18,12 @@ import errorMessage from "@/lib/utils/errorMessage";
 import { Input } from "@/components/ui/input";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import { DownloadDocDialog } from "../Documents/DownloadDoc";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useState } from "react";
 
-export default function FormPanel() {
+
+
+export default function FormPanel({ test }: {test: boolean}) {
   const {
     fields,
     resetForm,
@@ -35,6 +39,7 @@ export default function FormPanel() {
   const pathname = useLocation().pathname;
   const isPurchased = pathname.includes("documents");
   const queryClient = useQueryClient();
+  const [showTestDialog, setShowTestDialog] = useState(false);
 
   const { mutate: create, isPending: createPending } = useMutation({
     mutationFn: (data: Partial<PurchasedTemplate>) => purchaseTemplate(data),
@@ -63,7 +68,7 @@ export default function FormPanel() {
     },
   });
 
-  const createDocument = () => {
+  const createDocument = (isTest: boolean) => {
     const mutateFn = isPurchased ? update : create;
     if (pathname.includes("all-tools")) {
       navigate("/auth/login?next=" + encodeURIComponent(`/tools/${id}`));
@@ -72,14 +77,15 @@ export default function FormPanel() {
     const tracking_id = getFieldValue("Tracking_ID");
     const data = {
       id: id,
-      ...(isPurchased ? {} : { name: name }),
+      ...(!isPurchased ? {} : { name: name }),
       ...(isPurchased ? {} : { template: id }),
-      svg: updateSvgFromFormData(svgRaw, fields),
+      ...(isPurchased ? {} : { svg: updateSvgFromFormData(svgRaw, fields) }),
       tracking_id: tracking_id as string,
       ...(!status ? {} : { status: status }),
       error_message: statusMessage,
+      test: isTest,
     };
-    console.log(data)
+    console.log(data);
     mutateFn(data);
   };
 
@@ -147,35 +153,78 @@ export default function FormPanel() {
         </div>
       )}
 
-      <div className="space-y-4">
-        {fields?.map((field) => (
-          <FormFieldComponent key={field.id} field={field} />
-        ))}
+      <div className="space-y-3">
+        {fields
+          ?.filter((field) => field.type === "status")
+          .map((field) => (
+            <FormFieldComponent key={field.id} field={field} />
+          ))}
+        <fieldset disabled={isPurchased} className="m-0 p-0 border-0 space-y-3">
+          {fields
+            ?.filter((field) => field.type !== "status")
+            .map((field) => (
+              <FormFieldComponent key={field.id} field={field} />
+            ))}
+        </fieldset>
       </div>
 
       <div className="pt-4 border-t border-white/20 flex flex-col sm:flex-row justify-end gap-5 ">
-        <Button
-          variant={"outline"}
-          onClick={createDocument}
-          className="py-6 px-10 hover:bg-black/50 hover:text-white"
-        >
-          <>
-            {createPending || updatePending
-              ? isPurchased
-                ? "Updating Document"
-                : "Creating Document"
-              : isPurchased
-              ? "Update Document"
-              : "Create Document"}
-            {createPending || updatePending ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <Upload className="w-4 h-4 ml-1" />
-            )}
-          </>
-        </Button>
+        {(isPurchased && test)  && (
+          <Button
+            variant={"outline"}
+            disabled={createPending || updatePending}
+            onClick={() => {
+              createDocument(false);
+            }}
+            className="py-6 px-10 hover:bg-black/50 hover:text-white"
+          >
+            <>
+              {createPending ? "Removing Watermark" : "Remove Watermark"}
+              {createPending ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 ml-1" />
+              )}
+            </>
+          </Button>
+        )}
+
+        {!isPurchased ? (
+          <Button
+            variant="outline"
+            disabled={createPending || updatePending}
+            onClick={() => setShowTestDialog(true)} // 👈 Show dialog instead
+            className="py-6 px-10 hover:bg-black/50 hover:text-white"
+          >
+            <>
+              {createPending ? "Creating Document" : "Create Document"}
+              {createPending ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 ml-1" />
+              )}
+            </>
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            disabled={createPending || updatePending}
+            onClick={() => createDocument(test)}
+            className="py-6 px-10 hover:bg-black/50 hover:text-white"
+          >
+            <>
+              {updatePending ? "Updating Document" : "Update Document"}
+              {updatePending ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 ml-1" />
+              )}
+            </>
+          </Button>
+        )}
+
         <Link to="?dialog=download-doc" className="w-full sm:w-auto">
-          <Button className="py-6 px-10 w-full">
+          <Button disabled={createPending || updatePending} className="py-6 px-10 w-full">
             <>
               Download Document
               <Download className="w-4 h-4 ml-1" />
@@ -183,8 +232,35 @@ export default function FormPanel() {
           </Button>
         </Link>
         <DownloadDocDialog svg={svgRaw} />
+        <Dialog open={showTestDialog} onOpenChange={setShowTestDialog}>
+          <DialogContent className="max-w-sm text-center space-y-4">
+            <h2 className="text-lg font-semibold">Create Document</h2>
+            <p>
+              Do you want to create a <strong>test document</strong> (with
+              watermark) or pay for the final version?
+            </p>
+            <div className="flex justify-center gap-4 mt-4">
+              <Button
+                onClick={() => {
+                  createDocument(true);
+                  setShowTestDialog(false);
+                }}
+                variant="outline"
+              >
+                Test Document
+              </Button>
+              <Button
+                onClick={() => {
+                  createDocument(false);
+                  setShowTestDialog(false);
+                }}
+              >
+                Pay & Create
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
 }
-

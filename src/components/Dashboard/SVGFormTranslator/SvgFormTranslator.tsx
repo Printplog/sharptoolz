@@ -59,12 +59,14 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     setFields
   ]);
 
+  const purchasedData = data as PurchasedTemplate;
+
   // Separate effect for status fields to avoid conflicts
   useEffect(() => {
     if (isLoading || !data) return;
     
     if (isPurchased) {
-      const purchasedData = data as PurchasedTemplate;
+      
       
       // Use setTimeout to ensure other state updates complete first
       setTimeout(() => {
@@ -149,7 +151,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
           <TabsTrigger value="preview">Preview</TabsTrigger>
         </TabsList>
         <TabsContent value="editor">
-          <FormPanel />
+          <FormPanel test={purchasedData?.test} />
         </TabsContent>
         <TabsContent value="preview">
           <div className="w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl">
