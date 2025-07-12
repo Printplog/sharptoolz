@@ -44,7 +44,7 @@ const TransactionHistory: React.FC = () => {
               <div
                 className={`p-2 rounded-lg ${
                   transaction.status === "completed"
-                    ? "bg-green-500/20 text-green-400"
+                    ? (transaction.type === "deposit" ? "bg-green-500/20 text-green-400" : "bg-blue-500/20 text-blue-400")
                     : "bg-yellow-500/20 text-yellow-400"
                 }`}
               >
@@ -69,7 +69,7 @@ const TransactionHistory: React.FC = () => {
               <p
                 className={`text-sm font-medium ${
                   transaction.status === "completed"
-                    ? "text-green-400"
+                    ? (transaction.type === "deposit" ? "text-green-400" : "text-blue-400")
                     : "text-yellow-400"
                 }`}
               >

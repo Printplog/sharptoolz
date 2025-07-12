@@ -4,6 +4,9 @@ export type User = {
   username: string;
   email: string;
   role?: string;
+  total_purchases: number;
+  downloads: number;
+  wallet_balance: number;
 };
 
 export type AuthState = {

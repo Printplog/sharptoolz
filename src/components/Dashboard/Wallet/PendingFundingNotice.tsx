@@ -5,6 +5,8 @@ import { AlertTriangle, Loader2, Copy, CheckCircle } from "lucide-react";
 import { useWalletStore } from "@/store/walletStore";
 import { useMutation } from "@tanstack/react-query";
 import { cancelCryptoPayment } from "@/api/apiEndpoints";
+import { toast } from "sonner";
+import { ConfirmAction } from "@/components/ConfirmAction";
 
 const PendingFundingNotice: React.FC = () => {
   const [copied, setCopied] = useState(false);
@@ -12,19 +14,22 @@ const PendingFundingNotice: React.FC = () => {
   const { mutate, isPending } = useMutation({
     mutationFn: (id: string) => cancelCryptoPayment(id),
     onSuccess: () => {
-        setCopied(false);
-        console.log("Transaction cancelled successfully");
-    }
+      setCopied(false);
+      toast.success("Transaction cancelled");
+    },
+    onError: () => {
+      toast.error("Failed to cancel transaction");
+    },
   });
 
   const transaction = wallet?.transactions?.[0];
-
   if (!transaction || transaction.status !== "pending") return null;
 
-  const { address } = transaction;
+  const { address, amount = 0 } = transaction;
 
   const symbol = "USDT";
   const network = "BEP20 (Binance Smart Chain)";
+  const VENDOR_PHONE = "2349160914217";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(address);
@@ -33,8 +38,14 @@ const PendingFundingNotice: React.FC = () => {
   };
 
   const onCancel = () => {
-    mutate(transaction?.id);
-    console.log("Transaction cancelled");
+    mutate(transaction.id);
+  };
+
+  const handleWhatsApp = () => {
+    const msg = `Hello, I made a payment of approximately ₦${amount.toLocaleString()} to this USDT BEP20 address:\n${address}\n\nKindly confirm the funding.`;
+    const encoded = encodeURIComponent(msg);
+    const link = `https://wa.me/${VENDOR_PHONE}?text=${encoded}`;
+    window.open(link, "_blank");
   };
 
   return (
@@ -63,7 +74,6 @@ const PendingFundingNotice: React.FC = () => {
 
       {/* Payment Details */}
       <div className="space-y-2">
-        {/* Address */}
         <div>
           <label className="text-white/60 text-sm block mb-1">
             Send Payment To
@@ -85,17 +95,31 @@ const PendingFundingNotice: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* WhatsApp Vendor Button */}
+        <button
+          onClick={handleWhatsApp}
+          className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-500 transition text-sm font-medium"
+        >
+          Pay with Naira
+        </button>
       </div>
 
       {/* Cancel Button */}
       <div className="pt-3">
-        <button
-          onClick={onCancel}
-          disabled={isPending}
-          className="w-full disabled:bg-red-300 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 transition-colors text-sm font-medium"
-        >
-            {isPending ? "Cancelling..." : "Cancel Payment"}
-        </button>
+        <ConfirmAction
+          title="Are you sure?"
+          description="Do not cancel if you have made payment to the address. If you cancel, the transaction cannot be confirmed!"
+          trigger={
+            <button
+              disabled={isPending}
+              className="w-full disabled:bg-red-300 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 transition-colors text-sm font-medium"
+            >
+              {isPending ? "Cancelling..." : "Cancel Payment"}
+            </button>
+          }
+          onConfirm={onCancel}
+        />
       </div>
     </div>
   );

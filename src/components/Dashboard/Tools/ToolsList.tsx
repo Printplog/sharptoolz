@@ -67,11 +67,13 @@ export default function ToolsList() {
               }}
             >
               {tool.svg ? (
-                <div
-                  className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden mask-b-to-[80%]"
+                <div className="mask-b-to-[80%] h-full bg-white rounded-lg overflow-hidden">
+                  <div
+                  className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden"
                   dangerouslySetInnerHTML={{ __html: tool.svg }}
                   aria-label="SVG Preview"
                 />
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-black/10">
                   No Preview

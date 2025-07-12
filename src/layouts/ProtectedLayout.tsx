@@ -28,6 +28,7 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
     retry: 2,
+    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {

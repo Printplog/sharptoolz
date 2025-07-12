@@ -5,6 +5,8 @@ import { create } from 'zustand';
 
 
 type WalletState = {
+  newPayment: boolean;
+  setNewPayment: (isTrue: boolean) => void;
   wallet: WalletData | null;
   setWallet: (data: WalletData) => void;
   updateBalance: (newBalance: number) => void;
@@ -13,6 +15,8 @@ type WalletState = {
 };
 
 export const useWalletStore = create<WalletState>((set) => ({
+  newPayment: false,
+  setNewPayment: (data) => set({ newPayment: data }),
   wallet: null,
   setWallet: (data) => set({ wallet: data }),
   updateBalance: (newBalance) =>

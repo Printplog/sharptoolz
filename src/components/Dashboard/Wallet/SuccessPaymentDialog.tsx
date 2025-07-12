@@ -1,6 +1,4 @@
-// src/components/Dashboard/Wallet/SuccessPaymentDialog.tsx
-
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useWalletStore } from '@/store/walletStore';
 import {
   Dialog,
@@ -12,32 +10,26 @@ import {
 import { CheckCircle } from 'lucide-react';
 
 const SuccessPaymentDialog = () => {
-  const { wallet } = useWalletStore();
+  const { wallet, newPayment, setNewPayment } = useWalletStore(); // you must expose `setNewPayment`
   const lastTx = wallet?.transactions?.[0];
   const [open, setOpen] = useState(false);
-  const prevTxStatusRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (
       lastTx &&
+      newPayment && // only if new payment flag is set
+      lastTx.status === 'completed' &&
       typeof window !== 'undefined'
     ) {
       const wasShown = sessionStorage.getItem(`tx-${lastTx.id}-shown`);
 
-      // Only show if it changed from not completed to completed
-      if (
-        lastTx.status === 'completed' &&
-        prevTxStatusRef.current !== 'completed' &&
-        !wasShown
-      ) {
+      if (!wasShown) {
         setOpen(true);
         sessionStorage.setItem(`tx-${lastTx.id}-shown`, '1');
+        setNewPayment(false); // reset flag after showing
       }
-
-      // Update ref after check
-      prevTxStatusRef.current = lastTx.status;
     }
-  }, [lastTx?.id, lastTx?.status]);
+  }, [lastTx?.id, lastTx?.status, newPayment, setNewPayment]);
 
   const closeDialog = () => setOpen(false);
 

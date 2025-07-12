@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export default function AuthLayout() {
   const navigate = useNavigate();
-
+  console.log(import.meta.env.VITE_PUBLIC_API_URL);
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0F172A] px-4 py-10">
       <motion.main
