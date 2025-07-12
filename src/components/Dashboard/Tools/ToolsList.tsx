@@ -4,25 +4,20 @@ import { getTemplates } from "@/api/apiEndpoints";
 import { Link, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import IsLoading from "@/components/IsLoading";
+import type { Template } from "@/types";
 
-export interface Template {
-  id?: string;
-  name: string;
-  svg: string;
-  type: "tool";
-  created_at: string;
-  updated_at: string;
-  category?: string;
+interface Props {
+  hot?: boolean;
 }
 
-export default function ToolsList() {
+export default function ToolsList({ hot }: Props) {
   const [tools, setTools] = useState<Template[]>([]);
   const [query, setQuery] = useState("");
   const pathname = useLocation().pathname;
 
   const { data, isLoading } = useQuery({
     queryKey: ["tools"],
-    queryFn: getTemplates,
+    queryFn: () => getTemplates(hot),
   });
 
   useEffect(() => {
@@ -33,21 +28,22 @@ export default function ToolsList() {
     tool.name.toLowerCase().includes(query.toLowerCase())
   );
 
-
   return (
     <div className="space-y-10">
       {/* Search Box */}
-      <div className="flex justify-center">
-        <div className="flex flex-col sm:flex-row items-center gap-3 bg-white/5 border border-white/10 px-4 py-5 w-full max-w-3xl rounded-xl">
-          <Input
-            type="text"
-            placeholder="Search tools..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full px-4 py-2 h-fit border border-gray-30"
-          />
+      {!hot && (
+        <div className="flex justify-center">
+          <div className="flex flex-col sm:flex-row items-center gap-3 bg-white/5 border border-white/10 px-4 py-5 w-full max-w-3xl rounded-xl">
+            <Input
+              type="text"
+              placeholder="Search tools..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full px-4 py-2 h-fit border border-gray-30"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Tool Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -69,10 +65,10 @@ export default function ToolsList() {
               {tool.svg ? (
                 <div className="mask-b-to-[80%] h-full bg-white rounded-lg overflow-hidden">
                   <div
-                  className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden"
-                  dangerouslySetInnerHTML={{ __html: tool.svg }}
-                  aria-label="SVG Preview"
-                />
+                    className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden"
+                    dangerouslySetInnerHTML={{ __html: tool.svg }}
+                    aria-label="SVG Preview"
+                  />
                 </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-black/10">
@@ -88,14 +84,14 @@ export default function ToolsList() {
                   {tool.name}
                 </h3>
                 <span className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded-full capitalize">
-                  {tool.category || "tool"}
+                   {tool?.hot ? "Hot Tool 🔥" : "Tool"}
                 </span>
               </div>
 
               <Link
-                to={`/${pathname.includes("all-tools") ? "all-tools" : "tools"}/${
-                  tool.id
-                }`}
+                to={`/${
+                  pathname.includes("all-tools") ? "all-tools" : "tools"
+                }/${tool.id}`}
                 className="w-full mt-2"
               >
                 <button className="w-full px-4 py-2 rounded-md bg-primary text-background font-medium hover:bg-primary/90 transition">

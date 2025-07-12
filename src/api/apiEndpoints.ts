@@ -36,8 +36,8 @@ export const updateTemplate = async (id: string, data: Partial<Template>): Promi
   return res.data;
 }
 
-export const getTemplates = async (): Promise<Template[]> => {
-  const res = await apiClient.get('/templates/');
+export const getTemplates = async (hot?: boolean): Promise<Template[]> => {
+  const res = await apiClient.get(`/templates/?${hot && "hot=true"}`);
   return res.data;
 }
 

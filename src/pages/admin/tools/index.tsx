@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 export default function Tools() {
   const { data, isLoading } = useQuery<Template[]>({
-    queryFn: getTemplates,
+    queryFn: () => getTemplates(undefined),
     queryKey: ["templates"]
   })
 

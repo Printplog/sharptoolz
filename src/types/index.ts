@@ -68,6 +68,7 @@ export type Template = {
   svg: string;
   form_fields: FormField[]
   type: "tool";
+  hot: boolean;
   created_at: string;
   updated_at: string;
 }
