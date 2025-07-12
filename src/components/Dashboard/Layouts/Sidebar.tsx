@@ -43,7 +43,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "w-64 bg-white/5 border-r border-white/10 h-full lg:flex hidden flex-col px-4 py-10 z-[999]"
+        "w-64 bg-white/5 border-r border-white/10 h-full lg:flex hidden flex-col px-4 py-10 z-[]"
       )}
     >
       {/* Header */}
