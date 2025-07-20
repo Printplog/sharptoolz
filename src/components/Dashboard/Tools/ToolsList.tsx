@@ -16,7 +16,7 @@ export default function ToolsList({ hot }: Props) {
   const pathname = useLocation().pathname;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tools"],
+    queryKey: ["tools", `${ hot && "hot" }`],
     queryFn: () => getTemplates(hot),
   });
 

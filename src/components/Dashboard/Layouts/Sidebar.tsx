@@ -43,7 +43,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "w-64 bg-white/5 border-r border-white/10 h-full lg:flex hidden flex-col px-4 py-10 z-[]"
+        "w-64 bg-white/5 border-r border-white/10 h-full lg:flex hidden flex-col py-10 z-[]"
       )}
     >
       {/* Header */}
@@ -61,9 +61,9 @@ export default function Sidebar() {
               <Link to={item.to} key={item.to}>
                 <button
                   className={cn(
-                    "w-full justify-start transition-colors py-3 rounded-2xl px-6 flex items-center",
+                    "w-full justify-start transition-colors py-3 px-6 flex items-center",
                     isActive
-                      ? "bg-primary/10 text-primary hover:bg-primary/10"
+                      ? "bg-primary/10 text-primary hover:bg-primary/10 border-r-2 border-primary"
                       : "text-foreground hover:bg-primary/5 hover:text-primary/90"
                   )}
                 >

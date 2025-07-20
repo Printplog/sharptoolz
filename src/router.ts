@@ -16,6 +16,7 @@ export type Path =
   | `/dashboard`
   | `/documents`
   | `/documents/:id`
+  | `/settings`
   | `/tools`
   | `/tools/:id`
   | `/wallet`
