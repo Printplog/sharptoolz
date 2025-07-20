@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { CustomDialog } from "@/components/ui/CustomDialog"
 import {
   DialogContent,
@@ -19,15 +19,17 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Eye, EyeOff } from "lucide-react"
+import { useMutation } from "@tanstack/react-query"
+import { toast } from "sonner"
+import errorMessage from "@/lib/utils/errorMessage"
+import { changePassword } from "@/api/apiEndpoints" // ✅ import
 
-// ✅ Validation schema
 const schema = z
   .object({
-    current_password: z.string().min(6, "Required"),
+    old_password: z.string().min(6, "Required"),
     new_password: z
       .string()
       .min(8, "At least 8 characters")
-      .regex(/[A-Z]/, "One uppercase required")
       .regex(/[0-9]/, "One number required"),
     confirm_password: z.string(),
   })
@@ -42,23 +44,14 @@ export default function ChangePassword() {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      current_password: "",
+      old_password: "",
       new_password: "",
       confirm_password: "",
     },
   })
 
-  useEffect(() => {
-    form.reset({
-        current_password: "",
-        new_password: "",
-        confirm_password: "",
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const [visible, setVisible] = useState({
-    current_password: false,
+    old_password: false,
     new_password: false,
     confirm_password: false,
   })
@@ -67,13 +60,32 @@ export default function ChangePassword() {
     setVisible((prev) => ({ ...prev, [field]: !prev[field] }))
   }
 
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: FormValues) =>
+      changePassword({
+        old_password: data.old_password,
+        new_password: data.new_password,
+      }),
+    onSuccess: () => {
+      toast.success("Password changed successfully.")
+      form.reset()
+    },
+    onError: (error: Error) => {
+      toast.error(errorMessage(error))
+    },
+  })
+
+  const onSubmit = (values: FormValues) => {
+    mutate(values)
+  }
+
   const fields: {
     name: keyof FormValues
     label: string
     placeholder: string
   }[] = [
     {
-      name: "current_password",
+      name: "old_password",
       label: "Current Password",
       placeholder: "Enter current password",
     },
@@ -88,11 +100,6 @@ export default function ChangePassword() {
       placeholder: "Confirm new password",
     },
   ]
-
-  const onSubmit = (values: FormValues) => {
-    console.log("Submitted:", values)
-    // ✅ Call your API here
-  }
 
   return (
     <CustomDialog dialogName="change-password">
@@ -117,7 +124,7 @@ export default function ChangePassword() {
                           type={visible[name] ? "text" : "password"}
                           placeholder={placeholder}
                           {...field}
-                          className="border-white/10 focus-visible:border-white/10 focus-visible:ring-white/20"
+                          className="border-white/10 focus-visible:border-white/10"
                         />
                         <button
                           type="button"
@@ -138,8 +145,12 @@ export default function ChangePassword() {
               />
             ))}
 
-            <Button type="submit" className="w-full">
-              Change Password
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isPending}
+            >
+              {isPending ? "Updating..." : "Change Password"}
             </Button>
           </form>
         </Form>

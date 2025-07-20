@@ -16,6 +16,28 @@ export const logout = async (): Promise<unknown> => {
   return res.data;
 };
 
+export const forgotPassword = async (data: { email: string }): Promise<unknown> => {
+  const res = await apiClient.post('/accounts/forgot-password/', data);
+  return res.data;
+};
+
+export const changePassword = async (data: {
+  old_password: string
+  new_password: string
+}): Promise<unknown> => {
+  const res = await apiClient.post('/accounts/change-password/', data);
+  return res.data;
+};
+
+export const resetPasswordConfirm = async (data: {
+  uid: string;
+  token: string;
+  password: string;
+}): Promise<unknown> => {
+  const res = await apiClient.post('/accounts/reset-password-confirm/', data);
+  return res.data;
+};
+
 export const register = async (data: RegisterPayload): Promise<unknown> => {
   const res = await apiClient.post('/accounts/register/', data);
   return res.data;

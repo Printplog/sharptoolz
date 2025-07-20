@@ -3,8 +3,8 @@ import {
   LayoutDashboard,
   Hammer,
   FileText,
-  CreditCard,
   Settings,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -29,7 +29,7 @@ export default function Sidebar() {
       to: "/documents",
     },
     {
-      icon: <CreditCard className="h-5 w-5" />,
+      icon: <Wallet className="h-5 w-5" />,
       label: "Wallet",
       to: "/wallet",
     },

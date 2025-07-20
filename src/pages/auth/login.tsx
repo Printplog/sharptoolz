@@ -18,6 +18,8 @@ import { login } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { useAuthStore } from "@/store/authStore";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react"; // <-- Icon import
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username is required"),
@@ -28,9 +30,10 @@ type LoginSchema = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
-  const [params] = useSearchParams()
-  const next = params.get("next") || "/dashboard"
-  const { setUser } = useAuthStore()
+  const [params] = useSearchParams();
+  const next = params.get("next") || "/dashboard";
+  const { setUser } = useAuthStore();
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -43,19 +46,17 @@ export default function Login() {
   const { mutate, isPending } = useMutation({
     mutationFn: (data: LoginPayload) => login(data),
     onSuccess: (user) => {
-        toast.success("Login Success")
-        setUser(user)
-        navigate(next)
-        console.log(user)
+      toast.success("Login Success");
+      setUser(user);
+      navigate(next);
     },
     onError: (error: Error) => {
-        toast.error(errorMessage(error))
-        console.log(error)
-    }
-  })
+      toast.error(errorMessage(error));
+    },
+  });
 
   const onSubmit = async (values: LoginSchema) => {
-    mutate(values)
+    mutate(values);
   };
 
   return (
@@ -65,6 +66,7 @@ export default function Login() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <h2 className="text-center text-[24px]">Login</h2>
+
               <FormField
                 control={form.control}
                 name="username"
@@ -82,24 +84,35 @@ export default function Login() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="********"
-                        {...field}
-                        className="border-white/20 bg-white/5"
-                      />
-                    </FormControl>
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="********"
+                          {...field}
+                          className="border-white/20 bg-white/5 pr-10"
+                        />
+                      </FormControl>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <Button
                 type="submit"
                 className="w-full bg-primary text-black hover:bg-primary/90"
@@ -107,6 +120,7 @@ export default function Login() {
               >
                 {isPending ? "Logging in..." : "Login"}
               </Button>
+
               <div className="text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
                   Don't have an account?{" "}

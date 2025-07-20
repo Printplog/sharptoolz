@@ -11,12 +11,13 @@ export type Path =
   | `/admin/tools/:id`
   | `/all-tools`
   | `/all-tools/:id`
+  | `/auth/forgot-password`
   | `/auth/login`
   | `/auth/register`
+  | `/auth/reset-password`
   | `/dashboard`
   | `/documents`
   | `/documents/:id`
-  | `/no`
   | `/settings`
   | `/settings/api`
   | `/tools`
