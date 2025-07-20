@@ -5,11 +5,11 @@ import {
   LifeBuoy,
   Code2,
   MessageCircle,
-} from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
-import UserInfoCard from "@/components/Dashboard/Settings/UserInfoCard"
-import ChangePassword from "@/components/Dashboard/Settings/ChangePassword"
-import { useAuthStore } from "@/store/authStore"
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import UserInfoCard from "@/components/Dashboard/Settings/UserInfoCard";
+import ChangePassword from "@/components/Dashboard/Settings/ChangePassword";
+import { useAuthStore } from "@/store/authStore";
 const settingsLinks = [
   {
     label: "Change Password",
@@ -23,7 +23,7 @@ const settingsLinks = [
   },
   {
     label: "Customer Service",
-    to:  "https://wa.me/2348147929994",
+    to: "https://wa.me/2348147929994",
     icon: LifeBuoy,
   },
   {
@@ -36,18 +36,17 @@ const settingsLinks = [
     to: "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu", // Replace with real invite link
     icon: MessageCircle,
   },
-]
+];
 
 export default function SettingsPage() {
-  const navigate = useNavigate()
-  const { logout } = useAuthStore()
- 
+  const navigate = useNavigate();
+  const { logout } = useAuthStore();
 
   const handleLogout = () => {
     // perform logout logic here (clear tokens, call API, etc.)
-    logout()
-    navigate("/auth/login")
-  }
+    logout();
+    navigate("/auth/login");
+  };
 
   return (
     <div className="space-y-6 text-white">
@@ -66,19 +65,20 @@ export default function SettingsPage() {
             <span className="text-sm">{label}</span>
           </Link>
         ))}
+        <div className="">
+          <button
+            className="text-red-500 border-y border-white/10 flex w-full items-center gap-2 flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-5 h-5" />
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Logout Button */}
-      <div className="">
-        <button
-          className="text-red-500 border-y border-white/10 flex w-full items-center gap-2 flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition"
-          onClick={handleLogout}
-        >
-          <LogOut className="w-5 h-5" />
-          Logout
-        </button>
-      </div>
+
       <ChangePassword />
     </div>
-  )
+  );
 }
