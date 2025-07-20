@@ -17,6 +17,7 @@ import type { LoginPayload } from "@/types";
 import { login } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
+import { useAuthStore } from "@/store/authStore";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username is required"),
@@ -29,6 +30,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [params] = useSearchParams()
   const next = params.get("next") || "/dashboard"
+  const { setUser } = useAuthStore()
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -40,9 +42,11 @@ export default function Login() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: LoginPayload) => login(data),
-    onSuccess: () => {
+    onSuccess: (user) => {
         toast.success("Login Success")
+        setUser(user)
         navigate(next)
+        console.log(user)
     },
     onError: (error: Error) => {
         toast.error(errorMessage(error))

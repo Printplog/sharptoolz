@@ -6,7 +6,7 @@ export type User = {
   role?: string;
   total_purchases: number;
   downloads: number;
-  wallet_balance: number;
+  wallet_balance: string;
 };
 
 export type AuthState = {

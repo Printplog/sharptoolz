@@ -22,7 +22,7 @@ interface ProtectedLayoutProps {
 
 export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutProps) {
   const navigate = useNavigate();
-  const { setUser } = useAuthStore();
+  const { setUser, isAuthenticated } = useAuthStore();
 
   const { data, isError, isLoading } = useQuery({
     queryKey: ["currentUser"],
@@ -32,7 +32,7 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
   });
 
   useEffect(() => {
-    if (isError) {
+    if ( !isLoading && isError || !isAuthenticated) {
       toast.error("Session expired, login to continue");
       navigate("/auth/login");
       return;
@@ -57,7 +57,7 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
         return;
       }
     }
-  }, [data, setUser, isError, isAdmin, navigate]);
+  }, [data, setUser, isError, isAdmin, navigate, isAuthenticated, isLoading]);
 
   if (isLoading) {
     return (

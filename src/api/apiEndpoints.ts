@@ -6,7 +6,7 @@ export const fetchCurrentUser = async (): Promise<User> => {
   return res.data;
 };
 
-export const login = async (data: LoginPayload): Promise<unknown> => {
+export const login = async (data: LoginPayload): Promise<User> => {
   const res = await apiClient.post('/accounts/login/', data);
   return res.data;
 };
