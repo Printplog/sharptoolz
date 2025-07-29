@@ -16,7 +16,7 @@ export default function Hero() {
         testing, development, and demonstrations. Create invoices, contracts,
         reports and more with just a few clicks.
       </p>
-      <Link to="/auth/register">
+      <Link to="/all-tools">
         <button className="bg-lime-600 border-3 border-primary text-background flex gap-2 items-center px-8 font-bold py-3 rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500">
           Get Started
           <ArrowRight className="group-hover:translate-x-[5px] transition-all duration-500" />

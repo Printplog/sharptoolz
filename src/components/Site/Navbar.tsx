@@ -12,8 +12,8 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/all-tools", label: "All Tools" },
-    { href: "/#why-us", label: "Why Us" },
-    { href: "/testimonials", label: "Community" },
+    { href: "/tutorials", label: "Tutorials" },
+    { href: "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu", label: "Community" },
     { href: "/contact", label: "Contact" },
   ];
 
@@ -29,6 +29,7 @@ export default function Navbar() {
             <Link
               key={index}
               to={link.href}
+              target={link.href.startsWith("http") ? "_blank" : "_self"}
               className={`transition-colors font-medium ${
                 link.href === pathname
                   ? "text-primary"

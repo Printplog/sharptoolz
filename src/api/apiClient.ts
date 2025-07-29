@@ -10,6 +10,9 @@ export const apiClient = axios.create({
   },
 });
 
+const apiUrl = import.meta.env.ENV === "development" ? "" : import.meta.env.VITE_PUBLIC_API_URL
+
+
 const refreshToken = async () => {
   const response = await axios.post(
     `${import.meta.env.VITE_PUBLIC_API_URL}accounts/refresh-token/`,
@@ -40,6 +43,8 @@ apiClient.interceptors.response.use(
         // window.location.href = "/auth/login"; // ✅ Redirect to login if needed
       }
     }
+
+    console.log(apiUrl)
 
     return Promise.reject(error);
   }

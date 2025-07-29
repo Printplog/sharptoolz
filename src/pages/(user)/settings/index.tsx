@@ -67,7 +67,7 @@ export default function SettingsPage() {
         ))}
         <div className="">
           <button
-            className="text-red-500 border-white/10 flex w-full items-center gap-2 flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition"
+            className="text-red-500 border-white/10 w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition"
             onClick={handleLogout}
           >
             <LogOut className="w-5 h-5" />
