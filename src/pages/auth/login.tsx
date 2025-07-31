@@ -55,7 +55,7 @@ export default function Login() {
     },
   });
 
-  const onSubmit = async (values: LoginSchema) => {
+  const onSubmitLogin = async (values: LoginSchema) => {
     mutate(values);
   };
 
@@ -64,7 +64,7 @@ export default function Login() {
       <div className="">
         <div>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmitLogin)} className="space-y-6">
               <h2 className="text-center text-[24px]">Login</h2>
 
               <FormField

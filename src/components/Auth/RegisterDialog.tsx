@@ -6,7 +6,7 @@ export default function RegisterDialog() {
   return (
     <CustomDialog dialogName="register">
       <DialogContent>
-        <Register />
+        <Register dialog={true} />
       </DialogContent>
     </CustomDialog>
   );

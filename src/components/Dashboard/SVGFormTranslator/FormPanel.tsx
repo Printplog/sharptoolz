@@ -7,6 +7,7 @@ import {
   ArrowUpRightFromCircle,
   Copy,
   PenLine,
+  Youtube,
 } from "lucide-react";
 import useToolStore from "@/store/formStore";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
@@ -21,6 +22,7 @@ import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import { DownloadDocDialog } from "../Documents/DownloadDoc";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
+import { useAuthStore } from "@/store/authStore";
 
 export default function FormPanel({ test }: { test: boolean }) {
   const {
@@ -39,6 +41,7 @@ export default function FormPanel({ test }: { test: boolean }) {
   const isPurchased = pathname.includes("documents");
   const queryClient = useQueryClient();
   const [showTestDialog, setShowTestDialog] = useState(false);
+  const { isAuthenticated } = useAuthStore();
 
   const { mutate: create, isPending: createPending } = useMutation({
     mutationFn: (data: Partial<PurchasedTemplate>) => purchaseTemplate(data),
@@ -74,12 +77,14 @@ export default function FormPanel({ test }: { test: boolean }) {
 
   const createDocument = (isTest: boolean) => {
     const mutateFn = isPurchased ? update : create;
-    if (pathname.includes("all-tools")) {
-      navigate("/auth/login?next=" + encodeURIComponent(`/tools/${id}`));
-      return;
+    if (!isAuthenticated) {
+      navigate("/auth/login?dialog=register");
     }
     const tracking_id = getFieldValue("Tracking_ID");
-    const toastMessage = test === isTest ? "Document updated successfully" : "Document is now watermark free";
+    const toastMessage =
+      test === isTest
+        ? "Document updated successfully"
+        : "Document is now watermark free";
     const data = {
       id: id,
       ...(!isPurchased ? {} : { name: name }),
@@ -103,12 +108,30 @@ export default function FormPanel({ test }: { test: boolean }) {
           onClick={resetForm}
           variant="outline"
           size="sm"
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          className="bg-white/10 border-white/20 text-white hover:text-white hover:bg-white/20"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           Reset
         </Button>
       </div>
+
+      {!isPurchased && (
+        <div className="flex justify-end">
+          <Link
+            to="https://www.youtube.com/results?search_query=svg+form+translator+tutorial"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button
+              variant="outline"
+              className=" gap-2 bg-white/10 border-white/20 text-white hover:text-white hover:bg-white/20 shadow-lg shadow-primary/10"
+            >
+              <Youtube className="w-4 h-4 text-primary" />
+              Watch Tutorial
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {isPurchased && (
         <div className="mb-10 pb-4 border-b border-white/10">
@@ -174,6 +197,7 @@ export default function FormPanel({ test }: { test: boolean }) {
         </fieldset>
       </div>
 
+      {/* Buttons */}
       <div className="pt-4 border-t border-white/20 flex flex-col sm:flex-row justify-end gap-5 ">
         {isPurchased && test && (
           <Button
@@ -199,7 +223,14 @@ export default function FormPanel({ test }: { test: boolean }) {
           <Button
             variant="outline"
             disabled={createPending || updatePending}
-            onClick={() => setShowTestDialog(true)} // 👈 Show dialog instead
+            onClick={() => {
+              if (!isAuthenticated) {
+                toast.info("Register to continue");
+                navigate("?dialog=register");
+              } else {
+                setShowTestDialog(true);
+              }
+            }}
             className="py-6 px-10 hover:bg-black/50 hover:text-white"
           >
             <>
@@ -245,8 +276,10 @@ export default function FormPanel({ test }: { test: boolean }) {
           <DialogContent className="max-w-sm text-center space-y-4">
             <h2 className="text-lg font-semibold">Create Document</h2>
             <p>
-              Do you want to create a <strong className="text-primary">test document</strong> (with
-              watermark) or pay <strong className="text-primary">$5</strong>  for the final version?
+              Do you want to create a{" "}
+              <strong className="text-primary">test document</strong> (with
+              watermark) or pay <strong className="text-primary">$5</strong> for
+              the final version?
             </p>
             <div className="flex justify-center gap-4 mt-4">
               <Button

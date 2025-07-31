@@ -5,6 +5,8 @@ import { Link, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import IsLoading from "@/components/IsLoading";
 import type { Template } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 
 interface Props {
   hot?: boolean;
@@ -32,15 +34,18 @@ export default function ToolsList({ hot }: Props) {
     <div className="space-y-10">
       {/* Search Box */}
       {!hot && (
-        <div className="flex justify-center">
-          <div className="flex flex-col sm:flex-row items-center gap-3 bg-white/5 border border-white/10 px-4 py-5 w-full max-w-3xl rounded-xl">
+        <div className="flex justify-center bg-gradient-to-b  from-background to-white/5  border-white/10 px-4 py-5">
+          <div className="flex flex-col sm:flex-row items-center  w-full relative">
             <Input
               type="text"
               placeholder="Search tools..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full px-4 py-2 h-fit border border-gray-30"
+              className="w-full px-5 py-3 h-fit border border-white/30 rounded-full"
             />
+            <Button className="w-fit rounded-full  absolute right-0 top-0 bottom-0 bg-white/10 hover:bg-white/20 text-white m-1 mr-2">
+              <Search className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       )}

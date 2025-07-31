@@ -1,6 +1,6 @@
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
   Form,
   FormControl,
@@ -8,15 +8,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Link, useNavigate } from "react-router-dom"
-import { useMutation } from "@tanstack/react-query"
-import type { RegisterPayload } from "@/types"
-import { register } from "@/api/apiEndpoints"
-import { toast } from "sonner"
-import errorMessage from "@/lib/utils/errorMessage"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Link, useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import type { LoginPayload, RegisterPayload } from "@/types";
+import { login, register } from "@/api/apiEndpoints";
+import { toast } from "sonner";
+import errorMessage from "@/lib/utils/errorMessage";
+import { useAuthStore } from "@/store/authStore";
 
 const registerSchema = z
   .object({
@@ -28,15 +29,15 @@ const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
-  })
+  });
 
-type RegisterSchema = z.infer<typeof registerSchema>
+type RegisterSchema = z.infer<typeof registerSchema>;
 
 const fields: {
-  name: keyof RegisterSchema
-  label: string
-  type?: string
-  placeholder: string
+  name: keyof RegisterSchema;
+  label: string;
+  type?: string;
+  placeholder: string;
 }[] = [
   {
     name: "username",
@@ -61,11 +62,15 @@ const fields: {
     type: "password",
     placeholder: "********",
   },
-]
+];
 
-export default function Register() {
-  const navigate = useNavigate()
+interface Props {
+  dialog?: boolean;
+}
 
+export default function Register({ dialog = false }: Props) {
+  const navigate = useNavigate();
+  const { setUser } = useAuthStore();
   const form = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -74,22 +79,42 @@ export default function Register() {
       password: "",
       confirmPassword: "",
     },
-  })
+  });
+
+  const { mutate: loginMutate, isPending: loginPending } = useMutation({
+    mutationFn: (data: LoginPayload) => login(data),
+    onSuccess: (user) => {
+      setUser(user);
+      toast.success("You are logged in now....");
+      navigate(-1);
+    },
+    onError: (error: Error) => {
+      toast.error(errorMessage(error));
+    },
+  });
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: RegisterPayload) => register(data),
     onSuccess: () => {
-        toast.success("Account created successfully")
-        navigate("/auth/login")
+      toast.success("Account created successfully");
+      if (dialog) {
+        loginMutate({
+          username: form.getValues("username"),
+          password: form.getValues("password"),
+        });
+      } else {
+        navigate("/auth/login");
+      }
     },
     onError: (error: Error) => {
-        toast.error(errorMessage(error))
-    }
-  })
- 
+      toast.error(errorMessage(error));
+    },
+  });
+
   const onSubmit = async (values: RegisterSchema) => {
-    mutate(values)
-  }
+    mutate(values);
+  };
+
 
   return (
     <div className="">
@@ -122,19 +147,24 @@ export default function Register() {
           <Button
             type="submit"
             className="w-full bg-primary text-black hover:bg-primary/90"
-            disabled={isPending}
+            disabled={isPending || loginPending}
           >
-            {isPending ? "Creating account..." : "Register"}
+            {isPending ? "Creating account..." : loginPending ? "Logging in..." : "Register"}
           </Button>
 
-          <div className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link to="/auth/login" className="text-primary underline hover:opacity-80">
-              Login
-            </Link>
-          </div>
+          {!dialog && (
+            <div className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link
+                to="/auth/login"
+                className="text-primary underline hover:opacity-80"
+              >
+                Login
+              </Link>
+            </div>
+          )}
         </form>
       </Form>
     </div>
-  )
+  );
 }
