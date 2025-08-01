@@ -18,7 +18,7 @@ export default function ToolsList({ hot }: Props) {
   const pathname = useLocation().pathname;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tools", `${ hot && "hot" }`],
+    queryKey: ["tools", `${hot && "hot"}`],
     queryFn: () => getTemplates(hot),
   });
 
@@ -53,7 +53,10 @@ export default function ToolsList({ hot }: Props) {
       {/* Tool Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredTools.map((tool) => (
-          <div
+          <Link
+            to={`/${pathname.includes("all-tools") ? "all-tools" : "tools"}/${
+              tool.id
+            }`}
             key={tool.id}
             className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5"
           >
@@ -89,7 +92,7 @@ export default function ToolsList({ hot }: Props) {
                   {tool.name}
                 </h3>
                 <span className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded-full capitalize">
-                   {tool?.hot ? "Hot Tool 🔥" : "Tool"}
+                  {tool?.hot ? "Hot Tool 🔥" : "Tool"}
                 </span>
               </div>
 
@@ -104,7 +107,7 @@ export default function ToolsList({ hot }: Props) {
                 </button>
               </Link>
             </div>
-          </div>
+          </Link>
         ))}
 
         {/* No Match */}

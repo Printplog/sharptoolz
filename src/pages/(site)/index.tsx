@@ -7,8 +7,8 @@ export default function Home() {
   return (
     <div>
       <Hero />
-      <FeaturesSection />
       <Tools />
+      <FeaturesSection />
       <JoinCommunity />
     </div>
   )
