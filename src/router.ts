@@ -20,8 +20,10 @@ export type Path =
   | `/documents/:id`
   | `/settings`
   | `/settings/api`
+  | `/sub`
   | `/tools`
   | `/tools/:id`
+  | `/tutorials`
   | `/wallet`
 
 export type Params = {

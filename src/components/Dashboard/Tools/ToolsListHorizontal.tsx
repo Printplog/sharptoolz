@@ -16,7 +16,8 @@ export default function ToolsListHorizontal() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {hotTools.map((tool) => (
-        <div
+        <Link
+          to={`/all-tools/${tool.id}`}
           key={tool.id}
           className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-4"
         >
@@ -58,7 +59,7 @@ export default function ToolsListHorizontal() {
               </button>
             </Link>
           </div>
-        </div>
+        </Link>
       ))}
 
       {placeholders.map((_, index) => (
