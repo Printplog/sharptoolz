@@ -14,7 +14,7 @@ const navigationItems = [
     to: "/admin/tools",
   },
   {
-    icon: <Users className="h-5 w-5" />,
+    icon: Users,
     label: "Users",
     to: "/admin/users",
   },
