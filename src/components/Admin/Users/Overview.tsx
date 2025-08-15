@@ -76,7 +76,7 @@ export default function UsersOverview({ data }: UsersOverviewProps) {
               <SelectTrigger className="w-[120px] h-8 bg-purple-500/20 border-purple-500/30 text-purple-200 text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-white/20">
+              <SelectContent className="bg-gray-800 border-white/20 text-white">
                 <SelectItem value="today">Today</SelectItem>
                 <SelectItem value="7d">Past 7 days</SelectItem>
                 <SelectItem value="14d">Past 14 days</SelectItem>
@@ -109,7 +109,7 @@ export default function UsersOverview({ data }: UsersOverviewProps) {
               <SelectTrigger className="w-[120px] h-8 bg-green-500/20 border-green-500/30 text-green-200 text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-white/20">
+              <SelectContent className="bg-gray-800 border-white/20 text-white">
                 <SelectItem value="today">Today</SelectItem>
                 <SelectItem value="7d">Past 7 days</SelectItem>
                 <SelectItem value="14d">Past 14 days</SelectItem>
