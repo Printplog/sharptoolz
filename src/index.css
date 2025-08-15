@@ -137,3 +137,7 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.input {
+  @apply border-white/10 focus-visible:border-white/10
+}

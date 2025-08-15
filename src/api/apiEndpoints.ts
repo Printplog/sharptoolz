@@ -111,4 +111,24 @@ export const downloadDoc = async (data: DownloadData) => {
   return res.data;
 };
 
+export const adminOverview = async () => {
+  const res = await apiClient.get('/admin/overview/');
+  return res.data;
+};
+
+export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string }) => {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append('page', params.page.toString());
+  if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
+  if (params?.search) searchParams.append('search', params.search);
+  
+  const res = await apiClient.get(`/admin/users/?${searchParams.toString()}`);
+  return res.data;
+};
+
+export const adminUserDetails = async (userId: string) => {
+  const res = await apiClient.get(`/admin/users/${userId}/`);
+  return res.data;
+};
+
 

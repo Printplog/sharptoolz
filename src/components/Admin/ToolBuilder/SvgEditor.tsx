@@ -129,7 +129,7 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
           placeholder="Enter template name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="max-w-md"
+          className="max-w-md input"
         />
       </div>
 
@@ -155,6 +155,7 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
                   placeholder="Element ID"
                   value={el.id || ""}
                   onChange={(e) => updateElement(i, { id: e.target.value })}
+                  className="input"
                 />
               </div>
 
@@ -168,7 +169,8 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
                     placeholder="Enter text content"
                     value={el.innerText || ""}
                     onChange={(e) => updateElement(i, { innerText: e.target.value })}
-                    rows={3}
+                    rows={3} 
+                    className="input"
                   />
                 </div>
               )}
@@ -209,7 +211,7 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
                           onChange={(e) => updateElement(i, { 
                             attributes: { ...el.attributes, [attr]: e.target.value }
                           })}
-                          className="text-xs"
+                          className="text-xs input"
                         />
                       </div>
                     )

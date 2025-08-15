@@ -15,7 +15,7 @@ const apiUrl = import.meta.env.ENV === "development" ? "" : import.meta.env.VITE
 
 const refreshToken = async () => {
   const response = await axios.post(
-    `${import.meta.env.VITE_PUBLIC_API_URL}accounts/refresh-token/`,
+    `${import.meta.env.VITE_PUBLIC_API_URL}/accounts/refresh-token/`,
     {},
     {
       withCredentials: true, 

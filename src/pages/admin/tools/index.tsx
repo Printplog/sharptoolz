@@ -15,9 +15,9 @@ export default function Tools() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center border-b border-white/10 pb-5">
         <h1 className="text-2xl font-bold">Your Tools</h1>
-        <Link to="?dialog=toolBuilder" className=" button">
+        <Link to="?dialog=toolBuilder" className=" button rounded-none">
           <Plus className="h-4 w-4" />
           New Tool
         </Link>

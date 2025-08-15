@@ -13,13 +13,28 @@ export default function parseSvgElements(svgString: string): SvgElement[] {
   const elements = Array.from(svgDoc.querySelectorAll("*"));
 
   return elements
-    .filter(el => el.tagName !== "svg") // skip root
-    .map(el => ({
-      tag: el.tagName,
-      id: el.getAttribute("id") || undefined,
-      attributes: Object.fromEntries(
+    .filter(el => el.tagName.toLowerCase() !== "svg") // skip root
+    .map(el => {
+      const tag = el.tagName.toLowerCase();
+      const id = el.getAttribute("id") || undefined;
+      const attributes = Object.fromEntries(
         Array.from(el.attributes).map(attr => [attr.name, attr.value])
-      ),
-      innerText: el.textContent?.trim() || undefined,
-    }));
+      );
+      // Always lowercase text content for comparison
+      const rawText = el.textContent?.trim() || "";
+      const innerText = rawText.length > 0 ? rawText : undefined;
+
+      // Exclude element if its text content is exactly "test document" (case-insensitive)
+      if (innerText && innerText.toLowerCase() === "test document") {
+        return null;
+      }
+
+      return {
+        tag,
+        id,
+        attributes,
+        innerText: innerText ? innerText.toLowerCase() : undefined,
+      };
+    })
+    .filter(Boolean) as SvgElement[];
 }

@@ -1,70 +1,68 @@
-import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ClipboardList, Hammer } from "lucide-react";
+import {
+  LayoutDashboard,
+  Hammer,
+  Users,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const navigationItems = [
-  {
-    icon: <LayoutDashboard className="h-5 w-5" />,
-    label: "Dashboard",
-    to: "/admin/dashboard"
-  },
-  {
-    icon: <Hammer className="h-5 w-5" />,
-    label: "Tools",
-    to: "/admin/tools"
-  },
-];
+import Logo from "@/components/Logo";
 
 export default function Sidebar() {
-  return (
-    <aside className="hidden lg:flex w-64 bg-white/5 h-full flex-col px-4 py-10">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
-          <ClipboardList />
-        </div>
-        <span className="font-bold text-xl text-foreground">DocsMaker</span>
-      </div>
-
-      <nav className="flex-1 space-y-2 mt-[40px]">
-        {navigationItems.map((item) => (
-          <NavItem
-            key={item.to}
-            icon={item.icon}
-            label={item.label}
-            to={item.to}
-          />
-        ))}
-      </nav>
-    </aside>
-  );
-}
-
-type NavItemProps = {
-  icon: React.ReactNode;
-  label: string;
-  to: string;
-};
-
-function NavItem({ icon, label, to }: NavItemProps) {
   const { pathname } = useLocation();
-  const isActive = pathname === to;
+
+  const navigationItems = [
+    {
+      icon: <LayoutDashboard className="h-5 w-5" />,
+      label: "Dashboard",
+      to: "/admin/dashboard",
+    },
+    {
+      icon: <Hammer className="h-5 w-5" />,
+      label: "Tools",
+      to: "/admin/tools",
+    },
+    {
+      icon: <Users className="h-5 w-5" />,
+      label: "Users",
+      to: "/admin/users",
+    },
+  ];
 
   return (
-    <Button
-      asChild
-      variant="ghost"
+    <aside
       className={cn(
-        "w-full justify-start transition-colors py-6 rounded-xl",
-        isActive 
-          ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-          : "text-foreground hover:text-primary hover:bg-primary/10"
+        "w-64 bg-white/5 border-r border-white/10 h-full lg:flex hidden flex-col py-10 z-[]"
       )}
     >
-      <Link to={to}>
-        {icon}
-        <span className="ml-2">{label}</span>
-      </Link>
-    </Button>
+      {/* Header */}
+      <div className="flex pl-6">
+        <Logo />
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-2 mt-[40px]">
+        {navigationItems.map((item) => {
+          const isActive = pathname.includes(item.to);
+
+          return (
+            <div key={item.to}>
+              <Link to={item.to}>
+                <button
+                  className={cn(
+                    "w-full justify-start transition-colors py-3 px-6 flex items-center",
+                    isActive
+                      ? "bg-primary/10 text-primary hover:bg-primary/10 border-r-2 border-primary"
+                      : "text-foreground hover:bg-primary/5 hover:text-primary/90"
+                  )}
+                >
+                  {item.icon}
+                  <span className="ml-2">{item.label}</span>
+                </button>
+              </Link>
+            </div>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }

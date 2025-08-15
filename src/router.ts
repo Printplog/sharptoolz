@@ -9,6 +9,8 @@ export type Path =
   | `/admin/dashboard`
   | `/admin/tools`
   | `/admin/tools/:id`
+  | `/admin/users`
+  | `/admin/users/:id`
   | `/all-tools`
   | `/all-tools/:id`
   | `/auth/forgot-password`
@@ -28,6 +30,7 @@ export type Path =
 
 export type Params = {
   '/admin/tools/:id': { id: string }
+  '/admin/users/:id': { id: string }
   '/all-tools/:id': { id: string }
   '/documents/:id': { id: string }
   '/tools/:id': { id: string }

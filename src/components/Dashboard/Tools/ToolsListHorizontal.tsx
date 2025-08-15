@@ -10,12 +10,12 @@ export default function ToolsListHorizontal() {
     queryFn: () => getTemplates(true), // always fetch hot tools
   });
 
-  const hotTools = tools.filter((tool) => tool.hot); // just in case
+  const hotTools = tools?.filter((tool) => tool.hot); // just in case
   const placeholders = Array.from({ length: 4 - hotTools.slice(0, 4).length })
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {hotTools.map((tool) => (
+      {hotTools?.map((tool) => (
         <Link
           to={`/all-tools/${tool.id}`}
           key={tool.id}
