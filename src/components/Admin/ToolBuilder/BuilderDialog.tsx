@@ -61,7 +61,7 @@ export default function BuilderDialog() {
 
   const navigate = useNavigate()
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: (data: Partial<Template>) => addTemplate(data),
     onSuccess() {
       closeDialog("toolBuilder")
@@ -165,9 +165,9 @@ export default function BuilderDialog() {
                 <Button
                   type="submit"
                   className="text-sm font-medium"
-                  disabled={!file || !form.formState.isDirty}
+                  disabled={ isPending || !form.formState.isDirty }
                 >
-                  Build Tool
+                  { isPending ? "Building..." : "Build Tool"}
                 </Button>
               </div>
             </div>
