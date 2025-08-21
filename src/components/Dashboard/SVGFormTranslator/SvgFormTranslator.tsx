@@ -43,12 +43,12 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   // Combined effect to handle data loading and state updates
   useEffect(() => {
     if (isLoading || !data) return;
-    const newSvgText = data.svg as string;
+    const newSvgText = updateSvgFromFormData(data.svg, data.form_fields)
     // Update all state in the correct order
     setSvgText(newSvgText);
     setSvgRaw(newSvgText);
     setName(data.name as string);
-    setFields(data.form_fields as FormField[]);
+    setFields(data.form_fields as FormField[], isPurchased);
     console.log('Template data loaded:', data);
     
   }, [
@@ -56,7 +56,8 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     isLoading, 
     setSvgRaw, 
     setName, 
-    setFields
+    setFields,
+    isPurchased
   ]);
 
   const purchasedData = data as PurchasedTemplate;

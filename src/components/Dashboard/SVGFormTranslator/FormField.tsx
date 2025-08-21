@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
   const { updateField, uploadFile, status, setStatus, setStatusMessage, statusMessage } = useToolStore();
-  const value = field.currentValue || "";
+  const value = field.currentValue;
 
   useEffect(() => {
     setStatus("")
@@ -25,6 +25,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
 
   const handleChange = (newValue: string | number | boolean) => {
     updateField(field.id, newValue);
+    console.log(newValue)
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,31 +45,11 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
   };
 
   // If field has options, render as select
-  if (field.options && field.options.length > 0) {
-    return (
-      <div className="space-y-2 w-full">
-        <label htmlFor={field.id} className="text-sm font-medium text-white">
-          {field.name}
-        </label>
-        <Select value={value as string} onValueChange={handleChange}>
-          <SelectTrigger className="bg-white/10 border-white/20 text-white w-full">
-            <SelectValue placeholder={`Select ${field.name}`} />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-white/20">
-            {field.options.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                className="text-white hover:bg-white/10"
-              >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
-  }
+  // if (field.options && field.options.length > 0) {
+  //   return (
+      
+  //   );
+  // }
 
   // Render based on field type
   switch (field.type) {
@@ -136,6 +117,31 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
             placeholder={`Enter ${field.name}`}
           />
         </div>
+      );
+
+    case "select":
+      return (
+        <div className="space-y-2 w-full">
+        <label htmlFor={field.id} className="text-sm font-medium text-white">
+          {field.name}
+        </label>
+        <Select defaultValue={value as string} value={value as string} onValueChange={handleChange}>
+          <SelectTrigger className="bg-white/10 border-white/20 text-white w-full">
+            <SelectValue placeholder={`Select ${field.name}`} />
+          </SelectTrigger>
+          <SelectContent className="bg-gray-800 border-white/20">
+            {field?.options?.map((option) => (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                className="text-white hover:bg-white/10"
+              >
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       );
 
     case "status":

@@ -1,7 +1,7 @@
 // store/useFormStore.ts
 import { create } from "zustand";
 import type { FormField } from "@/types";
-import updateSvgFromFields from "@/lib/utils/updateSvgFromFormData";
+import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 
 interface ToolStore {
   name: string;
@@ -11,7 +11,7 @@ interface ToolStore {
   statusMessage: string;
 
   setName: (name: string) => void;
-  setFields: (fields: FormField[]) => void;
+  setFields: (fields: FormField[], isPurchased?: boolean) => void;
   updateField: (fieldId: string, value: string | number | boolean) => void;
   uploadFile: (fieldId: string, file: File) => void;
   resetForm: () => void;
@@ -33,13 +33,17 @@ const  useToolStore = create<ToolStore>((set, get) => ({
 
   setName: (name) => set({ name }),
 
-  setFields: (fields) => {
+  setFields: (fields, isPurchased) => {
     const initializedFields = fields?.map((field) => ({
       ...field,
       currentValue: field.defaultValue ?? "",
     }));
 
-    set({ fields: initializedFields });
+    if (isPurchased) {
+      set({ fields });
+    } else {
+      set({ fields: initializedFields });
+    }
   },
 
   updateField: (fieldId, value) => {
@@ -81,7 +85,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
   downloadSvg: (fileName = "form-output.svg") => {
     const { svgRaw, fields } = get();
 
-    const updatedSvg = updateSvgFromFields(svgRaw, fields);
+    const updatedSvg = updateSvgFromFormData(svgRaw, fields);
     const blob = new Blob([updatedSvg], {
       type: "image/svg+xml;charset=utf-8",
     });

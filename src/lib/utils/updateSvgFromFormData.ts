@@ -1,19 +1,18 @@
 import type { FormField } from "@/types";
 
-export default function updateSvgFromFields(svgRaw: string, fields: FormField[]): string {
+export default function updateSvgFromFormData(svgRaw: string, fields: FormField[]): string {
   if (!svgRaw) return "";
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgRaw, "image/svg+xml");
 
-  // Convert to map for easy lookup
   const fieldMap = Object.fromEntries(fields.map(f => [f.id, f]));
 
   fields.forEach((field) => {
-    if (!field.svgElementId) return;
-
-    const el = doc.getElementById(field.svgElementId);
-    if (!el) return;
+    // For select fields, svgElementId is not used (it's just a group, not a real SVG element)
+    if ((!field.svgElementId || !doc.getElementById(field.svgElementId)) && !(field.options && field.options.length > 0)) {
+      return;
+    }
 
     // Support dependency values
     let value: string = "";
@@ -24,31 +23,51 @@ export default function updateSvgFromFields(svgRaw: string, fields: FormField[])
       value = String(field.currentValue ?? "");
     }
 
-    switch (field.type) {
-      case "upload": {
-        const hrefNS = "http://www.w3.org/1999/xlink";
-        el.setAttributeNS(hrefNS, "href", value);
-        break;
-      }
-
-      case "select": {
-        field.options?.forEach((opt) => {
-          const optEl = doc.getElementById(opt.svgElementId || "");
-          if (optEl) optEl.setAttribute("opacity", "0");
-        });
-
-        const selectedOption = field.options?.find(
-          (opt) => String(opt.value) === value
-        );
-        if (selectedOption?.svgElementId) {
-          const selectedEl = doc.getElementById(selectedOption.svgElementId);
-          if (selectedEl) selectedEl.setAttribute("opacity", "1");
+    // Handle select fields (options)
+    if (field.options && field.options.length > 0) {
+      // Hide all options first
+      field.options.forEach((opt) => {
+        if (opt.svgElementId) {
+          const optEl = doc.getElementById(opt.svgElementId);
+          if (optEl) {
+            // Use SVG attributes that will be preserved in serialization
+            optEl.setAttribute("opacity", "0");
+            optEl.setAttribute("visibility", "hidden");
+            // Remove any existing display style and set it as an attribute
+            optEl.removeAttribute("style");
+            optEl.setAttribute("display", "none");
+          }
         }
-        break;
-      }
+      });
 
-      default: {
-        el.textContent = value;
+      // Show only the selected option
+      const selectedOption = field.options.find(
+        (opt) => String(opt.value) === field.currentValue
+      );
+      if (selectedOption?.svgElementId) {
+        const selectedEl = doc.getElementById(selectedOption.svgElementId);
+        if (selectedEl) {
+          // Use SVG attributes that will be preserved in serialization
+          selectedEl.setAttribute("opacity", "1");
+          selectedEl.setAttribute("visibility", "visible");
+          // Remove display attribute to show the element
+          selectedEl.removeAttribute("display");
+        }
+      }
+    } else {
+      // Handle other field types
+      const el = field.svgElementId ? doc.getElementById(field.svgElementId) : null;
+      if (!el) return;
+
+      switch (field.type) {
+        case "upload": {
+          const hrefNS = "http://www.w3.org/1999/xlink";
+          el.setAttributeNS(hrefNS, "href", value);
+          break;
+        }
+        default: {
+          el.textContent = value;
+        }
       }
     }
   });

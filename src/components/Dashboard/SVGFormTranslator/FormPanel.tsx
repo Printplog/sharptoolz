@@ -90,6 +90,7 @@ export default function FormPanel({ test }: { test: boolean }) {
       ...(!isPurchased ? {} : { name: name }),
       ...(isPurchased ? {} : { template: id }),
       ...(isPurchased ? {} : { svg: updateSvgFromFormData(svgRaw, fields) }),
+      ...(isPurchased ? {} : { form_fields: fields }),
       tracking_id: tracking_id as string,
       ...(!status ? {} : { status: status }),
       error_message: statusMessage,
