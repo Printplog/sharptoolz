@@ -57,8 +57,12 @@ export const addTemplate = async (data: FormData): Promise<unknown> => {
   return res.data;
 }
 
-export const updateTemplate = async (id: string, data: Partial<Template>): Promise<unknown> => {
-  const res = await apiClient.patch(`/templates/${id}/`, data);
+export const updateTemplate = async (id: string, data: Partial<Template> | FormData): Promise<unknown> => {
+  const headers = data instanceof FormData 
+    ? { 'Content-Type': 'multipart/form-data' }
+    : { 'Content-Type': 'application/json' };
+    
+  const res = await apiClient.patch(`/templates/${id}/`, data, { headers });
   return res.data;
 }
 

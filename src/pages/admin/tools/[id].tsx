@@ -18,8 +18,22 @@ export default function SvgTemplateEditor() {
 
   // Save template mutation
   const saveMutation = useMutation({
-    mutationFn: (templateData: { name: string; svg: string }) => 
-      updateTemplate(id as string, templateData),
+    mutationFn: (templateData: { name: string; svg: string; banner?: File | null }) => {
+      // If there's a banner file, use FormData
+      if (templateData.banner) {
+        const formData = new FormData();
+        formData.append('name', templateData.name);
+        formData.append('svg', templateData.svg);
+        formData.append('banner', templateData.banner);
+        return updateTemplate(id as string, formData);
+      } else {
+        // Otherwise, send as JSON
+        return updateTemplate(id as string, {
+          name: templateData.name,
+          svg: templateData.svg
+        });
+      }
+    },
     onSuccess: () => {
       toast.success('Template saved successfully!');
       queryClient.invalidateQueries({ queryKey: ["template", id] });
@@ -31,7 +45,7 @@ export default function SvgTemplateEditor() {
     }
   });
 
-  const handleSave = (templateData: { name: string; svg: string }) => {
+  const handleSave = (templateData: { name: string; svg: string; banner?: File | null }) => {
     if (!templateData.name.trim()) {
       toast.error('Template name is required');
       return;
@@ -65,6 +79,7 @@ export default function SvgTemplateEditor() {
         svgRaw={data.svg} 
         templateName={data.name}
         onSave={handleSave}
+        banner={data.banner}
         isLoading={saveMutation.isPending}
       />
     </div>

@@ -88,115 +88,116 @@ export default function UserDetails() {
         </div>
       </div>
 
-      {/* User Info Card */}
-      <Card className="bg-white/5 border border-white/10 backdrop-blur-sm">
+      {/* User Profile Card */}
+      <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-blue-100">
             <User className="h-5 w-5 text-blue-400" />
-            User Information
+            User Profile
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">
-                    {user.username}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-white">{user.email}</span>
-                  </div>
-                </div>
-              </div>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500/30 to-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30">
+              <User className="h-8 w-8 text-blue-300" />
             </div>
-
-            <div className="space-y-4 p-5 border rounded-xl bg-white/5 border-white/10">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Wallet Balance:</span>
-                <span className="text-green-400 font-semibold">
-                  ${user.wallet_balance}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Total Purchases:</span>
-                <span className="text-white font-semibold">
-                  {user.total_purchases}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Downloads:</span>
-                <span className="text-white font-semibold">
-                  {user.downloads}
-                </span>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-white mb-1">
+                {user.username}
+              </h3>
+              <div className="flex items-center gap-2 text-blue-200">
+                <Mail className="h-4 w-4" />
+                <span>{user.email}</span>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <DollarSign className="h-5 w-5 text-blue-400" />
-              <div>
-                <p className="text-sm text-blue-200/70">Total Purchases</p>
-                <p className="text-2xl font-bold text-blue-100">
-                  {stats.total_purchases}
-                </p>
+      {/* Wallet & Activity Card */}
+      <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-green-100">
+            <DollarSign className="h-5 w-5 text-green-400" />
+            Wallet & Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+              <div className="text-2xl font-bold text-green-300 mb-1">
+                ${user.wallet_balance}
               </div>
+              <div className="text-sm text-green-200/70">Wallet Balance</div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+              <div className="text-2xl font-bold text-blue-300 mb-1">
+                {user.total_purchases}
+              </div>
+              <div className="text-sm text-blue-200/70">Total Purchases</div>
+            </div>
+            <div className="text-center p-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
+              <div className="text-2xl font-bold text-purple-300 mb-1">
+                {user.downloads}
+              </div>
+              <div className="text-sm text-purple-200/70">Downloads</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-5 w-5 text-green-400" />
-              <div>
-                <p className="text-sm text-green-200/70">Paid Purchases</p>
-                <p className="text-2xl font-bold text-green-100">
-                  {stats.paid_purchases}
-                </p>
+      {/* Statistics Overview */}
+      <Card className="bg-gradient-to-br from-slate-500/10 to-slate-600/5 border-slate-500/20 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-slate-100">
+            <TrendingUp className="h-5 w-5 text-slate-400" />
+            Statistics Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="text-center p-6 bg-gradient-to-br from-blue-500/15 to-blue-600/10 rounded-xl border border-blue-500/25 hover:border-blue-500/40 transition-colors">
+              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <DollarSign className="h-6 w-6 text-blue-300" />
               </div>
+              <div className="text-3xl font-bold text-blue-200 mb-1">
+                {stats.total_purchases}
+              </div>
+              <div className="text-sm text-blue-200/70 font-medium">Total Purchases</div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Download className="h-5 w-5 text-orange-400" />
-              <div>
-                <p className="text-sm text-orange-200/70">Test Purchases</p>
-                <p className="text-2xl font-bold text-orange-100">
-                  {stats.test_purchases}
-                </p>
+            <div className="text-center p-6 bg-gradient-to-br from-green-500/15 to-green-600/10 rounded-xl border border-green-500/25 hover:border-green-500/40 transition-colors">
+              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="h-6 w-6 text-green-300" />
               </div>
+              <div className="text-3xl font-bold text-green-200 mb-1">
+                {stats.paid_purchases}
+              </div>
+              <div className="text-sm text-green-200/70 font-medium">Paid Purchases</div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 backdrop-blur-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-purple-400" />
-              <div>
-                <p className="text-sm text-purple-200/70">Days Since Joined</p>
-                <p className="text-2xl font-bold text-purple-100">
-                  {stats.days_since_joined}
-                </p>
+            <div className="text-center p-6 bg-gradient-to-br from-orange-500/15 to-orange-600/10 rounded-xl border border-orange-500/25 hover:border-orange-500/40 transition-colors">
+              <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Download className="h-6 w-6 text-orange-300" />
               </div>
+              <div className="text-3xl font-bold text-orange-200 mb-1">
+                {stats.test_purchases}
+              </div>
+              <div className="text-sm text-orange-200/70 font-medium">Test Purchases</div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+
+            <div className="text-center p-6 bg-gradient-to-br from-purple-500/15 to-purple-600/10 rounded-xl border border-purple-500/25 hover:border-purple-500/40 transition-colors">
+              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Calendar className="h-6 w-6 text-purple-300" />
+              </div>
+              <div className="text-3xl font-bold text-purple-200 mb-1">
+                {stats.days_since_joined}
+              </div>
+              <div className="text-sm text-purple-200/70 font-medium">Days Since Joined</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* History Components */}
       <div className="space-y-6">

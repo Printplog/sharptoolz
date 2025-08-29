@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ChevronLeft, ChevronRight, Mail, User as UserIcon, DollarSign, Download } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Mail, User as UserIcon, Download, HandCoins } from "lucide-react";
 import AdminLoading from "@/components/Admin/AdminLoading";
 import { Link } from "react-router-dom";
 
@@ -111,7 +111,7 @@ export default function UsersTable() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4 text-green-400" />
+                          <HandCoins className="h-4 w-4 text-green-400" />
                           <span className="text-white">{user.total_purchases}</span>
                         </div>
                       </TableCell>

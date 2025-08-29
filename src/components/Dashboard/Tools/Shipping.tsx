@@ -116,6 +116,7 @@ export default function SVGDocumentEditor() {
                       {key.replace(/_/g, " ")}
                     </label>
                     <input
+                      placeholder={key.replace(/_/g, " ")}
                       type="text"
                       value={value}
                       onChange={(e) => handleInputChange(key, e.target.value)}

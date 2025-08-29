@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 interface SvgEditorProps {
   svgRaw: string;
   templateName?: string;
-  onSave?: (data: { name: string; svg: string }) => void;
+  banner?: string;
+  onSave?: (data: { name: string; svg: string; banner?: File | null }) => void;
   isLoading?: boolean;
 }
 
@@ -185,11 +186,12 @@ function FloatingScrollButton({ show, onClick }: { show: boolean; onClick: () =>
   );
 }
 
-export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading }: SvgEditorProps) {
+export default function SvgEditor({ svgRaw, templateName = "", banner = "", onSave, isLoading }: SvgEditorProps) {
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
-  const [preview, setPreview] = useState<string>("");
   const [name, setName] = useState<string>(templateName);
+  const [bannerImage, setBannerImage] = useState<string>(banner);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -208,12 +210,11 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
     setName(templateName);
   }, [templateName]);
 
-  // Auto-regenerate preview when elements change
   useEffect(() => {
-    if (elements.length > 0 && svgRaw) {
-      regenerateSvg();
-    }
-  }, [elements, svgRaw]);
+    setBannerImage(banner);
+    // If banner is a URL (not base64), we don't need to set bannerFile
+    // Only set bannerFile if it's a new upload
+  }, [banner]);
 
   // Handle scroll events for floating scroll-to-top button
   useEffect(() => {
@@ -278,9 +279,7 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
         }
       });
 
-      const updatedSvg = newSvg.outerHTML;
-      setPreview(updatedSvg);
-      return updatedSvg;
+      return newSvg.outerHTML;
     } catch (error) {
       console.error('Error regenerating SVG:', error);
       // Fallback to original SVG if regeneration fails
@@ -304,9 +303,24 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
     
     onSave({
       name: name.trim(),
-      svg: updatedSvg
+      svg: updatedSvg,
+      banner: bannerFile
     });
   }
+
+  const handleBannerUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setBannerFile(file);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      setBannerImage(base64);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleElementSelect = useCallback((index: number) => {
     setSelectedElementIndex(index);
@@ -341,15 +355,7 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
         </div>
       </div>
 
-      {/* Element Selection */}
-      <ElementNavigation 
-        elements={elements}
-        onElementClick={handleElementSelect}
-        selectedElementIndex={selectedElementIndex}
-        isTextElement={isTextElement}
-        isImageElement={isImageElement}
-      />
-
+      {/* Template Name */}
       <div className="space-y-2">
         <Label htmlFor="template-name" className="text-sm font-medium">
           Template Name
@@ -362,6 +368,65 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
           className="max-w-md input"
         />
       </div>
+
+      {/* Banner Upload */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">
+          Banner Image
+        </Label>
+        <div className="relative">
+          <input
+            id="banner-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleBannerUpload}
+            className="hidden"
+          />
+          <label
+            htmlFor="banner-upload"
+            className="block w-full h-48 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-white/40 transition-colors overflow-hidden"
+          >
+            {bannerImage ? (
+              <div className="relative w-full h-full group">
+                <div className="w-full h-full overflow-auto custom-scrollbar">
+                  <img 
+                    src={bannerImage} 
+                    alt="Banner preview" 
+                    className="w-full max-w-none h-auto object-contain min-h-full"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                  <div className="text-center text-white">
+                    <div className="text-sm font-medium">Click to change banner</div>
+                    <div className="text-xs opacity-80">Upload a new image</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-white/60 hover:text-white/80 transition-colors">
+                <div className="w-12 h-12 border-2 border-dashed border-current rounded-full flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium">Click to upload banner</div>
+                  <div className="text-xs opacity-80">Upload an image for this template</div>
+                </div>
+              </div>
+            )}
+          </label>
+        </div>
+      </div>
+
+      {/* Element Selection */}
+      <ElementNavigation 
+        elements={elements}
+        onElementClick={handleElementSelect}
+        selectedElementIndex={selectedElementIndex}
+        isTextElement={isTextElement}
+        isImageElement={isImageElement}
+      />
 
       {/* Show only selected element */}
       {selectedElementIndex !== null && elements[selectedElementIndex] && (
@@ -386,21 +451,7 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
         </div>
       )}
 
-      <Button onClick={regenerateSvg} variant="outline" className="w-full">
-        Generate SVG Preview
-      </Button>
 
-      {preview && (
-        <div className="mt-6 border p-5 rounded-lg bg-white/10">
-          <h3 className="text-lg font-semibold mb-3">Live Preview</h3>
-          <div className="bg-white/5 p-4 rounded border-2 border-dashed border-white/20">
-            <div
-              className="[&_svg]:w-full [&_svg]:h-auto"
-              dangerouslySetInnerHTML={{ __html: preview }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Floating Scroll to Top Button */}
       <FloatingScrollButton show={showScrollTop} onClick={scrollToTop} />
