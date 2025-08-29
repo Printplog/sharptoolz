@@ -11,7 +11,6 @@ export default function Dashboard() {
     queryFn: () => adminOverview(),
     queryKey: ["adminOverview"],
   });
-  console.log(data);
 
   if (isLoading) return <IsLoading />;
   return (

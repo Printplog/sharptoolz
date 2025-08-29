@@ -73,6 +73,7 @@ export type Template = {
   hot: boolean;
   created_at: string;
   updated_at: string;
+  banner: string;
 };
 
 export type CreateDocument = {

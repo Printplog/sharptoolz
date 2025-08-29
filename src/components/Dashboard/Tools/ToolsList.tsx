@@ -60,7 +60,7 @@ export default function ToolsList({ hot }: Props) {
             key={tool.id}
             className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5"
           >
-            {/* SVG Preview */}
+            {/* Banner Preview */}
             <div
               className="absolute inset-0 p-2 pointer-events-none z-0"
               style={{
@@ -70,12 +70,12 @@ export default function ToolsList({ hot }: Props) {
                   "linear-gradient(to bottom, black 60%, transparent 100%)",
               }}
             >
-              {tool.svg ? (
+              {tool.banner ? (
                 <div className="mask-b-to-[80%] h-full bg-white rounded-lg overflow-hidden">
-                  <div
-                    className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden"
-                    dangerouslySetInnerHTML={{ __html: tool.svg }}
-                    aria-label="SVG Preview"
+                  <img
+                    src={tool.banner}
+                    alt={`${tool.name} banner`}
+                    className="w-full h-full object-cover rounded-lg"
                   />
                 </div>
               ) : (

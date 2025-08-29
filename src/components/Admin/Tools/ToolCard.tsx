@@ -1,16 +1,34 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Loader, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Template } from "@/types";
 import { Link } from "react-router-dom";
+import { ConfirmAction } from "@/components/ConfirmAction";
+import { deleteTemplate } from "@/api/apiEndpoints";
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Props = {
   tool: Template;
 };
 
 export default function ToolCard({ tool }: Props) {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (id: string) => deleteTemplate(id),
+    onSuccess: () => {
+      toast.success("Template deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["tools"] });
+    },
+  });
+
+  const handleDelete = async () => {
+    mutate(tool.id as string);
+  };
+
   return (
     <div className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5">
-      {/* SVG Preview */}
+      {/* Banner Preview */}
       <div
         className="absolute inset-0 p-2 pointer-events-none z-0"
         style={{
@@ -19,12 +37,14 @@ export default function ToolCard({ tool }: Props) {
           maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
         }}
       >
-        {tool.svg ? (
-          <div
-            className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden mask-b-to-[80%]"
-            dangerouslySetInnerHTML={{ __html: tool.svg }}
-            aria-label="SVG Preview"
-          />
+        {tool.banner ? (
+          <div className="w-full h-full rounded-lg overflow-hidden mask-b-to-[80%]">
+            <img
+              src={tool.banner}
+              alt={`${tool.name} banner`}
+              className="w-full h-full object-cover rounded-lg"
+            />
+          </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-black/10">
             No Preview
@@ -45,13 +65,27 @@ export default function ToolCard({ tool }: Props) {
               <Pencil className="h-4 w-4" />
             </Button>
           </Link>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 w-8 p-0 text-red-500 hover:text-red-400"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <ConfirmAction
+            title="Delete Template"
+            description={`Are you sure you want to delete "${tool.name}"? This action cannot be undone.`}
+            onConfirm={handleDelete}
+            trigger={
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isPending}
+                className="h-8 w-8 p-0 text-red-500 hover:text-red-400"
+              >
+                {isPending ? (
+                  <Loader className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+              </Button>
+            }
+            confirmText="Delete"
+            cancelText="Cancel"
+          />
         </div>
       </div>
     </div>

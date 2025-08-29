@@ -1,0 +1,5 @@
+---
+description: all types must be in @/types/index.ts all stores in @/stores, dont change ui, unless i tell u to do so
+globs:
+alwaysApply: true
+---

@@ -12,23 +12,19 @@ type Props = {
 };
 
 export default function DocumentCard({ doc }: Props) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
     mutationFn: (id: string) => deletePurchasedTemplate(id),
     onSuccess: () => {
       toast.success("Document deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["purchased-templates"] })
-    }
-  })
-
-  
+      queryClient.invalidateQueries({ queryKey: ["purchased-templates"] });
+    },
+  });
 
   const handleDelete = async () => {
     mutate(doc.id);
   };
-
-  
 
   return (
     <div className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5">
@@ -56,8 +52,15 @@ export default function DocumentCard({ doc }: Props) {
 
       {/* Bottom Overlay Content */}
       <div className="absolute bottom-0 left-0 w-full z-10 bg-transparent p-4 flex flex-col gap-2">
-        <div className="flex justify-between items-center">
-          <h3 className="text-white font-semibold truncate">{doc.name}</h3>
+        <div className="flex justify-between items-start">
+          <div className="space-y-2">
+            <h3 className="text-white font-semibold truncate">{doc.name}</h3>
+            {doc.test && (
+              <span className="text-xs text-white/80 bg-red-500 px-2 py-1 rounded-full capitalize">
+                Test document
+              </span>
+            )}
+          </div>
           <span className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded-full capitalize">
             {doc.status || "Unknown"}
           </span>
@@ -65,8 +68,13 @@ export default function DocumentCard({ doc }: Props) {
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-2 mt-2">
-          <Link  to={ !isPending ? `/documents/${doc.id}` : "#"} className="">
-            <Button disabled={isPending} size="sm" variant="outline" className="h-8 w-8 p-0">
+          <Link to={!isPending ? `/documents/${doc.id}` : "#"} className="">
+            <Button
+              disabled={isPending}
+              size="sm"
+              variant="outline"
+              className="h-8 w-8 p-0"
+            >
               <Pencil className="h-4 w-4" />
             </Button>
           </Link>
@@ -78,7 +86,11 @@ export default function DocumentCard({ doc }: Props) {
                 disabled={isPending}
                 className="h-8 w-8 p-0 text-red-500 hover:text-red-400"
               >
-                {isPending ? <Loader className="h-4 w-4 animate-spin " /> : <Trash2 className="h-4 w-4" />}
+                {isPending ? (
+                  <Loader className="h-4 w-4 animate-spin " />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
               </Button>
             }
             onConfirm={handleDelete}

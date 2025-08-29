@@ -48,13 +48,22 @@ export const refreshToken = async (): Promise<User> => {
   return res.data;
 };
 
-export const addTemplate = async (data: Partial<Template>): Promise<unknown> => {
-  const res = await apiClient.post('/templates/', data);
+export const addTemplate = async (data: FormData): Promise<unknown> => {
+  const res = await apiClient.post('/templates/', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return res.data;
 }
 
 export const updateTemplate = async (id: string, data: Partial<Template>): Promise<unknown> => {
   const res = await apiClient.patch(`/templates/${id}/`, data);
+  return res.data;
+}
+
+export const deleteTemplate = async (id: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/templates/${id}/`);
   return res.data;
 }
 
