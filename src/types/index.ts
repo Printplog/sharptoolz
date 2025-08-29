@@ -62,6 +62,7 @@ export interface FormField {
   max?: number; // Max value for number OR max length for text
   options?: SelectOption[]; // If options exist, it's automatically a select field
   dependsOn?: string;
+  link?: string; // Link property for fields like Tracking_ID
 }
 
 export type Template = {
@@ -94,6 +95,7 @@ export type PurchasedTemplate = {
 
   tracking_id: string | null;
   status: string;
+  link: string;   
 
   created_at: string; // ISO datetime string
   updated_at: string;

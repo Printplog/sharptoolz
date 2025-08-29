@@ -163,7 +163,7 @@ export default function FormPanel({ test }: { test: boolean }) {
                 </div>
                 <Button asChild size="sm" className="">
                   <a
-                    href={`https://parcelfinda.com`}
+                    href={fields?.find(f => f.id === "Tracking_ID")?.link}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

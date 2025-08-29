@@ -32,6 +32,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const next = params.get("next") || "/dashboard";
+  // const isAdmin = params.get("admin") === "true";
   const { setUser } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -48,7 +49,13 @@ export default function Login() {
     onSuccess: (user) => {
       toast.success("Login Success");
       setUser(user);
-      navigate(next);
+      
+      // Check if user has admin role and redirect accordingly
+      if (user.role === "ZK7T-93XY") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate(next);
+      }
     },
     onError: (error: Error) => {
       toast.error(errorMessage(error));

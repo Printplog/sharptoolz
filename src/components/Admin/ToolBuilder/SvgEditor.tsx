@@ -17,11 +17,13 @@ interface SvgEditorProps {
 function ElementNavigation({ 
   elements, 
   onElementClick, 
+  selectedElementIndex,
   isTextElement, 
   isImageElement 
 }: {
   elements: SvgElement[];
   onElementClick: (index: number) => void;
+  selectedElementIndex: number | null;
   isTextElement: (el: SvgElement) => boolean;
   isImageElement: (el: SvgElement) => boolean;
 }) {
@@ -29,18 +31,19 @@ function ElementNavigation({
 
   return (
     <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-      <h3 className="text-sm font-medium mb-3 text-white/80">Quick Navigation</h3>
+      <h3 className="text-sm font-medium mb-3 text-white/80">Select Element to Edit</h3>
       <div className="flex flex-wrap gap-2">
         {elements.map((el, index) => {
           const displayName = el.id || `${el.tag} ${index + 1}`;
           const elementType = isTextElement(el) ? '📝' : isImageElement(el) ? '🖼️' : '🔧';
+          const isSelected = selectedElementIndex === index;
           return (
             <Button
               key={index}
               onClick={() => onElementClick(index)}
-              variant="outline"
+              variant={isSelected ? "default" : "outline"}
               size="sm"
-              className="text-xs h-8 px-2 flex items-center gap-1"
+              className={`text-xs h-8 px-2 flex items-center gap-1 ${isSelected ? 'bg-primary text-background' : ''}`}
               title={`${el.tag} element${el.id ? ` (ID: ${el.id})` : ''}`}
             >
               <span>{elementType}</span>
@@ -184,6 +187,7 @@ function FloatingScrollButton({ show, onClick }: { show: boolean; onClick: () =>
 
 export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading }: SvgEditorProps) {
   const [elements, setElements] = useState<SvgElement[]>([]);
+  const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
   const [preview, setPreview] = useState<string>("");
   const [name, setName] = useState<string>(templateName);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -304,15 +308,8 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
     });
   }
 
-  const scrollToElement = useCallback((index: number) => {
-    const element = elementRefs.current[index];
-    if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center',
-        inline: 'nearest'
-      });
-    }
+  const handleElementSelect = useCallback((index: number) => {
+    setSelectedElementIndex(index);
   }, []);
 
   const scrollToTop = useCallback(() => {
@@ -344,10 +341,11 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
         </div>
       </div>
 
-      {/* ID Navigation */}
+      {/* Element Selection */}
       <ElementNavigation 
         elements={elements}
-        onElementClick={scrollToElement}
+        onElementClick={handleElementSelect}
+        selectedElementIndex={selectedElementIndex}
         isTextElement={isTextElement}
         isImageElement={isImageElement}
       />
@@ -365,21 +363,28 @@ export default function SvgEditor({ svgRaw, templateName = "", onSave, isLoading
         />
       </div>
 
-      <div className="space-y-4">
-        {elements.map((el, i) => (
+      {/* Show only selected element */}
+      {selectedElementIndex !== null && elements[selectedElementIndex] && (
+        <div className="space-y-4">
           <ElementEditor
-            key={i}
-            element={el}
-            index={i}
+            element={elements[selectedElementIndex]}
+            index={selectedElementIndex}
             onUpdate={updateElement}
             isTextElement={isTextElement}
             isImageElement={isImageElement}
             ref={(el: HTMLDivElement | null) => {
-              elementRefs.current[i] = el;
+              elementRefs.current[selectedElementIndex] = el;
             }}
           />
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Show message when no element is selected */}
+      {selectedElementIndex === null && (
+        <div className="text-center py-8 text-white/60">
+          <p>Select an element from above to start editing</p>
+        </div>
+      )}
 
       <Button onClick={regenerateSvg} variant="outline" className="w-full">
         Generate SVG Preview
