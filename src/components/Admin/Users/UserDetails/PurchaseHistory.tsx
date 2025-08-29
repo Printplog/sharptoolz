@@ -60,7 +60,7 @@ export default function PurchaseHistory({ purchases }: PurchaseHistoryProps) {
             <p className="text-muted-foreground">No purchase history found</p>
           </div>
         ) : (
-          <div className="rounded-md border border-white/10 overflow-hidden">
+          <div className="rounded-md border border-white/10 overflow-y-auto overflow-x-hidden max-h-96 custom-scrollbar">
             <Table>
               <TableHeader>
                 <TableRow className="border-white/10">
