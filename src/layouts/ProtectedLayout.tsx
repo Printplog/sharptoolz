@@ -3,9 +3,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchCurrentUser } from "@/api/apiEndpoints";
 import { useAuthStore } from "@/store/authStore";
-import { LoaderIcon } from "lucide-react";
 import { toast } from "sonner";
-import Logo from "@/components/Logo";
+import PageLoader from "@/components/PageLoader";
 
 // Obfuscated role code mapping
 const ROLE_MAP = {
@@ -61,10 +60,7 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-5 items-center justify-center h-screen">
-        <Logo />
-        <LoaderIcon className="size-6 animate-spin text-primary" />
-      </div>
+      <PageLoader />
     );
   }
 
