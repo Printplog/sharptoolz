@@ -258,14 +258,6 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
       <div className="flex items-center justify-between pb-5 border-b border-white/10">
         <h2 className="text-xl font-semibold">SVG Editor</h2>
         <div className="flex items-center gap-2">
-          <Button 
-            onClick={scrollToTop}
-            variant="outline"
-            size="sm"
-            className="text-xs"
-          >
-            ↑ Top
-          </Button>
           {onSave && (
             <Button 
               onClick={handleSave} 
@@ -293,19 +285,54 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
       </div>
 
       {/* Hot Template Toggle */}
-      <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="hot-template"
-          checked={isHot}
-          onCheckedChange={(checked) => setIsHot(checked === true)}
-        />
-        <Label 
-          htmlFor="hot-template" 
-          className="text-sm font-medium cursor-pointer flex items-center gap-1"
+      <div className="relative">
+        <div 
+          className={`
+            p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
+            ${isHot 
+              ? 'border-orange-500/50 bg-orange-500/10 shadow-lg shadow-orange-500/20' 
+              : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10'
+            }
+          `}
+          onClick={() => setIsHot(!isHot)}
         >
-          🔥 Hot Template
-          <span className="text-xs text-white/60">(Featured on homepage)</span>
-        </Label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`
+                text-2xl transition-all duration-200
+                ${isHot ? 'animate-pulse' : 'grayscale opacity-50'}
+              `}>
+                🔥
+              </div>
+              <div>
+                <div className="font-medium text-sm">
+                  Hot Template
+                </div>
+                <div className="text-xs text-white/60">
+                  Featured prominently on homepage
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center">
+              <Checkbox 
+                id="hot-template"
+                checked={isHot}
+                onCheckedChange={(checked) => setIsHot(checked === true)}
+                className="pointer-events-none"
+              />
+            </div>
+          </div>
+          
+          {isHot && (
+            <div className="mt-2 pt-2 border-t border-orange-500/20">
+              <div className="flex items-center gap-1 text-xs text-orange-400">
+                <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
+                This template will be featured on the homepage
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Banner Upload */}
