@@ -84,9 +84,7 @@ function SortableElementButton({
         onClick={() => onElementClick(originalIndex)}
         variant={isSelected ? "default" : "outline"}
         size="sm"
-        className={`text-xs h-8 px-1 flex items-center gap-1 ${
-          isSelected ? 'bg-primary text-background' : ''
-        } ${extraClasses}`}
+        className={`text-xs h-8 px-1 flex items-center gap-1 ${extraClasses}`}
         title={`${element.tag} element${element.id ? ` (ID: ${element.id})` : ''}`}
       >
         {/* Separate drag handle */}
@@ -228,9 +226,7 @@ function GroupButton({
         onClick={handleClick}
         variant={isExpanded ? "default" : "outline"}
         size="sm"
-        className={`text-xs h-8 px-1 flex items-center gap-1 ${
-          isExpanded ? 'bg-primary text-background' : ''
-        }`}
+        className="text-xs h-8 px-1 flex items-center gap-1"
         title={`${groupName} dropdown (${elementCount} options) - Click to ${isExpanded ? 'hide' : 'show'} options`}
       >
         {/* Drag handle for the group */}

@@ -1,14 +1,5 @@
 import { Link } from "react-router-dom";
-import React from "react";
 
-/**
- * Logo component
- *
- * Props:
- * - alone?: boolean - If true, only show the logo image (no text, no link)
- * - noLink?: boolean - If true, do not wrap in a link (just render the logo and text)
- * - size?: number - Size in pixels for the logo image (default: 30)
- */
 interface LogoProps {
   icon?: boolean;
   noLink?: boolean;
@@ -16,9 +7,6 @@ interface LogoProps {
 }
 
 export default function Logo({ icon = false, noLink = false, size = 30 }: LogoProps) {
-  // Debugging: Print props for tracing
-  // Print($"Logo rendered with alone={alone}, noLink={noLink}, size={size}");
-
   const logoImg = (
     <img
       src="/logo.png"
