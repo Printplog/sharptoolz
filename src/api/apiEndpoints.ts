@@ -1,4 +1,4 @@
-import type { CryptoPaymentData, DownloadData, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
+import type { Tool, CryptoPaymentData, DownloadData, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
@@ -71,8 +71,13 @@ export const deleteTemplate = async (id: string): Promise<unknown> => {
   return res.data;
 }
 
-export const getTemplates = async (hot?: boolean): Promise<Template[]> => {
-  const res = await apiClient.get(`/templates/?${hot && "hot=true"}`);
+export const getTemplates = async (hot?: boolean, tool?: string): Promise<Template[]> => {
+  const params = new URLSearchParams();
+  if (hot) params.append('hot', 'true');
+  if (tool) params.append('tool', tool);
+  
+  const queryString = params.toString();
+  const res = await apiClient.get(`/templates${queryString ? `?${queryString}` : ''}`);
   return res.data;
 }
 
@@ -144,4 +149,29 @@ export const adminUserDetails = async (userId: string) => {
   return res.data;
 };
 
+// Tools API (same as categories but with different naming)
+export const getTools = async (): Promise<Tool[]> => {
+  const res = await apiClient.get('/tools/');
+  return res.data;
+};
+
+export const getTool = async (id: string): Promise<Tool> => {
+  const res = await apiClient.get(`/tools/${id}/`);
+  return res.data;
+};
+
+export const createTool = async (data: { name: string; description?: string }): Promise<Tool> => {
+  const res = await apiClient.post('/tools/', data);
+  return res.data;
+};
+
+export const updateTool = async (id: string, data: Partial<Tool>): Promise<Tool> => {
+  const res = await apiClient.put(`/tools/${id}/`, data);
+  return res.data;
+};
+
+export const deleteTool = async (id: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/tools/${id}/`);
+  return res.data;
+};
 

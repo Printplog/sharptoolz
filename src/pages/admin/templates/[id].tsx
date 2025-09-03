@@ -16,15 +16,20 @@ export default function SvgTemplateEditor() {
     enabled: !!id, // Only run query if id exists
   });
 
-  // Save template mutation
+  console.log(data);
+
+    // Save template mutation
   const saveMutation = useMutation({
-    mutationFn: (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean }) => {
+    mutationFn: (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string }) => {
       // If there's a banner file, use FormData
       if (templateData.banner) {
         const formData = new FormData();
         formData.append('name', templateData.name);
         formData.append('svg', templateData.svg);
-        formData.append('hot', templateData.hot ? 'true' : 'false'); 
+        formData.append('hot', templateData.hot ? 'true' : 'false');
+        if (templateData.tool) {
+          formData.append('tool', templateData.tool);
+        }
         formData.append('banner', templateData.banner);
         return updateTemplate(id as string, formData);
       } else {
@@ -32,7 +37,8 @@ export default function SvgTemplateEditor() {
         return updateTemplate(id as string, {
           name: templateData.name,
           svg: templateData.svg,
-          hot: templateData.hot || false
+          hot: templateData.hot || false,
+          tool: templateData.tool || undefined
         });
       }
     },
@@ -47,7 +53,7 @@ export default function SvgTemplateEditor() {
     }
   });
 
-  const handleSave = (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean }) => {
+  const handleSave = (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string }) => {
     if (!templateData.name.trim()) {
       toast.error('Template name is required');
       return;
@@ -83,6 +89,7 @@ export default function SvgTemplateEditor() {
         onSave={handleSave}
         banner={data.banner}
         hot={data.hot}
+        tool={data.tool}
         isLoading={saveMutation.isPending}
       />
     </div>

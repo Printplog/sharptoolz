@@ -7,8 +7,10 @@ export type Path =
   | `/`
   | `/about`
   | `/admin/dashboard`
+  | `/admin/templates`
+  | `/admin/templates/:id`
   | `/admin/tools`
-  | `/admin/tools/:id`
+  | `/admin/tools/:id/templates`
   | `/admin/users`
   | `/admin/users/:id`
   | `/all-tools`
@@ -29,7 +31,8 @@ export type Path =
   | `/wallet`
 
 export type Params = {
-  '/admin/tools/:id': { id: string }
+  '/admin/templates/:id': { id: string }
+  '/admin/tools/:id/templates': { id: string }
   '/admin/users/:id': { id: string }
   '/all-tools/:id': { id: string }
   '/documents/:id': { id: string }

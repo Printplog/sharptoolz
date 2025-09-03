@@ -18,13 +18,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addTemplate } from "@/api/apiEndpoints";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { addTemplate, getTools } from "@/api/apiEndpoints";
 import { useNavigate } from "react-router-dom";
 import { useDialogStore } from "@/store/dialogStore";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { useEffect } from "react";
+import type { Tool } from "@/types";
 
 // ------------------------
 // Validation Schema
@@ -33,6 +41,7 @@ const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   svgFile: z.instanceof(File, { message: "SVG file is required" }),
   bannerFile: z.instanceof(File, { message: "Banner image is required" }),
+  tool: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -45,7 +54,14 @@ export default function BuilderDialog() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      tool: undefined,
     },
+  });
+
+  // Fetch tools
+  const { data: tools = [] } = useQuery<Tool[]>({
+    queryKey: ["tools"],
+    queryFn: getTools,
   });
 
   // Reset form when dialog opens
@@ -124,6 +140,9 @@ export default function BuilderDialog() {
       formData.append('svg', svgText);
       formData.append('banner', values.bannerFile); // Send the actual file
       formData.append('type', 'tool');
+      if (values.tool) {
+        formData.append('tool', values.tool);
+      }
 
       mutate(formData);
     } catch (error) {
@@ -274,6 +293,38 @@ export default function BuilderDialog() {
                   />
                 </div>
               )}
+
+              {/* Tool Selection */}
+              <FormField
+                control={form.control}
+                name="tool"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tool (Optional)</FormLabel>
+                    <FormControl>
+                      <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}>
+                        <SelectTrigger className="bg-white/10 text-white">
+                          <SelectValue placeholder="Select a tool" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">
+                            <span className="text-white/60 italic">No tool</span>
+                          </SelectItem>
+                          {tools.map((tool) => (
+                            <SelectItem key={tool.id} value={tool.id}>
+                              <div className="flex items-center gap-2">
+                                <span>🔧</span>
+                                <span>{tool.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Submit */}
               <div className="flex justify-end flex-shrink-0">

@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { getTools } from "@/api/apiEndpoints";
 import ElementNavigation from "./ElementNavigation";
 import ElementEditor from "./ElementEditor";
 import BannerUpload from "./BannerUpload";
@@ -15,19 +18,29 @@ interface SvgEditorProps {
   templateName?: string;
   banner?: string;
   hot?: boolean;
-  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean }) => void;
+  tool?: string;
+  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string }) => void;
   isLoading?: boolean;
 }
 
-export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot = false, onSave, isLoading }: SvgEditorProps) {
+export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot = false, tool = "", onSave, isLoading }: SvgEditorProps) {
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
   const [name, setName] = useState<string>(templateName);
   const [bannerImage, setBannerImage] = useState<string>(banner);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [isHot, setIsHot] = useState<boolean>(hot);
+  const [selectedTool, setSelectedTool] = useState<string>(tool);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Fetch tools for the dropdown
+  const { data: tools = [] } = useQuery({
+    queryKey: ["tools"],
+    queryFn: getTools,
+  });
+
+  console.log(tools);
 
   useEffect(() => {
     const parsed = parseSvgElements(svgRaw);
@@ -53,6 +66,10 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
   useEffect(() => {
     setIsHot(hot);
   }, [hot]);
+
+  useEffect(() => {
+    setSelectedTool(tool);
+  }, [tool]);
 
   // Handle scroll events for floating scroll-to-top button
   useEffect(() => {
@@ -194,7 +211,8 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
       name: name.trim(),
       svg: updatedSvg,
       banner: bannerFile,
-      hot: isHot
+      hot: isHot,
+      tool: selectedTool && selectedTool !== "" ? selectedTool : undefined
     });
   }
 
@@ -282,6 +300,35 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
           onChange={(e) => setName(e.target.value)}
           className="max-w-md input"
         />
+      </div>
+
+      {/* Tool Selection */}
+      <div className="space-y-2">
+        <Label htmlFor="tool-select" className="text-sm font-medium">
+          Tool
+        </Label>
+        <Select value={selectedTool || "none"} onValueChange={(value) => setSelectedTool(value === "none" ? "" : value)}>
+          <SelectTrigger className="max-w-md">
+            <SelectValue placeholder="Select a tool (optional)" />
+          </SelectTrigger>
+          <SelectContent className="bg-background border border-white/10 ">
+            <SelectItem value="none" className="text-white/90 focus:bg-white/5 focus:text-white/80">
+              <span className="text-white/60 italic">No tool</span>
+            </SelectItem>
+            {tools.map((tool) => (
+              <SelectItem key={tool.id} value={tool.id} className="text-white/90 hover:bg-white/5 focus:bg-white/5 focus:text-white/80">
+                <div className="flex items-center gap-2">
+                  <span>{tool.name}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {selectedTool && (
+          <div className="text-xs text-white/60">
+            Selected: {tools.find(tool => tool.id === selectedTool)?.name}
+          </div>
+        )}
       </div>
 
       {/* Hot Template Toggle */}

@@ -65,13 +65,22 @@ export interface FormField {
   link?: string; // Link property for fields like Tracking_ID
 }
 
+export type Tool = {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+};
+
 export type Template = {
   id?: string;
   name: string;
   svg: string;
   form_fields: FormField[];
   type: "tool";
+  tool?: string;
   hot: boolean;
+  category?: string; // Category ID
   created_at: string;
   updated_at: string;
   banner: string;
