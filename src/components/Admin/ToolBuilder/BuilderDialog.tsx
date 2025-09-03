@@ -306,12 +306,12 @@ export default function BuilderDialog() {
                         <SelectTrigger className="bg-white/10 text-white">
                           <SelectValue placeholder="Select a tool" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">
+                        <SelectContent className="bg-background border border-white/10 z-[999999]">
+                          <SelectItem value="none" className="text-white/90 focus:bg-white/5 focus:text-white/80">
                             <span className="text-white/60 italic">No tool</span>
                           </SelectItem>
                           {tools.map((tool) => (
-                            <SelectItem key={tool.id} value={tool.id}>
+                            <SelectItem key={tool.id} value={tool.id} className="text-white/90 hover:bg-white/5 focus:bg-white/5 focus:text-white/80">
                               <div className="flex items-center gap-2">
                                 <span>🔧</span>
                                 <span>{tool.name}</span>

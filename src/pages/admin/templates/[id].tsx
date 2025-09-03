@@ -1,9 +1,11 @@
 import { getTemplate, updateTemplate } from '@/api/apiEndpoints';
 import SvgEditor from '@/components/Admin/ToolBuilder/SvgEditor'
+import errorMessage from '@/lib/utils/errorMessage';
 import type { Template } from '@/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+
 
 export default function SvgTemplateEditor() {
   const { id } = useParams<{ id: string }>();
@@ -18,38 +20,54 @@ export default function SvgTemplateEditor() {
 
   console.log(data);
 
-    // Save template mutation
+  // Save template mutation
   const saveMutation = useMutation({
-    mutationFn: (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string }) => {
-      // If there's a banner file, use FormData
-      if (templateData.banner) {
-        const formData = new FormData();
-        formData.append('name', templateData.name);
-        formData.append('svg', templateData.svg);
-        formData.append('hot', templateData.hot ? 'true' : 'false');
-        if (templateData.tool) {
-          formData.append('tool', templateData.tool);
+    mutationFn: async (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string }) => {
+      try {
+        // If there's a banner file, use FormData
+        if (templateData.banner) {
+          const formData = new FormData();
+          formData.append('name', templateData.name);
+          formData.append('svg', templateData.svg);
+          formData.append('hot', templateData.hot ? 'true' : 'false');
+          if (templateData.tool) {
+            formData.append('tool', templateData.tool);
+          }
+          formData.append('banner', templateData.banner);
+          const result = await updateTemplate(id as string, formData);
+          console.log('FormData update result:', result);
+          return result;
+        } else {
+          // Otherwise, send as JSON
+          const result = await updateTemplate(id as string, {
+            name: templateData.name,
+            svg: templateData.svg,
+            hot: templateData.hot || false,
+            tool: templateData.tool || undefined
+          });
+          console.log('JSON update result:', result);
+          return result;
         }
-        formData.append('banner', templateData.banner);
-        return updateTemplate(id as string, formData);
-      } else {
-        // Otherwise, send as JSON
-        return updateTemplate(id as string, {
-          name: templateData.name,
-          svg: templateData.svg,
-          hot: templateData.hot || false,
-          tool: templateData.tool || undefined
-        });
+      } catch (error) {
+        console.error('Update template error:', error);
+        throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Template saved successfully:', data);
       toast.success('Template saved successfully!');
+      
+      // Invalidate all related queries to ensure UI updates
       queryClient.invalidateQueries({ queryKey: ["template", id] });
+      queryClient.invalidateQueries({ queryKey: ["tools"] });
+      queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
+      
       // Optionally navigate back or refresh
       // navigate('/admin/templates');
     },
     onError: (error: Error) => {
-      toast.error(error?.message || 'Failed to save template');
+      console.error('Save template error:', error);
+      toast.error(errorMessage(error));
     }
   });
 
@@ -59,6 +77,7 @@ export default function SvgTemplateEditor() {
       return;
     }
     
+    console.log('Saving template data:', templateData);
     saveMutation.mutate(templateData);
   };
 

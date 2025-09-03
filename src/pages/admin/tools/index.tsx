@@ -109,7 +109,7 @@ export default function AdminTools() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto ">
         <div className="flex items-center justify-center h-64">
           <div className="flex items-center gap-2 text-white/60">
             <Loader className="w-5 h-5 animate-spin" />

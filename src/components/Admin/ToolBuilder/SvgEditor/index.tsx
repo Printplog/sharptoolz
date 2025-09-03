@@ -95,6 +95,9 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
 
   function regenerateSvg(): string {
     try {
+      console.log('Regenerating SVG with elements:', elements);
+      console.log('Original SVG:', svgRaw);
+      
       // Get original SVG to preserve defs, styles, etc.
       const parser = new DOMParser();
       const originalDoc = parser.parseFromString(svgRaw, 'image/svg+xml');
@@ -109,6 +112,8 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
         const nonEditableTags = ['defs', 'style', 'linearGradient', 'radialGradient', 'pattern', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feFlood', 'feComposite', 'feMerge', 'feMergeNode'];
         return !nonEditableTags.includes(tag);
       });
+      
+      console.log('All original elements:', allOriginalElements);
       
       // Create a mapping of original elements by their identifying characteristics
       const elementMap = new Map<string, Element>();
@@ -185,7 +190,9 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
         }
       });
 
-      return newSvg.outerHTML;
+      const result = newSvg.outerHTML;
+      console.log('Generated SVG result:', result);
+      return result;
     } catch (error) {
       console.error('Error regenerating SVG:', error);
       // Fallback to original SVG if regeneration fails
