@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Hammer,
   Users,
-  FolderOpen,
+  LayoutTemplate,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -18,12 +18,12 @@ export default function Sidebar() {
       to: "/admin/dashboard",
     },
     {
-      icon: <FolderOpen className="h-5 w-5" />,
+      icon: <Hammer className="h-5 w-5" />,
       label: "Tools",
       to: "/admin/tools",
     },
     {
-      icon: <Hammer className="h-5 w-5" />,
+      icon: <LayoutTemplate className="h-5 w-5" />,
       label: "Templates",
       to: "/admin/templates",
     },

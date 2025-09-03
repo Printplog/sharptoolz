@@ -53,20 +53,20 @@ export default function UsersTable() {
   return (
     <Card className="bg-white/5 border border-white/10 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
           <span>Users List</span>
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search users..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="pl-10 w-64 bg-white/5 border-white/10"
+                className="pl-10 w-full sm:w-64 bg-white/5 border-white/10"
               />
             </div>
-            <Button onClick={handleSearch} variant="outline" size="sm">
+            <Button onClick={handleSearch} variant="outline" size="sm" className="w-full sm:w-fit">
               Search
             </Button>
           </div>
@@ -78,7 +78,7 @@ export default function UsersTable() {
          ) : (
           <>
             {/* Table */}
-            <div className="rounded-md border border-white/10 overflow-hidden">
+            <div className="rounded-md border border-white/10 overflow-hidden custom-scrollbar">
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/10">
