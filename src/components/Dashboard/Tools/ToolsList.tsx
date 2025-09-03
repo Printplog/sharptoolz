@@ -69,7 +69,7 @@ export default function ToolsList({ hot }: Props) {
     <div className="space-y-10">
       {/* Search Box */}
       {!hot && (
-        <div className="flex justify-center bg-gradient-to-b  from-background to-white/5  border-white/10 px-4 py-5">
+        <div className="flex justify-center bg-gradient-to-b  from-background to-white/5  border-white/10 px-4 py-5 border">
           <div className="flex flex-col sm:flex-row items-center  w-full relative">
             <Input
               type="text"
