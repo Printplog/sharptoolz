@@ -9,13 +9,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Upload, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import useToolStore from "@/store/formStore";
 import type { FormField } from "@/types";
+
+// Extended FormField type for signature fields
+interface ExtendedFormField extends FormField {
+  signatureWidth?: number;
+  signatureHeight?: number;
+  signatureBackground?: string;
+  signaturePenColor?: string;
+}
 import { Textarea } from "@/components/ui/textarea";
+import ImageCropUpload from "@/components/ui/ImageCropUpload";
+import SignatureField from "@/components/ui/SignatureField";
 
 const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
-  const { updateField, uploadFile, status, setStatus, setStatusMessage, statusMessage } = useToolStore();
+  const { updateField, status, setStatus, setStatusMessage, statusMessage } = useToolStore();
   const value = field.currentValue;
 
   useEffect(() => {
@@ -26,13 +36,6 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
   const handleChange = (newValue: string | number | boolean) => {
     updateField(field.id, newValue);
     console.log(newValue)
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadFile(field.id, file);
-    }
   };
 
   const generateId = (length: number) => {
@@ -216,30 +219,36 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
     case "upload":
     case "file":
       return (
-        <div className="space-y-2 w-full">
-          <label htmlFor={field.id} className="text-sm font-medium text-white">
-            {field.name}
-          </label>
-          <div className="relative">
-            <Input
-              id={field.id}
-              type="file"
-              onChange={handleFileUpload}
-              className="hidden"
-              accept="image/*"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => document.getElementById(field.id)?.click()}
-              className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {value ? `${field.name} uploaded` : `Upload ${field.name}`}
-            </Button>
-          </div>
-        </div>
+        <ImageCropUpload
+          fieldId={field.id}
+          fieldName={field.name}
+          currentValue={value as string}
+          onImageSelect={(fieldId: string, croppedImageDataUrl: string) => {
+            updateField(fieldId, croppedImageDataUrl);
+          }}
+          aspectRatio={field.aspectRatio}
+          minWidth={field.minWidth || 50}
+          minHeight={field.minHeight || 50}
+        />
       );
+
+    case "sign": {
+      const signatureField = field as ExtendedFormField;
+      return (
+        <SignatureField
+          fieldId={field.id}
+          fieldName={field.name}
+          currentValue={value as string}
+          onSignatureSelect={(fieldId: string, signatureDataUrl: string) => {
+            updateField(fieldId, signatureDataUrl);
+          }}
+          width={signatureField.signatureWidth || 400}
+          height={signatureField.signatureHeight || 150}
+          backgroundColor={signatureField.signatureBackground || '#ffffff'}
+          penColor={signatureField.signaturePenColor || '#000000'}
+        />
+      );
+    }
 
     case "gen":
       return (

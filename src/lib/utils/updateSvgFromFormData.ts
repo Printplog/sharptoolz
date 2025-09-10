@@ -60,7 +60,13 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
       if (!el) return;
 
       switch (field.type) {
-        case "upload": {
+        case "upload":
+        case "file": {
+          const hrefNS = "http://www.w3.org/1999/xlink";
+          el.setAttributeNS(hrefNS, "href", value);
+          break;
+        }
+        case "sign": {
           const hrefNS = "http://www.w3.org/1999/xlink";
           el.setAttributeNS(hrefNS, "href", value);
           break;

@@ -63,7 +63,14 @@ export interface FormField {
   options?: SelectOption[]; // If options exist, it's automatically a select field
   dependsOn?: string;
   link?: string; // Link property for fields like Tracking_ID
-}
+  aspectRatio?: number; // For image crop fields (width/height ratio)
+  minWidth?: number; // Minimum width for image crop
+  minHeight?: number; // Minimum height for image crop
+  signatureWidth?: number; // Width for signature canvas
+  signatureHeight?: number; // Height for signature canvas
+  signatureBackground?: string; // Background color for signature canvas
+  signaturePenColor?: string; // Pen color for signature drawing
+} // Updated for signature fields
 
 export type Tool = {
   id: string;
