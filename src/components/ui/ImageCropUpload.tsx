@@ -4,7 +4,6 @@ import ReactCrop, {
   makeAspectCrop,
   type Crop,
   type PixelCrop,
-  convertToPixelCrop,
 } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Button } from './button';
@@ -26,8 +25,7 @@ interface ImageCropUploadProps {
 // Helper function to get cropped image as data URL
 function getCroppedImg(
   image: HTMLImageElement,
-  crop: PixelCrop,
-  fileName: string = 'cropped-image.jpg'
+  crop: PixelCrop
 ): Promise<string> {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -91,7 +89,7 @@ export default function ImageCropUpload({
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [scale, setScale] = useState(1);
   const [rotate, setRotate] = useState(0);
-  const [aspect, setAspect] = useState<number | undefined>(aspectRatio);
+  const [aspect] = useState<number | undefined>(aspectRatio);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const imgRef = useRef<HTMLImageElement>(null);
@@ -126,7 +124,7 @@ export default function ImageCropUpload({
     setCompletedCrop(crop);
   };
 
-  const onImageCropChange = (crop: Crop, percentCrop: Crop) => {
+  const onImageCropChange = (_crop: Crop, percentCrop: Crop) => {
     setCrop(percentCrop);
   };
 
@@ -137,8 +135,7 @@ export default function ImageCropUpload({
     try {
       const croppedImageDataUrl = await getCroppedImg(
         imgRef.current,
-        completedCrop,
-        `${fieldName}-cropped.jpg`
+        completedCrop
       );
       
       onImageSelect(fieldId, croppedImageDataUrl);
