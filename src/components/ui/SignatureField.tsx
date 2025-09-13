@@ -76,7 +76,7 @@ const PRESET_SIGNATURES = [
     id: 'sign7', 
     name: 'Signature 7', 
     data: '/sign/sign7.png'
-  },
+  }, 
   { 
     id: 'sign8', 
     name: 'Signature 8', 
