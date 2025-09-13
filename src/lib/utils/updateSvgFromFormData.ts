@@ -63,12 +63,18 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
         case "upload":
         case "file": {
           const hrefNS = "http://www.w3.org/1999/xlink";
-          el.setAttributeNS(hrefNS, "href", value);
+          // Only update href if there's a value, otherwise preserve original
+          if (value && value.trim() !== "") {
+            el.setAttributeNS(hrefNS, "href", value);
+          }
           break;
         }
         case "sign": {
           const hrefNS = "http://www.w3.org/1999/xlink";
-          el.setAttributeNS(hrefNS, "href", value);
+          // Only update href if there's a value, otherwise preserve original
+          if (value && value.trim() !== "") {
+            el.setAttributeNS(hrefNS, "href", value);
+          }
           break;
         }
         default: {

@@ -20,6 +20,28 @@ interface ImageCropUploadProps {
   aspectRatio?: number; // Optional aspect ratio (width/height)
   minWidth?: number;
   minHeight?: number;
+  svgElementId?: string; // SVG element ID to get dimensions from
+}
+
+// Helper function to get SVG element dimensions from the DOM
+function getSvgElementDimensions(svgElementId: string): { width: number; height: number } | null {
+  if (!svgElementId) return null;
+  
+  const element = document.getElementById(svgElementId);
+  if (!element) return null;
+  
+  // Get computed style dimensions
+  const computedStyle = window.getComputedStyle(element);
+  const width = parseFloat(computedStyle.width);
+  const height = parseFloat(computedStyle.height);
+  
+  // Fallback to getBoundingClientRect if computed style doesn't work
+  if (!width || !height) {
+    const rect = element.getBoundingClientRect();
+    return { width: rect.width, height: rect.height };
+  }
+  
+  return { width, height };
 }
 
 // Helper function to get cropped image as data URL
@@ -82,6 +104,7 @@ export default function ImageCropUpload({
   aspectRatio,
   minWidth = 50,
   minHeight = 50,
+  svgElementId,
 }: ImageCropUploadProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [imgSrc, setImgSrc] = useState('');
@@ -96,19 +119,39 @@ export default function ImageCropUpload({
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
   const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    if (aspect) {
-      const { width, height } = e.currentTarget;
+    const { width: imgWidth, height: imgHeight } = e.currentTarget;
+    
+    // Get exact dimensions from SVG element
+    let targetWidth = minWidth;
+    let targetHeight = minHeight;
+    let targetAspect = aspect;
+    
+    if (svgElementId) {
+      const svgDimensions = getSvgElementDimensions(svgElementId);
+      if (svgDimensions) {
+        targetWidth = svgDimensions.width;
+        targetHeight = svgDimensions.height;
+        targetAspect = targetWidth / targetHeight;
+      }
+    }
+    
+    if (targetAspect) {
+      // Auto-set crop to match the exact SVG image dimensions for perfect fitting
+      const cropWidth = Math.min(95, (targetWidth / imgWidth) * 100);
+      const cropHeight = Math.min(95, (targetHeight / imgHeight) * 100);
+      
       setCrop(centerCrop(makeAspectCrop(
         {
           unit: '%',
-          width: 90,
+          width: cropWidth,
+          height: cropHeight,
         },
-        aspect,
-        width,
-        height
-      ), width, height));
+        targetAspect,
+        imgWidth,
+        imgHeight
+      ), imgWidth, imgHeight));
     }
-  }, [aspect]);
+  }, [aspect, minWidth, minHeight, svgElementId]);
 
   const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -164,17 +207,38 @@ export default function ImageCropUpload({
   const handleResetCrop = () => {
     setScale(1);
     setRotate(0);
-    if (imgRef.current && aspect) {
-      const { width, height } = imgRef.current;
-      setCrop(centerCrop(makeAspectCrop(
-        {
-          unit: '%',
-          width: 90,
-        },
-        aspect,
-        width,
-        height
-      ), width, height));
+    if (imgRef.current) {
+      const { width: imgWidth, height: imgHeight } = imgRef.current;
+      
+      // Get exact dimensions from SVG element
+      let targetWidth = minWidth;
+      let targetHeight = minHeight;
+      let targetAspect = aspect;
+      
+      if (svgElementId) {
+        const svgDimensions = getSvgElementDimensions(svgElementId);
+        if (svgDimensions) {
+          targetWidth = svgDimensions.width;
+          targetHeight = svgDimensions.height;
+          targetAspect = targetWidth / targetHeight;
+        }
+      }
+      
+      if (targetAspect) {
+        const cropWidth = Math.min(95, (targetWidth / imgWidth) * 100);
+        const cropHeight = Math.min(95, (targetHeight / imgHeight) * 100);
+        
+        setCrop(centerCrop(makeAspectCrop(
+          {
+            unit: '%',
+            width: cropWidth,
+            height: cropHeight,
+          },
+          targetAspect,
+          imgWidth,
+          imgHeight
+        ), imgWidth, imgHeight));
+      }
     }
   };
 

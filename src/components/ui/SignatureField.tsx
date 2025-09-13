@@ -16,34 +16,76 @@ interface SignatureFieldProps {
   height?: number;
   backgroundColor?: string;
   penColor?: string;
+  svgElementId?: string; // SVG element ID to get dimensions from
+}
+
+// Helper function to get SVG element dimensions from the DOM
+function getSvgElementDimensions(svgElementId: string): { width: number; height: number } | null {
+  if (!svgElementId) return null;
+  
+  const element = document.getElementById(svgElementId);
+  if (!element) return null;
+  
+  // Get computed style dimensions
+  const computedStyle = window.getComputedStyle(element);
+  const width = parseFloat(computedStyle.width);
+  const height = parseFloat(computedStyle.height);
+  
+  // Fallback to getBoundingClientRect if computed style doesn't work
+  if (!width || !height) {
+    const rect = element.getBoundingClientRect();
+    return { width: rect.width, height: rect.height };
+  }
+  
+  return { width, height };
 }
 
 // Pre-made signature options - Using local images from /sign/ directory
 const PRESET_SIGNATURES = [
   { 
-    id: 'preset1', 
-    name: 'Preset Signature 1', 
-    data: '/sign/preset1.png'
+    id: 'sign1', 
+    name: 'Signature 1', 
+    data: '/sign/sign1.png'
   },
   { 
-    id: 'preset2', 
-    name: 'Preset Signature 2', 
-    data: '/sign/preset2.png'
+    id: 'sign2', 
+    name: 'Signature 2', 
+    data: '/sign/sign2.png'
   },
   { 
-    id: 'preset3', 
-    name: 'Preset Signature 3', 
-    data: '/sign/preset3.png'
+    id: 'sign3', 
+    name: 'Signature 3', 
+    data: '/sign/sign3.png'
   },
   { 
-    id: 'preset4', 
-    name: 'Preset Signature 4', 
-    data: '/sign/preset4.png'
+    id: 'sign4', 
+    name: 'Signature 4', 
+    data: '/sign/sign4.png'
   },
   { 
-    id: 'preset5', 
-    name: 'Preset Signature 5', 
-    data: '/sign/preset5.png'
+    id: 'sign5', 
+    name: 'Signature 5', 
+    data: '/sign/sign5.png'
+  },
+  { 
+    id: 'sign6', 
+    name: 'Signature 6', 
+    data: '/sign/sign6.png'
+  },
+  { 
+    id: 'sign7', 
+    name: 'Signature 7', 
+    data: '/sign/sign7.png'
+  },
+  { 
+    id: 'sign8', 
+    name: 'Signature 8', 
+    data: '/sign/sign8.png'
+  },
+  { 
+    id: 'sign9', 
+    name: 'Signature 9', 
+    data: '/sign/sign9.png'
   },
 ];
 
@@ -57,7 +99,12 @@ export default function SignatureField({
   height = 150,
   backgroundColor = '#ffffff',
   penColor = '#000000',
+  svgElementId,
 }: SignatureFieldProps) {
+  // Get exact dimensions from SVG element
+  const svgDimensions = svgElementId ? getSvgElementDimensions(svgElementId) : null;
+  const canvasWidth = svgDimensions?.width || width;
+  const canvasHeight = svgDimensions?.height || height;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'draw' | 'preset'>('draw');
 //   const [isProcessing, setIsProcessing] = useState(false);
@@ -223,8 +270,8 @@ export default function SignatureField({
                   <SignatureCanvas
                     ref={signatureRef}
                     canvasProps={{
-                      width,
-                      height,
+                      width: canvasWidth,
+                      height: canvasHeight,
                       className: 'signature-canvas',
                       style: { backgroundColor }
                     }}

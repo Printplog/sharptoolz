@@ -38,12 +38,22 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
         ? getPurchasedTemplate(id as string)
         : getTemplate(id as string),
     enabled: !!id, // Only run query if id exists
+    refetchOnWindowFocus: false,
   });
 
   // Combined effect to handle data loading and state updates
   useEffect(() => {
     if (isLoading || !data) return;
-    const newSvgText = updateSvgFromFormData(data.svg, data.form_fields)
+    
+    // Initialize fields with default values first
+    const initializedFields = data.form_fields?.map((field: FormField) => ({
+      ...field,
+      currentValue: field.defaultValue ?? "",
+    })) || [];
+    
+    // Process SVG with initialized fields to preserve default images
+    const newSvgText = updateSvgFromFormData(data.svg, initializedFields);
+    
     // Update all state in the correct order
     setSvgText(newSvgText);
     setSvgRaw(newSvgText);
@@ -89,7 +99,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
       }, 0);
     }
     
-  }, [data, isLoading, isPurchased, setStatus, setStatusMessage]);
+  }, [data, isLoading, isPurchased, setStatus, setStatusMessage, purchasedData?.status, purchasedData?.error_message]);
 
   // Update live preview when fields or svgText change
   useEffect(() => {

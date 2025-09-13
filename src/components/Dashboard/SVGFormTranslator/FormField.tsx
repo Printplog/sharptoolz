@@ -229,6 +229,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
           aspectRatio={field.aspectRatio}
           minWidth={field.minWidth || 50}
           minHeight={field.minHeight || 50}
+          svgElementId={field.svgElementId}
         />
       );
 
@@ -246,6 +247,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
           height={signatureField.signatureHeight || 150}
           backgroundColor={signatureField.signatureBackground || '#ffffff'}
           penColor={signatureField.signaturePenColor || '#000000'}
+          svgElementId={field.svgElementId}
         />
       );
     }
