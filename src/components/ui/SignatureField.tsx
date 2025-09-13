@@ -134,27 +134,9 @@ export default function SignatureField({
   };
 
   const handlePresetSignature = (preset: typeof PRESET_SIGNATURES[0]) => {
-    // Convert image URL to data URL for consistency
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        const dataUrl = canvas.toDataURL('image/png');
-        onSignatureSelect(fieldId, dataUrl);
-        setIsDialogOpen(false);
-      }
-    };
-    img.onerror = () => {
-      // Fallback: use the URL directly if image conversion fails
-      onSignatureSelect(fieldId, preset.data);
-      setIsDialogOpen(false);
-    };
-    img.src = preset.data;
+    // Use the URL directly to avoid CORS issues in production
+    onSignatureSelect(fieldId, preset.data);
+    setIsDialogOpen(false);
   };
 
   const handleClearSignature = () => {
