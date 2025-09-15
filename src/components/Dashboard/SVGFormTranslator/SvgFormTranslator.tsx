@@ -168,6 +168,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
           <div className="w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl">
             <div className="min-w-[300px] inline-block max-w-full">
               <div
+                data-svg-preview
                 className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full"
                 dangerouslySetInnerHTML={{ __html: livePreview || svgText }}
               />

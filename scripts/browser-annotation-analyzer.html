@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Annotation Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .results {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .image-preview {
+            max-width: 100%;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+        }
+        .blue-pixels {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .debug-canvas {
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 SVG Annotation Analyzer</h1>
+        <p>This tool analyzes annotated SVG images to extract width and height from blue border annotations.</p>
+        
+        <div class="section">
+            <h2>📁 Load SVG File</h2>
+            <input type="file" id="svgFileInput" accept=".svg" />
+            <button onclick="loadSVG()">Load SVG</button>
+        </div>
+        
+        <div class="section">
+            <h2>🖼️ Image Preview</h2>
+            <div id="imagePreview"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🔍 Analysis Controls</h2>
+            <button onclick="analyzeAnnotations()">Analyze Blue Border</button>
+            <button onclick="showDebugVisualization()">Show Debug View</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+        
+        <div class="section">
+            <h2>📊 Analysis Results</h2>
+            <div id="results" class="results">No analysis performed yet.</div>
+        </div>
+        
+        <div class="section">
+            <h2>💡 Usage Instructions</h2>
+            <div id="usageInstructions" class="results">Load and analyze an SVG first.</div>
+        </div>
+    </div>
+
+    <script>
+        let currentImageData = null;
+        let currentImage = null;
+        let analysisResults = null;
+
+        // Blue color detection configuration
+        const BLUE_COLORS = [
+            { r: 0, g: 0, b: 255, name: 'Pure Blue' },
+            { r: 0, g: 100, b: 255, name: 'Light Blue' },
+            { r: 0, g: 0, b: 200, name: 'Dark Blue' },
+            { r: 50, g: 50, b: 255, name: 'Blue-ish' },
+            { r: 0, g: 150, b: 255, name: 'Sky Blue' }
+        ];
+        const COLOR_TOLERANCE = 100;
+
+        function loadSVG() {
+            const fileInput = document.getElementById('svgFileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an SVG file first.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const svgContent = e.target.result;
+                extractImageFromSVG(svgContent);
+            };
+            reader.readAsText(file);
+        }
+
+        function extractImageFromSVG(svgContent) {
+            console.log('🔍 Extracting image from SVG...');
+            
+            // Find the annotated image element
+            const imageMatch = svgContent.match(/<image[^>]*id="Annotated_Image\.upload"[^>]*>/);
+            if (!imageMatch) {
+                alert('Could not find Annotated_Image.upload element in SVG');
+                return;
+            }
+            
+            // Extract the xlink:href attribute (base64 data)
+            const hrefMatch = imageMatch[0].match(/xlink:href="([^"]+)"/);
+            if (!hrefMatch) {
+                alert('Could not find xlink:href attribute');
+                return;
+            }
+            
+            const base64Data = hrefMatch[1];
+            console.log('✅ Extracted base64 image data');
+            
+            // Extract width and height attributes
+            const widthMatch = imageMatch[0].match(/width="([^"]+)"/);
+            const heightMatch = imageMatch[0].match(/height="([^"]+)"/);
+            
+            const svgWidth = widthMatch ? parseInt(widthMatch[1]) : null;
+            const svgHeight = heightMatch ? parseInt(heightMatch[1]) : null;
+            
+            console.log(`📐 SVG Image dimensions: ${svgWidth}x${svgHeight}`);
+            
+            // Display the image
+            displayImage(base64Data, svgWidth, svgHeight);
+        }
+
+        function displayImage(base64Data, width, height) {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = `
+                <img src="${base64Data}" alt="Annotated Image" class="image-preview" />
+                <p><strong>Dimensions:</strong> ${width}x${height}px</p>
+            `;
+            
+            // Load the image for analysis
+            const img = new Image();
+            img.onload = function() {
+                currentImage = img;
+                console.log('✅ Image loaded for analysis');
+            };
+            img.src = base64Data;
+        }
+
+        function analyzeAnnotations() {
+            if (!currentImage) {
+                alert('Please load an SVG file first.');
+                return;
+            }
+            
+            console.log('🔍 Starting blue border analysis...');
+            
+            // Create a canvas to analyze the image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = currentImage.width;
+            canvas.height = currentImage.height;
+            
+            // Draw the image to the canvas
+            ctx.drawImage(currentImage, 0, 0);
+            
+            // Get image data
+            currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Analyze for blue border annotations
+            const result = detectBlueBorderAnnotations(currentImageData);
+            
+            if (result) {
+                analysisResults = result;
+                displayResults(result);
+                generateUsageInstructions(result);
+            } else {
+                alert('Could not detect blue border annotations. Make sure the image has blue borders.');
+            }
+        }
+
+        function detectBlueBorderAnnotations(imageData) {
+            const { data, width, height } = imageData;
+            console.log(`📊 Analyzing image: ${width}x${height} pixels`);
+            
+            // Helper function to check if pixel matches any blue color
+            const isBluePixel = (r, g, b) => {
+                for (const blueColor of BLUE_COLORS) {
+                    if (
+                        Math.abs(r - blueColor.r) <= COLOR_TOLERANCE &&
+                        Math.abs(g - blueColor.g) <= COLOR_TOLERANCE &&
+                        Math.abs(b - blueColor.b) <= COLOR_TOLERANCE
+                    ) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            
+            // Find blue pixels
+            const bluePixels = [];
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+                    
+                    if (isBluePixel(r, g, b)) {
+                        bluePixels.push({ x, y, r, g, b });
+                    }
+                }
+            }
+            
+            console.log(`🔵 Found ${bluePixels.length} blue pixels`);
+            
+            if (bluePixels.length === 0) {
+                return null;
+            }
+            
+            // Find border boundaries
+            const xs = bluePixels.map(p => p.x);
+            const ys = bluePixels.map(p => p.y);
+            
+            const minX = Math.min(...xs);
+            const maxX = Math.max(...xs);
+            const minY = Math.min(...ys);
+            const maxY = Math.max(...ys);
+            
+            // Calculate content dimensions
+            const contentWidth = maxX - minX;
+            const contentHeight = maxY - minY;
+            const borderThickness = Math.min(minX, minY, width - maxX, height - maxY);
+            
+            const result = {
+                imageWidth: width,
+                imageHeight: height,
+                border: {
+                    left: minX,
+                    right: maxX,
+                    top: minY,
+                    bottom: maxY
+                },
+                content: {
+                    width: contentWidth,
+                    height: contentHeight,
+                    aspectRatio: contentWidth / contentHeight
+                },
+                borderThickness,
+                bluePixelCount: bluePixels.length,
+                confidence: Math.min(1, bluePixels.length / (width * height * 0.01)) // Simple confidence metric
+            };
+            
+            console.log('✅ Blue border analysis complete:', result);
+            return result;
+        }
+
+        function displayResults(result) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h3>📊 Analysis Results</h3>
+                <p><strong>Image Dimensions:</strong> ${result.imageWidth}x${result.imageHeight}px</p>
+                <p><strong>Border Boundaries:</strong></p>
+                <ul>
+                    <li>Left: ${result.border.left}px</li>
+                    <li>Right: ${result.border.right}px</li>
+                    <li>Top: ${result.border.top}px</li>
+                    <li>Bottom: ${result.border.bottom}px</li>
+                </ul>
+                <p><strong>Content Dimensions:</strong> ${result.content.width}x${result.content.height}px</p>
+                <p><strong>Aspect Ratio:</strong> ${result.content.aspectRatio.toFixed(3)}</p>
+                <p><strong>Border Thickness:</strong> ${result.borderThickness}px</p>
+                <p><strong>Blue Pixels Found:</strong> <span class="blue-pixels">${result.bluePixelCount}</span></p>
+                <p><strong>Detection Confidence:</strong> ${(result.confidence * 100).toFixed(1)}%</p>
+            `;
+        }
+
+        function generateUsageInstructions(result) {
+            const instructionsDiv = document.getElementById('usageInstructions');
+            const { content } = result;
+            
+            instructionsDiv.innerHTML = `
+                <h3>💡 ImageCropUpload Component Usage</h3>
+                <p><strong>Props for your component:</strong></p>
+                <pre>
+&lt;ImageCropUpload
+  fieldId="your_field_id"
+  fieldName="Your Field Name"
+  onImageSelect={handleImageSelect}
+  aspectRatio={${content.aspectRatio.toFixed(3)}}
+  minWidth={${Math.round(content.width)}}
+  minHeight={${Math.round(content.height)}}
+  svgElementId="Annotated_Image.upload"
+/&gt;
+                </pre>
+                <p><strong>Key Values:</strong></p>
+                <ul>
+                    <li><code>aspectRatio={${content.aspectRatio.toFixed(3)}}</code></li>
+                    <li><code>minWidth={${Math.round(content.width)}}</code></li>
+                    <li><code>minHeight={${Math.round(content.height)}}</code></li>
+                </ul>
+            `;
+        }
+
+        function showDebugVisualization() {
+            if (!currentImageData || !analysisResults) {
+                alert('Please analyze the image first.');
+                return;
+            }
+            
+            // Create a debug canvas showing detected blue pixels
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = currentImageData.width;
+            canvas.height = currentImageData.height;
+            canvas.className = 'debug-canvas';
+            
+            // Draw the original image
+            ctx.putImageData(currentImageData, 0, 0);
+            
+            // Highlight blue pixels in red
+            const { data, width, height } = currentImageData;
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+                    
+                    // Check if this is a blue pixel
+                    let isBlue = false;
+                    for (const blueColor of BLUE_COLORS) {
+                        if (
+                            Math.abs(r - blueColor.r) <= COLOR_TOLERANCE &&
+                            Math.abs(g - blueColor.g) <= COLOR_TOLERANCE &&
+                            Math.abs(b - blueColor.b) <= COLOR_TOLERANCE
+                        ) {
+                            isBlue = true;
+                            break;
+                        }
+                    }
+                    
+                    if (isBlue) {
+                        // Highlight blue pixels in red
+                        data[index] = 255;     // R
+                        data[index + 1] = 0;   // G
+                        data[index + 2] = 0;   // B
+                    }
+                }
+            }
+            
+            ctx.putImageData(currentImageData, 0, 0);
+            
+            // Add to page
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML += '<h4>Debug Visualization (Blue pixels highlighted in red):</h4>';
+            preview.appendChild(canvas);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = 'No analysis performed yet.';
+            document.getElementById('usageInstructions').innerHTML = 'Load and analyze an SVG first.';
+            document.getElementById('imagePreview').innerHTML = '';
+            currentImageData = null;
+            currentImage = null;
+            analysisResults = null;
+        }
+
+        // Initialize
+        console.log('🚀 SVG Annotation Analyzer loaded');
+    </script>
+</body>
+</html>
