@@ -1,22 +1,19 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
-import ReactCrop from "react-image-crop";
-import "react-image-crop/dist/ReactCrop.css";
+import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Upload, RotateCcw, RotateCw, ZoomIn, ZoomOut, X, Check } from "lucide-react";
+import { Upload, RotateCcw, RotateCw, X, Check, Wand2, Loader2 } from "lucide-react";
+import { removeBackground } from "@imgly/background-removal";
 import { annotationDetector, type AnnotationResult } from "@/lib/utils/annotationDetector";
 import useToolStore from "@/store/formStore";
+import "react-image-crop/dist/ReactCrop.css";
 
 interface ImageCropUploadProps {
   fieldId: string;
   fieldName: string;
   currentValue: string;
   onImageSelect: (fieldId: string, croppedImageDataUrl: string) => void;
-  aspectRatio?: number;
-  minWidth?: number;
-  minHeight?: number;
   svgElementId?: string;
 }
 
@@ -25,20 +22,19 @@ export default function ImageCropUpload({
   fieldName,
   currentValue,
   onImageSelect,
-  aspectRatio = 1,
-  minWidth = 50,
-  minHeight = 50,
   svgElementId
 }: ImageCropUploadProps) {
   const [image, setImage] = useState<string | null>(null);
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
-  const [scale, setScale] = useState(1);
-  const [rotate, setRotate] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRemovingBackground, setIsRemovingBackground] = useState(false);
+  const [hasBackgroundRemoved, setHasBackgroundRemoved] = useState(false);
   const [annotationResult, setAnnotationResult] = useState<AnnotationResult | null>(null);
+  const [rotation, setRotation] = useState(0);
+  
   const imgRef = useRef<HTMLImageElement>(null);
-  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   
   // Get SVG text from store
   const { svgRaw } = useToolStore();
@@ -49,7 +45,6 @@ export default function ImageCropUpload({
       if (!svgElementId) return;
       
       try {
-        // Pass SVG text to the annotation detector
         const result = await annotationDetector.findAndAnalyzeDefaultImage(svgElementId, svgRaw);
         
         if (result) {
@@ -62,158 +57,201 @@ export default function ImageCropUpload({
 
     analyzeDefaultImage();
   }, [svgElementId, svgRaw]);
+  
+
 
   const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget;
     
-    // Use annotation result if available, otherwise use default aspect ratio
-    const targetAspectRatio = annotationResult?.content.aspectRatio || aspectRatio;
+    // Set a default crop area (center, 80% of image)
+    const cropWidth = width * 0.8;
+    const cropHeight = height * 0.8;
+    const cropX = (width - cropWidth) / 2;
+    const cropY = (height - cropHeight) / 2;
     
-    const crop = centerCrop(
-      makeAspectCrop(
-        {
-          unit: "%",
-          width: 90,
-        },
-        targetAspectRatio,
-        width,
-        height
-      ),
-      width,
-      height
-    );
-    setCrop(crop);
-  }, [aspectRatio, annotationResult]);
-
+    setCrop({
+      unit: "px",
+      x: cropX,
+      y: cropY,
+      width: cropWidth,
+      height: cropHeight,
+    });
+  }, []);
 
   const getCroppedImg = useCallback(
-    (
-      image: HTMLImageElement,
-      crop: PixelCrop
-    ) => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+    async (imageSrc: string, pixelCrop: PixelCrop): Promise<string> => {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      
+      return new Promise((resolve, reject) => {
+        image.onload = () => {
+          console.log('=== CROPPING DEBUG ===');
+          console.log('Original image dimensions:', image.width, 'x', image.height);
+          console.log('Pixel crop coordinates:', pixelCrop);
+          console.log('Annotation result:', annotationResult);
+          
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
 
-      if (!ctx) {
-        throw new Error("No 2d context");
-      }
+          if (!ctx) {
+            reject(new Error("No 2d context"));
+            return;
+          }
 
-      const scaleX = image.naturalWidth / image.width;
-      const scaleY = image.naturalHeight / image.height;
-      const pixelRatio = window.devicePixelRatio;
+          // Calculate scale factors between displayed image and original image
+          const displayedHeight = 400; // Our fixed display height
+          const displayedWidth = (image.width / image.height) * displayedHeight;
+          const scaleX = image.width / displayedWidth;
+          const scaleY = image.height / displayedHeight;
+          
+          console.log('Display dimensions:', displayedWidth, 'x', displayedHeight);
+          console.log('Scale factors:', scaleX, 'x', scaleY);
+          
+          // Scale crop coordinates to original image dimensions
+          const scaledCrop = {
+            x: pixelCrop.x * scaleX,
+            y: pixelCrop.y * scaleY,
+            width: pixelCrop.width * scaleX,
+            height: pixelCrop.height * scaleY
+          };
+          
+          console.log('Scaled crop coordinates:', scaledCrop);
 
-      canvas.width = crop.width * pixelRatio * scaleX;
-      canvas.height = crop.height * pixelRatio * scaleY;
+          // If we have annotation result, stretch the cropped image to those dimensions
+          if (annotationResult) {
+            const targetWidth = annotationResult.content.width;
+            const targetHeight = annotationResult.content.height;
+            
+            console.log('Stretching to target dimensions:', targetWidth, 'x', targetHeight);
+            
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            
+            // Draw the cropped image stretched to target dimensions
+            ctx.drawImage(
+              image,
+              scaledCrop.x,
+              scaledCrop.y,
+              scaledCrop.width,
+              scaledCrop.height,
+              0,
+              0,
+              targetWidth,
+              targetHeight
+            );
+          } else {
+            // Use the actual crop dimensions
+            console.log('Using actual crop dimensions:', scaledCrop.width, 'x', scaledCrop.height);
+            
+            canvas.width = scaledCrop.width;
+            canvas.height = scaledCrop.height;
 
-      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-      ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(
+              image,
+              scaledCrop.x,
+              scaledCrop.y,
+              scaledCrop.width,
+              scaledCrop.height,
+              0,
+              0,
+              scaledCrop.width,
+              scaledCrop.height
+            );
+          }
 
-      ctx.drawImage(
-        image,
-        crop.x * scaleX,
-        crop.y * scaleY,
-        crop.width * scaleX,
-        crop.height * scaleY,
-        0,
-        0,
-        crop.width * scaleX,
-        crop.height * scaleY
-      );
+          console.log('Final canvas dimensions:', canvas.width, 'x', canvas.height);
+          console.log('=== END DEBUG ===');
 
-      return new Promise<Blob>((resolve) => {
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              throw new Error("Canvas is empty");
-            }
-            resolve(blob);
-          },
-          "image/jpeg",
-          0.8
-        );
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Canvas is empty"));
+                return;
+              }
+              resolve(URL.createObjectURL(blob));
+            },
+            "image/jpeg",
+            0.8
+          );
+        };
+        image.src = imageSrc;
       });
     },
-    []
+    [annotationResult]
   );
 
-  const makeClientCrop = useCallback(
-    async (crop: PixelCrop) => {
-      if (image && completedCrop && previewCanvasRef.current && imgRef.current) {
-        setCompletedCrop(crop);
-        const croppedImageBlob = await getCroppedImg(imgRef.current, crop);
-        const croppedImageDataUrl = URL.createObjectURL(croppedImageBlob);
-        onImageSelect(fieldId, croppedImageDataUrl);
+  const handleRemoveBackground = useCallback(async () => {
+    if (!originalImage) return;
+
+    setIsRemovingBackground(true);
+    try {
+      console.log('Starting background removal...');
+      console.log('Original image URL:', originalImage);
+      
+      // Convert data URL to blob for the background removal library
+      const response = await fetch(originalImage);
+      const blob = await response.blob();
+      
+      console.log('Converted to blob:', blob);
+      
+      // Use the blob directly with removeBackground
+      const result = await removeBackground(blob, {
+        // Use the correct model name
+        model: 'isnet',
+        output: {
+          format: 'image/png',
+          quality: 0.8,
+        },
+      });
+      
+      if (!result) {
+        throw new Error('Background removal returned no result');
       }
-    },
-    [image, completedCrop, getCroppedImg, onImageSelect, fieldId]
-  );
-
-  const onCropChange = useCallback((_crop: Crop, percentCrop: Crop) => {
-    setCrop(percentCrop);
-  }, []);
-
-  const onCropComplete = useCallback(
-    (crop: PixelCrop) => {
-      setCompletedCrop(crop);
-      makeClientCrop(crop);
-    },
-    [makeClientCrop]
-  );
-
-  const handleResetCrop = useCallback(() => {
-    if (imgRef.current) {
-      const { width, height } = imgRef.current;
       
-      // Use annotation result if available, otherwise use default
-      const targetAspectRatio = annotationResult?.content.aspectRatio || aspectRatio;
-      
-      const newCrop = centerCrop(
-        makeAspectCrop(
-          {
-            unit: "%",
-            width: 90,
-          },
-          targetAspectRatio,
-          width,
-          height
-        ),
-        width,
-        height
-      );
-      setCrop(newCrop);
+      console.log('Background removal result:', result);
+      const processedImageDataUrl = URL.createObjectURL(result);
+      setImage(processedImageDataUrl);
+      setHasBackgroundRemoved(true);
+      console.log('Background removal completed successfully');
+    } catch (error) {
+      console.error('Background removal failed:', error);
+      alert(`Background removal failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again or use the original image.`);
+    } finally {
+      setIsRemovingBackground(false);
     }
-  }, [aspectRatio, annotationResult]);
+  }, [originalImage]);
 
-  const handleZoomIn = useCallback(() => {
-    setScale(prev => Math.min(prev + 0.1, 3));
-  }, []);
+  const handleRestoreOriginal = useCallback(() => {
+    if (originalImage) {
+      setImage(originalImage);
+      setHasBackgroundRemoved(false);
+    }
+  }, [originalImage]);
 
-  const handleZoomOut = useCallback(() => {
-    setScale(prev => Math.max(prev - 0.1, 0.5));
-  }, []);
+  const handleConfirmCrop = useCallback(async () => {
+    if (!image || !completedCrop) return;
+
+    try {
+      const croppedImageDataUrl = await getCroppedImg(image, completedCrop);
+      onImageSelect(fieldId, croppedImageDataUrl);
+      setIsDialogOpen(false);
+      setImage(null);
+      setOriginalImage(null);
+      setCrop(undefined);
+      setCompletedCrop(undefined);
+      setHasBackgroundRemoved(false);
+    } catch (error) {
+      console.error('Crop failed:', error);
+    }
+  }, [image, completedCrop, getCroppedImg, onImageSelect, fieldId]);
 
   const handleRotateLeft = useCallback(() => {
-    setRotate(prev => prev - 90);
+    setRotation(prev => prev - 90);
   }, []);
 
   const handleRotateRight = useCallback(() => {
-    setRotate(prev => prev + 90);
+    setRotation(prev => prev + 90);
   }, []);
-
-  const handleConfirmCrop = useCallback(() => {
-    if (completedCrop && imgRef.current) {
-      getCroppedImg(imgRef.current, completedCrop).then((blob) => {
-        const croppedImageDataUrl = URL.createObjectURL(blob);
-        onImageSelect(fieldId, croppedImageDataUrl);
-        setIsDialogOpen(false);
-        setImage(null);
-        setCrop(undefined);
-        setCompletedCrop(undefined);
-        setScale(1);
-        setRotate(0);
-      });
-    }
-  }, [completedCrop, getCroppedImg, onImageSelect, fieldId]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: useCallback((acceptedFiles: File[]) => {
@@ -221,8 +259,12 @@ export default function ImageCropUpload({
         const file = acceptedFiles[0];
         const reader = new FileReader();
         reader.addEventListener("load", () => {
-          setImage(reader.result as string);
+          const imageDataUrl = reader.result as string;
+          setImage(imageDataUrl);
+          setOriginalImage(imageDataUrl);
           setCrop(undefined);
+          setCompletedCrop(undefined);
+          setHasBackgroundRemoved(false);
           setIsDialogOpen(true);
         });
         reader.readAsDataURL(file);
@@ -235,7 +277,6 @@ export default function ImageCropUpload({
   });
 
   const handleChangeImage = useCallback(() => {
-    // Create a hidden file input and trigger it
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -244,8 +285,12 @@ export default function ImageCropUpload({
       if (file) {
         const reader = new FileReader();
         reader.addEventListener("load", () => {
-          setImage(reader.result as string);
+          const imageDataUrl = reader.result as string;
+          setImage(imageDataUrl);
+          setOriginalImage(imageDataUrl);
           setCrop(undefined);
+          setCompletedCrop(undefined);
+          setHasBackgroundRemoved(false);
           setIsDialogOpen(true);
         });
         reader.readAsDataURL(file);
@@ -308,34 +353,17 @@ export default function ImageCropUpload({
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>Crop Image</DialogTitle>
+        <DialogContent className="max-w-5xl max-h-[95vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="text-white">Crop Image</DialogTitle>
           </DialogHeader>
           
           {image && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleZoomOut}
-                    className="text-white border-white/20 hover:bg-white/10"
-                  >
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                  <span className="text-white text-sm">{Math.round(scale * 100)}%</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleZoomIn}
-                    className="text-white border-white/20 hover:bg-white/10"
-                  >
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
+            <div className="flex-1 flex flex-col space-y-4 min-h-0 overflow-y-auto custom-scrollbar">
+              {/* Controls Row */}
+              <div className="flex-shrink-0 flex items-center justify-between flex-wrap gap-2 p-2 bg-gray-800/50 rounded-lg">
+                <div className="text-white text-sm">
+                  <span className="text-gray-300">Drag the corners to resize • Drag the center to move</span>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -360,49 +388,80 @@ export default function ImageCropUpload({
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleResetCrop}
-                    className="text-white border-white/20 hover:bg-white/10"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Reset
-                  </Button>
+                  {!hasBackgroundRemoved ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRemoveBackground}
+                      disabled={isRemovingBackground}
+                      className="text-white border-white/20 hover:bg-white/10"
+                    >
+                      {isRemovingBackground ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-4 w-4" />
+                      )}
+                      {isRemovingBackground ? "Removing..." : "Remove BG"}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRestoreOriginal}
+                      className="text-white border-white/20 hover:bg-white/10"
+                    >
+                      <X className="h-4 w-4" />
+                      Restore Original
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              <div className="relative">
-                <ReactCrop
-                  crop={crop}
-                  onChange={onCropChange}
-                  onComplete={onCropComplete}
-                  aspect={annotationResult?.content.aspectRatio || aspectRatio}
-                  minWidth={annotationResult?.content.width || minWidth}
-                  minHeight={annotationResult?.content.height || minHeight}
-                >
-                  <img
-                    ref={imgRef}
-                    alt="Crop me"
-                    src={image}
-                    style={{
-                      transform: `scale(${scale}) rotate(${rotate}deg)`,
-                      maxHeight: "400px",
-                      maxWidth: "100%"
+              {/* Cropper Container */}
+              <div className="flex-1 relative h-fit bg-gray-900 rounded-lg overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center">
+                  <ReactCrop
+                    crop={crop}
+                    onChange={(_, percentCrop) => setCrop(percentCrop)}
+                    onComplete={(c) => {
+                      console.log('Crop completed with coordinates:', c);
+                      setCompletedCrop(c);
                     }}
-                    onLoad={onImageLoad}
-                  />
-                </ReactCrop>
+                    className="max-w-full max-h-full"
+                    keepSelection
+                    minWidth={50}
+                    minHeight={50}
+                  >
+                    <img
+                      ref={imgRef}
+                      alt="Crop me"
+                      src={image}
+                      style={{
+                        transform: `rotate(${rotation}deg)`,
+                        height: "400px",
+                        width: "auto",
+                        objectFit: "contain"
+                      }}
+                      onLoad={onImageLoad}
+                    />
+                  </ReactCrop>
+                </div>
               </div>
             </div>
           )}
           
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 mt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsDialogOpen(false)}
+              onClick={() => {
+                setIsDialogOpen(false);
+                setImage(null);
+                setOriginalImage(null);
+                setHasBackgroundRemoved(false);
+              }}
               className="text-white border-white/20 hover:bg-white/10"
             >
               Cancel

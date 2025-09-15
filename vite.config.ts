@@ -21,5 +21,9 @@ export default defineConfig({
       usePolling: true,
       interval: 100, // You can bump this up if CPU gets hot
     },
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    },
   },
 });

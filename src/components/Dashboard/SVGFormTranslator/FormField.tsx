@@ -226,9 +226,6 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
           onImageSelect={(fieldId: string, croppedImageDataUrl: string) => {
             updateField(fieldId, croppedImageDataUrl);
           }}
-          aspectRatio={field.aspectRatio}
-          minWidth={field.minWidth || 50}
-          minHeight={field.minHeight || 50}
           svgElementId={field.svgElementId}
         />
       );

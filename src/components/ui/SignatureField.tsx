@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
@@ -23,21 +23,49 @@ interface SignatureFieldProps {
 function getSvgElementDimensions(svgElementId: string): { width: number; height: number } | null {
   if (!svgElementId) return null;
   
-  const element = document.getElementById(svgElementId);
-  if (!element) return null;
+  // Try multiple times to find the element (in case of timing issues)
+  let element = document.getElementById(svgElementId);
+  if (!element) {
+    // Try to find it in the SVG preview container
+    const svgPreview = document.querySelector('[data-svg-preview]');
+    if (svgPreview) {
+      element = svgPreview.querySelector(`#${svgElementId}`) as HTMLElement;
+    }
+  }
+  
+  if (!element) {
+    console.log('SVG element not found:', svgElementId);
+    return null;
+  }
+  
+  console.log('Found SVG element:', element, 'Tag:', element.tagName);
+  
+  // For image elements, try to get the natural dimensions first
+  if (element.tagName === 'image') {
+    const img = element as HTMLImageElement;
+    if (img.naturalWidth && img.naturalHeight) {
+      console.log('Using natural image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+      return { width: img.naturalWidth, height: img.naturalHeight };
+    }
+  }
   
   // Get computed style dimensions
   const computedStyle = window.getComputedStyle(element);
   const width = parseFloat(computedStyle.width);
   const height = parseFloat(computedStyle.height);
   
-  // Fallback to getBoundingClientRect if computed style doesn't work
-  if (!width || !height) {
-    const rect = element.getBoundingClientRect();
-    return { width: rect.width, height: rect.height };
+  console.log('Computed style dimensions:', width, 'x', height);
+  
+  // Check if we got valid dimensions
+  if (width && height && width > 0 && height > 0) {
+    console.log('Returning computed style dimensions:', width, 'x', height);
+    return { width, height };
   }
   
-  return { width, height };
+  // Fallback to getBoundingClientRect if computed style doesn't work
+  const rect = element.getBoundingClientRect();
+  console.log('Using bounding rect dimensions:', rect.width, 'x', rect.height);
+  return { width: rect.width, height: rect.height };
 }
 
 // Pre-made signature options - Using local images from /sign/ directory
@@ -101,10 +129,42 @@ export default function SignatureField({
   penColor = '#000000',
   svgElementId,
 }: SignatureFieldProps) {
-  // Get exact dimensions from SVG element
-  const svgDimensions = svgElementId ? getSvgElementDimensions(svgElementId) : null;
-  const canvasWidth = svgDimensions?.width || width;
-  const canvasHeight = svgDimensions?.height || height;
+  // State for dimensions to handle timing issues
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+  
+  // Get exact dimensions from SVG element with retry logic
+  useEffect(() => {
+    if (!svgElementId) {
+      setDimensions(null);
+      return;
+    }
+    
+    const getDimensions = () => {
+      const svgDimensions = getSvgElementDimensions(svgElementId);
+      setDimensions(svgDimensions);
+      
+      // Debug logging
+      console.log('Signature Field Debug:', {
+        svgElementId,
+        svgDimensions,
+        canvasWidth: svgDimensions?.width || width,
+        canvasHeight: svgDimensions?.height || height,
+        fallbackWidth: width,
+        fallbackHeight: height
+      });
+    };
+    
+    // Try immediately
+    getDimensions();
+    
+    // Retry after a short delay in case the SVG isn't ready yet
+    const timeout = setTimeout(getDimensions, 100);
+    
+    return () => clearTimeout(timeout);
+  }, [svgElementId, width, height]);
+  
+  const canvasWidth = dimensions?.width || width;
+  const canvasHeight = dimensions?.height || height;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'draw' | 'preset'>('draw');
 //   const [isProcessing, setIsProcessing] = useState(false);
@@ -258,6 +318,9 @@ export default function SignatureField({
                       style: { backgroundColor }
                     }}
                     penColor={penColor}
+                    minWidth={3}
+                    maxWidth={8}
+                    velocityFilterWeight={0.7}
                   />
                 </div>
               </div>
