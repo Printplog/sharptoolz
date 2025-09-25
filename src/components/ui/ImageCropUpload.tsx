@@ -4,9 +4,11 @@ import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Upload, RotateCcw, RotateCw, X, Check, Wand2, Loader2 } from "lucide-react";
-import { removeBackground } from "@imgly/background-removal";
 import { annotationDetector, type AnnotationResult } from "@/lib/utils/annotationDetector";
 import useToolStore from "@/store/formStore";
+import { removeBackground } from "@/api/apiEndpoints";
+import { toast } from "sonner";
+import errorMessage from "@/lib/utils/errorMessage";
 import "react-image-crop/dist/ReactCrop.css";
 
 interface ImageCropUploadProps {
@@ -26,6 +28,7 @@ export default function ImageCropUpload({
 }: ImageCropUploadProps) {
   const [image, setImage] = useState<string | null>(null);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -181,45 +184,31 @@ export default function ImageCropUpload({
   );
 
   const handleRemoveBackground = useCallback(async () => {
-    if (!originalImage) return;
+    if (!originalFile) return;
 
     setIsRemovingBackground(true);
     try {
-      console.log('Starting background removal...');
-      console.log('Original image URL:', originalImage);
+      console.log('Starting background removal via API...');
+      console.log('Original file:', originalFile.name, originalFile.size, 'bytes');
       
-      // Convert data URL to blob for the background removal library
-      const response = await fetch(originalImage);
-      const blob = await response.blob();
+      // Call backend API for background removal using axios
+      const result = await removeBackground(originalFile);
       
-      console.log('Converted to blob:', blob);
-      
-      // Use the blob directly with removeBackground
-      const result = await removeBackground(blob, {
-        // Use the correct model name
-        model: 'isnet',
-        output: {
-          format: 'image/png',
-          quality: 0.8,
-        },
-      });
-      
-      if (!result) {
-        throw new Error('Background removal returned no result');
+      if (!result.success || !result.image) {
+        throw new Error('Invalid response from server');
       }
       
-      console.log('Background removal result:', result);
-      const processedImageDataUrl = URL.createObjectURL(result);
-      setImage(processedImageDataUrl);
-      setHasBackgroundRemoved(true);
       console.log('Background removal completed successfully');
+      setImage(result.image);
+      setHasBackgroundRemoved(true);
+      toast.success("Background removed successfully");
     } catch (error) {
       console.error('Background removal failed:', error);
-      alert(`Background removal failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again or use the original image.`);
+      toast.error(errorMessage(error as any));
     } finally {
       setIsRemovingBackground(false);
     }
-  }, [originalImage]);
+  }, [originalFile]);
 
   const handleRestoreOriginal = useCallback(() => {
     if (originalImage) {
@@ -237,6 +226,7 @@ export default function ImageCropUpload({
       setIsDialogOpen(false);
       setImage(null);
       setOriginalImage(null);
+      setOriginalFile(null);
       setCrop(undefined);
       setCompletedCrop(undefined);
       setHasBackgroundRemoved(false);
@@ -257,6 +247,7 @@ export default function ImageCropUpload({
     onDrop: useCallback((acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
         const file = acceptedFiles[0];
+        setOriginalFile(file);
         const reader = new FileReader();
         reader.addEventListener("load", () => {
           const imageDataUrl = reader.result as string;
@@ -283,6 +274,7 @@ export default function ImageCropUpload({
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
+        setOriginalFile(file);
         const reader = new FileReader();
         reader.addEventListener("load", () => {
           const imageDataUrl = reader.result as string;
@@ -460,6 +452,7 @@ export default function ImageCropUpload({
                 setIsDialogOpen(false);
                 setImage(null);
                 setOriginalImage(null);
+                setOriginalFile(null);
                 setHasBackgroundRemoved(false);
               }}
               className="text-white border-white/20 hover:bg-white/10"

@@ -175,3 +175,15 @@ export const deleteTool = async (id: string): Promise<unknown> => {
   return res.data;
 };
 
+export const removeBackground = async (imageFile: File): Promise<{ success: boolean; image: string; message: string }> => {
+  const formData = new FormData();
+  formData.append('image', imageFile);
+  
+  const res = await apiClient.post('/remove-background/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};
+
