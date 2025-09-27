@@ -50,6 +50,7 @@ export interface SelectOption {
   value: string; // The text content from SVG element
   label: string; // Same as value or formatted
   svgElementId: string; // Full SVG element ID
+  displayText?: string; // Original text content from SVG element (preserves case)
 }
 
 export interface FormField {

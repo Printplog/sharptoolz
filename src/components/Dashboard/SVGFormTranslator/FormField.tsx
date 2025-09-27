@@ -139,7 +139,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
                 value={option.value}
                 className="text-white hover:bg-white/10"
               >
-                {option.label}
+                {option.displayText || option.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -196,6 +196,21 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
           />
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {field.name}
+          </label>
+        </div>
+      );
+      
+    case "hide":
+      return (
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id={field.id}
+            checked={value as boolean}
+            onCheckedChange={handleChange}
+            className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black"
+          />
+          <label htmlFor={field.id} className="text-sm font-medium text-white">
+            {`${field.name}`}
           </label>
         </div>
       );

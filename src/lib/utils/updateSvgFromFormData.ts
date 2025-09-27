@@ -18,7 +18,18 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
     let value: string = "";
 
     if ("dependsOn" in field && field.dependsOn && fieldMap[field.dependsOn]) {
-      value = String(fieldMap[field.dependsOn].currentValue ?? "");
+      const dependencyField = fieldMap[field.dependsOn];
+      
+      // For select fields, get the display text of the selected option instead of the ID
+      if (dependencyField.options && dependencyField.options.length > 0) {
+        const selectedOption = dependencyField.options.find(
+          opt => String(opt.value) === String(dependencyField.currentValue)
+        );
+        // Use displayText or text content from the selected option
+        value = selectedOption?.displayText || selectedOption?.label || String(dependencyField.currentValue ?? "");
+      } else {
+        value = String(dependencyField.currentValue ?? "");
+      }
     } else {
       value = String(field.currentValue ?? "");
     }
@@ -74,6 +85,29 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
           // Only update href if there's a value, otherwise preserve original
           if (value && value.trim() !== "") {
             el.setAttributeNS(hrefNS, "href", value);
+          }
+          break;
+        }
+        case "hide": {
+          // Toggle visibility based on checkbox state
+          // When checked (true), SHOW the overlay element; when unchecked (false), HIDE it
+          // This is reversed from normal hide behavior because these elements are overlays
+          // Determine visibility based on the value
+          let isVisible = false;
+          
+          if (typeof value === 'boolean') {
+            isVisible = value;
+          } else if (typeof value === 'string') {
+            const valueStr = value.toLowerCase();
+            isVisible = valueStr === "true" || valueStr === "1";
+          }
+          
+          el.setAttribute("opacity", isVisible ? "1" : "0");
+          el.setAttribute("visibility", isVisible ? "visible" : "hidden");
+          if (isVisible) {
+            el.removeAttribute("display");
+          } else {
+            el.setAttribute("display", "none");
           }
           break;
         }
