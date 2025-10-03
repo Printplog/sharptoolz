@@ -5,16 +5,31 @@ import BuilderDialog from "@/components/Admin/ToolBuilder/BuilderDialog";
 import ProtectedLayout from "@/layouts/ProtectedLayout";
 import { useDialogStore } from "@/store/dialogStore";
 import { useEffect } from "react";
-import { Outlet, useSearchParams } from "react-router-dom"; // or next/router if using Next.js
+import { Outlet, useSearchParams, useNavigate, useLocation } from "react-router-dom"; // or next/router if using Next.js
 
 export default function AdminLayout() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const dialog = params.get("dialog") as string;
-  const { openDialog } = useDialogStore();
+  const { openDialog, closeDialog, dialogs } = useDialogStore();
 
   useEffect(() => {
-    openDialog(dialog);
+    if (dialog) {
+      openDialog(dialog);
+    }
   }, [dialog, openDialog]);
+
+  // Clear URL parameters when dialog is closed
+  useEffect(() => {
+    if (!dialogs.toolBuilder && dialog === "toolBuilder") {
+      const newParams = new URLSearchParams(params);
+      newParams.delete("dialog");
+      const newSearch = newParams.toString();
+      const newUrl = `${location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+      navigate(newUrl, { replace: true });
+    }
+  }, [dialogs.toolBuilder, dialog, params, location.pathname, navigate]);
 
   return (
     <ProtectedLayout isAdmin={true}>

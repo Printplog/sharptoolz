@@ -42,7 +42,9 @@ export default function AdminTools() {
     mutationFn: createTool,
     onSuccess: () => {
       toast.success("Tool created successfully!");
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["tools"] });
+      queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
       setDialogOpen(false);
     },
     onError: () => {
@@ -56,7 +58,9 @@ export default function AdminTools() {
       updateTool(id, data),
     onSuccess: () => {
       toast.success("Tool updated successfully!");
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["tools"] });
+      queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
       setDialogOpen(false);
       setEditingTool(null);
     },
@@ -70,7 +74,9 @@ export default function AdminTools() {
     mutationFn: deleteTool,
     onSuccess: () => {
       toast.success("Tool deleted successfully!");
+      // Invalidate specific queries to avoid circular re-fetching
       queryClient.invalidateQueries({ queryKey: ["tools"] });
+      queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
     },
     onError: () => {
       toast.error("Failed to delete tool");

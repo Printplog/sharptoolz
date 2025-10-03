@@ -21,9 +21,10 @@ interface SvgEditorProps {
   tool?: string;
   onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string }) => void;
   isLoading?: boolean;
+  onElementSelect?: (elementType: string, idPattern?: string) => void;
 }
 
-export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot = false, tool = "", onSave, isLoading }: SvgEditorProps) {
+export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot = false, tool = "", onSave, isLoading, onElementSelect }: SvgEditorProps) {
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
   const [name, setName] = useState<string>(templateName);
@@ -236,7 +237,22 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
 
   const handleElementSelect = useCallback((index: number) => {
     setSelectedElementIndex(index);
-  }, []);
+    
+    // Notify parent component about selection for docs context
+    if (onElementSelect && index >= 0 && index < elements.length) {
+      const element = elements[index];
+      const elementType = isTextElement(element) ? 'text' : 
+                        isImageElement(element) ? 'image' : element.tag;
+      
+      // Extract ID pattern for documentation context
+      let idPattern;
+      if (element.id) {
+        idPattern = element.id;
+      }
+      
+      onElementSelect(elementType, idPattern);
+    }
+  }, [elements, onElementSelect]);
 
   const handleElementReorder = useCallback((reorderedElements: SvgElement[]) => {
     const currentlySelectedElement = selectedElementIndex !== null ? elements[selectedElementIndex] : null;

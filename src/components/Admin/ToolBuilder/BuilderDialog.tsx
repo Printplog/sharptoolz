@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { addTemplate, getTools } from "@/api/apiEndpoints";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDialogStore } from "@/store/dialogStore";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
@@ -40,7 +40,7 @@ import type { Tool } from "@/types";
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   svgFile: z.instanceof(File, { message: "SVG file is required" }),
-  bannerFile: z.instanceof(File, { message: "Banner image is required" }),
+  bannerFile: z.instanceof(File, { message: "Banner image is required" }).optional(),
   tool: z.string().optional(),
 });
 
@@ -50,11 +50,16 @@ export default function BuilderDialog() {
   const { closeDialog, dialogs } = useDialogStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const location = useLocation();
+  
+  // Extract tool ID from current URL path (e.g., /admin/tools/7286b789-bca0-4327-9844-3df7e65b68dc/templates)
+  const toolId = location.pathname.match(/\/admin\/tools\/([^\/]+)\/templates/)?.[1] || null;
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      tool: undefined,
+      tool: toolId || undefined,
     },
   });
 
@@ -64,12 +69,30 @@ export default function BuilderDialog() {
     queryFn: getTools,
   });
 
-  // Reset form when dialog opens
+  // Reset form when dialog opens, but preserve tool selection if provided via URL
   useEffect(() => {
     if (dialogs.toolBuilder) {
-      form.reset();
+      console.log('Dialog opened, toolId from URL:', toolId);
+      form.reset({
+        name: "",
+        tool: toolId || undefined,
+      });
+      
+      // Also explicitly set the tool value to ensure it's selected
+      if (toolId) {
+        form.setValue("tool", toolId);
+        console.log('Set tool value to:', toolId);
+      }
     }
-  }, [dialogs.toolBuilder, form]);
+  }, [dialogs.toolBuilder, form, toolId]);
+
+  // Additional effect to handle toolId changes while dialog is open
+  useEffect(() => {
+    if (dialogs.toolBuilder && toolId && !form.getValues("tool")) {
+      console.log('ToolId available, setting form value:', toolId);
+      form.setValue("tool", toolId);
+    }
+  }, [toolId, dialogs.toolBuilder, form]);
 
   // SVG Dropzone
   const onSvgDrop = (acceptedFiles: File[]) => {
@@ -111,12 +134,28 @@ export default function BuilderDialog() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormData) => addTemplate(data),
-    onSuccess() {
+    onSuccess(data: any) {
+      toast.success("Template created successfully");
       
-      closeDialog("toolBuilder");
-      navigate("/admin/tools");
-      toast.success("Tool created successfully");
+      // Invalidate queries first, then navigate
       queryClient.invalidateQueries({ queryKey: ["tools"] });
+      if (toolId) {
+        queryClient.invalidateQueries({ queryKey: ["templates", "tool", toolId] });
+      }
+      
+      // Close dialog and navigate after a brief delay to allow invalidation
+      setTimeout(() => {
+        closeDialog("toolBuilder");
+        
+        // Redirect based on where the dialog was opened from
+        if (toolId) {
+          // If opened from a tool page, redirect back to that tool's templates
+          navigate(`/admin/tools/${toolId}/templates`);
+        } else {
+          // If opened from templates page, redirect to tools page
+          navigate("/admin/tools");
+        }
+      }, 100);
     },
     onError(error: Error) {
       toast.error(errorMessage(error));
@@ -125,6 +164,11 @@ export default function BuilderDialog() {
   });
 
   const onSubmit = async (values: FormValues) => {
+    console.log('=== TEMPLATE CREATION DEBUG ===');
+    console.log('Current toolId from URL:', toolId);
+    console.log('Form values received:', values);
+    console.log('Tools available:', tools);
+    
     try {
       // Read SVG file
       const svgText = await new Promise<string>((resolve, reject) => {
@@ -138,10 +182,21 @@ export default function BuilderDialog() {
       const formData = new FormData();
       formData.append('name', values.name);
       formData.append('svg', svgText);
-      formData.append('banner', values.bannerFile); // Send the actual file
+      if (values.bannerFile) {
+        formData.append('banner', values.bannerFile);
+      }
       formData.append('type', 'tool');
       if (values.tool) {
         formData.append('tool', values.tool);
+        console.log('Adding tool to form data:', values.tool);
+      } else {
+        console.log('No tool selected for template creation');
+      }
+
+      console.log('Form values:', values);
+      console.log('FormData entries:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
 
       mutate(formData);

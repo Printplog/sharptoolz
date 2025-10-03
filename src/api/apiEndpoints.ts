@@ -2,7 +2,7 @@ import type { Tool, CryptoPaymentData, DownloadData, LoginPayload, PurchasedTemp
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
-  const res = await apiClient.get('/accounts/user');
+  const res = await apiClient.get('/accounts/user/');
   return res.data;
 };
 
@@ -77,7 +77,7 @@ export const getTemplates = async (hot?: boolean, tool?: string): Promise<Templa
   if (tool) params.append('tool', tool);
   
   const queryString = params.toString();
-  const res = await apiClient.get(`/templates${queryString ? `?${queryString}` : ''}`);
+  const res = await apiClient.get(`/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
 }
 

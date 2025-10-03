@@ -1,7 +1,7 @@
 import { Loader, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Template } from "@/types";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ConfirmAction } from "@/components/ConfirmAction";
 import { deleteTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
@@ -13,12 +13,23 @@ type Props = {
 
 export default function ToolCard({ tool }: Props) {
   const queryClient = useQueryClient();
+  const location = useLocation();
 
   const { mutate, isPending } = useMutation({
     mutationFn: (id: string) => deleteTemplate(id),
     onSuccess: () => {
       toast.success("Template deleted successfully");
+      
+      // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ["tools"] });
+      queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      
+      // If we're on a tool's templates page, also invalidate that specific tool's templates
+      const toolId = location.pathname.match(/\/admin\/tools\/([^\/]+)\/templates/)?.[1];
+      if (toolId) {
+        queryClient.invalidateQueries({ queryKey: ["templates", "tool", toolId] });
+      }
     },
   });
 

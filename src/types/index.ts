@@ -64,6 +64,8 @@ export interface FormField {
   options?: SelectOption[]; // If options exist, it's automatically a select field
   dependsOn?: string;
   link?: string; // Link property for fields like Tracking_ID
+  isTrackingId?: boolean; // Flag to identify tracking ID fields
+  trackingRole?: string; // Role in tracking display (e.g., "name", "email", "weight")
   aspectRatio?: number; // For image crop fields (width/height ratio)
   minWidth?: number; // Minimum width for image crop
   minHeight?: number; // Minimum height for image crop
@@ -210,3 +212,19 @@ export type AdminUserDetails = {
     days_since_joined: number;
   };
 };
+
+export interface DocSection {
+  id: string;          // Unique identifier for the section
+  title: string;       // Section title
+  content: string;     // Markdown content
+  codeExamples?: {     // Optional code examples
+    title: string;     // Example title
+    code: string;      // Code snippet (just the ID pattern)
+    description?: string; // Optional description
+  }[];
+  subsections?: DocSection[]; // Nested subsections
+  visualPreview?: {    // Optional visual preview component
+    type: 'tracking-site';
+    site: 'parcelfinda' | 'myflightlookup';
+  };
+}

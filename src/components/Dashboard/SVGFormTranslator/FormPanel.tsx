@@ -80,7 +80,9 @@ export default function FormPanel({ test }: { test: boolean }) {
     if (!isAuthenticated) {
       navigate("/auth/login?dialog=register");
     }
-    const tracking_id = getFieldValue("Tracking_ID");
+    // Find tracking ID field using isTrackingId flag or fall back to "Tracking_ID"
+    const trackingField = fields?.find(field => field.isTrackingId) || fields?.find(field => field.id === "Tracking_ID");
+    const tracking_id = trackingField ? getFieldValue(trackingField.id) : undefined;
     const toastMessage =
       test === isTest
         ? "Document updated successfully"
@@ -137,42 +139,48 @@ export default function FormPanel({ test }: { test: boolean }) {
       {isPurchased && (
         <div className="mb-10 pb-4 border-b border-white/10">
           <div className="">
-            {getFieldValue("Tracking_ID") && (
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
-                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                  <span className="text-white font-medium">Tracking ID:</span>
-                  <div className="flex gap-2 items-center">
-                    <span className="text-primary py-1 px-3 border border-primary bg-primary/10 rounded-full text-sm shrink overflow-hidden">
-                      {getFieldValue("Tracking_ID")}
-                    </span>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="ml-1"
-                      onClick={() => {
-                        navigator.clipboard.writeText(
-                          getFieldValue("Tracking_ID") as string
-                        );
-                        toast.success("Tracking ID copied!");
-                      }}
-                      aria-label="Copy Tracking ID"
-                    >
-                      <Copy />
-                    </Button>
+            {(() => {
+              // Find tracking ID field using isTrackingId flag or fall back to "Tracking_ID"
+              const trackingField = fields?.find(field => field.isTrackingId) || fields?.find(field => field.id === "Tracking_ID");
+              const trackingId = trackingField ? getFieldValue(trackingField.id) : undefined;
+              
+              return trackingId ? (
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                    <span className="text-white font-medium">Tracking ID:</span>
+                    <div className="flex gap-2 items-center">
+                      <span className="text-primary py-1 px-3 border border-primary bg-primary/10 rounded-full text-sm shrink overflow-hidden">
+                        {trackingId}
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="ml-1"
+                        onClick={() => {
+                          navigator.clipboard.writeText(trackingId as string);
+                          toast.success("Tracking ID copied!");
+                        }}
+                        aria-label="Copy Tracking ID"
+                      >
+                        <Copy />
+                      </Button>
+                    </div>
                   </div>
+                  {trackingField?.link && (
+                    <Button asChild size="sm" className="">
+                      <a
+                        href={trackingField.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Track
+                        <ArrowUpRightFromCircle className="ml-2" />
+                      </a>
+                    </Button>
+                  )}
                 </div>
-                <Button asChild size="sm" className="">
-                  <a
-                    href={fields?.find(f => f.id === "Tracking_ID")?.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Track
-                    <ArrowUpRightFromCircle className="ml-2" />
-                  </a>
-                </Button>
-              </div>
-            )}
+              ) : null;
+            })()}
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="" className="text-primary">

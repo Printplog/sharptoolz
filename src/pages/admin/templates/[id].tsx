@@ -1,5 +1,6 @@
 import { getTemplate, updateTemplate } from '@/api/apiEndpoints';
-import SvgEditor from '@/components/Admin/ToolBuilder/SvgEditor'
+import SvgEditor from '@/components/Admin/ToolBuilder/SvgEditor';
+import DocsPanel from '@/components/Admin/ToolBuilder/SvgEditor/DocsPanel';
 import errorMessage from '@/lib/utils/errorMessage';
 import type { Template } from '@/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -59,6 +60,7 @@ export default function SvgTemplateEditor() {
       
       // Invalidate all related queries to ensure UI updates
       queryClient.invalidateQueries({ queryKey: ["template", id] });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
       
@@ -102,15 +104,25 @@ export default function SvgTemplateEditor() {
 
   return (
     <div className="container mx-auto">
-      <SvgEditor 
-        svgRaw={data.svg} 
-        templateName={data.name}
-        onSave={handleSave}
-        banner={data.banner}
-        hot={data.hot}
-        tool={data.tool}
-        isLoading={saveMutation.isPending}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <SvgEditor 
+            svgRaw={data.svg} 
+            templateName={data.name}
+            onSave={handleSave}
+            banner={data.banner}
+            hot={data.hot}
+            tool={data.tool}
+            isLoading={saveMutation.isPending}
+            onElementSelect={() => {
+              // Simplified - no automatic section selection
+            }}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <DocsPanel />
+        </div>
+      </div>
     </div>
   );
 }
