@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, Shield, User, Plane, MapPin, Calendar, Clock } from "lucide-react";
+import { CheckCircle, Shield, User } from "lucide-react";
 
 interface TrackingSitePreviewProps {
   site: 'parcelfinda' | 'myflightlookup';

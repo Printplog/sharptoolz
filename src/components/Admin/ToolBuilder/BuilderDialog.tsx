@@ -134,7 +134,7 @@ export default function BuilderDialog() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormData) => addTemplate(data),
-    onSuccess(data: any) {
+    onSuccess() {
       toast.success("Template created successfully");
       
       // Invalidate queries first, then navigate

@@ -12,7 +12,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const dialog = params.get("dialog") as string;
-  const { openDialog, closeDialog, dialogs } = useDialogStore();
+  const { openDialog, dialogs } = useDialogStore();
 
   useEffect(() => {
     if (dialog) {

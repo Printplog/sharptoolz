@@ -12,7 +12,7 @@ interface DocsPanelProps {
 export default function DocsPanel({ activeSection }: DocsPanelProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["intro"]));
   const [searchQuery, setSearchQuery] = useState("");
-  const { ref: navbarRef, height: navbarHeight } = useHeight<HTMLDivElement>();
+  const { ref: navbarRef } = useHeight<HTMLDivElement>();
   
   // Auto-expand section when activeSection changes
   useEffect(() => {
@@ -112,7 +112,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
   }
   
   // Render a code example
-  const renderCodeExample = (example: DocSection['codeExamples'][0]) => (
+  const renderCodeExample = (example: NonNullable<DocSection['codeExamples']>[0]) => (
     <div className="my-2 bg-black/30 rounded-md overflow-hidden">
       <div className="bg-black/50 px-3 py-1 text-xs font-medium">{example.title}</div>
       <div className="p-3 font-mono text-sm overflow-x-auto custom-scrollbar">
