@@ -155,7 +155,7 @@ export const svgEditorDocs: DocSection[] = [
         description: "The City field's value depends on the Country field"
       }
     ]
-  },
+  }, 
   {
     id: "generated-values",
     title: ".gen Extension",
