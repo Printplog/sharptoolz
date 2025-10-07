@@ -17,6 +17,7 @@ interface SignatureFieldProps {
   backgroundColor?: string;
   penColor?: string;
   svgElementId?: string; // SVG element ID to get dimensions from
+  disabled?: boolean;
 }
 
 // Helper function to get SVG element dimensions from the DOM
@@ -128,6 +129,7 @@ export default function SignatureField({
   backgroundColor = '#ffffff',
   penColor = '#000000',
   svgElementId,
+  disabled = false,
 }: SignatureFieldProps) {
   // State for dimensions to handle timing issues
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
@@ -244,6 +246,7 @@ export default function SignatureField({
           variant="outline"
           onClick={() => setIsDialogOpen(true)}
           className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+          disabled={disabled}
         >
           <Pen className="w-4 h-4 mr-2" />
           {currentValue ? 'Change Signature' : `Add ${fieldName}`}
@@ -256,6 +259,7 @@ export default function SignatureField({
               variant="outline"
               onClick={handleDownloadSignature}
               className="bg-blue-500/20 border-blue-500/30 text-blue-400 hover:bg-blue-500/30"
+              disabled={disabled}
             >
               <Download className="w-4 h-4" />
             </Button>
@@ -264,6 +268,7 @@ export default function SignatureField({
               variant="outline"
               onClick={handleRemoveSignature}
               className="bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30"
+              disabled={disabled}
             >
               <X className="w-4 h-4" />
             </Button>
@@ -321,6 +326,7 @@ export default function SignatureField({
                     minWidth={3}
                     maxWidth={8}
                     velocityFilterWeight={0.7}
+                    disabled={disabled}
                   />
                 </div>
               </div>
@@ -331,6 +337,7 @@ export default function SignatureField({
                   variant="outline"
                   onClick={handleClearSignature}
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  disabled={disabled}
                 >
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Clear
@@ -339,6 +346,7 @@ export default function SignatureField({
                   type="button"
                   onClick={handleDrawSignature}
                   className="bg-primary text-background hover:bg-primary/90"
+                  disabled={disabled}
                 >
                   <Check className="w-4 h-4 mr-2" />
                   Use Signature
@@ -355,6 +363,7 @@ export default function SignatureField({
                   variant="outline"
                   onClick={() => hiddenInputRef.current?.click()}
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  disabled={disabled}
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Choose File
@@ -368,8 +377,12 @@ export default function SignatureField({
                 {PRESET_SIGNATURES.map((preset) => (
                   <div
                     key={preset.id}
-                    className="flex items-center gap-4 p-4 border border-white/20 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition-colors"
-                    onClick={() => handlePresetSignature(preset)}
+                    className={`flex items-center gap-4 p-4 border border-white/20 rounded-lg bg-white/5 transition-colors ${
+                      disabled 
+                        ? "opacity-50 cursor-not-allowed" 
+                        : "hover:bg-white/10 cursor-pointer"
+                    }`}
+                    onClick={disabled ? undefined : () => handlePresetSignature(preset)}
                   >
                     <img
                       src={preset.data}
@@ -381,6 +394,7 @@ export default function SignatureField({
                       type="button"
                       size="sm"
                       className="bg-primary text-background hover:bg-primary/90"
+                      disabled={disabled}
                     >
                       Use
                     </Button>

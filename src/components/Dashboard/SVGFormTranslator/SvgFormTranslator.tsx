@@ -23,9 +23,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     setFields, 
     setSvgRaw, 
     setName, 
-    setStatus, 
     fields, 
-    setStatusMessage, 
   } = useToolStore();
   
   const { id } = useParams<{ id: string }>();
@@ -79,27 +77,12 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     if (isPurchased) {
       
       
-      // Use setTimeout to ensure other state updates complete first
-      setTimeout(() => {
-        console.log('Setting status:', purchasedData.status);
-        console.log('Setting status message:', purchasedData.error_message);
-        
-        if (purchasedData.status !== undefined) {
-          setStatus(purchasedData.status);
-        }
-        if (purchasedData.error_message !== undefined) {
-          setStatusMessage(purchasedData.error_message as string);
-        }
-      }, 0);
-    } else {
-      // Clear status fields for regular templates
-      setTimeout(() => {
-        setStatus("");
-        setStatusMessage("");
-      }, 0);
+      // Status and error message are now handled by the SVG template fields
+      console.log('Purchased template status:', purchasedData.status);
+      console.log('Purchased template error message:', purchasedData.error_message);
     }
     
-  }, [data, isLoading, isPurchased, setStatus, setStatusMessage, purchasedData?.status, purchasedData?.error_message]);
+  }, [data, isLoading, isPurchased, purchasedData?.status, purchasedData?.error_message]);
 
   // Update live preview when fields or svgText change
   useEffect(() => {
@@ -162,7 +145,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
           <TabsTrigger value="preview">Preview</TabsTrigger>
         </TabsList>
         <TabsContent value="editor">
-          <FormPanel test={purchasedData?.test} />
+          <FormPanel test={purchasedData?.test} tutorial={data && 'tutorial' in data ? data.tutorial : undefined} />
         </TabsContent>
         <TabsContent value="preview">
           <div className="w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl">

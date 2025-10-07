@@ -57,12 +57,22 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "select-fields",
     title: ".select_ Extension",
-    content: "Create dropdown fields by using the .select_ pattern for multiple related elements. The text content of each element becomes the option text.",
+    content: "Create dropdown fields by using the .select_ pattern for multiple related elements. The text content of each element becomes the option text. To make a select field trackable, add .track_[role] to ONE of the select options.",
     codeExamples: [
       { 
-        title: "Dropdown Options", 
+        title: "Basic Dropdown Options", 
         code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered",
         description: "Creates a dropdown with three options"
+      },
+      { 
+        title: "Trackable Select Field", 
+        code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status",
+        description: "Creates a dropdown that can be tracked with role 'status'. Only ONE option needs the .track_ extension."
+      },
+      { 
+        title: "Airline Selection with Tracking", 
+        code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline",
+        description: "Airline selection dropdown that can be tracked with role 'airline'"
       }
     ]
   },
@@ -191,6 +201,73 @@ export const svgEditorDocs: DocSection[] = [
     ]
   },
   {
+    id: "editable-extension",
+    title: ".editable Extension",
+    content: "Marks fields as editable even after document purchase. By default, all fields become non-editable after purchase, but the .editable extension allows specific fields to remain editable. This is useful for fields that users might need to update after purchase, such as status fields, dynamic content, or user-specific information.",
+    codeExamples: [
+      { 
+        title: "Editable Text Field", 
+        code: "Status.text.editable",
+        description: "Creates a text field that remains editable even after document purchase"
+      },
+      { 
+        title: "Editable Email Field", 
+        code: "Contact_Email.email.editable",
+        description: "Creates an email field that remains editable after purchase"
+      },
+      { 
+        title: "Editable Number Field", 
+        code: "Quantity.number.editable",
+        description: "Creates a number field that remains editable after purchase"
+      },
+      { 
+        title: "Editable Textarea", 
+        code: "Notes.textarea.editable",
+        description: "Creates a textarea field that remains editable after purchase"
+      },
+      { 
+        title: "Editable Select Field", 
+        code: "Priority.select_High\nPriority.select_Medium\nPriority.select_Low.editable",
+        description: "Creates a select field with options that remains editable after purchase"
+      },
+      { 
+        title: "Editable Date Field", 
+        code: "Due_Date.date.editable",
+        description: "Creates a date field that remains editable after purchase"
+      },
+      { 
+        title: "Editable Checkbox", 
+        code: "Terms_Accepted.checkbox.editable",
+        description: "Creates a checkbox that remains editable after purchase"
+      },
+      { 
+        title: "Editable Generated Field", 
+        code: "Reference_Number.gen.max_12.editable",
+        description: "Creates a generated field that remains editable after purchase (users can regenerate)"
+      },
+      { 
+        title: "Editable File Upload", 
+        code: "Updated_Logo.upload.editable",
+        description: "Creates a file upload field that remains editable after purchase"
+      },
+      { 
+        title: "Editable Signature Field", 
+        code: "Manager_Signature.sign.editable",
+        description: "Creates a signature field that remains editable after purchase"
+      },
+      { 
+        title: "Editable with Tracking", 
+        code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status.editable",
+        description: "Creates a select field with tracking role that remains editable after purchase"
+      },
+      { 
+        title: "Editable with Multiple Extensions", 
+        code: "Tracking_Number.gen.max_15.tracking_id.editable",
+        description: "Creates a generated tracking ID field that remains editable after purchase"
+      }
+    ]
+  },
+  {
     id: "tracking-websites",
     title: "Tracking Websites",
     content: "Configure SVG templates for use with our tracking websites.",
@@ -200,15 +277,17 @@ export const svgEditorDocs: DocSection[] = [
         title: "ParcelFinda",
         content: "ParcelFinda is our package tracking website. Use these extensions to map SVG fields to the tracking display. ⚠️ IMPORTANT: .track_ extensions must be the LAST extension in the ID chain.",
         codeExamples: [
-          { title: "Tracking ID with Link", code: "Order_Number.gen.max_10.tracking_id.link_https://parcelfinda.com/track", description: "Main tracking ID with link to ParcelFinda (no .track_ extension needed)" },
-          { title: "Customer Name", code: "Customer_Name.text.track_name", description: "Customer name display (.track_name must be last)" },
-          { title: "Email Address", code: "Email.email.track_email", description: "Contact email (.track_email must be last)" },
-          { title: "Package Description", code: "Item.text.track_package", description: "Package description/contents (.track_package must be last)" },
-          { title: "Package Weight", code: "Weight.number.track_weight", description: "Weight of the package (.track_weight must be last)" },
-          { title: "Destination", code: "Address.textarea.track_destination", description: "Delivery address (.track_destination must be last)" },
-          { title: "Shipment Date", code: "Date.date.track_shipment_date", description: "Date the package was shipped (.track_shipment_date must be last)" },
-          { title: "Arrival Time", code: "ETA.date.track_arrival", description: "Expected arrival time (.track_arrival must be last)" },
-          { title: "Estimated Delivery", code: "Delivery.date.track_estimated_delivery", description: "Estimated delivery date (.track_estimated_delivery must be last)" }
+          { title: "Tracking ID with Link", code: "Tracking_ID.gen.max_12.link_https://parcelfinda.com/track", description: "Main tracking ID with link to ParcelFinda (no .track_ extension needed)" },
+          { title: "Recipient Name", code: "Recipient_Name.text.track_name", description: "Recipient name display (.track_name must be last)" },
+          { title: "Recipient Address", code: "Recipient_Address.text.track_destination", description: "Delivery address (.track_destination must be last)" },
+          { title: "Package Content", code: "Package_Content.text.track_package", description: "Package description/contents (.track_package must be last)" },
+          { title: "Package Weight", code: "Package_Weight.text.track_weight", description: "Weight of the package (.track_weight must be last)" },
+          { title: "Shipment Date", code: "Shipment_Date.text.track_shipment_date", description: "Date the package was shipped (.track_shipment_date must be last)" },
+          { title: "Arrival Date", code: "Arrival_Date.text.track_arrival", description: "Expected arrival date (.track_arrival must be last)" },
+          { title: "Status Selection", code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status\nStatus.select_Error", description: "Package status dropdown (.track_status must be on ONE option only)" },
+          { title: "Editable Status Selection", code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status.editable\nStatus.select_Error", description: "Editable package status dropdown that remains editable after purchase" },
+          { title: "Error Message", code: "Error_Message.textarea.track_error_message", description: "Error message field (shows when status is 'Error') (.track_error_message must be last)" },
+          { title: "Editable Error Message", code: "Error_Message.textarea.track_error_message.editable", description: "Editable error message field that remains editable after purchase" }
         ]
       },
       {
@@ -226,7 +305,8 @@ export const svgEditorDocs: DocSection[] = [
           { title: "Second Flight - Origin", code: "Departure2.text.track_origin2", description: "Second flight departure location for multi-leg journeys (.track_origin2 must be last)" },
           { title: "Second Flight - Destination", code: "Arrival2.text.track_destination2", description: "Second flight arrival location for multi-leg journeys (.track_destination2 must be last)" },
           { title: "Third Flight - Origin", code: "Departure3.text.track_origin3", description: "Third flight departure location for multi-leg journeys (.track_origin3 must be last)" },
-          { title: "Third Flight - Destination", code: "Arrival3.text.track_destination3", description: "Third flight arrival location for multi-leg journeys (.track_destination3 must be last)" }
+          { title: "Third Flight - Destination", code: "Arrival3.text.track_destination3", description: "Third flight arrival location for multi-leg journeys (.track_destination3 must be last)" },
+          { title: "Airline Selection", code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline", description: "Airline selection dropdown (.track_airline must be on ONE option only)" }
         ]
       }
     ]

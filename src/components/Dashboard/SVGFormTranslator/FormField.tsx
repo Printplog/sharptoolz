@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,18 +24,41 @@ import { Textarea } from "@/components/ui/textarea";
 import ImageCropUpload from "@/components/ui/ImageCropUpload";
 import SignatureField from "@/components/ui/SignatureField";
 
-const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
-  const { updateField, status, setStatus, setStatusMessage, statusMessage } = useToolStore();
+const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; isPurchased?: boolean }> = ({ field, allFields = [], isPurchased = false }) => {
+  const { updateField } = useToolStore();
   const value = field.currentValue;
+  
+  // Check if this is the Error_Message field and if Status is "Error Message"
+  const shouldShowErrorMessage = () => {
+    if (field.id === "Error_Message") {
+      const statusField = allFields.find(f => f.id === "Status");
+      const statusValue = statusField?.currentValue || statusField?.defaultValue;
+      
+      // Find the selected option to get its label
+      const selectedOption = statusField?.options?.find(opt => opt.value === statusValue);
+      const label = selectedOption?.label;
+      
+      return label === "Error";
+    }
+    return true; // Show all other fields normally
+  };
+  
+  // Don't render if this is Error_Message and Status is not "Error Message"
+  if (!shouldShowErrorMessage()) {
+    return null;
+  }
 
-  useEffect(() => {
-    setStatus("")
-    setStatusMessage("")
-  }, [setStatus, setStatusMessage])
+  // Determine if field should be disabled
+  // Field is disabled if:
+  // 1. Document is purchased AND
+  // 2. Field is not explicitly marked as editable
+  const isFieldDisabled = isPurchased && !field.editable;
 
   const handleChange = (newValue: string | number | boolean) => {
-    updateField(field.id, newValue);
-    console.log(newValue)
+    if (!isFieldDisabled) {
+      updateField(field.id, newValue);
+      console.log(newValue)
+    }
   };
 
   const generateId = (length: number) => {
@@ -77,6 +100,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
             maxLength={field.max}
             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
             placeholder={`Enter ${field.name}`}
+            disabled={isFieldDisabled}
           />
         </div>
       );
@@ -98,6 +122,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
             onChange={(e) => handleChange(Number(e.target.value))}
             max={field.max}
             className="bg-white/10 border-white/20 text-white"
+            disabled={isFieldDisabled}
           />
         </div>
       );
@@ -118,6 +143,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
             maxLength={field.max}
             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[80px]"
             placeholder={`Enter ${field.name}`}
+            disabled={isFieldDisabled}
           />
         </div>
       );
@@ -128,7 +154,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
         <label htmlFor={field.id} className="text-sm font-medium text-white">
           {field.name}
         </label>
-        <Select defaultValue={value as string} value={value as string} onValueChange={handleChange}>
+        <Select defaultValue={value as string} value={value as string} onValueChange={handleChange} disabled={isFieldDisabled}>
           <SelectTrigger className="bg-white/10 border-white/20 text-white w-full">
             <SelectValue placeholder={`Select ${field.name}`} />
           </SelectTrigger>
@@ -139,7 +165,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
                 value={option.value}
                 className="text-white hover:bg-white/10"
               >
-                {option.displayText || option.label}
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -147,43 +173,6 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
       </div>
       );
 
-    case "status":
-      return (
-        <div className="space-y-2 w-full">
-          <label htmlFor={field.id} className="text-sm font-medium text-white">
-            {field.name}
-          </label>
-          <Select value={status} onValueChange={(e) => setStatus(e)}>
-            <SelectTrigger className="bg-white/10 border-white/20 w-full text-white data-[placeholder]:text-white/80">
-              <SelectValue placeholder={`--Select ${field.name}--`} className="text-white placeholder:text-white " />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-white/20">
-              {[
-                "Processing",
-                "In Transit",
-                "Delivered",
-                "Error Message",
-              ].map((item) => (
-                <SelectItem
-                  key={item}
-                  value={item.replace(" ", "_").toLowerCase()}
-                  className="text-white hover:bg-white/10"
-                >
-                  {item}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {status === "error_message" && (
-            <div className="mt-4 space-y-2">
-              <label htmlFor="error">
-                Error Message
-              </label>
-              <Textarea id="error" value={statusMessage} onChange={(e) => setStatusMessage(e.target.value)}  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[80px]" />
-            </div>
-          )}
-        </div>
-      );
 
     case "checkbox":
       return (
@@ -193,6 +182,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
             checked={value as boolean}
             onCheckedChange={handleChange}
             className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black"
+            disabled={isFieldDisabled}
           />
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {field.name}
@@ -208,6 +198,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
             checked={value as boolean}
             onCheckedChange={handleChange}
             className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black"
+            disabled={isFieldDisabled}
           />
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {`${field.name}`}
@@ -227,6 +218,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
             value={value as string}
             onChange={(e) => handleChange(e.target.value)}
             className="bg-white/10 border-white/20 text-white w-full"
+            disabled={isFieldDisabled}
           />
         </div>
       );
@@ -242,6 +234,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
             updateField(fieldId, croppedImageDataUrl);
           }}
           svgElementId={field.svgElementId}
+          disabled={isFieldDisabled}
         />
       );
 
@@ -260,6 +253,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
           backgroundColor={signatureField.signatureBackground || '#ffffff'}
           penColor={signatureField.signaturePenColor || '#000000'}
           svgElementId={field.svgElementId}
+          disabled={isFieldDisabled}
         />
       );
     }
@@ -277,11 +271,13 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
               value={(value as string) || generateId(field.max as number)}
               readOnly
               className="bg-white/5 border-white/20 text-gray-400 cursor-not-allowed"
+              disabled={isFieldDisabled}
             />
             <Button
               type="button"
               onClick={() => handleChange(generateId(field.max as number))}
               className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              disabled={isFieldDisabled}
             >
               <RotateCcw className="w-4 h-4" />
             </Button>
@@ -301,6 +297,7 @@ const FormFieldComponent: React.FC<{ field: FormField }> = ({ field }) => {
             value={value as string}
             onChange={(e) => handleChange(e.target.value)}
             className="bg-white/10 border-white/20 h-10 w-full"
+            disabled={isFieldDisabled}
           />
         </div>
       );

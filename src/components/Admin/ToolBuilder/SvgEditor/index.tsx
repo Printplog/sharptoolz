@@ -12,6 +12,7 @@ import ElementNavigation from "./ElementNavigation";
 import ElementEditor from "./ElementEditor";
 import BannerUpload from "./BannerUpload";
 import FloatingScrollButton from "./FloatingScrollButton";
+import type { Tutorial } from "@/types";
 
 interface SvgEditorProps {
   svgRaw: string;
@@ -19,12 +20,13 @@ interface SvgEditorProps {
   banner?: string;
   hot?: boolean;
   tool?: string;
-  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string }) => void;
+  tutorial?: Tutorial;
+  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => void;
   isLoading?: boolean;
   onElementSelect?: (elementType: string, idPattern?: string) => void;
 }
 
-export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot = false, tool = "", onSave, isLoading, onElementSelect }: SvgEditorProps) {
+export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot = false, tool = "", tutorial, onSave, isLoading, onElementSelect }: SvgEditorProps) {
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
   const [name, setName] = useState<string>(templateName);
@@ -32,6 +34,8 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [isHot, setIsHot] = useState<boolean>(hot);
   const [selectedTool, setSelectedTool] = useState<string>(tool);
+  const [tutorialUrlState, setTutorialUrlState] = useState<string>(tutorial?.url || "");
+  const [tutorialTitleState, setTutorialTitleState] = useState<string>(tutorial?.title || "");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -71,6 +75,14 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
   useEffect(() => {
     setSelectedTool(tool);
   }, [tool]);
+
+  useEffect(() => {
+    setTutorialUrlState(tutorial?.url || "");
+  }, [tutorial]);
+
+  useEffect(() => {
+    setTutorialTitleState(tutorial?.title || "");
+  }, [tutorial]);
 
   // Handle scroll events for floating scroll-to-top button
   useEffect(() => {
@@ -143,10 +155,23 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
         let originalElement: Element | null = null;
         
         for (const [key, el] of elementMap.entries()) {
-          const [tag, id, href, textContent] = key.split('-');
+          const [tag, id, href, textContent, originalIndex] = key.split('-');
           
-          // Match by ID and tag first
+          // Match by exact ID and tag first
           if (editedEl.id && editedEl.id === id && editedEl.tag === tag) {
+            originalElement = el;
+            break;
+          }
+          
+          // Match by base ID (for elements with extensions like .editable added)
+          // Extract base ID from both the edited element and the original
+          const editedBaseId = editedEl.id?.split('.')[0];
+          const originalBaseId = id?.split('.')[0];
+          
+          if (editedBaseId && originalBaseId && 
+              editedBaseId === originalBaseId && 
+              editedEl.tag === tag &&
+              editedEl.innerText === textContent) {
             originalElement = el;
             break;
           }
@@ -158,7 +183,7 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
             break;
           }
           
-          // Match by tag and text content
+          // Match by tag and text content as fallback
           if (editedEl.tag === tag && editedEl.innerText === textContent) {
             originalElement = el;
             break;
@@ -220,7 +245,9 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
       svg: updatedSvg,
       banner: bannerFile,
       hot: isHot,
-      tool: selectedTool && selectedTool !== "" ? selectedTool : undefined
+      tool: selectedTool && selectedTool !== "" ? selectedTool : undefined,
+      tutorialUrl: tutorialUrlState.trim() || undefined,
+      tutorialTitle: tutorialTitleState.trim() || undefined
     });
   }
 
@@ -298,17 +325,6 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
     <div className="space-y-6">
       <div className="flex items-center justify-between pb-5 border-b border-white/10">
         <h2 className="text-xl font-semibold">SVG Editor</h2>
-        <div className="flex items-center gap-2">
-          {onSave && (
-            <Button 
-              onClick={handleSave} 
-              disabled={!name.trim() || isLoading}
-              className="min-w-24"
-            >
-              {isLoading ? "Saving..." : "Save Template"}
-            </Button>
-          )}
-        </div>
       </div>
 
       {/* Template Name */}
@@ -321,7 +337,7 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
           placeholder="Enter template name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="max-w-md input"
+          className="w-full input"
         />
       </div>
 
@@ -331,7 +347,7 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
           Tool
         </Label>
         <Select value={selectedTool || "none"} onValueChange={(value) => setSelectedTool(value === "none" ? "" : value)}>
-          <SelectTrigger className="max-w-md">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a tool (optional)" />
           </SelectTrigger>
           <SelectContent className="bg-background border border-white/10 ">
@@ -352,6 +368,64 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
             Selected: {tools.find(tool => tool.id === selectedTool)?.name}
           </div>
         )}
+      </div>
+
+      {/* Tutorial Section */}
+      <div className="relative">
+        <div 
+          className={`
+            p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
+            ${tutorialUrlState.trim() 
+              ? 'border-white/50 bg-white/10' 
+              : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/8'
+            }
+          `}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`
+              w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200
+              ${tutorialUrlState.trim() ? 'bg-white text-black' : 'bg-white/20 text-white/60'}
+            `}>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white">Tutorial</h3>
+              <p className="text-sm text-white/60">Add a tutorial video to help users</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 space-y-4">
+            {/* Tutorial URL */}
+            <div className="space-y-2">
+              <Label htmlFor="tutorial-url" className="text-sm font-medium">
+                Tutorial URL
+              </Label>
+              <Input
+                id="tutorial-url"
+                placeholder="https://youtube.com/watch?v=..."
+                value={tutorialUrlState}
+                onChange={(e) => setTutorialUrlState(e.target.value)}
+                className="w-full input"
+              />
+            </div>
+
+            {/* Tutorial Title */}
+            <div className="space-y-2">
+              <Label htmlFor="tutorial-title" className="text-sm font-medium">
+                Tutorial Title
+              </Label>
+              <Input
+                id="tutorial-title"
+                placeholder="How to use the tool"
+                value={tutorialTitleState}
+                onChange={(e) => setTutorialTitleState(e.target.value)}
+                className="w-full input"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Hot Template Toggle */}
@@ -441,6 +515,19 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
       {selectedElementIndex === null && (
         <div className="text-center py-8 text-white/60">
           <p>Select an element from above to start editing</p>
+        </div>
+      )}
+
+      {/* Save Template Button at Bottom */}
+      {onSave && (
+        <div className="flex justify-center pt-6 border-t border-white/10">
+          <Button 
+            onClick={handleSave} 
+            disabled={!name.trim() || isLoading}
+            className="min-w-32 px-8 py-2"
+          >
+            {isLoading ? "Saving..." : "Save Template"}
+          </Button>
         </div>
       )}
 

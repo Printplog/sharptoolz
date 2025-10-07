@@ -7,8 +7,6 @@ interface ToolStore {
   name: string;
   fields: FormField[];
   svgRaw: string;
-  status: string;
-  statusMessage: string;
 
   setName: (name: string) => void;
   setFields: (fields: FormField[], isPurchased?: boolean) => void;
@@ -18,18 +16,12 @@ interface ToolStore {
   getFieldValue: (fieldId: string) => string | number | boolean | undefined;
   setSvgRaw: (svg: string) => void;
   downloadSvg: (fileName?: string) => void;
-
-  setStatus: (status: string) => void;
-  setStatusMessage: (message: string) => void;
-  setStatusWithMessage: (status: string, message: string) => void;
 }
 
 const  useToolStore = create<ToolStore>((set, get) => ({
   name: "",
   fields: [] as FormField[],
   svgRaw: "",
-  status: "",
-  statusMessage: "",
 
   setName: (name) => set({ name }),
 
@@ -99,10 +91,6 @@ const  useToolStore = create<ToolStore>((set, get) => ({
     URL.revokeObjectURL(url);
   },
 
-  setStatus: (status) => set({ status }),
-  setStatusMessage: (message) => set({ statusMessage: message }),
-  setStatusWithMessage: (status, message) =>
-    set({ status, statusMessage: message }),
 }));
 
 

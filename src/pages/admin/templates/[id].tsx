@@ -23,7 +23,7 @@ export default function SvgTemplateEditor() {
 
   // Save template mutation
   const saveMutation = useMutation({
-    mutationFn: async (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string }) => {
+    mutationFn: async (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => {
       try {
         // If there's a banner file, use FormData
         if (templateData.banner) {
@@ -33,6 +33,12 @@ export default function SvgTemplateEditor() {
           formData.append('hot', templateData.hot ? 'true' : 'false');
           if (templateData.tool) {
             formData.append('tool', templateData.tool);
+          }
+          if (templateData.tutorialUrl) {
+            formData.append('tutorial_url', templateData.tutorialUrl);
+          }
+          if (templateData.tutorialTitle) {
+            formData.append('tutorial_title', templateData.tutorialTitle);
           }
           formData.append('banner', templateData.banner);
           const result = await updateTemplate(id as string, formData);
@@ -44,7 +50,9 @@ export default function SvgTemplateEditor() {
             name: templateData.name,
             svg: templateData.svg,
             hot: templateData.hot || false,
-            tool: templateData.tool || undefined
+            tool: templateData.tool || undefined,
+            tutorial_url: templateData.tutorialUrl || undefined,
+            tutorial_title: templateData.tutorialTitle || undefined
           });
           console.log('JSON update result:', result);
           return result;
@@ -113,6 +121,7 @@ export default function SvgTemplateEditor() {
             banner={data.banner}
             hot={data.hot}
             tool={data.tool}
+            tutorial={data.tutorial}
             isLoading={saveMutation.isPending}
             onElementSelect={() => {
               // Simplified - no automatic section selection

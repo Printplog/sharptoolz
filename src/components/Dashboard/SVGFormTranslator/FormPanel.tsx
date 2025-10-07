@@ -23,15 +23,14 @@ import { DownloadDocDialog } from "../Documents/DownloadDoc";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
+import type { Tutorial } from "@/types";
 
-export default function FormPanel({ test }: { test: boolean }) {
+export default function FormPanel({ test, tutorial }: { test: boolean; tutorial?: Tutorial }) {
   const {
     fields,
     resetForm,
     name,
     svgRaw,
-    status,
-    statusMessage,
     getFieldValue,
     setName,
   } = useToolStore();
@@ -94,8 +93,6 @@ export default function FormPanel({ test }: { test: boolean }) {
       ...(isPurchased ? {} : { svg: updateSvgFromFormData(svgRaw, fields) }),
       ...(isPurchased ? {} : { form_fields: fields }),
       tracking_id: tracking_id as string,
-      ...(!status ? {} : { status: status }),
-      error_message: statusMessage,
       test: isTest,
       toastMessage: toastMessage,
     };
@@ -118,21 +115,24 @@ export default function FormPanel({ test }: { test: boolean }) {
         </Button>
       </div>
 
-      {!isPurchased && (
+      {/* Tutorial Button at top - Only show for regular templates with tutorial */}
+      {tutorial && !isPurchased && (
         <div className="flex justify-end">
-          <Link
-            to="https://www.youtube.com/results?search_query=svg+form+translator+tutorial"
+          <a
+            href={tutorial.url}
             target="_blank"
             rel="noopener noreferrer"
           >
             <Button
               variant="outline"
-              className=" gap-2 bg-white/10 border-white/20 text-white hover:text-white hover:bg-white/20 shadow-lg shadow-primary/10"
+              className="gap-2 bg-white/10 border-white/20 text-white hover:text-white hover:bg-white/20"
             >
-              <Youtube className="w-4 h-4 text-primary" />
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
               Watch Tutorial
             </Button>
-          </Link>
+          </a>
         </div>
       )}
 
@@ -195,16 +195,44 @@ export default function FormPanel({ test }: { test: boolean }) {
         {fields
           ?.filter((field) => field.type === "status")
           .map((field) => (
-            <FormFieldComponent key={field.id} field={field} />
+            <FormFieldComponent key={field.id} field={field} allFields={fields} />
           ))}
-        <fieldset disabled={isPurchased} className="m-0 p-0 border-0 space-y-3">
+        <div className="m-0 p-0 border-0 space-y-3">
           {fields
             ?.filter((field) => field.type !== "status")
             .map((field) => (
-              <FormFieldComponent key={field.id} field={field} />
+              <FormFieldComponent 
+                key={field.id} 
+                field={field} 
+                allFields={fields} 
+                isPurchased={isPurchased}
+              />
             ))}
-        </fieldset>
+        </div>
       </div>
+
+      {/* Tutorial Button - Only show for regular templates, not purchased ones */}
+      {tutorial && !isPurchased && (
+        <div className="pt-4 border-t border-white/20">
+          <Button
+            asChild
+            variant="outline"
+            className="w-full hover:bg-black/50 hover:text-white"
+          >
+            <a
+              href={tutorial.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              {tutorial.title || "Watch Tutorial"}
+            </a>
+          </Button>
+        </div>
+      )}
 
       {/* Buttons */}
       <div className="pt-4 border-t border-white/20 flex flex-col sm:flex-row justify-end gap-5 ">

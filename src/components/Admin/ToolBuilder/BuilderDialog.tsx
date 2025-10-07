@@ -42,6 +42,8 @@ const formSchema = z.object({
   svgFile: z.instanceof(File, { message: "SVG file is required" }),
   bannerFile: z.instanceof(File, { message: "Banner image is required" }).optional(),
   tool: z.string().optional(),
+  tutorialUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  tutorialTitle: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -53,7 +55,7 @@ export default function BuilderDialog() {
   const location = useLocation();
   
   // Extract tool ID from current URL path (e.g., /admin/tools/7286b789-bca0-4327-9844-3df7e65b68dc/templates)
-  const toolId = location.pathname.match(/\/admin\/tools\/([^\/]+)\/templates/)?.[1] || null;
+  const toolId = location.pathname.match(/\/admin\/tools\/([^/]+)\/templates/)?.[1] || null;
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -76,6 +78,8 @@ export default function BuilderDialog() {
       form.reset({
         name: "",
         tool: toolId || undefined,
+        tutorialUrl: "",
+        tutorialTitle: "",
       });
       
       // Also explicitly set the tool value to ensure it's selected
@@ -93,6 +97,19 @@ export default function BuilderDialog() {
       form.setValue("tool", toolId);
     }
   }, [toolId, dialogs.toolBuilder, form]);
+
+  // Auto-generate tutorial title when name changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name: fieldName }) => {
+      if (fieldName === "name" && value.name?.trim()) {
+        const currentTitle = form.getValues("tutorialTitle");
+        if (!currentTitle) {
+          form.setValue("tutorialTitle", `How to use the ${value.name} tool`);
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // SVG Dropzone
   const onSvgDrop = (acceptedFiles: File[]) => {
@@ -192,10 +209,20 @@ export default function BuilderDialog() {
       } else {
         console.log('No tool selected for template creation');
       }
+      
+      // Add tutorial data if provided
+      if (values.tutorialUrl?.trim()) {
+        formData.append('tutorial_url', values.tutorialUrl);
+        console.log('Adding tutorial URL:', values.tutorialUrl);
+      }
+      if (values.tutorialTitle?.trim()) {
+        formData.append('tutorial_title', values.tutorialTitle);
+        console.log('Adding tutorial title:', values.tutorialTitle);
+      }
 
       console.log('Form values:', values);
       console.log('FormData entries:');
-      for (let [key, value] of formData.entries()) {
+      for (const [key, value] of formData.entries()) {
         console.log(key, value);
       }
 
@@ -236,6 +263,75 @@ export default function BuilderDialog() {
                   </FormItem>
                 )}
               />
+
+              {/* Tutorial Section */}
+              <div className="relative">
+                <div 
+                  className={`
+                    p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
+                    ${form.watch("tutorialUrl")?.trim() 
+                      ? 'border-white/10 bg-white/5' 
+                      : 'border-white/20 bg-white/5 hover:border-white/20 hover:bg-white/8'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`
+                      w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200
+                      ${form.watch("tutorialUrl")?.trim() ? 'bg-white text-black' : 'bg-white/20 text-white/60'}
+                    `}>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Tutorial (Optional)</h3>
+                      <p className="text-sm text-white/60">Add a tutorial video to help users</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 space-y-4">
+                    {/* Tutorial URL */}
+                    <FormField
+                      control={form.control}
+                      name="tutorialUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tutorial URL</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="https://youtube.com/watch?v=..."
+                              className="bg-white/10 text-white"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Tutorial Title */}
+                    <FormField
+                      control={form.control}
+                      name="tutorialTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tutorial Title</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="How to use the tool"
+                              className="bg-white/10 text-white"
+                              disabled={!form.watch("name")?.trim()}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
 
               {/* SVG Dropzone */}
               <FormField

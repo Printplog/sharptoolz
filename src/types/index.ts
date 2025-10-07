@@ -73,6 +73,7 @@ export interface FormField {
   signatureHeight?: number; // Height for signature canvas
   signatureBackground?: string; // Background color for signature canvas
   signaturePenColor?: string; // Pen color for signature drawing
+  editable?: boolean; // Whether field remains editable after purchase (default: false)
 } // Updated for signature fields
 
 export type Tool = {
@@ -80,6 +81,15 @@ export type Tool = {
   name: string;
   description?: string;
   created_at: string;
+};
+
+export type Tutorial = {
+  id: string;
+  template: string;
+  url: string;
+  title?: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type Template = {
@@ -91,6 +101,7 @@ export type Template = {
   tool?: string;
   hot: boolean;
   category?: string; // Category ID
+  tutorial?: Tutorial;
   created_at: string;
   updated_at: string;
   banner: string;

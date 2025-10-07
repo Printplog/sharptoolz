@@ -17,6 +17,7 @@ interface ImageCropUploadProps {
   currentValue: string;
   onImageSelect: (fieldId: string, croppedImageDataUrl: string) => void;
   svgElementId?: string;
+  disabled?: boolean;
 }
 
 export default function ImageCropUpload({
@@ -24,7 +25,8 @@ export default function ImageCropUpload({
   fieldName,
   currentValue,
   onImageSelect,
-  svgElementId
+  svgElementId,
+  disabled = false
 }: ImageCropUploadProps) {
   const [image, setImage] = useState<string | null>(null);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
@@ -204,7 +206,7 @@ export default function ImageCropUpload({
       toast.success("Background removed successfully");
     } catch (error) {
       console.error('Background removal failed:', error);
-      toast.error(errorMessage(error as any));
+      toast.error(errorMessage(error as Error));
     } finally {
       setIsRemovingBackground(false);
     }
@@ -245,7 +247,7 @@ export default function ImageCropUpload({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: useCallback((acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0) {
+      if (!disabled && acceptedFiles.length > 0) {
         const file = acceptedFiles[0];
         setOriginalFile(file);
         const reader = new FileReader();
@@ -260,11 +262,12 @@ export default function ImageCropUpload({
         });
         reader.readAsDataURL(file);
       }
-    }, []),
+    }, [disabled]),
     accept: {
       "image/*": [".jpeg", ".jpg", ".png", ".gif", ".bmp", ".webp"]
     },
-    multiple: false
+    multiple: false,
+    disabled: disabled
   });
 
   const handleChangeImage = useCallback(() => {
@@ -298,10 +301,12 @@ export default function ImageCropUpload({
       {!currentValue ? (
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-            isDragActive 
-              ? "border-blue-400 bg-blue-50/10" 
-              : "border-gray-300 hover:border-gray-400"
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+            disabled 
+              ? "border-gray-500 bg-gray-100/10 cursor-not-allowed opacity-50" 
+              : isDragActive 
+                ? "border-blue-400 bg-blue-50/10 cursor-pointer" 
+                : "border-gray-300 hover:border-gray-400 cursor-pointer"
           }`}
         >
           <input {...getInputProps()} />
@@ -326,6 +331,7 @@ export default function ImageCropUpload({
               size="sm"
               onClick={handleChangeImage}
               className="text-white border-white/20 hover:bg-white/10"
+              disabled={disabled}
             >
               <Upload className="h-4 w-4 mr-2" />
               Change Image
@@ -336,6 +342,7 @@ export default function ImageCropUpload({
               size="sm"
               onClick={() => onImageSelect(fieldId, "")}
               className="text-white border-white/20 hover:bg-white/10"
+              disabled={disabled}
             >
               <X className="h-4 w-4 mr-2" />
               Remove

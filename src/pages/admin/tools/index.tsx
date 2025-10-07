@@ -184,7 +184,7 @@ export default function AdminTools() {
             {filteredTools.map((tool) => (
               <div
                 key={tool.id}
-                className=" border border-white/10 rounded-xl p-2 "
+                className=" border border-white/10 rounded-xl p-[2px]"
               >
                 <div className="relative border bg-gradient-to-b from-white/5 from-60% to-background border-white/10 rounded-xl p-4 overflow-hidden">
                   <div className="absolute w-full h-full inset-0 pointer-events-none z-10   mask-b-to-[50%]"></div>
