@@ -7,7 +7,6 @@ import {
   ArrowUpRightFromCircle,
   Copy,
   PenLine,
-  Youtube,
 } from "lucide-react";
 import useToolStore from "@/store/formStore";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";

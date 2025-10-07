@@ -102,6 +102,8 @@ export type Template = {
   hot: boolean;
   category?: string; // Category ID
   tutorial?: Tutorial;
+  tutorial_url?: string;
+  tutorial_title?: string;
   created_at: string;
   updated_at: string;
   banner: string;

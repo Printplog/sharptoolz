@@ -314,20 +314,33 @@ export default function SignatureField({
             <TabsContent value="draw" className="space-y-4">
               <div className="flex justify-center">
                 <div className="border border-white/20 rounded-lg overflow-hidden bg-white">
-                  <SignatureCanvas
-                    ref={signatureRef}
-                    canvasProps={{
-                      width: canvasWidth,
-                      height: canvasHeight,
-                      className: 'signature-canvas',
-                      style: { backgroundColor }
-                    }}
-                    penColor={penColor}
-                    minWidth={3}
-                    maxWidth={8}
-                    velocityFilterWeight={0.7}
-                    disabled={disabled}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <SignatureCanvas
+                      ref={signatureRef}
+                      canvasProps={{
+                        width: canvasWidth,
+                        height: canvasHeight,
+                        className: 'signature-canvas',
+                        style: { backgroundColor }
+                      }}
+                      penColor={penColor}
+                      minWidth={3}
+                      maxWidth={8}
+                      velocityFilterWeight={0.7}
+                    />
+                    {disabled && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'transparent',
+                        cursor: 'not-allowed',
+                        zIndex: 10
+                      }} />
+                    )}
+                  </div>
                 </div>
               </div>
               

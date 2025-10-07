@@ -155,7 +155,7 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
         let originalElement: Element | null = null;
         
         for (const [key, el] of elementMap.entries()) {
-          const [tag, id, href, textContent, originalIndex] = key.split('-');
+          const [tag, id, href, textContent] = key.split('-');
           
           // Match by exact ID and tag first
           if (editedEl.id && editedEl.id === id && editedEl.tag === tag) {
