@@ -67,12 +67,12 @@ export const svgEditorDocs: DocSection[] = [
       { 
         title: "Trackable Select Field", 
         code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status",
-        description: "Creates a dropdown that can be tracked with role 'status'. Only ONE option needs the .track_ extension."
+        description: "Creates a dropdown that can be tracked with role 'status'. Only ONE option needs the .track_ extension (track_ must be last)."
       },
       { 
         title: "Airline Selection with Tracking", 
         code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline",
-        description: "Airline selection dropdown that can be tracked with role 'airline'"
+        description: "Airline selection dropdown that can be tracked with role 'airline' (track_ must be last)"
       }
     ]
   },
@@ -257,8 +257,8 @@ export const svgEditorDocs: DocSection[] = [
       },
       { 
         title: "Editable with Tracking", 
-        code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status.editable",
-        description: "Creates a select field with tracking role that remains editable after purchase"
+        code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.editable.track_status",
+        description: "Creates a select field with tracking role that remains editable after purchase (.editable before .track_status, track_ must be last)"
       },
       { 
         title: "Editable with Multiple Extensions", 
@@ -284,10 +284,10 @@ export const svgEditorDocs: DocSection[] = [
           { title: "Package Weight", code: "Package_Weight.text.track_weight", description: "Weight of the package (.track_weight must be last)" },
           { title: "Shipment Date", code: "Shipment_Date.text.track_shipment_date", description: "Date the package was shipped (.track_shipment_date must be last)" },
           { title: "Arrival Date", code: "Arrival_Date.text.track_arrival", description: "Expected arrival date (.track_arrival must be last)" },
-          { title: "Status Selection", code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status\nStatus.select_Error", description: "Package status dropdown (.track_status must be on ONE option only)" },
-          { title: "Editable Status Selection", code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status.editable\nStatus.select_Error", description: "Editable package status dropdown that remains editable after purchase" },
+          { title: "Status Selection", code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status\nStatus.select_Error", description: "Package status dropdown (.track_status must be on ONE option only, and must be last)" },
+          { title: "Editable Status Selection", code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.editable.track_status\nStatus.select_Error", description: "Editable package status dropdown that remains editable after purchase (.editable before .track_status)" },
           { title: "Error Message", code: "Error_Message.textarea.track_error_message", description: "Error message field (shows when status is 'Error') (.track_error_message must be last)" },
-          { title: "Editable Error Message", code: "Error_Message.textarea.track_error_message.editable", description: "Editable error message field that remains editable after purchase" }
+          { title: "Editable Error Message", code: "Error_Message.textarea.editable.track_error_message", description: "Editable error message field that remains editable after purchase (.editable before .track_error_message)" }
         ]
       },
       {
