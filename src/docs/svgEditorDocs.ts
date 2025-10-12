@@ -279,6 +279,7 @@ export const svgEditorDocs: DocSection[] = [
         codeExamples: [
           { title: "Tracking ID with Link", code: "Tracking_ID.gen.max_12.link_https://parcelfinda.com/track", description: "Main tracking ID with link to ParcelFinda (no .track_ extension needed)" },
           { title: "Recipient Name", code: "Recipient_Name.text.track_name", description: "Recipient name display (.track_name must be last)" },
+          { title: "Recipient Email", code: "Recipient_Email.email.track_email", description: "Recipient email address (.track_email must be last)" },
           { title: "Recipient Address", code: "Recipient_Address.text.track_destination", description: "Delivery address (.track_destination must be last)" },
           { title: "Package Content", code: "Package_Content.text.track_package", description: "Package description/contents (.track_package must be last)" },
           { title: "Package Weight", code: "Package_Weight.text.track_weight", description: "Weight of the package (.track_weight must be last)" },
