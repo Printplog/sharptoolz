@@ -32,7 +32,18 @@ const  useToolStore = create<ToolStore>((set, get) => ({
     }));
 
     if (isPurchased) {
-      set({ fields });
+      // For purchased documents, also ensure select fields have a currentValue
+      const fieldsWithValues = fields?.map((field) => {
+        // If it's a select field and currentValue is empty, initialize from defaultValue
+        if (field.options && field.options.length > 0 && !field.currentValue) {
+          return {
+            ...field,
+            currentValue: field.defaultValue ?? "",
+          };
+        }
+        return field;
+      });
+      set({ fields: fieldsWithValues });
     } else {
       set({ fields: initializedFields });
     }

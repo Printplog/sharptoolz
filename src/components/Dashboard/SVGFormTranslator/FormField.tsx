@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,6 +27,23 @@ import SignatureField from "@/components/ui/SignatureField";
 const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; isPurchased?: boolean }> = ({ field, allFields = [], isPurchased = false }) => {
   const { updateField } = useToolStore();
   const value = field.currentValue;
+
+  const generateId = (length: number) => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < (length || 8); i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  // Auto-generate tracking ID for "gen" type fields when they're first loaded
+  useEffect(() => {
+    if (field.type === "gen" && !value && !isPurchased) {
+      const generatedId = generateId(field.max as number);
+      updateField(field.id, generatedId);
+    }
+  }, [field.type, field.id, field.max, value, updateField, isPurchased]);
   
   // Check if this is the Error_Message field and if Status is "Error Message"
   const shouldShowErrorMessage = () => {
@@ -59,15 +76,6 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
       updateField(field.id, newValue);
       console.log(newValue)
     }
-  };
-
-  const generateId = (length: number) => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
-    for (let i = 0; i < (length || 8); i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
   };
 
   // If field has options, render as select

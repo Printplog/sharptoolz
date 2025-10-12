@@ -53,7 +53,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
       // Show only the selected option
       const selectedOption = field.options.find(
-        (opt) => String(opt.value) === field.currentValue
+        (opt) => String(opt.value) === String(field.currentValue)
       );
       if (selectedOption?.svgElementId) {
         const selectedEl = doc.getElementById(selectedOption.svgElementId);
