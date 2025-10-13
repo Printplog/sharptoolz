@@ -24,7 +24,7 @@ import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import type { Tutorial } from "@/types";
 
-export default function FormPanel({ test, tutorial }: { test: boolean; tutorial?: Tutorial }) {
+export default function FormPanel({ test, tutorial, templateId }: { test: boolean; tutorial?: Tutorial; templateId?: string }) {
   const {
     fields,
     resetForm,
@@ -234,7 +234,7 @@ export default function FormPanel({ test, tutorial }: { test: boolean; tutorial?
       )}
 
       {/* Buttons */}
-      <div className="pt-4 border-t border-white/20 flex flex-col sm:flex-row justify-end gap-5 ">
+      <div className="pt-4 border-t border-white/20 flex flex-col lg:flex-row justify-end gap-5 ">
         {isPurchased && test && (
           <Button
             variant={"outline"}
@@ -279,21 +279,33 @@ export default function FormPanel({ test, tutorial }: { test: boolean; tutorial?
             </>
           </Button>
         ) : (
-          <Button
-            variant="outline"
-            disabled={createPending || updatePending}
-            onClick={() => createDocument(test)}
-            className="py-6 px-10 hover:bg-black/50 hover:text-white"
-          >
-            <>
-              {updatePending ? "Updating Document" : "Update Document"}
-              {updatePending ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4 ml-1" />
-              )}
-            </>
-          </Button>
+          <>
+            {templateId && (
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/tools/${templateId}`)}
+                className="py-6 px-10 hover:bg-black/50 hover:text-white"
+              >
+                Create Similar Doc
+                <Copy className="w-4 h-4 ml-1" />
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              disabled={createPending || updatePending}
+              onClick={() => createDocument(test)}
+              className="py-6 px-10 hover:bg-black/50 hover:text-white"
+            >
+              <>
+                {updatePending ? "Updating Document" : "Update Document"}
+                {updatePending ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4 ml-1" />
+                )}
+              </>
+            </Button>
+          </>
         )}
 
         <Link to="?dialog=download-doc" className="w-full sm:w-auto">

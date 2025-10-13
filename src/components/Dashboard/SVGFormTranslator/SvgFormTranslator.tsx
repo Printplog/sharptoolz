@@ -145,7 +145,11 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
           <TabsTrigger value="preview">Preview</TabsTrigger>
         </TabsList>
         <TabsContent value="editor">
-          <FormPanel test={purchasedData?.test} tutorial={data && 'tutorial' in data ? data.tutorial : undefined} />
+          <FormPanel 
+            test={purchasedData?.test} 
+            tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
+            templateId={isPurchased ? purchasedData?.template : undefined}
+          />
         </TabsContent>
         <TabsContent value="preview">
           <div className="w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl">
