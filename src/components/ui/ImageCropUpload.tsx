@@ -6,9 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Upload, RotateCcw, RotateCw, X, Check, Wand2, Loader2 } from "lucide-react";
 import { annotationDetector, type AnnotationResult } from "@/lib/utils/annotationDetector";
 import useToolStore from "@/store/formStore";
-import { removeBackground } from "@/api/apiEndpoints";
+import { Client } from "@gradio/client";
 import { toast } from "sonner";
-import errorMessage from "@/lib/utils/errorMessage";
 import "react-image-crop/dist/ReactCrop.css";
 
 interface ImageCropUploadProps {
@@ -38,6 +37,9 @@ export default function ImageCropUpload({
   const [hasBackgroundRemoved, setHasBackgroundRemoved] = useState(false);
   const [annotationResult, setAnnotationResult] = useState<AnnotationResult | null>(null);
   const [rotation, setRotation] = useState(0);
+  
+  // Cache for background-removed image to avoid re-processing
+  const [cachedBgRemovedImage, setCachedBgRemovedImage] = useState<string | null>(null);
   
   const imgRef = useRef<HTMLImageElement>(null);
   
@@ -188,29 +190,71 @@ export default function ImageCropUpload({
   const handleRemoveBackground = useCallback(async () => {
     if (!originalFile) return;
 
+    // Check if we already have a cached background-removed version
+    if (cachedBgRemovedImage) {
+      console.log('Using cached background-removed image');
+      setImage(cachedBgRemovedImage);
+      setHasBackgroundRemoved(true);
+      toast.success("Background removed ⚡");
+      return;
+    }
+
     setIsRemovingBackground(true);
     try {
-      console.log('Starting background removal via API...');
+      console.log('Starting background removal...');
       console.log('Original file:', originalFile.name, originalFile.size, 'bytes');
       
-      // Call backend API for background removal using axios
-      const result = await removeBackground(originalFile);
+      // Convert File to Blob for Gradio Client
+      const imageBlob = new Blob([originalFile], { type: originalFile.type });
       
-      if (!result.success || !result.image) {
-        throw new Error('Invalid response from server');
+      // Connect to Hugging Face Gradio Space
+      const client = await Client.connect("not-lain/background-removal");
+      
+      // Call the background removal API
+      const result = await client.predict("/image", { 
+        image: imageBlob, 
+      });
+
+      console.log('API Result:', result);
+      
+      // The result.data contains [input_image, output_image]
+      // We need the second item (index 1) which is the background-removed image
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const resultData = result.data as any;
+      if (result && resultData && resultData[0] && resultData[0][1]) {
+        // Get the processed image (second item in the array)
+        const processedImageUrl = resultData[0][1].url;
+        
+        // Fetch the image and convert to base64
+        const response = await fetch(processedImageUrl);
+        const blob = await response.blob();
+        
+        // Convert blob to data URL using Promise
+        const base64data = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        
+        // Cache the processed image for future use
+        setCachedBgRemovedImage(base64data);
+        
+        // Update state after conversion is complete
+        setImage(base64data);
+        setHasBackgroundRemoved(true);
+        toast.success("Background removed successfully ✨");
+      } else {
+        throw new Error('Invalid response from background removal service');
       }
       
-      console.log('Background removal completed successfully');
-      setImage(result.image);
-      setHasBackgroundRemoved(true);
-      toast.success("Background removed successfully");
     } catch (error) {
       console.error('Background removal failed:', error);
-      toast.error(errorMessage(error as Error));
+      toast.error(error instanceof Error ? error.message : 'Failed to remove background. Please try again.');
     } finally {
       setIsRemovingBackground(false);
     }
-  }, [originalFile]);
+  }, [originalFile, cachedBgRemovedImage]);
 
   const handleRestoreOriginal = useCallback(() => {
     if (originalImage) {
@@ -232,6 +276,7 @@ export default function ImageCropUpload({
       setCrop(undefined);
       setCompletedCrop(undefined);
       setHasBackgroundRemoved(false);
+      setCachedBgRemovedImage(null); // Clear cache when done
     } catch (error) {
       console.error('Crop failed:', error);
     }
@@ -258,6 +303,7 @@ export default function ImageCropUpload({
           setCrop(undefined);
           setCompletedCrop(undefined);
           setHasBackgroundRemoved(false);
+          setCachedBgRemovedImage(null); // Clear cache for new image
           setIsDialogOpen(true);
         });
         reader.readAsDataURL(file);
@@ -286,6 +332,7 @@ export default function ImageCropUpload({
           setCrop(undefined);
           setCompletedCrop(undefined);
           setHasBackgroundRemoved(false);
+          setCachedBgRemovedImage(null); // Clear cache for new image
           setIsDialogOpen(true);
         });
         reader.readAsDataURL(file);
@@ -295,56 +342,61 @@ export default function ImageCropUpload({
   }, []);
 
   return (
-    <div className="space-y-4">
-      <label className="text-sm font-medium text-white">{fieldName}</label>
+    <div className="space-y-2">
+      <label htmlFor={fieldId} className="text-sm font-medium text-white">
+        {fieldName}
+      </label>
       
       {!currentValue ? (
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          className={`relative border border-white/20 rounded-lg p-8 text-center transition-all duration-200 ${
             disabled 
-              ? "border-gray-500 bg-gray-100/10 cursor-not-allowed opacity-50" 
+              ? "bg-white/5 cursor-not-allowed opacity-50" 
               : isDragActive 
-                ? "border-blue-400 bg-blue-50/10 cursor-pointer" 
-                : "border-gray-300 hover:border-gray-400 cursor-pointer"
+                ? "bg-white/20 border-white/40 cursor-pointer" 
+                : "bg-white/10 hover:bg-white/15 hover:border-white/30 cursor-pointer"
           }`}
         >
           <input {...getInputProps()} />
-          <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-gray-400">
-            {isDragActive ? "Drop the image here" : "Drag & drop an image, or click to select"}
+          <Upload className="mx-auto h-10 w-10 text-white/40 mb-3" />
+          <p className="text-sm text-white/60">
+            {isDragActive ? "Drop image here" : "Click to upload or drag and drop"}
+          </p>
+          <p className="text-xs text-white/40 mt-1">
+            PNG, JPG, GIF up to 10MB
           </p>
         </div>
       ) : (
         <div className="space-y-2">
-          <div className="overflow-auto custom-scrollbar max-h-64 rounded-lg border border-gray-300">
+          <div className="relative overflow-hidden rounded-lg border border-white/20 bg-white/5">
             <img 
               src={currentValue} 
-              alt="Current image" 
-              className="w-full h-auto object-contain"
+              alt="Uploaded image" 
+              className="w-full h-auto object-contain max-h-64"
             />
           </div>
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={handleChangeImage}
-              className="text-white border-white/20 hover:bg-white/10"
+              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
               disabled={disabled}
             >
-              <Upload className="h-4 w-4 mr-2" />
-              Change Image
+              <Upload className="h-3.5 w-3.5 mr-1.5" />
+              Change
             </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onImageSelect(fieldId, "")}
-              className="text-white border-white/20 hover:bg-white/10"
+              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
               disabled={disabled}
             >
-              <X className="h-4 w-4 mr-2" />
+              <X className="h-3.5 w-3.5 mr-1.5" />
               Remove
             </Button>
           </div>
@@ -352,41 +404,42 @@ export default function ImageCropUpload({
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[95vh] flex flex-col">
+        <DialogContent className="max-w-5xl max-h-[95vh] flex flex-col bg-gray-900 border-white/20">
           <DialogHeader className="flex-shrink-0">
-            <DialogTitle className="text-white">Crop Image</DialogTitle>
+            <DialogTitle className="text-white text-lg">Crop & Edit Image</DialogTitle>
           </DialogHeader>
           
           {image && (
-            <div className="flex-1 flex flex-col space-y-4 min-h-0 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 flex flex-col space-y-3 min-h-0 overflow-y-auto custom-scrollbar">
               {/* Controls Row */}
-              <div className="flex-shrink-0 flex items-center justify-between flex-wrap gap-2 p-2 bg-gray-800/50 rounded-lg">
-                <div className="text-white text-sm">
-                  <span className="text-gray-300">Drag the corners to resize • Drag the center to move</span>
+              <div className="flex-shrink-0 flex items-center justify-between flex-wrap gap-3 p-3 bg-white/5 border border-white/10 rounded-lg">
+                <div className="text-xs text-white/50 hidden md:block">
+                  Drag corners to resize • Drag center to move
                 </div>
-                
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={handleRotateLeft}
-                    className="text-white border-white/20 hover:bg-white/10"
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 h-8 w-8 p-0"
+                    title="Rotate Left"
                   >
-                    <RotateCcw className="h-4 w-4" />
+                    <RotateCcw className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={handleRotateRight}
-                    className="text-white border-white/20 hover:bg-white/10"
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 h-8 w-8 p-0"
+                    title="Rotate Right"
                   >
-                    <RotateCw className="h-4 w-4" />
+                    <RotateCw className="h-3.5 w-3.5" />
                   </Button>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   {!hasBackgroundRemoved ? (
                     <Button
                       type="button"
@@ -394,14 +447,19 @@ export default function ImageCropUpload({
                       size="sm"
                       onClick={handleRemoveBackground}
                       disabled={isRemovingBackground}
-                      className="text-white border-white/20 hover:bg-white/10"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
                     >
                       {isRemovingBackground ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                          Removing...
+                        </>
                       ) : (
-                        <Wand2 className="h-4 w-4" />
+                        <>
+                          <Wand2 className="h-3.5 w-3.5 mr-1.5" />
+                          Remove BG
+                        </>
                       )}
-                      {isRemovingBackground ? "Removing..." : "Remove BG"}
                     </Button>
                   ) : (
                     <Button
@@ -409,18 +467,18 @@ export default function ImageCropUpload({
                       variant="outline"
                       size="sm"
                       onClick={handleRestoreOriginal}
-                      className="text-white border-white/20 hover:bg-white/10"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
                     >
-                      <X className="h-4 w-4" />
-                      Restore Original
+                      <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                      Restore
                     </Button>
                   )}
                 </div>
               </div>
 
               {/* Cropper Container */}
-              <div className="flex-1 relative h-fit bg-gray-900 rounded-lg overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center">
+              <div className="flex-1 relative h-fit bg-black/30 border border-white/10 rounded-lg overflow-hidden">
+                <div className="w-full h-full flex items-center justify-center p-4">
                   <ReactCrop
                     crop={crop}
                     onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -451,7 +509,7 @@ export default function ImageCropUpload({
             </div>
           )}
           
-          <DialogFooter className="flex-shrink-0 mt-4">
+          <DialogFooter className="flex-shrink-0 mt-3 gap-2">
             <Button
               type="button"
               variant="outline"
@@ -461,8 +519,9 @@ export default function ImageCropUpload({
                 setOriginalImage(null);
                 setOriginalFile(null);
                 setHasBackgroundRemoved(false);
+                setCachedBgRemovedImage(null); // Clear cache on cancel
               }}
-              className="text-white border-white/20 hover:bg-white/10"
+              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
             >
               Cancel
             </Button>
@@ -470,10 +529,10 @@ export default function ImageCropUpload({
               type="button"
               onClick={handleConfirmCrop}
               disabled={!completedCrop}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Check className="h-4 w-4 mr-2" />
-              Confirm Crop
+              <Check className="h-3.5 w-3.5 mr-1.5" />
+              Confirm
             </Button>
           </DialogFooter>
         </DialogContent>
