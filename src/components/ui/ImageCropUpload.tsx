@@ -169,8 +169,7 @@ export default function ImageCropUpload({
               }
               resolve(URL.createObjectURL(blob));
             },
-            "image/jpeg",
-            0.8
+            "image/png"
           );
         };
         image.src = imageSrc;
