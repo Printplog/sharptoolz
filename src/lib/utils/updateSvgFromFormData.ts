@@ -1,4 +1,5 @@
 import type { FormField } from "@/types";
+import { extractFromDependency } from "./fieldExtractor";
 
 export default function updateSvgFromFormData(svgRaw: string, fields: FormField[]): string {
   if (!svgRaw) return "";
@@ -6,30 +7,24 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgRaw, "image/svg+xml");
 
-  const fieldMap = Object.fromEntries(fields.map(f => [f.id, f]));
-
   fields.forEach((field) => {
     // For select fields, svgElementId is not used (it's just a group, not a real SVG element)
     if ((!field.svgElementId || !doc.getElementById(field.svgElementId)) && !(field.options && field.options.length > 0)) {
       return;
     }
 
-    // Support dependency values
+    // Support dependency values with extraction
     let value: string = "";
 
-    if ("dependsOn" in field && field.dependsOn && fieldMap[field.dependsOn]) {
-      const dependencyField = fieldMap[field.dependsOn];
+    if ("dependsOn" in field && field.dependsOn) {
+      // Build field value map for extraction
+      const allFieldValues: Record<string, string | number | boolean> = {};
+      fields.forEach(f => {
+        allFieldValues[f.id] = f.currentValue || '';
+      });
       
-      // For select fields, get the display text of the selected option instead of the ID
-      if (dependencyField.options && dependencyField.options.length > 0) {
-        const selectedOption = dependencyField.options.find(
-          opt => String(opt.value) === String(dependencyField.currentValue)
-        );
-        // Use displayText or text content from the selected option
-        value = selectedOption?.displayText || selectedOption?.label || String(dependencyField.currentValue ?? "");
-      } else {
-        value = String(dependencyField.currentValue ?? "");
-      }
+      // Use extraction utility to handle dependencies with patterns
+      value = extractFromDependency(field.dependsOn, allFieldValues);
     } else {
       value = String(field.currentValue ?? "");
     }

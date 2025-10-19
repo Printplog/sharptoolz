@@ -62,10 +62,14 @@ export interface FormField {
   currentValue?: string | number | boolean;
   max?: number; // Max value for number OR max length for text
   options?: SelectOption[]; // If options exist, it's automatically a select field
-  dependsOn?: string;
+  dependsOn?: string; // Field dependency with optional extraction (e.g., "field_name[w1]", "field[ch1-4]")
   link?: string; // Link property for fields like Tracking_ID
   isTrackingId?: boolean; // Flag to identify tracking ID fields
   trackingRole?: string; // Role in tracking display (e.g., "name", "email", "weight")
+  dateFormat?: string; // Date format string (e.g., "MM/DD/YYYY", "MMM DD", "MMMM D, YYYY")
+  generationRule?: string; // Generation rule (e.g., "(rn[12])", "FL(rn[6])(rc[6])")
+  maxGeneration?: string; // Max padding generation (e.g., "(A[10])")
+  helperText?: string; // Contextual help text for the field (from data-helper attribute)
   aspectRatio?: number; // For image crop fields (width/height ratio)
   minWidth?: number; // Minimum width for image crop
   minHeight?: number; // Minimum height for image crop
@@ -74,7 +78,7 @@ export interface FormField {
   signatureBackground?: string; // Background color for signature canvas
   signaturePenColor?: string; // Pen color for signature drawing
   editable?: boolean; // Whether field remains editable after purchase (default: false)
-} // Updated for signature fields
+} // Updated for signature fields, date formatting, generation/extraction, and helper text
 
 export type Tool = {
   id: string;

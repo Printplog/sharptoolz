@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,9 +9,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Calendar } from "lucide-react";
 import useToolStore from "@/store/formStore";
-import type { FormField } from "@/types";
+import type { FormField, Tutorial } from "@/types";
+import FieldHelper from "./FieldHelper";
 
 // Extended FormField type for signature fields
 interface ExtendedFormField extends FormField {
@@ -23,27 +24,71 @@ interface ExtendedFormField extends FormField {
 import { Textarea } from "@/components/ui/textarea";
 import ImageCropUpload from "@/components/ui/ImageCropUpload";
 import SignatureField from "@/components/ui/SignatureField";
+import { formatDate } from "@/lib/utils/dateFormatter";
+import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
 
-const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; isPurchased?: boolean }> = ({ field, allFields = [], isPurchased = false }) => {
+const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; isPurchased?: boolean; tutorial?: Tutorial }> = ({ field, allFields = [], isPurchased = false, tutorial }) => {
   const { updateField } = useToolStore();
   const value = field.currentValue;
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  
+  // Track raw date value for date inputs (YYYY-MM-DD format)
+  const [rawDateValue, setRawDateValue] = useState<string>(() => {
+    if (field.type === 'date' && typeof value === 'string') {
+      // If value is already in YYYY-MM-DD format, use it
+      if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return value;
+      }
+      // Otherwise, try to parse it or use today's date
+      try {
+        const parsed = new Date(value);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return new Date().toISOString().split('T')[0];
+  });
 
-  const generateId = (length: number) => {
+  // Generate value based on generation rule or fallback to simple random
+  const generateFieldValue = () => {
+    // Build field map for cross-field generation
+    const fieldMap: Record<string, string | number | boolean> = {};
+    allFields.forEach(f => {
+      fieldMap[f.id] = f.currentValue || '';
+    });
+    
+    // If generationRule exists, use comprehensive generation
+    if (field.generationRule) {
+      let generated = generateValue(field.generationRule, fieldMap);
+      
+      // Apply max generation padding if specified
+      if (field.maxGeneration) {
+        generated = applyMaxGeneration(generated, field.maxGeneration);
+      }
+      
+      return generated;
+    }
+    
+    // Fallback to simple alphanumeric generation (old behavior)
+    const length = field.max || 8;
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let result = "";
-    for (let i = 0; i < (length || 8); i++) {
+    for (let i = 0; i < length; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
   };
 
-  // Auto-generate tracking ID for "gen" type fields when they're first loaded
+  // Auto-generate value for "gen" type fields when they're first loaded
   useEffect(() => {
     if (field.type === "gen" && !value && !isPurchased) {
-      const generatedId = generateId(field.max as number);
-      updateField(field.id, generatedId);
+      const generatedValue = generateFieldValue();
+      updateField(field.id, generatedValue);
     }
-  }, [field.type, field.id, field.max, value, updateField, isPurchased]);
+  }, [field.type, field.id, value, updateField, isPurchased]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Check if this is the Error_Message field and if Status is "Error Message"
   const shouldShowErrorMessage = () => {
@@ -96,6 +141,13 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
         <div className="space-y-2 flex flex-col">
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {field.name}
+            {field.helperText && (
+              <FieldHelper 
+                fieldName={field.name}
+                helperText={field.helperText} 
+                tutorialUrl={tutorial?.url}
+              />
+            )}
             {field.max && (
               <span className="text-gray-400 ml-1">(max {field.max})</span>
             )}
@@ -119,6 +171,13 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
         <div className="space-y-2 w-full">
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {field.name}
+            {field.helperText && (
+              <FieldHelper 
+                fieldName={field.name}
+                helperText={field.helperText} 
+                tutorialUrl={tutorial?.url}
+              />
+            )}
             {field.max && (
               <span className="text-gray-400 ml-1">(max {field.max})</span>
             )}
@@ -140,6 +199,13 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
         <div className="space-y-2 w-full">
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {field.name}
+            {field.helperText && (
+              <FieldHelper 
+                fieldName={field.name}
+                helperText={field.helperText} 
+                tutorialUrl={tutorial?.url}
+              />
+            )}
             {field.max && (
               <span className="text-gray-400 ml-1">(max {field.max})</span>
             )}
@@ -161,6 +227,13 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
         <div className="space-y-2 w-full">
         <label htmlFor={field.id} className="text-sm font-medium text-white">
           {field.name}
+          {field.helperText && (
+            <FieldHelper 
+              fieldName={field.name}
+              helperText={field.helperText} 
+              tutorialUrl={tutorial?.url}
+            />
+          )}
         </label>
         <Select defaultValue={value as string} value={value as string} onValueChange={handleChange} disabled={isFieldDisabled}>
           <SelectTrigger className="bg-white/10 border-white/20 text-white w-full">
@@ -192,8 +265,15 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
             className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black"
             disabled={isFieldDisabled}
           />
-          <label htmlFor={field.id} className="text-sm font-medium text-white">
+          <label htmlFor={field.id} className="text-sm font-medium text-white flex items-center">
             {field.name}
+            {field.helperText && (
+              <FieldHelper 
+                fieldName={field.name}
+                helperText={field.helperText} 
+                tutorialUrl={tutorial?.url}
+              />
+            )}
           </label>
         </div>
       );
@@ -219,50 +299,119 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
         <div className="space-y-2 w-full">
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {field.name}
+            {field.helperText && (
+              <FieldHelper 
+                fieldName={field.name}
+                helperText={field.helperText} 
+                tutorialUrl={tutorial?.url}
+              />
+            )}
           </label>
-          <Input
-            id={field.id}
-            type="date"
-            value={value as string}
-            onChange={(e) => handleChange(e.target.value)}
-            className="bg-white/10 border-white/20 text-white w-full"
-            disabled={isFieldDisabled}
-          />
+          <div className="relative">
+            {/* Hidden native date picker */}
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={rawDateValue}
+              onChange={(e) => {
+                const selectedDate = e.target.value; // YYYY-MM-DD format
+                
+                // Update the raw date value
+                setRawDateValue(selectedDate);
+                
+                // If custom format is specified, format the date
+                if (field.dateFormat) {
+                  const formattedDate = formatDate(selectedDate, field.dateFormat);
+                  handleChange(formattedDate);
+                } else {
+                  // Use default YYYY-MM-DD format
+                  handleChange(selectedDate);
+                }
+              }}
+              className="absolute opacity-0 pointer-events-none"
+              disabled={isFieldDisabled}
+            />
+            
+            {/* Visible formatted display */}
+            <div className="flex gap-2">
+              <Input
+                id={field.id}
+                type="text"
+                value={(value as string) || ''}
+                readOnly
+                onClick={() => dateInputRef.current?.showPicker()}
+                className="bg-white/10 border-white/20 text-white w-full cursor-pointer"
+                disabled={isFieldDisabled}
+              />
+              <Button
+                type="button"
+                onClick={() => dateInputRef.current?.showPicker()}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                disabled={isFieldDisabled}
+              >
+                <Calendar className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       );
 
     case "upload":
     case "file":
       return (
-        <ImageCropUpload
-          fieldId={field.id}
-          fieldName={field.name}
-          currentValue={value as string}
-          onImageSelect={(fieldId: string, croppedImageDataUrl: string) => {
-            updateField(fieldId, croppedImageDataUrl);
-          }}
-          svgElementId={field.svgElementId}
-          disabled={isFieldDisabled}
-        />
+        <div className="space-y-2 w-full">
+          {field.helperText && (
+            <label className="text-sm font-medium text-white">
+              {field.name}
+              <FieldHelper 
+                fieldName={field.name}
+                helperText={field.helperText} 
+                tutorialUrl={tutorial?.url}
+              />
+            </label>
+          )}
+          <ImageCropUpload
+            fieldId={field.id}
+            fieldName={field.helperText ? "" : field.name}
+            currentValue={value as string}
+            onImageSelect={(fieldId: string, croppedImageDataUrl: string) => {
+              updateField(fieldId, croppedImageDataUrl);
+            }}
+            svgElementId={field.svgElementId}
+            disabled={isFieldDisabled}
+          />
+        </div>
       );
 
     case "sign": {
       const signatureField = field as ExtendedFormField;
       return (
-        <SignatureField
-          fieldId={field.id}
-          fieldName={field.name}
-          currentValue={value as string}
-          onSignatureSelect={(fieldId: string, signatureDataUrl: string) => {
-            updateField(fieldId, signatureDataUrl);
-          }}
-          width={signatureField.signatureWidth || 400}
-          height={signatureField.signatureHeight || 150}
-          backgroundColor={signatureField.signatureBackground || '#ffffff'}
-          penColor={signatureField.signaturePenColor || '#000000'}
-          svgElementId={field.svgElementId}
-          disabled={isFieldDisabled}
-        />
+        <div className="space-y-2 w-full">
+          {field.helperText && (
+            <label className="text-sm font-medium text-white">
+              {field.name}
+              <FieldHelper 
+                fieldName={field.name}
+                helperText={field.helperText} 
+                tutorialUrl={tutorial?.url}
+              />
+            </label>
+          )}
+          <SignatureField
+            fieldId={field.id}
+            fieldName={field.helperText ? "" : field.name}
+            currentValue={value as string}
+            onSignatureSelect={(fieldId: string, signatureDataUrl: string) => {
+              updateField(fieldId, signatureDataUrl);
+            }}
+            width={signatureField.signatureWidth || 400}
+            height={signatureField.signatureHeight || 150}
+            backgroundColor={signatureField.signatureBackground || '#ffffff'}
+            penColor={signatureField.signaturePenColor || '#000000'}
+            svgElementId={field.svgElementId}
+            disabled={isFieldDisabled}
+          />
+        </div>
       );
     }
 
@@ -271,19 +420,26 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
         <div className="space-y-2 w-full">
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {field.name}
+            {field.helperText && (
+              <FieldHelper 
+                fieldName={field.name}
+                helperText={field.helperText} 
+                tutorialUrl={tutorial?.url}
+              />
+            )}
           </label>
           <div className="flex gap-2">
             <Input
               id={field.id}
               type="text"
-              value={(value as string) || generateId(field.max as number)}
+              value={(value as string) || generateFieldValue()}
               readOnly
               className="bg-white/5 border-white/20 text-gray-400 cursor-not-allowed"
               disabled={isFieldDisabled}
             />
             <Button
               type="button"
-              onClick={() => handleChange(generateId(field.max as number))}
+              onClick={() => handleChange(generateFieldValue())}
               className="bg-white/10 border-white/20 text-white hover:bg-white/20"
               disabled={isFieldDisabled}
             >
@@ -298,6 +454,13 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
         <div className="space-y-2 w-full">
           <label htmlFor={field.id} className="text-sm font-medium text-white">
             {field.name}
+            {field.helperText && (
+              <FieldHelper 
+                fieldName={field.name}
+                helperText={field.helperText} 
+                tutorialUrl={tutorial?.url}
+              />
+            )}
           </label>
           <Input
             id={field.id}

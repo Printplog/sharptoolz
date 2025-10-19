@@ -194,7 +194,7 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
         {fields
           ?.filter((field) => field.type === "status")
           .map((field) => (
-            <FormFieldComponent key={field.id} field={field} allFields={fields} />
+            <FormFieldComponent key={field.id} field={field} allFields={fields} tutorial={tutorial} />
           ))}
         <div className="m-0 p-0 border-0 space-y-3">
           {fields
@@ -205,6 +205,7 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
                 field={field} 
                 allFields={fields} 
                 isPurchased={isPurchased}
+                tutorial={tutorial}
               />
             ))}
         </div>

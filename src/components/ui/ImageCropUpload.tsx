@@ -126,7 +126,7 @@ export default function ImageCropUpload({
             width: pixelCrop.width * scaleX,
             height: pixelCrop.height * scaleY
           };
-
+          
           // If we have annotation result, stretch to those dimensions
           if (annotationResult) {
             canvas.width = annotationResult.content.width;
@@ -438,7 +438,7 @@ export default function ImageCropUpload({
                 <div className="flex-shrink-0 flex items-center justify-between gap-3 p-3 bg-white/5 border border-white/10 rounded-lg">
                   <div className="text-xs text-white/50 hidden md:block">
                     Drag corners to resize • Drag center to move
-                  </div>
+                </div>
                   <div className="flex items-center gap-2 ml-auto">
                     <Button
                       type="button"
@@ -461,9 +461,9 @@ export default function ImageCropUpload({
                       <RotateCw className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                </div>
+              </div>
 
-                {/* Cropper Container */}
+              {/* Cropper Container */}
                 <div className="bg-black/30 border border-white/10 rounded-lg p-4 flex items-center justify-center">
                   <ReactCrop
                     crop={crop}
@@ -603,9 +603,9 @@ export default function ImageCropUpload({
                       <div className="absolute top-6 left-6 flex items-center gap-2 bg-black/80 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm">
                         <Check className="h-3.5 w-3.5 text-green-400" />
                         {showOriginal ? "Original Image" : "Background Removed"}
-                      </div>
-                    </div>
-                  </div>
+                </div>
+              </div>
+            </div>
                 )}
               </TabsContent>
             </Tabs>

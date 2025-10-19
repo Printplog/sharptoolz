@@ -55,6 +55,127 @@ export const svgEditorDocs: DocSection[] = [
     ]
   },
   {
+    id: "date-fields",
+    title: ".date Extension",
+    content: "Creates a date picker field. Use .date for basic picker or .date_FORMAT for custom formatting.",
+    codeExamples: [
+      { 
+        title: "Basic Date Field", 
+        code: "Birth_Date.date",
+        description: "Creates a date picker (stores as YYYY-MM-DD)"
+      },
+      {
+        title: "US Format (MM/DD/YYYY)",
+        code: "Event_Date.date_MM/DD/YYYY",
+        description: "Displays as: 01/10/2025"
+      },
+      {
+        title: "European Format (DD/MM/YYYY)",
+        code: "Start_Date.date_DD/MM/YYYY",
+        description: "Displays as: 10/01/2025"
+      },
+      {
+        title: "Short Year (MM/DD/YY)",
+        code: "Expiry.date_MM/DD/YY",
+        description: "Displays as: 01/10/25"
+      },
+      {
+        title: "Short Month (MMM DD)",
+        code: "Due_Date.date_MMM_DD",
+        description: "Displays as: Jan 10"
+      },
+      {
+        title: "Full Month (MMMM D, YYYY)",
+        code: "Created.date_MMMM_D,_YYYY",
+        description: "Displays as: January 10, 2025"
+      },
+      {
+        title: "Month Without Zero (M/D/YYYY)",
+        code: "Custom_Date.date_M/D/YYYY",
+        description: "Displays as: 1/10/2025"
+      },
+      {
+        title: "With Weekday (ddd, MMM DD)",
+        code: "Appointment.date_ddd,_MMM_DD",
+        description: "Displays as: Mon, Jan 10"
+      },
+      {
+        title: "Full Weekday (dddd, MMMM D)",
+        code: "Event.date_dddd,_MMMM_D",
+        description: "Displays as: Monday, January 10"
+      },
+      {
+        title: "24-Hour Time (HH:mm:ss)",
+        code: "Timestamp.date_MM/DD/YYYY_HH:mm:ss",
+        description: "Displays as: 01/10/2025 14:30:45"
+      },
+      {
+        title: "24-Hour No Zero (H:m)",
+        code: "Time.date_H:m",
+        description: "Displays as: 14:30"
+      },
+      {
+        title: "12-Hour with AM/PM (hh:mm A)",
+        code: "Schedule.date_MM/DD/YYYY_hh:mm_A",
+        description: "Displays as: 01/10/2025 02:30 PM"
+      },
+      {
+        title: "12-Hour Lowercase (h:mm a)",
+        code: "Alarm.date_h:mm_a",
+        description: "Displays as: 2:30 pm"
+      },
+      {
+        title: "Editable + Tracking",
+        code: "Delivery_Date.date_MM/DD/YYYY.editable.track_delivery",
+        description: "Works with .editable and .track_ extensions"
+      },
+      {
+        title: "With Depends (Field Sync)",
+        code: "Start.date_MM/DD/YYYY\nEnd.date_MM/DD/YYYY.depends_Start",
+        description: "End date syncs with Start date automatically"
+      }
+    ],
+    subsections: [
+      {
+        id: "date-format-codes",
+        title: "Date Format Codes Reference",
+        content: "All available format codes for the .date_FORMAT extension:",
+        codeExamples: [
+          {
+            title: "Year Codes",
+            code: "YYYY\nYY",
+            description: "YYYY = Full year (2025) | YY = Last two digits (25)"
+          },
+          {
+            title: "Month Codes",
+            code: "MMMM\nMMM\nMM\nM",
+            description: "MMMM = January | MMM = Jan | MM = 01, 12 | M = 1, 12"
+          },
+          {
+            title: "Day Codes",
+            code: "DD\nD\ndddd\nddd",
+            description: "DD = 01, 28 | D = 1, 28 | dddd = Monday | ddd = Mon"
+          },
+          {
+            title: "Hour Codes",
+            code: "HH\nH\nhh\nh",
+            description: "HH = 01, 23 (24h) | H = 1, 23 (24h) | hh = 01, 12 (12h) | h = 1, 12 (12h)"
+          },
+          {
+            title: "Minute & Second Codes",
+            code: "mm\nm\nss\ns",
+            description: "mm = 01, 59 | m = 1, 59 | ss = 01, 59 | s = 1, 59"
+          },
+          {
+            title: "AM/PM Codes",
+            code: "A\na",
+            description: "A = AM or PM | a = am or pm"
+          }
+        ]
+      }
+    ]
+  },
+  {
     id: "select-fields",
     title: ".select_ Extension",
     content: "Create dropdown fields by using the .select_ pattern for multiple related elements. The text content of each element becomes the option text. To make a select field trackable, add .track_[role] to ONE of the select options.",
@@ -157,24 +278,84 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "dependencies",
     title: ".depends_ Extension",
-    content: "Make one field depend on another field's value.",
+    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters.",
     codeExamples: [
       { 
-        title: "Dependent Field", 
-        code: "City.depends_Country",
-        description: "The City field's value depends on the Country field"
+        title: "Simple Copy", 
+        code: "Confirm_Email.text.depends_Email",
+        description: "Copies entire value from Email field"
+      },
+      {
+        title: "Extract First Word",
+        code: "Full_Name.text\nFirst_Name.text.depends_Full_Name[w1]",
+        description: "Extracts first word → 'Johnson Jojo' becomes 'Johnson'"
+      },
+      {
+        title: "Extract Second Word",
+        code: "Full_Name.text\nLast_Name.text.depends_Full_Name[w2]",
+        description: "Extracts second word → 'Johnson Jojo' becomes 'Jojo'"
+      },
+      {
+        title: "Extract First Character",
+        code: "Name.text\nInitial.text.depends_Name[ch1]",
+        description: "Extracts first character → 'Johnson' becomes 'J'"
+      },
+      {
+        title: "Extract Specific Characters",
+        code: "Name.text\nCode.text.depends_Name[ch1,2,5]",
+        description: "Extracts 1st, 2nd, 5th characters → 'Johnson' becomes 'Jos'"
+      },
+      {
+        title: "Extract Character Range",
+        code: "Name.text\nShort.text.depends_Name[ch1-4]",
+        description: "Extracts characters 1 to 4 → 'Johnson' becomes 'John'"
+      },
+      {
+        title: "With Tracking",
+        code: "Customer.text\nDisplay_Name.text.depends_Customer.track_name",
+        description: "Copies value and tracks with role 'name'"
       }
     ]
   }, 
   {
     id: "generated-values",
     title: ".gen Extension",
-    content: "Generate random values for fields.",
+    content: "Generate values using advanced patterns: random numbers, random letters, prefixes, field extraction, and more.",
     codeExamples: [
       { 
-        title: "Random Code", 
+        title: "Simple Random (Old Style)", 
         code: "Reference.gen.max_8",
-        description: "Generates a random code with maximum length of 8 characters"
+        description: "Generates random alphanumeric code (8 characters)"
+      },
+      {
+        title: "Random Numbers",
+        code: "ID_Number.gen_(rn[12])",
+        description: "Generates 12 random numbers → 245167839145"
+      },
+      {
+        title: "Random Letters",
+        code: "ID_Letter.gen_(rc[12])",
+        description: "Generates 12 random alphabets → ageyuiosdhet"
+      },
+      {
+        title: "With Prefix",
+        code: "ID_Number.gen_FL(rn[12])",
+        description: "FL + 12 random numbers → FL245167839145"
+      },
+      {
+        title: "Mixed Numbers + Letters",
+        code: "Tracking_ID.gen_(rn[6])(rc[6])",
+        description: "6 numbers + 6 letters → 123574qgyiop"
+      },
+      {
+        title: "Character Duplication",
+        code: "ID_Number.gen_(A[12])",
+        description: "Duplicates 'A' 12 times → AAAAAAAAAAAA"
+      },
+      {
+        title: "With Max Padding",
+        code: "ID_Number.gen_(rn[3]).max_(A[10])",
+        description: "3 random numbers, padded to 10 chars with 'A' → 274AAAAAAA"
       }
     ]
   },

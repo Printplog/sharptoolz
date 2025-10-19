@@ -57,6 +57,24 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           />
         </div>
 
+        {/* Helper Text - Available for all elements */}
+        <div className="space-y-2">
+          <Label htmlFor={`helper-${index}`} className="text-sm font-medium text-white/80">
+            Helper Text
+            <span className="text-xs text-white/50 ml-2">(Optional - shows info icon for users)</span>
+          </Label>
+          <Textarea
+            id={`helper-${index}`}
+            placeholder="Add helpful instructions for this field..."
+            value={element.attributes['data-helper'] || ""}
+            onChange={(e) => onUpdate(index, { 
+              attributes: { ...element.attributes, 'data-helper': e.target.value }
+            })}
+            rows={2}
+            className="input text-sm"
+          />
+        </div>
+
         {isTextElement(element) && (
           <div className="space-y-2">
             <Label htmlFor={`text-${index}`} className="text-sm font-medium">
