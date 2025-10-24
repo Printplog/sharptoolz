@@ -17,8 +17,8 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
     let value: string = "";
 
     if ("dependsOn" in field && field.dependsOn) {
-      // Build field value map for extraction
-      const allFieldValues: Record<string, string | number | boolean> = {};
+      // Build field value map for extraction - preserve original values for all field types
+      const allFieldValues: Record<string, string | number | boolean | any> = {};
       fields.forEach(f => {
         allFieldValues[f.id] = f.currentValue || '';
       });

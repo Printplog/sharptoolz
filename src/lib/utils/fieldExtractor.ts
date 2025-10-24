@@ -8,11 +8,13 @@
  * - field_name[ch1] - Extract first character
  * - field_name[ch1,2,5] - Extract specific characters (1st, 2nd, 5th)
  * - field_name[ch1-4] - Extract character range (1st to 4th)
+ * 
+ * For image and signature fields, extraction patterns are ignored and the full value is returned
  */
 
 export function extractFromDependency(
   dependsOn: string, 
-  allFields: Record<string, string | number | boolean>
+  allFields: Record<string, string | number | boolean | any>
 ): string {
   // Check if pattern contains extraction syntax
   const extractMatch = dependsOn.match(/^(.+)\[(w|ch)(.+)\]$/);
@@ -22,19 +24,33 @@ export function extractFromDependency(
     const extractType = extractMatch[2]; // 'w' or 'ch'
     const extractPattern = extractMatch[3]; // '1', '1,2,5', '1-4'
     
-    const fieldValue = String(allFields[fieldName] || '');
+    const fieldValue = allFields[fieldName];
+    
+    // For image and signature fields, ignore extraction patterns and return the full value
+    if (fieldValue && (typeof fieldValue === 'string' && (fieldValue.startsWith('data:image/') || fieldValue.startsWith('blob:')))) {
+      return fieldValue;
+    }
+    
+    const stringValue = String(fieldValue || '');
     
     if (extractType === 'w') {
       // Word extraction
-      return extractWord(fieldValue, extractPattern);
+      return extractWord(stringValue, extractPattern);
     } else if (extractType === 'ch') {
       // Character extraction
-      return extractChars(fieldValue, extractPattern);
+      return extractChars(stringValue, extractPattern);
     }
   }
   
   // Simple field reference (no extraction) - current behavior
-  return String(allFields[dependsOn] || '');
+  const fieldValue = allFields[dependsOn];
+  
+  // For image and signature fields, return the full value
+  if (fieldValue && (typeof fieldValue === 'string' && (fieldValue.startsWith('data:image/') || fieldValue.startsWith('blob:')))) {
+    return fieldValue;
+  }
+  
+  return String(fieldValue || '');
 }
 
 function extractWord(text: string, pattern: string): string {
