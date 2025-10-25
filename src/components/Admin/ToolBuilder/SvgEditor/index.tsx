@@ -1,5 +1,5 @@
 // Main SvgEditor component
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import parseSvgElements, { type SvgElement } from "@/lib/utils/parseSvgElements";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,20 +19,27 @@ interface SvgEditorProps {
   templateName?: string;
   banner?: string;
   hot?: boolean;
+  isActive?: boolean;
   tool?: string;
   tutorial?: Tutorial;
-  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => void;
+  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => void;
   isLoading?: boolean;
   onElementSelect?: (elementType: string, idPattern?: string) => void;
 }
 
-export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot = false, tool = "", tutorial, onSave, isLoading, onElementSelect }: SvgEditorProps) {
+export interface SvgEditorRef {
+  handleSave: () => void;
+  name: string;
+}
+
+const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, onSave, isLoading, onElementSelect }, ref) => {
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
   const [name, setName] = useState<string>(templateName);
   const [bannerImage, setBannerImage] = useState<string>(banner);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [isHot, setIsHot] = useState<boolean>(hot);
+  const [isActiveState, setIsActiveState] = useState<boolean>(isActive);
   const [selectedTool, setSelectedTool] = useState<string>(tool);
   const [tutorialUrlState, setTutorialUrlState] = useState<string>(tutorial?.url || "");
   const [tutorialTitleState, setTutorialTitleState] = useState<string>(tutorial?.title || "");
@@ -71,6 +78,10 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
   useEffect(() => {
     setIsHot(hot);
   }, [hot]);
+
+  useEffect(() => {
+    setIsActiveState(isActive);
+  }, [isActive]);
 
   useEffect(() => {
     setSelectedTool(tool);
@@ -234,7 +245,7 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
     return ['text', 'tspan', 'textPath'].includes(el.tag);
   }
 
-  function handleSave() {
+  const handleSave = useCallback(() => {
     if (!onSave) return;
     
     // Regenerate SVG and get the updated version immediately
@@ -245,11 +256,18 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
       svg: updatedSvg,
       banner: bannerFile,
       hot: isHot,
+      isActive: isActiveState,
       tool: selectedTool && selectedTool !== "" ? selectedTool : undefined,
       tutorialUrl: tutorialUrlState.trim() || undefined,
       tutorialTitle: tutorialTitleState.trim() || undefined
     });
-  }
+  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState]);
+
+  // Expose methods and state via ref
+  useImperativeHandle(ref, () => ({
+    handleSave,
+    name
+  }), [handleSave, name]);
 
   const handleBannerUpload = (file: File) => {
     setBannerFile(file);
@@ -479,6 +497,57 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
         </div>
       </div>
 
+      {/* Active Template Toggle */}
+      <div className="relative">
+        <div 
+          className={`
+            p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
+            ${isActiveState 
+              ? 'border-green-500/50 bg-green-500/10 shadow-lg shadow-green-500/20' 
+              : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10'
+            }
+          `}
+          onClick={() => setIsActiveState(!isActiveState)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`
+                text-2xl transition-all duration-200
+                ${isActiveState ? 'animate-pulse' : 'grayscale opacity-50'}
+              `}>
+                ✓
+              </div>
+              <div>
+                <div className="font-medium text-sm">
+                  Active Template
+                </div>
+                <div className="text-xs text-white/60">
+                  Visible to users in listings
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center">
+              <Checkbox 
+                id="active-template"
+                checked={isActiveState}
+                onCheckedChange={(checked) => setIsActiveState(checked === true)}
+                className="pointer-events-none"
+              />
+            </div>
+          </div>
+          
+          {!isActiveState && (
+            <div className="mt-2 pt-2 border-t border-red-500/20">
+              <div className="flex items-center gap-1 text-xs text-red-400">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                This template will be hidden from users
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Banner Upload */}
       <BannerUpload 
         bannerImage={bannerImage}
@@ -535,4 +604,8 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
       <FloatingScrollButton show={showScrollTop} onClick={scrollToTop} />
     </div>
   );
-}
+});
+
+SvgEditor.displayName = "SvgEditor";
+
+export default SvgEditor;

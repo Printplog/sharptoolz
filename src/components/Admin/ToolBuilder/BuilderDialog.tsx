@@ -31,8 +31,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDialogStore } from "@/store/dialogStore";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Tool } from "@/types";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // ------------------------
 // Validation Schema
@@ -56,6 +57,8 @@ export default function BuilderDialog() {
   
   // Extract tool ID from current URL path (e.g., /admin/tools/7286b789-bca0-4327-9844-3df7e65b68dc/templates)
   const toolId = location.pathname.match(/\/admin\/tools\/([^/]+)\/templates/)?.[1] || null;
+  
+  const [isActive, setIsActive] = useState(true);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -81,6 +84,7 @@ export default function BuilderDialog() {
         tutorialUrl: "",
         tutorialTitle: "",
       });
+      setIsActive(true); // Reset isActive
       
       // Also explicitly set the tool value to ensure it's selected
       if (toolId) {
@@ -219,6 +223,9 @@ export default function BuilderDialog() {
         formData.append('tutorial_title', values.tutorialTitle);
         console.log('Adding tutorial title:', values.tutorialTitle);
       }
+      
+      // Add is_active status
+      formData.append('is_active', isActive ? 'true' : 'false');
 
       console.log('Form values:', values);
       console.log('FormData entries:');
@@ -476,6 +483,57 @@ export default function BuilderDialog() {
                   </FormItem>
                 )}
               />
+
+              {/* Active Template Toggle */}
+              <div className="relative">
+                <div 
+                  className={`
+                    p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
+                    ${isActive 
+                      ? 'border-green-500/50 bg-green-500/10 shadow-lg shadow-green-500/20' 
+                      : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10'
+                    }
+                  `}
+                  onClick={() => setIsActive(!isActive)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`
+                        text-2xl transition-all duration-200
+                        ${isActive ? 'animate-pulse' : 'grayscale opacity-50'}
+                      `}>
+                        ✓
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">
+                          Active Template
+                        </div>
+                        <div className="text-xs text-white/60">
+                          Visible to users in listings
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <Checkbox 
+                        id="active-template"
+                        checked={isActive}
+                        onCheckedChange={(checked) => setIsActive(checked === true)}
+                        className="pointer-events-none"
+                      />
+                    </div>
+                  </div>
+                  
+                  {!isActive && (
+                    <div className="mt-2 pt-2 border-t border-red-500/20">
+                      <div className="flex items-center gap-1 text-xs text-red-400">
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                        This template will be hidden from users
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* Submit */}
               <div className="flex justify-end flex-shrink-0">

@@ -84,6 +84,7 @@ export type Tool = {
   id: string;
   name: string;
   description?: string;
+  is_active: boolean;
   created_at: string;
 };
 
@@ -104,6 +105,7 @@ export type Template = {
   type: "tool";
   tool?: string;
   hot: boolean;
+  is_active: boolean;
   category?: string; // Category ID
   tutorial?: Tutorial;
   tutorial_url?: string;

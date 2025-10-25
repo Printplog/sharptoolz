@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ interface ToolDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tool?: Tool | null; // null for add, Category for edit
-  onSave: (data: { name: string; description?: string }) => void;
+  onSave: (data: { name: string; description?: string; is_active: boolean }) => void;
   isLoading?: boolean;
 }
 
@@ -31,6 +32,7 @@ export default function ToolDialog({
 }: ToolDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isActive, setIsActive] = useState(true);
 
   const isEditing = !!tool;
 
@@ -39,9 +41,11 @@ export default function ToolDialog({
     if (open) {
       setName(tool?.name || "");
       setDescription(tool?.description || "");
+      setIsActive(tool?.is_active ?? true);
     } else {
       setName("");
       setDescription("");
+      setIsActive(true);
     }
   }, [open, tool]);
 
@@ -53,6 +57,7 @@ export default function ToolDialog({
     onSave({
       name: name.trim(),
       description: description.trim() || undefined,
+      is_active: isActive,
     });
   };
 
@@ -111,6 +116,21 @@ export default function ToolDialog({
             <div className="text-xs text-white/60">
               Help users understand what types of templates belong in this tool.
             </div>
+          </div>
+
+          {/* Is Active Checkbox */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="is-active"
+              checked={isActive}
+              onCheckedChange={(checked) => setIsActive(checked as boolean)}
+            />
+            <Label
+              htmlFor="is-active"
+              className="text-sm font-medium cursor-pointer"
+            >
+              Active - Show this tool to users
+            </Label>
           </div>
 
           <DialogFooter className="gap-2 pt-4">

@@ -101,7 +101,7 @@ export default function AdminTools() {
     setDialogOpen(true);
   };
 
-  const handleSaveTool = (data: { name: string; description?: string }) => {
+  const handleSaveTool = (data: { name: string; description?: string; is_active: boolean }) => {
     if (editingTool) {
       updateMutation.mutate({ id: editingTool.id, data });
     } else {
