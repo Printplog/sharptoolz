@@ -7,9 +7,8 @@ import type { Template } from '@/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Eye, Save } from 'lucide-react';
 import SvgFormTranslator from '@/components/Dashboard/SVGFormTranslator/SvgFormTranslator';
 
