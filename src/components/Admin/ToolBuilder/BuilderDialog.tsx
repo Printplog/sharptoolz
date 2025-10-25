@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -262,7 +263,7 @@ export default function BuilderDialog() {
                     <FormControl>
                       <Input
                         placeholder="e.g., National ID Card"
-                        className="bg-white/10 text-white"
+                        className="bg-white/10 border-white/20 text-white"
                         {...field}
                       />
                     </FormControl>
@@ -308,7 +309,7 @@ export default function BuilderDialog() {
                           <FormControl>
                             <Input
                               placeholder="https://youtube.com/watch?v=..."
-                              className="bg-white/10 text-white"
+                              className="bg-white/10 border-white/20 text-white"
                               {...field}
                             />
                           </FormControl>
@@ -327,7 +328,7 @@ export default function BuilderDialog() {
                           <FormControl>
                             <Input
                               placeholder="How to use the tool"
-                              className="bg-white/10 text-white"
+                              className="bg-white/10 border-white/20 text-white"
                               disabled={!form.watch("name")?.trim()}
                               {...field}
                             />
@@ -353,7 +354,7 @@ export default function BuilderDialog() {
                         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
                           ${
                             isSvgDragActive
-                              ? "border-primary bg-primary/5"
+                              ? "border-white/50 bg-white/10"
                               : "border-white/20 hover:border-white/40"
                           }
                         `}
@@ -412,7 +413,7 @@ export default function BuilderDialog() {
                         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
                           ${
                             isBannerDragActive
-                              ? "border-primary bg-primary/5"
+                              ? "border-white/50 bg-white/10"
                               : "border-white/20 hover:border-white/40"
                           }
                         `}
@@ -461,7 +462,7 @@ export default function BuilderDialog() {
                     <FormLabel>Tool (Optional)</FormLabel>
                     <FormControl>
                       <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}>
-                        <SelectTrigger className="bg-white/10 text-white">
+                        <SelectTrigger className="bg-white/10 text-white w-full">
                           <SelectValue placeholder="Select a tool" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border border-white/10 z-[999999]">
@@ -484,56 +485,28 @@ export default function BuilderDialog() {
                 )}
               />
 
-              {/* Active Template Toggle */}
-              <div className="relative">
-                <div 
-                  className={`
-                    p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
-                    ${isActive 
-                      ? 'border-green-500/50 bg-green-500/10 shadow-lg shadow-green-500/20' 
-                      : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10'
-                    }
-                  `}
-                  onClick={() => setIsActive(!isActive)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`
-                        text-2xl transition-all duration-200
-                        ${isActive ? 'animate-pulse' : 'grayscale opacity-50'}
-                      `}>
-                        ✓
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">
-                          Active Template
-                        </div>
-                        <div className="text-xs text-white/60">
-                          Visible to users in listings
-                        </div>
-                      </div>
+              {/* Publish Checkbox */}
+              <Label
+                htmlFor="publish-template"
+                className="block border border-white/20 rounded-lg p-4 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="publish-template"
+                    checked={isActive}
+                    onCheckedChange={(checked) => setIsActive(checked === true)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold block mb-1">
+                      Publish
                     </div>
-                    
-                    <div className="flex items-center">
-                      <Checkbox 
-                        id="active-template"
-                        checked={isActive}
-                        onCheckedChange={(checked) => setIsActive(checked === true)}
-                        className="pointer-events-none"
-                      />
-                    </div>
+                    <p className="text-xs text-white/60">
+                      Make this template visible to users
+                    </p>
                   </div>
-                  
-                  {!isActive && (
-                    <div className="mt-2 pt-2 border-t border-red-500/20">
-                      <div className="flex items-center gap-1 text-xs text-red-400">
-                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                        This template will be hidden from users
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </div>
+              </Label>
 
               {/* Submit */}
               <div className="flex justify-end flex-shrink-0">

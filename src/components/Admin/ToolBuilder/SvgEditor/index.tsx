@@ -355,7 +355,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
           placeholder="Enter template name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full input"
+          className="w-full bg-white/10 border-white/20"
         />
       </div>
 
@@ -425,7 +425,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                 placeholder="https://youtube.com/watch?v=..."
                 value={tutorialUrlState}
                 onChange={(e) => setTutorialUrlState(e.target.value)}
-                className="w-full input"
+                className="w-full bg-white/10 border-white/20"
               />
             </div>
 
@@ -439,7 +439,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                 placeholder="How to use the tool"
                 value={tutorialTitleState}
                 onChange={(e) => setTutorialTitleState(e.target.value)}
-                className="w-full input"
+                className="w-full bg-white/10 border-white/20"
               />
             </div>
           </div>
@@ -497,56 +497,28 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
         </div>
       </div>
 
-      {/* Active Template Toggle */}
-      <div className="relative">
-        <div 
-          className={`
-            p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
-            ${isActiveState 
-              ? 'border-green-500/50 bg-green-500/10 shadow-lg shadow-green-500/20' 
-              : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10'
-            }
-          `}
-          onClick={() => setIsActiveState(!isActiveState)}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`
-                text-2xl transition-all duration-200
-                ${isActiveState ? 'animate-pulse' : 'grayscale opacity-50'}
-              `}>
-                ✓
-              </div>
-              <div>
-                <div className="font-medium text-sm">
-                  Active Template
-                </div>
-                <div className="text-xs text-white/60">
-                  Visible to users in listings
-                </div>
-              </div>
+      {/* Publish Checkbox */}
+      <Label
+        htmlFor="publish-template"
+        className="block border border-white/20 rounded-lg p-4 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+      >
+        <div className="flex items-start space-x-3">
+          <Checkbox
+            id="publish-template"
+            checked={isActiveState}
+            onCheckedChange={(checked) => setIsActiveState(checked === true)}
+            className="mt-1"
+          />
+          <div className="flex-1">
+            <div className="text-sm font-semibold block mb-1">
+              Publish
             </div>
-            
-            <div className="flex items-center">
-              <Checkbox 
-                id="active-template"
-                checked={isActiveState}
-                onCheckedChange={(checked) => setIsActiveState(checked === true)}
-                className="pointer-events-none"
-              />
-            </div>
+            <p className="text-xs text-white/60">
+              Make this template visible to users
+            </p>
           </div>
-          
-          {!isActiveState && (
-            <div className="mt-2 pt-2 border-t border-red-500/20">
-              <div className="flex items-center gap-1 text-xs text-red-400">
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                This template will be hidden from users
-              </div>
-            </div>
-          )}
         </div>
-      </div>
+      </Label>
 
       {/* Banner Upload */}
       <BannerUpload 

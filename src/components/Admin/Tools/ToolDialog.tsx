@@ -91,7 +91,7 @@ export default function ToolDialog({
               placeholder="e.g., Shipping Labels, Business Cards, Invoices"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full"
+              className="w-full bg-white/10 border-white/20"
               maxLength={100}
               required
             />
@@ -110,7 +110,7 @@ export default function ToolDialog({
               placeholder="Brief description of what templates belong in this tool..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full min-h-[80px]"
+              className="w-full min-h-[80px] bg-white/10 border-white/20"
               rows={3}
             />
             <div className="text-xs text-white/60">
@@ -118,20 +118,28 @@ export default function ToolDialog({
             </div>
           </div>
 
-          {/* Is Active Checkbox */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="is-active"
-              checked={isActive}
-              onCheckedChange={(checked) => setIsActive(checked as boolean)}
-            />
-            <Label
-              htmlFor="is-active"
-              className="text-sm font-medium cursor-pointer"
-            >
-              Active - Show this tool to users
-            </Label>
-          </div>
+          {/* Publish Checkbox */}
+          <Label 
+            htmlFor="is-active"
+            className="block border border-white/20 rounded-lg p-4 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            <div className="flex items-start space-x-3">
+              <Checkbox
+                id="is-active"
+                checked={isActive}
+                onCheckedChange={(checked) => setIsActive(checked as boolean)}
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <div className="text-sm font-semibold block mb-1">
+                  Publish
+                </div>
+                <p className="text-xs text-white/60">
+                  Make this tool visible to users
+                </p>
+              </div>
+            </div>
+          </Label>
 
           <DialogFooter className="gap-2 pt-4">
             <Button
