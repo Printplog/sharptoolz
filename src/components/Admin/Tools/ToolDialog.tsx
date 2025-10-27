@@ -86,7 +86,7 @@ export default function ToolDialog({
               placeholder="e.g., Shipping Labels, Business Cards, Invoices"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full"
+              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
               maxLength={100}
               required
             />
@@ -105,7 +105,7 @@ export default function ToolDialog({
               placeholder="Brief description of what templates belong in this tool..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full min-h-[80px]"
+              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 min-h-[80px]"
               rows={3}
             />
             <div className="text-xs text-white/60">

@@ -53,7 +53,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
             placeholder="Element ID"
             value={element.id || ""}
             onChange={(e) => onUpdate(index, { id: e.target.value })}
-            className="input"
+            className="bg-white/10 border-white/20"
           />
         </div>
 
@@ -71,7 +71,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               attributes: { ...element.attributes, 'data-helper': e.target.value }
             })}
             rows={2}
-            className="input text-sm"
+            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 text-sm"
           />
         </div>
 
@@ -86,7 +86,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               value={element.innerText || ""}
               onChange={(e) => onUpdate(index, { innerText: e.target.value })}
               rows={3} 
-              className="input"
+              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
             />
           </div>
         )}
@@ -128,7 +128,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                     onChange={(e) => onUpdate(index, { 
                       attributes: { ...element.attributes, [attr]: e.target.value }
                     })}
-                    className="text-xs input"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 text-xs"
                   />
                 </div>
               )

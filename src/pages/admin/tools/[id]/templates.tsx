@@ -1,4 +1,4 @@
-import { getTemplates, getTool } from "@/api/apiEndpoints";
+import { getTemplatesForAdmin, getTool } from "@/api/apiEndpoints";
 import ToolCard from "@/components/Admin/Tools/ToolCard";
 import IsLoading from "@/components/IsLoading";
 import type { Template, Tool } from "@/types";
@@ -20,7 +20,7 @@ export default function ToolTemplates() {
   const { data: templates, isLoading: templatesLoading } = useQuery<Template[]>(
     {
       queryKey: ["templates", "tool", id],
-      queryFn: () => getTemplates(false, id as string),
+      queryFn: () => getTemplatesForAdmin(false, id as string),
       enabled: !!id,
     }
   );

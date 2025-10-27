@@ -1,4 +1,4 @@
-import { getTemplates } from "@/api/apiEndpoints";
+import { getTemplatesForAdmin } from "@/api/apiEndpoints";
 import ToolCard from "@/components/Admin/Tools/ToolCard";
 import IsLoading from "@/components/IsLoading";
 import type { Template } from "@/types";
@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 export default function Templates() {
   const { data, isLoading } = useQuery<Template[]>({
-    queryFn: () => getTemplates(undefined),
+    queryFn: () => getTemplatesForAdmin(undefined),
     queryKey: ["templates"]
   })
 

@@ -1,22 +1,29 @@
-import { getTemplate, updateTemplate } from '@/api/apiEndpoints';
-import SvgEditor from '@/components/Admin/ToolBuilder/SvgEditor';
+import { getTemplateForAdmin, updateTemplate } from '@/api/apiEndpoints';
+import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import DocsPanel from '@/components/Admin/ToolBuilder/SvgEditor/DocsPanel';
 import errorMessage from '@/lib/utils/errorMessage';
 import type { Template } from '@/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useRef, useState } from 'react';
+import { Save, Eye } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import AdminSvgFormTranslator from '@/components/Admin/ToolBuilder/SvgEditor/AdminSvgFormTranslator';
 
 
 export default function SvgTemplateEditor() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const svgEditorRef = useRef<SvgEditorRef>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Fetch template data
   const { data, isLoading } = useQuery<Template>({
     queryKey: ["template", id],
-    queryFn: () => getTemplate(id as string),
+    queryFn: () => getTemplateForAdmin(id as string),
     enabled: !!id, // Only run query if id exists
+    refetchOnMount: false, // Don't refetch on mount to prevent flickering
   });
 
   console.log(data);
@@ -66,8 +73,7 @@ export default function SvgTemplateEditor() {
       console.log('Template saved successfully:', data);
       toast.success('Template saved successfully!');
       
-      // Invalidate all related queries to ensure UI updates
-      queryClient.invalidateQueries({ queryKey: ["template", id] });
+      // Invalidate related queries but not the current template to avoid disappearing
       queryClient.invalidateQueries({ queryKey: ["templates"] });
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
@@ -81,7 +87,7 @@ export default function SvgTemplateEditor() {
     }
   });
 
-  const handleSave = (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string }) => {
+  const handleSave = (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => {
     if (!templateData.name.trim()) {
       toast.error('Template name is required');
       return;
@@ -111,27 +117,79 @@ export default function SvgTemplateEditor() {
   }
 
   return (
-    <div className="container mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <SvgEditor 
-            svgRaw={data.svg} 
-            templateName={data.name}
-            onSave={handleSave}
-            banner={data.banner}
-            hot={data.hot}
-            tool={data.tool}
-            tutorial={data.tutorial}
-            isLoading={saveMutation.isPending}
-            onElementSelect={() => {
-              // Simplified - no automatic section selection
+    <>
+      <div className="container mx-auto relative">
+        {/* Floating Action Buttons */}
+        <div className="fixed bottom-8 right-8 z-[9999999] flex gap-3">
+          {/* Floating Save Button */}
+          <button
+            onClick={() => {
+              if (svgEditorRef.current?.handleSave) {
+                svgEditorRef.current.handleSave();
+              }
             }}
-          />
+            disabled={!svgEditorRef.current?.name?.trim() || saveMutation.isPending}
+            className="bg-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            <Save className="h-5 w-5 group-hover:rotate-12 transition-all duration-500" />
+            <span>{saveMutation.isPending ? "Saving..." : "Save Template"}</span>
+          </button>
+
+          {/* Floating Preview Button */}
+          <button
+            onClick={() => setShowPreview(true)}
+            className="bg-lime-600 border-3 border-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2"
+          >
+            <Eye className="h-5 w-5 group-hover:translate-x-[2px] transition-all duration-500" />
+            <span>Preview</span>
+          </button>
         </div>
-        <div className="lg:col-span-1">
-          <DocsPanel />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <SvgEditor 
+              ref={svgEditorRef}
+              svgRaw={data.svg} 
+              templateName={data.name}
+              onSave={handleSave}
+              banner={data.banner}
+              hot={data.hot}
+              isActive={data.hot}
+              tool={data.tool}
+              tutorial={data.tutorial}
+              isLoading={saveMutation.isPending}
+              onElementSelect={() => {
+                // Simplified - no automatic section selection
+              }}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <DocsPanel />
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent 
+          className="max-h-[90vh] overflow-hidden"
+          style={{ width: '70vw', maxWidth: '70vw' }}
+        >
+          <DialogHeader>
+            <DialogTitle>Template Preview - {data.name}</DialogTitle>
+            <DialogDescription>
+              Preview how this template will look and work for users
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[calc(90vh-120px)] custom-scrollbar">
+            <AdminSvgFormTranslator 
+              svgContent={data.svg} 
+              formFields={data.form_fields} 
+              templateName={data.name}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

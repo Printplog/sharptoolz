@@ -63,7 +63,7 @@ export default function UsersTable() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="pl-10 w-full sm:w-64 bg-white/5 border-white/10"
+                className="pl-10 w-full sm:w-64 bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
               />
             </div>
             <Button onClick={handleSearch} variant="outline" size="sm" className="w-full sm:w-fit">

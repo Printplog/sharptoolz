@@ -239,7 +239,7 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
           <SelectTrigger className="bg-white/10 border-white/20 text-white w-full">
             <SelectValue placeholder={`Select ${field.name}`} />
           </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-white/20">
+          <SelectContent className="bg-gray-800 border-white/20 z-[999999]">
             {field?.options?.map((option) => (
               <SelectItem
                 key={option.value}

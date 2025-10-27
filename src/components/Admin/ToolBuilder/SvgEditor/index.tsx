@@ -1,5 +1,5 @@
 // Main SvgEditor component
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import parseSvgElements, { type SvgElement } from "@/lib/utils/parseSvgElements";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import ElementNavigation from "./ElementNavigation";
 import ElementEditor from "./ElementEditor";
 import BannerUpload from "./BannerUpload";
 import FloatingScrollButton from "./FloatingScrollButton";
+import PreviewDialog from "./PreviewDialog";
 import type { Tutorial } from "@/types";
 
 interface SvgEditorProps {
@@ -19,24 +20,32 @@ interface SvgEditorProps {
   templateName?: string;
   banner?: string;
   hot?: boolean;
+  isActive?: boolean;
   tool?: string;
   tutorial?: Tutorial;
-  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => void;
+  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => void;
   isLoading?: boolean;
   onElementSelect?: (elementType: string, idPattern?: string) => void;
 }
 
-export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot = false, tool = "", tutorial, onSave, isLoading, onElementSelect }: SvgEditorProps) {
+export interface SvgEditorRef {
+  handleSave: () => void;
+  name: string;
+}
+
+const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, onSave, isLoading, onElementSelect }, ref) => {
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
   const [name, setName] = useState<string>(templateName);
   const [bannerImage, setBannerImage] = useState<string>(banner);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [isHot, setIsHot] = useState<boolean>(hot);
+  const [isActiveState, setIsActiveState] = useState<boolean>(isActive);
   const [selectedTool, setSelectedTool] = useState<string>(tool);
   const [tutorialUrlState, setTutorialUrlState] = useState<string>(tutorial?.url || "");
   const [tutorialTitleState, setTutorialTitleState] = useState<string>(tutorial?.title || "");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Fetch tools for the dropdown
@@ -73,6 +82,10 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
   }, [hot]);
 
   useEffect(() => {
+    setIsActiveState(isActive);
+  }, [isActive]);
+
+  useEffect(() => {
     setSelectedTool(tool);
   }, [tool]);
 
@@ -95,6 +108,11 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
   }, []);
 
   function updateElement(index: number, updates: Partial<SvgElement>) {
+    console.log('=== UPDATE ELEMENT DEBUG ===');
+    console.log('Updating element at index:', index);
+    console.log('Updates:', updates);
+    console.log('Current element:', elements[index]);
+    
     const updated = [...elements];
     updated[index] = { ...updated[index], ...updates };
     
@@ -103,125 +121,74 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
       updated[index].attributes.id = updates.id;
     }
     
+    console.log('Updated element:', updated[index]);
     setElements(updated);
   }
 
   function regenerateSvg(): string {
     try {
-      console.log('Regenerating SVG with elements:', elements);
-      console.log('Original SVG:', svgRaw);
+      console.log('Regenerating SVG - elements count:', elements.length);
       
-      // Get original SVG to preserve defs, styles, etc.
+      // Parse the original SVG
       const parser = new DOMParser();
-      const originalDoc = parser.parseFromString(svgRaw, 'image/svg+xml');
-      const originalSvg = originalDoc.documentElement;
+      const doc = parser.parseFromString(svgRaw, 'image/svg+xml');
+      const svg = doc.documentElement;
       
-      // Clone the original SVG
-      const newSvg = originalSvg.cloneNode(true) as SVGElement;
-      
-      // Get all elements and filter them the same way as parseSvgElements
-      const allOriginalElements = Array.from(newSvg.querySelectorAll('*')).filter(el => {
+      // Get all editable elements from the original SVG (same filter as parseSvgElements)
+      const allOriginalElements = Array.from(svg.querySelectorAll('*')).filter(el => {
         const tag = el.tagName.toLowerCase();
         const nonEditableTags = ['defs', 'style', 'linearGradient', 'radialGradient', 'pattern', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feFlood', 'feComposite', 'feMerge', 'feMergeNode'];
         return !nonEditableTags.includes(tag);
       });
       
-      console.log('All original elements:', allOriginalElements);
+      console.log('Found original elements:', allOriginalElements.length);
       
-      // Create a mapping of original elements by their identifying characteristics
-      const elementMap = new Map<string, Element>();
-      allOriginalElements.forEach((el, index) => {
-        const id = el.getAttribute('id') || '';
-        const tag = el.tagName.toLowerCase();
-        const href = el.getAttribute('href') || el.getAttribute('xlink:href') || '';
-        const textContent = el.textContent || '';
-        
-        // Create a unique key for this element
-        const key = `${tag}-${id}-${href}-${textContent}-${index}`;
-        elementMap.set(key, el);
-      });
-      
-      // Clear all editable elements from the SVG
-      allOriginalElements.forEach(el => {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el);
-        }
-      });
-      
-      // Re-add elements in the new order with updated properties
-      const container = newSvg; // Assuming elements are direct children of SVG
-      elements.forEach((editedEl) => {
-        // Find the corresponding original element
-        let originalElement: Element | null = null;
-        
-        for (const [key, el] of elementMap.entries()) {
-          const [tag, id, href, textContent] = key.split('-');
+      // Update each element with its edited version
+      elements.forEach((editedEl, index) => {
+        if (index < allOriginalElements.length) {
+          const originalEl = allOriginalElements[index];
           
-          // Match by exact ID and tag first
-          if (editedEl.id && editedEl.id === id && editedEl.tag === tag) {
-            originalElement = el;
-            break;
+          console.log(`Updating element ${index}:`, {
+            original: {
+              tag: originalEl.tagName,
+              id: originalEl.getAttribute('id'),
+              text: originalEl.textContent
+            },
+            edited: {
+              tag: editedEl.tag,
+              id: editedEl.id,
+              text: editedEl.innerText,
+              attributes: editedEl.attributes
+            }
+          });
+          
+          // Update ALL attributes from the edited element
+          // First, clear all existing attributes
+          while (originalEl.attributes.length > 0) {
+            originalEl.removeAttribute(originalEl.attributes[0].name);
           }
           
-          // Match by base ID (for elements with extensions like .editable added)
-          // Extract base ID from both the edited element and the original
-          const editedBaseId = editedEl.id?.split('.')[0];
-          const originalBaseId = id?.split('.')[0];
-          
-          if (editedBaseId && originalBaseId && 
-              editedBaseId === originalBaseId && 
-              editedEl.tag === tag &&
-              editedEl.innerText === textContent) {
-            originalElement = el;
-            break;
-          }
-          
-          // Match by tag and href for images
-          if (editedEl.tag === 'image' && tag === 'image' && 
-              editedEl.attributes.href === href) {
-            originalElement = el;
-            break;
-          }
-          
-          // Match by tag and text content as fallback
-          if (editedEl.tag === tag && editedEl.innerText === textContent) {
-            originalElement = el;
-            break;
-          }
-        }
-        
-        if (originalElement) {
-          // Clone the original element
-          const newElement = originalElement.cloneNode(true) as Element;
-          
-          // Clear all existing attributes
-          while (newElement.attributes.length > 0) {
-            newElement.removeAttribute(newElement.attributes[0].name);
-          }
-          
-          // Set all attributes from our edited element
+          // Then set all attributes from the edited element
           Object.entries(editedEl.attributes).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
-              newElement.setAttribute(key, value);
+              originalEl.setAttribute(key, value);
+              console.log(`  Set attribute: ${key} = "${value}"`);
             }
           });
           
           // Update text content if applicable
           if (typeof editedEl.innerText === 'string') {
-            newElement.textContent = editedEl.innerText;
+            originalEl.textContent = editedEl.innerText;
+            console.log(`  Updated text: "${originalEl.textContent}"`);
           }
-          
-          // Append to container in the new order
-          container.appendChild(newElement);
         }
       });
 
-      const result = newSvg.outerHTML;
-      console.log('Generated SVG result:', result);
+      const result = svg.outerHTML;
+      console.log('SVG regeneration complete');
       return result;
     } catch (error) {
       console.error('Error regenerating SVG:', error);
-      // Fallback to original SVG if regeneration fails
       return svgRaw;
     }
   }
@@ -234,22 +201,37 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
     return ['text', 'tspan', 'textPath'].includes(el.tag);
   }
 
-  function handleSave() {
+  const handleSave = useCallback(() => {
     if (!onSave) return;
+    
+    console.log('=== SAVE DEBUG ===');
+    console.log('Elements to save:', elements);
+    console.log('Original SVG length:', svgRaw.length);
     
     // Regenerate SVG and get the updated version immediately
     const updatedSvg = regenerateSvg();
+    
+    console.log('Updated SVG length:', updatedSvg.length);
+    console.log('SVG changed:', updatedSvg !== svgRaw);
+    console.log('Updated SVG preview:', updatedSvg.substring(0, 200));
     
     onSave({
       name: name.trim(),
       svg: updatedSvg,
       banner: bannerFile,
       hot: isHot,
+      isActive: isActiveState,
       tool: selectedTool && selectedTool !== "" ? selectedTool : undefined,
       tutorialUrl: tutorialUrlState.trim() || undefined,
       tutorialTitle: tutorialTitleState.trim() || undefined
     });
-  }
+  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, elements, svgRaw]);
+
+  // Expose methods and state via ref
+  useImperativeHandle(ref, () => ({
+    handleSave,
+    name
+  }), [handleSave, name]);
 
   const handleBannerUpload = (file: File) => {
     setBannerFile(file);
@@ -337,7 +319,7 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
           placeholder="Enter template name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full input"
+          className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
         />
       </div>
 
@@ -347,7 +329,7 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
           Tool
         </Label>
         <Select value={selectedTool || "none"} onValueChange={(value) => setSelectedTool(value === "none" ? "" : value)}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0">
             <SelectValue placeholder="Select a tool (optional)" />
           </SelectTrigger>
           <SelectContent className="bg-background border border-white/10 ">
@@ -407,7 +389,7 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
                 placeholder="https://youtube.com/watch?v=..."
                 value={tutorialUrlState}
                 onChange={(e) => setTutorialUrlState(e.target.value)}
-                className="w-full input"
+                className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
               />
             </div>
 
@@ -421,7 +403,7 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
                 placeholder="How to use the tool"
                 value={tutorialTitleState}
                 onChange={(e) => setTutorialTitleState(e.target.value)}
-                className="w-full input"
+                className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
               />
             </div>
           </div>
@@ -479,6 +461,57 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
         </div>
       </div>
 
+      {/* Active Template Toggle */}
+      <div className="relative">
+        <div 
+          className={`
+            p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
+            ${isActiveState 
+              ? 'border-green-500/50 bg-green-500/10 shadow-lg shadow-green-500/20' 
+              : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10'
+            }
+          `}
+          onClick={() => setIsActiveState(!isActiveState)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`
+                text-2xl transition-all duration-200
+                ${isActiveState ? 'animate-pulse' : 'grayscale opacity-50'}
+              `}>
+                ✓
+              </div>
+              <div>
+                <div className="font-medium text-sm">
+                  Published
+                </div>
+                <div className="text-xs text-white/60">
+                  Make this template visible to users in listings
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center">
+              <Checkbox 
+                id="active-template"
+                checked={isActiveState}
+                onCheckedChange={(checked) => setIsActiveState(checked === true)}
+                className="pointer-events-none"
+              />
+            </div>
+          </div>
+          
+          {!isActiveState && (
+            <div className="mt-2 pt-2 border-t border-red-500/20">
+              <div className="flex items-center gap-1 text-xs text-red-400">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                This template will be hidden from users
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Banner Upload */}
       <BannerUpload 
         bannerImage={bannerImage}
@@ -518,9 +551,19 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
         </div>
       )}
 
-      {/* Save Template Button at Bottom */}
-      {onSave && (
-        <div className="flex justify-center pt-6 border-t border-white/10">
+      {/* Action Buttons at Bottom */}
+      <div className="flex justify-center gap-4 pt-6 border-t border-white/10">
+        {/* Preview Button */}
+        <Button 
+          onClick={() => setShowPreviewDialog(true)}
+          variant="outline"
+          className="min-w-32 px-8 py-2"
+        >
+          Preview
+        </Button>
+        
+        {/* Save Template Button */}
+        {onSave && (
           <Button 
             onClick={handleSave} 
             disabled={!name.trim() || isLoading}
@@ -528,11 +571,36 @@ export default function SvgEditor({ svgRaw, templateName = "", banner = "", hot 
           >
             {isLoading ? "Saving..." : "Save Template"}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Floating Scroll to Top Button */}
       <FloatingScrollButton show={showScrollTop} onClick={scrollToTop} />
+
+      {/* Preview Dialog */}
+      <PreviewDialog
+        open={showPreviewDialog}
+        onOpenChange={setShowPreviewDialog}
+        svgContent={svgRaw}
+        formFields={elements.filter(el => el.tag === 'text' && el.attributes['data-field-id']).map(el => ({
+          id: el.attributes['data-field-id'] || '',
+          name: el.attributes['data-field-name'] || el.attributes['data-field-id'] || '',
+          type: el.attributes['data-field-type'] || 'text',
+          defaultValue: el.innerText || '',
+          currentValue: el.innerText || '',
+          required: el.attributes['data-field-required'] === 'true',
+          max: el.attributes['data-field-max'] ? parseInt(el.attributes['data-field-max']) : undefined,
+          min: el.attributes['data-field-min'] ? parseInt(el.attributes['data-field-min']) : undefined,
+          options: el.attributes['data-field-options'] ? JSON.parse(el.attributes['data-field-options']) : undefined,
+          helperText: el.attributes['data-helper'] || '',
+          editable: el.attributes['data-field-editable'] !== 'false',
+        }))}
+        templateName={name}
+      />
     </div>
   );
-}
+});
+
+SvgEditor.displayName = "SvgEditor";
+
+export default SvgEditor;

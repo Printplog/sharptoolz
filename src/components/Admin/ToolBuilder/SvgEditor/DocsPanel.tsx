@@ -188,7 +188,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
             placeholder="Search documentation..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-white/10 border-white/20 text-white flex-1"
+            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 flex-1"
           />
           {searchQuery && (
             <Button 

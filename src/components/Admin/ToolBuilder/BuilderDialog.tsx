@@ -255,7 +255,7 @@ export default function BuilderDialog() {
                     <FormControl>
                       <Input
                         placeholder="e.g., National ID Card"
-                        className="bg-white/10 text-white"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
                         {...field}
                       />
                     </FormControl>
@@ -301,7 +301,7 @@ export default function BuilderDialog() {
                           <FormControl>
                             <Input
                               placeholder="https://youtube.com/watch?v=..."
-                              className="bg-white/10 text-white"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
                               {...field}
                             />
                           </FormControl>
@@ -320,7 +320,7 @@ export default function BuilderDialog() {
                           <FormControl>
                             <Input
                               placeholder="How to use the tool"
-                              className="bg-white/10 text-white"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
                               disabled={!form.watch("name")?.trim()}
                               {...field}
                             />
@@ -454,7 +454,7 @@ export default function BuilderDialog() {
                     <FormLabel>Tool (Optional)</FormLabel>
                     <FormControl>
                       <Select value={field.value || "none"} onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}>
-                        <SelectTrigger className="bg-white/10 text-white">
+                        <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0">
                           <SelectValue placeholder="Select a tool" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border border-white/10 z-[999999]">
