@@ -10,7 +10,7 @@ interface AdminSvgFormTranslatorProps {
   svgContent: string;
   formFields: FormField[];
   templateName: string;
-}
+} 
 
 export default function AdminSvgFormTranslator({ 
   svgContent, 
