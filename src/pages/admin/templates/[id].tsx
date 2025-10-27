@@ -128,7 +128,7 @@ export default function SvgTemplateEditor() {
                 svgEditorRef.current.handleSave();
               }
             }}
-            disabled={!svgEditorRef.current?.name?.trim() || saveMutation.isPending}
+            disabled={saveMutation.isPending}
             className="bg-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Save className="h-5 w-5 group-hover:rotate-12 transition-all duration-500" />
