@@ -57,7 +57,6 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     setSvgRaw(newSvgText);
     setName(data.name as string);
     setFields(data.form_fields as FormField[], isPurchased);
-    console.log('Template data loaded:', data);
     
   }, [
     data, 
@@ -75,11 +74,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     if (isLoading || !data) return;
     
     if (isPurchased) {
-      
-      
       // Status and error message are now handled by the SVG template fields
-      console.log('Purchased template status:', purchasedData.status);
-      console.log('Purchased template error message:', purchasedData.error_message);
     }
     
   }, [data, isLoading, isPurchased, purchasedData?.status, purchasedData?.error_message]);

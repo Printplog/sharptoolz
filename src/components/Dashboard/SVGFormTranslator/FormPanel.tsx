@@ -49,7 +49,6 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
     },
     onError: (error: Error) => {
       toast.error(errorMessage(error));
-      console.log(error);
     },
   });
 
@@ -95,7 +94,6 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
       test: isTest,
       toastMessage: toastMessage,
     };
-    console.log(data);
     mutateFn(data);
   };
 

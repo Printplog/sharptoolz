@@ -119,7 +119,6 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
   const handleChange = (newValue: string | number | boolean) => {
     if (!isFieldDisabled) {
       updateField(field.id, newValue);
-      console.log(newValue)
     }
   };
 
