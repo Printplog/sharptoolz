@@ -104,6 +104,9 @@ export function formatDate(date: Date | string, format: string): string {
   result = result.replace(/A/g, ampm);
   result = result.replace(/a/g, ampm.toLowerCase());
 
+  // Replace underscores with spaces (after all token replacements)
+  result = result.replace(/_/g, ' ');
+
   return result;
 }
 

@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Calendar } from "lucide-react";
+import { RotateCcw, Calendar, Clock } from "lucide-react";
 import useToolStore from "@/store/formStore";
 import type { FormField, Tutorial } from "@/types";
 import FieldHelper from "./FieldHelper";
@@ -24,6 +24,7 @@ interface ExtendedFormField extends FormField {
 import { Textarea } from "@/components/ui/textarea";
 import ImageCropUpload from "@/components/ui/ImageCropUpload";
 import SignatureField from "@/components/ui/SignatureField";
+import CustomDateTimePicker from "@/components/ui/CustomDateTimePicker";
 import { formatDate } from "@/lib/utils/dateFormatter";
 import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
 
@@ -31,6 +32,10 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
   const { updateField } = useToolStore();
   const value = field.currentValue;
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
+  
+  // Check if date format includes time components
+  const hasTime = field.dateFormat && /[Hhms]/.test(field.dateFormat);
   
   // Track raw date value for date inputs (YYYY-MM-DD format)
   const [rawDateValue, setRawDateValue] = useState<string>(() => {
@@ -50,6 +55,27 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
       }
     }
     return new Date().toISOString().split('T')[0];
+  });
+  
+  // Track raw time value for datetime inputs (HH:mm format)
+  const [rawTimeValue, setRawTimeValue] = useState<string>(() => {
+    if (field.type === 'date' && hasTime) {
+      // If value includes time, extract it
+      if (typeof value === 'string') {
+        try {
+          const parsed = new Date(value);
+          if (!isNaN(parsed.getTime())) {
+            const hours = parsed.getHours().toString().padStart(2, '0');
+            const minutes = parsed.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      return '12:00';
+    }
+    return '00:00';
   });
 
   // Generate value based on generation rule or fallback to simple random
@@ -306,52 +332,51 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
               />
             )}
           </label>
-          <div className="relative">
-            {/* Hidden native date picker */}
-            <input
-              ref={dateInputRef}
-              type="date"
-              value={rawDateValue}
-              onChange={(e) => {
-                const selectedDate = e.target.value; // YYYY-MM-DD format
-                
-                // Update the raw date value
-                setRawDateValue(selectedDate);
-                
-                // If custom format is specified, format the date
-                if (field.dateFormat) {
-                  const formattedDate = formatDate(selectedDate, field.dateFormat);
-                  handleChange(formattedDate);
-                } else {
-                  // Use default YYYY-MM-DD format
-                  handleChange(selectedDate);
-                }
-              }}
-              className="absolute opacity-0 pointer-events-none"
+          {field.dateFormat ? (
+            <CustomDateTimePicker
+              value={value as string}
+              onChange={handleChange}
+              format={field.dateFormat}
               disabled={isFieldDisabled}
             />
-            
-            {/* Visible formatted display */}
-            <div className="flex gap-2">
-              <Input
-                id={field.id}
-                type="text"
-                value={(value as string) || ''}
-                readOnly
-                onClick={() => dateInputRef.current?.showPicker()}
-                className="bg-white/10 border-white/20 text-white w-full cursor-pointer"
+          ) : (
+            <div className="relative">
+              {/* Hidden native date picker */}
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={rawDateValue}
+                onChange={(e) => {
+                  const selectedDate = e.target.value;
+                  setRawDateValue(selectedDate);
+                  handleChange(selectedDate);
+                }}
+                className="absolute opacity-0 pointer-events-none"
                 disabled={isFieldDisabled}
               />
-              <Button
-                type="button"
-                onClick={() => dateInputRef.current?.showPicker()}
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                disabled={isFieldDisabled}
-              >
-                <Calendar className="w-4 h-4" />
-              </Button>
+              
+              {/* Visible formatted display */}
+              <div className="flex gap-2">
+                <Input
+                  id={field.id}
+                  type="text"
+                  value={(value as string) || ''}
+                  readOnly
+                  onClick={() => dateInputRef.current?.showPicker()}
+                  className="bg-white/10 border-white/20 text-white w-full cursor-pointer"
+                  disabled={isFieldDisabled}
+                />
+                <Button
+                  type="button"
+                  onClick={() => dateInputRef.current?.showPicker()}
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  disabled={isFieldDisabled}
+                >
+                  <Calendar className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       );
 

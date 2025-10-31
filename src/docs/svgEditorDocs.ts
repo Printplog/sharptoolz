@@ -55,9 +55,147 @@ export const svgEditorDocs: DocSection[] = [
     ]
   },
   {
+    id: "tel-fields",
+    title: ".tel Extension",
+    content: "Creates a telephone number input field from an SVG element.",
+    codeExamples: [
+      { 
+        title: "Phone Field", 
+        code: "Phone_Number.tel",
+        description: "Creates a telephone number input field"
+      },
+      {
+        title: "With Max Length",
+        code: "Mobile_Number.tel.max_15",
+        description: "Telephone field with maximum length of 15 characters"
+      }
+    ]
+  },
+  {
+    id: "password-fields",
+    title: ".password Extension",
+    content: "Creates a password input field with hidden text from an SVG element.",
+    codeExamples: [
+      { 
+        title: "Password Field", 
+        code: "User_Password.password",
+        description: "Creates a password input field (text is hidden when typing)"
+      }
+    ]
+  },
+  {
+    id: "checkbox-fields",
+    title: ".checkbox Extension",
+    content: "Creates a checkbox input field from an SVG element. Checkboxes return true when checked, false when unchecked.",
+    codeExamples: [
+      { 
+        title: "Checkbox Field", 
+        code: "Terms_Accepted.checkbox",
+        description: "Creates a checkbox field"
+      },
+      {
+        title: "With Editable",
+        code: "Notifications_Enabled.checkbox.editable",
+        description: "Creates a checkbox that remains editable after purchase"
+      }
+    ]
+  },
+  {
+    id: "range-fields",
+    title: ".range Extension",
+    content: "Creates a range slider input field from an SVG element.",
+    codeExamples: [
+      { 
+        title: "Range Slider", 
+        code: "Volume.range",
+        description: "Creates a range slider input field"
+      },
+      {
+        title: "With Max Value",
+        code: "Score.range.max_100",
+        description: "Range slider with maximum value of 100"
+      }
+    ]
+  },
+  {
+    id: "color-fields",
+    title: ".color Extension",
+    content: "Creates a color picker input field from an SVG element.",
+    codeExamples: [
+      { 
+        title: "Color Picker", 
+        code: "Theme_Color.color",
+        description: "Creates a color picker input field"
+      }
+    ]
+  },
+  {
+    id: "file-fields",
+    title: ".file Extension",
+    content: "Creates a file upload input field from an SVG element. Alternative to .upload extension.",
+    codeExamples: [
+      { 
+        title: "File Upload", 
+        code: "Document.file",
+        description: "Creates a file upload input field"
+      },
+      {
+        title: "Alternative to Upload",
+        code: "Attachment.file",
+        description: "Same functionality as .upload extension"
+      }
+    ]
+  },
+  {
+    id: "upload-fields",
+    title: ".upload Extension",
+    content: "Creates a file upload input field from an SVG element. Alternative to .file extension.",
+    codeExamples: [
+      { 
+        title: "File Upload", 
+        code: "Company_Logo.upload",
+        description: "Creates a file upload input field"
+      },
+      {
+        title: "Alternative to File",
+        code: "Document.upload",
+        description: "Same functionality as .file extension"
+      }
+    ]
+  },
+  {
+    id: "sign-fields",
+    title: ".sign Extension",
+    content: "Creates a signature field from an SVG element. Allows users to draw or upload their signature.",
+    codeExamples: [
+      { 
+        title: "Signature Field", 
+        code: "Author_Signature.sign",
+        description: "Creates a signature input field"
+      },
+      {
+        title: "With Editable",
+        code: "Witness_Signature.sign.editable",
+        description: "Creates a signature field that remains editable after purchase"
+      }
+    ]
+  },
+  {
+    id: "status-fields",
+    title: ".status Extension",
+    content: "Creates a status input field from an SVG element.",
+    codeExamples: [
+      { 
+        title: "Status Field", 
+        code: "Order_Status.status",
+        description: "Creates a status input field"
+      }
+    ]
+  },
+  {
     id: "date-fields",
     title: ".date Extension",
-    content: "Creates a date picker field. Use .date for basic picker or .date_FORMAT for custom formatting.",
+    content: "Creates a date picker field. Use .date for basic picker or .date_FORMAT for custom formatting. Provides dropdown selectors for all components (year, month, day, hour, minute, second, AM/PM). Important: Use underscores (_) to represent spaces in your format string.",
     codeExamples: [
       { 
         title: "Basic Date Field", 
@@ -216,6 +354,33 @@ export const svgEditorDocs: DocSection[] = [
         title: "Visible by Default", 
         code: "Basic_Feature.hide_checked",
         description: "Creates a checkbox that toggles visibility (visible by default)"
+      }
+    ]
+  },
+  {
+    id: "helper-text",
+    title: "Helper Text (data-helper attribute)",
+    content: "Add contextual help text to any field by using the data-helper attribute on the SVG element. This helper text will appear below the field to provide additional guidance to users.",
+    codeExamples: [
+      { 
+        title: "With Helper Text", 
+        code: '<text id="Email.email" data-helper="Enter your email address">user@example.com</text>',
+        description: "Email field with helper text that appears below the input"
+      },
+      {
+        title: "Helper Text on Textarea",
+        code: '<text id="Description.textarea" data-helper="Provide a detailed description of your product">Product description</text>',
+        description: "Textarea field with helper text for guidance"
+      },
+      {
+        title: "Helper Text on Select",
+        code: '<text id="Country.select_usa" data-helper="Select your country of residence">United States</text>',
+        description: "Select option with helper text (applies to the select field)"
+      },
+      {
+        title: "Helper Text with Extensions",
+        code: '<text id="Order_Number.gen.max_12.tracking_id" data-helper="Your unique tracking number">TRK123456</text>',
+        description: "Helper text works with any field type and extension combination"
       }
     ]
   },
