@@ -42,10 +42,10 @@ export default function ToolsList({ hot }: Props) {
     tool.name.toLowerCase().includes(query.toLowerCase())
   );
 
-  // Group templates by their tool category
+  // Group templates by their tool category (only for non-hot tools)
   const groupedTools: GroupedTools = {};
   
-  if (toolCategories && filteredTools.length > 0) {
+  if (!hot && toolCategories && filteredTools.length > 0) {
     filteredTools.forEach((template) => {
       const toolId = template.tool;
       if (toolId) {
@@ -64,6 +64,65 @@ export default function ToolsList({ hot }: Props) {
   }
 
   const isLoading = templatesLoading || toolsLoading;
+
+  // Helper function to render template card
+  const renderTemplateCard = (template: Template) => (
+    <Link
+      to={`/${pathname.includes("all-tools") ? "all-tools" : "tools"}/${
+        template.id
+      }`}
+      key={template.id}
+      className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5"
+    >
+      {/* Banner Preview */}
+      <div
+        className="absolute inset-0 p-2 pointer-events-none z-0"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 60%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to bottom, black 60%, transparent 100%)",
+        }}
+      >
+        {template.banner ? (
+          <div className="mask-b-to-[80%] h-full bg-white rounded-lg overflow-hidden">
+            <img
+              src={template.banner}
+              alt={`${template.name} banner`}
+              className="w-full h-full object-cover rounded-lg"
+            />
+          </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-black/10">
+            No Preview
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Overlay */}
+      <div className="absolute bottom-0 left-0 w-full z-10 bg-transparent p-4 flex flex-col gap-2">
+        <div className="flex justify-between items-center">
+          <h3 className="text-white font-semibold truncate">
+            {template.name}
+          </h3>
+          <span className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded-full capitalize">
+            {template?.hot ? "Hot Tool 🔥" : "Template"}
+          </span>
+        </div>
+
+        <Link
+          to={`/${
+            pathname.includes("all-tools") ? "all-tools" : "tools"
+          }/${template.id}`}
+          className="w-full mt-2"
+        >
+          <button className="w-full px-4 py-2 rounded-md bg-primary text-background font-medium hover:bg-primary/90 transition">
+            Use Template
+          </button>
+        </Link>
+      </div>
+    </Link>
+  );
 
   return (
     <div className="space-y-10">
@@ -85,87 +144,41 @@ export default function ToolsList({ hot }: Props) {
         </div>
       )}
 
-      {/* Grouped Tool Sections */}
-      {Object.keys(groupedTools).length > 0 ? (
-        <div className="space-y-12">
+      {/* Hot Tools - Simple Grid (No Grouping) */}
+      {hot && filteredTools.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredTools.map((template) => renderTemplateCard(template))}
+        </div>
+      )}
+
+      {/* Regular Tools - Grouped by Category */}
+      {!hot && Object.keys(groupedTools).length > 0 && (
+        <div className="space-y-16">
           {Object.entries(groupedTools).map(([toolId, { tool, templates }]) => (
-            <div key={toolId} className="space-y-6">
+            <div key={toolId} className="space-y-8">
               {/* Tool Category Header */}
-              <div className="border-b border-white/20 pb-2">
-                <h2 className="text-2xl font-bold text-white mb-2">{tool.name}</h2>
-                <div className="w-full h-px bg-gradient-to-r from-white/20 via-white/40 to-white/20"></div>
+              <div className="relative pb-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-1 bg-gradient-to-b from-primary via-primary/80 to-primary/60 rounded-full"></div>
+                  <h2 className="text-3xl font-bold text-white tracking-tight">{tool.name}</h2>
+                </div>
+                <div className="mt-3 h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
               </div>
 
               {/* Templates Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {templates.map((template) => (
-                  <Link
-                    to={`/${pathname.includes("all-tools") ? "all-tools" : "tools"}/${
-                      template.id
-                    }`}
-                    key={template.id}
-                    className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5"
-                  >
-                    {/* Banner Preview */}
-                    <div
-                      className="absolute inset-0 p-2 pointer-events-none z-0"
-                      style={{
-                        WebkitMaskImage:
-                          "linear-gradient(to bottom, black 60%, transparent 100%)",
-                        maskImage:
-                          "linear-gradient(to bottom, black 60%, transparent 100%)",
-                      }}
-                    >
-                      {template.banner ? (
-                        <div className="mask-b-to-[80%] h-full bg-white rounded-lg overflow-hidden">
-                          <img
-                            src={template.banner}
-                            alt={`${template.name} banner`}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-black/10">
-                          No Preview
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom Overlay */}
-                    <div className="absolute bottom-0 left-0 w-full z-10 bg-transparent p-4 flex flex-col gap-2">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-white font-semibold truncate">
-                          {template.name}
-                        </h3>
-                        <span className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded-full capitalize">
-                          {template?.hot ? "Hot Tool 🔥" : "Template"}
-                        </span>
-                      </div>
-
-                      <Link
-                        to={`/${
-                          pathname.includes("all-tools") ? "all-tools" : "tools"
-                        }/${template.id}`}
-                        className="w-full mt-2"
-                      >
-                        <button className="w-full px-4 py-2 rounded-md bg-primary text-background font-medium hover:bg-primary/90 transition">
-                          Use Template
-                        </button>
-                      </Link>
-                    </div>
-                  </Link>
-                ))}
+                {templates.map((template) => renderTemplateCard(template))}
               </div>
             </div>
           ))}
         </div>
-      ) : (
-        /* No Match */
-        !isLoading && (
-          <p className="text-center text-gray-500">
-            No tools found.
-          </p>
-        )
+      )}
+
+      {/* No Match */}
+      {filteredTools.length === 0 && !isLoading && (
+        <p className="text-center text-gray-500">
+          No tools found.
+        </p>
       )}
       
       {isLoading && <IsLoading />}
