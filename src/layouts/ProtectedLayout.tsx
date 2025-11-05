@@ -21,17 +21,23 @@ interface ProtectedLayoutProps {
 
 export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutProps) {
   const navigate = useNavigate();
-  const { setUser, isAuthenticated } = useAuthStore();
+  const { setUser, isAuthenticated, logout } = useAuthStore();
 
   const { data, isError, isLoading } = useQuery({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
     retry: 2,
     refetchOnWindowFocus: true,
+    onError: () => {
+      // Immediately mark as unauthenticated on failed auth check
+      logout();
+    },
   });
 
   useEffect(() => {
-    if ( !isLoading && isError || !isAuthenticated) {
+    if ((!isLoading && isError) || !isAuthenticated) {
+      // Ensure state reflects unauthenticated immediately
+      if (isError) logout();
       toast.error("Session expired, login to continue");
       navigate("/auth/login");
       return;

@@ -118,6 +118,29 @@ export default function Navbar() {
                       {link.label}
                     </Link>
                   ))}
+
+                  {/* Auth Actions (Mobile) */}
+                  {isAuthenticated ? (
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full font-semibold rounded-full px-[25px] cursor-pointer bg-primary/5 hover:bg-primary/10 border border-primary/10">
+                        <User className="w-4 h-4 text-primary" />
+                        <span className="text-primary ml-2">Dashboard</span>
+                      </Button>
+                    </Link>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Link to="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                        <Button className="w-full font-semibold rounded-full px-[25px] cursor-pointer">
+                          Login
+                        </Button>
+                      </Link>
+                      <Link to="/auth/register" onClick={() => setIsMenuOpen(false)}>
+                        <Button className="w-full font-semibold rounded-full px-[25px] bg-white/10 hover:bg-white/5 border text-white border-white/20 cursor-pointer">
+                          Register
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </SectionPadding>
             </div>

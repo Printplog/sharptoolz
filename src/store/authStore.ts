@@ -7,7 +7,7 @@ export const useAuthStore = create<AuthState>()(
     persist(
       (set) => ({
         user: null,
-        isAuthenticated: true,
+        isAuthenticated: false,
         setUser: (userData: User) =>
           set({
             user: userData,
