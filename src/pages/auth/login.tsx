@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import type { LoginPayload } from "@/types";
+import type { LoginPayload, AuthDialogProps } from "@/types";
 import { login } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
@@ -28,7 +28,7 @@ const loginSchema = z.object({
 
 type LoginSchema = z.infer<typeof loginSchema>;
 
-export default function Login() {
+export default function Login({ dialog = false }: AuthDialogProps) {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const next = params.get("next") || "/dashboard";
@@ -50,6 +50,11 @@ export default function Login() {
       toast.success("Login Success");
       setUser(user);
       
+      if (dialog) {
+        navigate(-1);
+        return;
+      }
+
       // Check if user has admin role and redirect accordingly
       if (user.role === "ZK7T-93XY") {
         navigate("/admin/dashboard");
@@ -128,25 +133,27 @@ export default function Login() {
                 {isPending ? "Logging in..." : "Login"}
               </Button>
 
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Don't have an account?{" "}
-                  <Link
-                    to="/auth/register"
-                    className="text-primary underline hover:opacity-80"
-                  >
-                    Register
-                  </Link>
-                </p>
-                <p className="text-sm">
-                  <Link
-                    to="/auth/forgot-password"
-                    className="text-primary underline hover:opacity-80"
-                  >
-                    Forgot your password?
-                  </Link>
-                </p>
-              </div>
+              {!dialog && (
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Don't have an account?{" "}
+                    <Link
+                      to="/auth/register"
+                      className="text-primary underline hover:opacity-80"
+                    >
+                      Register
+                    </Link>
+                  </p>
+                  <p className="text-sm">
+                    <Link
+                      to="/auth/forgot-password"
+                      className="text-primary underline hover:opacity-80"
+                    >
+                      Forgot your password?
+                    </Link>
+                  </p>
+                </div>
+              )}
             </form>
           </Form>
         </div>

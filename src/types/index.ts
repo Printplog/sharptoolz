@@ -30,6 +30,10 @@ export type RegisterPayload = {
   confirmPassword: string;
 };
 
+export interface AuthDialogProps {
+  dialog?: boolean;
+}
+
 export type FieldType =
   | "text"
   | "textarea"

@@ -260,7 +260,7 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
             disabled={createPending || updatePending}
             onClick={() => {
               if (!isAuthenticated) {
-                toast.info("Register to continue");
+                toast.info("Please login to continue");
                 navigate("?dialog=register");
               } else {
                 setShowTestDialog(true);

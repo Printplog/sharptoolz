@@ -10,7 +10,7 @@ export default function RegisterDialog() {
   return (
     <CustomDialog dialogName="register">
       <DialogContent>
-        {mode === "login" ? <Login /> : <Register dialog={true} />}
+        {mode === "login" ? <Login dialog={true} /> : <Register dialog={true} />}
         <div className="mt-4 text-center">
           {mode === "login" ? (
             <div className="text-sm">
@@ -18,7 +18,7 @@ export default function RegisterDialog() {
               <button
                 type="button"
                 onClick={() => setMode("register")}
-                className="ml-2 text-primary underline decoration-dotted"
+                className="ml-2 text-primary underline decoration-dotted cursor-pointer"
               >
                 Register
               </button>
@@ -29,7 +29,7 @@ export default function RegisterDialog() {
               <button
                 type="button"
                 onClick={() => setMode("login")}
-                className="ml-2 text-primary underline decoration-dotted"
+                className="ml-2 text-primary underline decoration-dotted cursor-pointer"
               >
                 Login
               </button>
