@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchCurrentUser } from "@/api/apiEndpoints";
 import { useAuthStore } from "@/store/authStore";
+import type { User } from "@/types";
 import { toast } from "sonner";
 import PageLoader from "@/components/PageLoader";
 
@@ -23,15 +24,11 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
   const navigate = useNavigate();
   const { setUser, isAuthenticated, logout } = useAuthStore();
 
-  const { data, isError, isLoading } = useQuery({
+  const { data, isError, isLoading } = useQuery<User, Error>({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
     retry: 2,
     refetchOnWindowFocus: true,
-    onError: () => {
-      // Immediately mark as unauthenticated on failed auth check
-      logout();
-    },
   });
 
   useEffect(() => {
