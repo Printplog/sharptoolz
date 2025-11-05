@@ -18,6 +18,7 @@ import { login } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { useAuthStore } from "@/store/authStore";
+import { useDialogStore } from "@/store/dialogStore";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react"; // <-- Icon import
 
@@ -35,6 +36,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   // const isAdmin = params.get("admin") === "true";
   const { setUser } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const { closeDialog } = useDialogStore();
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -51,7 +53,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
       setUser(user);
       
       if (dialog) {
-        navigate(-1);
+        closeDialog("register");
         return;
       }
 
