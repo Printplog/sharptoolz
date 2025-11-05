@@ -11,12 +11,13 @@ import { logout } from "@/api/apiEndpoints";
 import { useAuthStore } from "@/store/authStore";
 
 export default function Navbar() {
-  const { user } = useAuthStore()
+  const { user, logout: logoutStore } = useAuthStore()
 
     const navigate = useNavigate()
     const { mutate } = useMutation({
       mutationFn: logout,
       onSuccess: () => {
+        logoutStore();
         navigate("/auth/login")
       }
     })
