@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TagInput } from "@/components/ui/tag-input";
 import { useQuery } from "@tanstack/react-query";
 import { getTools } from "@/api/apiEndpoints";
 import ElementNavigation from "./ElementNavigation";
@@ -23,7 +24,8 @@ interface SvgEditorProps {
   isActive?: boolean;
   tool?: string;
   tutorial?: Tutorial;
-  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => void;
+  keywords?: string[];
+  onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string; keywords?: string[] }) => void;
   isLoading?: boolean;
   onElementSelect?: (elementType: string, idPattern?: string) => void;
 }
@@ -33,7 +35,7 @@ export interface SvgEditorRef {
   name: string;
 }
 
-const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, onSave, isLoading, onElementSelect }, ref) => {
+const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], onSave, isLoading, onElementSelect }, ref) => {
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
   const [name, setName] = useState<string>(templateName);
@@ -44,6 +46,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   const [selectedTool, setSelectedTool] = useState<string>(tool);
   const [tutorialUrlState, setTutorialUrlState] = useState<string>(tutorial?.url || "");
   const [tutorialTitleState, setTutorialTitleState] = useState<string>(tutorial?.title || "");
+  const [keywordsTags, setKeywordsTags] = useState<string[]>(Array.isArray(keywords) ? keywords : []);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -96,6 +99,10 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   useEffect(() => {
     setTutorialTitleState(tutorial?.title || "");
   }, [tutorial]);
+
+  useEffect(() => {
+    setKeywordsTags(Array.isArray(keywords) ? keywords : []);
+  }, [keywords]);
 
   // Handle scroll events for floating scroll-to-top button
   useEffect(() => {
@@ -223,9 +230,10 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       isActive: isActiveState,
       tool: selectedTool && selectedTool !== "" ? selectedTool : undefined,
       tutorialUrl: tutorialUrlState.trim() || undefined,
-      tutorialTitle: tutorialTitleState.trim() || undefined
+      tutorialTitle: tutorialTitleState.trim() || undefined,
+      keywords: keywordsTags
     });
-  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, elements, svgRaw]);
+  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, elements, svgRaw]);
 
   // Expose methods and state via ref
   useImperativeHandle(ref, () => ({
@@ -321,6 +329,22 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
           onChange={(e) => setName(e.target.value)}
           className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
         />
+      </div>
+
+      {/* Keywords */}
+      <div className="space-y-2">
+        <Label htmlFor="template-keywords" className="text-sm font-medium">
+          Keywords
+        </Label>
+        <TagInput
+          tags={keywordsTags}
+          onChange={setKeywordsTags}
+          placeholder="Add a keyword and press Enter"
+          className="w-full"
+        />
+        <p className="text-xs text-white/50">
+          These tags help trigger tool-specific logic. Press Enter or comma to add keywords.
+        </p>
       </div>
 
       {/* Tool Selection */}

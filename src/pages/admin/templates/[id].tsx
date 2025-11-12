@@ -30,7 +30,7 @@ export default function SvgTemplateEditor() {
 
   // Save template mutation
   const saveMutation = useMutation({
-    mutationFn: async (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => {
+    mutationFn: async (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string; keywords?: string[] }) => {
       try {
         // If there's a banner file, use FormData
         if (templateData.banner) {
@@ -47,6 +47,7 @@ export default function SvgTemplateEditor() {
           if (templateData.tutorialTitle) {
             formData.append('tutorial_title', templateData.tutorialTitle);
           }
+          formData.append('keywords', JSON.stringify(templateData.keywords ?? []));
           formData.append('banner', templateData.banner);
           const result = await updateTemplate(id as string, formData);
           console.log('FormData update result:', result);
@@ -59,7 +60,8 @@ export default function SvgTemplateEditor() {
             hot: templateData.hot || false,
             tool: templateData.tool || undefined,
             tutorial_url: templateData.tutorialUrl || undefined,
-            tutorial_title: templateData.tutorialTitle || undefined
+            tutorial_title: templateData.tutorialTitle || undefined,
+            keywords: templateData.keywords ?? []
           });
           console.log('JSON update result:', result);
           return result;
@@ -87,7 +89,7 @@ export default function SvgTemplateEditor() {
     }
   });
 
-  const handleSave = (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string }) => {
+  const handleSave = (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string; keywords?: string[] }) => {
     if (!templateData.name.trim()) {
       toast.error('Template name is required');
       return;
@@ -157,6 +159,7 @@ export default function SvgTemplateEditor() {
               isActive={data.hot}
               tool={data.tool}
               tutorial={data.tutorial}
+              keywords={data.keywords}
               isLoading={saveMutation.isPending}
               onElementSelect={() => {
                 // Simplified - no automatic section selection

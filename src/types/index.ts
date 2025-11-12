@@ -112,6 +112,7 @@ export type Template = {
   tutorial?: Tutorial;
   tutorial_url?: string;
   tutorial_title?: string;
+  keywords: string[];
   created_at: string;
   updated_at: string;
   banner: string;
@@ -136,6 +137,7 @@ export type PurchasedTemplate = {
   tracking_id: string | null;
   status: string;
   link: string;   
+  keywords: string[];
 
   created_at: string; // ISO datetime string
   updated_at: string;
@@ -169,6 +171,8 @@ export type WalletData = {
 export type DownloadData = {
   svg: string;
   type: "pdf" | "png";
+  purchased_template_id?: string;
+  template_name?: string;
 };
 
 export type AdminOverview = {

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { TagInput } from "@/components/ui/tag-input";
 import {
   Select,
   SelectContent,
@@ -44,6 +45,7 @@ const formSchema = z.object({
   tool: z.string().optional(),
   tutorialUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   tutorialTitle: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -62,6 +64,7 @@ export default function BuilderDialog() {
     defaultValues: {
       name: "",
       tool: toolId || undefined,
+      keywords: [],
     },
   });
 
@@ -80,6 +83,7 @@ export default function BuilderDialog() {
         tool: toolId || undefined,
         tutorialUrl: "",
         tutorialTitle: "",
+        keywords: [],
       });
       
       // Also explicitly set the tool value to ensure it's selected
@@ -209,6 +213,10 @@ export default function BuilderDialog() {
       } else {
         console.log('No tool selected for template creation');
       }
+
+      if (values.keywords && values.keywords.length > 0) {
+        formData.append('keywords', JSON.stringify(values.keywords));
+      }
       
       // Add tutorial data if provided
       if (values.tutorialUrl?.trim()) {
@@ -260,6 +268,29 @@ export default function BuilderDialog() {
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Keywords */}
+              <FormField
+                control={form.control}
+                name="keywords"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Keywords</FormLabel>
+                    <FormControl>
+                      <TagInput
+                        tags={field.value || []}
+                        onChange={field.onChange}
+                        placeholder="Add a keyword and press Enter"
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-white/50">
+                      These tags help trigger tool-specific logic. Press Enter or comma to add keywords.
+                    </p>
                   </FormItem>
                 )}
               />

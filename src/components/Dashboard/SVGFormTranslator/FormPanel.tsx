@@ -318,7 +318,7 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
             </>
           </Button>
         </Link>
-        <DownloadDocDialog svg={svgRaw} />
+        <DownloadDocDialog svg={svgRaw} purchasedTemplateId={isPurchased ? id : undefined} templateName={name} />
         <Dialog open={showTestDialog} onOpenChange={setShowTestDialog}>
           <DialogContent className="max-w-sm text-center space-y-4">
             <h2 className="text-lg font-semibold">Create Document</h2>
