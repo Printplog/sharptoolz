@@ -40,7 +40,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
           // Try to extract zip and download both files
           try {
             const JSZip = (await import('jszip')).default;
-            const zip = await JSZip.loadAsync(blob);
+            const zip = await JSZip.loadAsync(blob); 
             
             // Download front.png
             const frontFile = zip.file('front.png');
