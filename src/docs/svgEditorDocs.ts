@@ -164,6 +164,23 @@ export const svgEditorDocs: DocSection[] = [
     ]
   },
   {
+    id: "grayscale-extension",
+    title: ".grayscale Extension",
+    content: "Applies automatic grayscale conversion to uploaded images. Works with both .upload and .file fields so final renders match grayscale requirements without extra user actions.",
+    codeExamples: [
+      {
+        title: "Full Grayscale",
+        code: "Passport_Photo.upload.grayscale",
+        description: "Forces the uploaded image to render in black and white (100% intensity)"
+      },
+      {
+        title: "Partial Grayscale",
+        code: "Receipt_Image.file.grayscale_65",
+        description: "Applies 65% grayscale so some color detail remains"
+      }
+    ]
+  },
+  {
     id: "sign-fields",
     title: ".sign Extension",
     content: "Creates a signature field from an SVG element. Allows users to draw or upload their signature.",

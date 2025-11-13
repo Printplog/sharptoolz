@@ -82,6 +82,8 @@ export interface FormField {
   signatureBackground?: string; // Background color for signature canvas
   signaturePenColor?: string; // Pen color for signature drawing
   editable?: boolean; // Whether field remains editable after purchase (default: false)
+  requiresGrayscale?: boolean; // Whether uploaded images should be forced to grayscale
+  grayscaleIntensity?: number; // Grayscale intensity percentage (0-100)
 } // Updated for signature fields, date formatting, generation/extraction, and helper text
 
 export type Tool = {

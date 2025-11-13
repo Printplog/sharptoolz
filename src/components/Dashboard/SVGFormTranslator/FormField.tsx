@@ -378,6 +378,8 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
             }}
             svgElementId={field.svgElementId}
             disabled={isFieldDisabled}
+            requiresGrayscale={field.requiresGrayscale}
+            grayscaleIntensity={field.grayscaleIntensity}
           />
         </div>
       );

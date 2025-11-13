@@ -20,6 +20,8 @@ interface ImageCropUploadProps {
   onImageSelect: (fieldId: string, croppedImageDataUrl: string) => void;
   svgElementId?: string;
   disabled?: boolean;
+  requiresGrayscale?: boolean;
+  grayscaleIntensity?: number;
 }
 
 export default function ImageCropUpload({
@@ -28,7 +30,9 @@ export default function ImageCropUpload({
   currentValue,
   onImageSelect,
   svgElementId,
-  disabled = false
+  disabled = false,
+  requiresGrayscale = false,
+  grayscaleIntensity = 100,
 }: ImageCropUploadProps) {
   const [image, setImage] = useState<string | null>(null);
   const [originalImage, setOriginalImage] = useState<string | null>(null); // Keep original for comparison
@@ -50,6 +54,70 @@ export default function ImageCropUpload({
   const [showOriginal, setShowOriginal] = useState(false);
   
   const imgRef = useRef<HTMLImageElement>(null);
+
+  const applyGrayscaleToImage = useCallback(
+    (imageSrc: string): Promise<string> => {
+      if (!requiresGrayscale) {
+        return Promise.resolve(imageSrc);
+      }
+
+      const intensityValue = Math.max(0, Math.min(100, grayscaleIntensity ?? 100));
+      if (intensityValue === 0) {
+        return Promise.resolve(imageSrc);
+      }
+
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              reject(new Error("Unable to acquire 2D context for grayscale conversion"));
+              return;
+            }
+
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            const alpha = intensityValue / 100;
+            if (alpha > 0) {
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const data = imageData.data;
+
+              for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                data[i] = r + (gray - r) * alpha;
+                data[i + 1] = g + (gray - g) * alpha;
+                data[i + 2] = b + (gray - b) * alpha;
+              }
+
+              ctx.putImageData(imageData, 0, 0);
+            }
+
+            const processedUrl = canvas.toDataURL("image/png");
+            resolve(processedUrl);
+          } catch (error) {
+            reject(error instanceof Error ? error : new Error("Failed to apply grayscale conversion"));
+          }
+        };
+
+        img.onerror = () => {
+          reject(new Error("Failed to load image for grayscale conversion"));
+        };
+
+        img.src = imageSrc;
+      });
+    },
+    [requiresGrayscale, grayscaleIntensity]
+  );
   
   // Get SVG text from store
   const { svgRaw } = useToolStore();
@@ -161,16 +229,12 @@ export default function ImageCropUpload({
             );
           }
 
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(new Error("Canvas is empty"));
-                return;
-              }
-              resolve(URL.createObjectURL(blob));
-            },
-            "image/png"
-          );
+          try {
+            const dataUrl = canvas.toDataURL("image/png");
+            resolve(dataUrl);
+          } catch (error) {
+            reject(error instanceof Error ? error : new Error("Failed to serialize cropped image"));
+          }
         };
         image.src = imageSrc;
       });
@@ -279,7 +343,8 @@ export default function ImageCropUpload({
 
     try {
       const croppedImageDataUrl = await getCroppedImg(image, completedCrop);
-      onImageSelect(fieldId, croppedImageDataUrl);
+      const processedImageDataUrl = await applyGrayscaleToImage(croppedImageDataUrl);
+      onImageSelect(fieldId, processedImageDataUrl);
       setIsDialogOpen(false);
       setImage(null);
       setOriginalImage(null);
@@ -292,7 +357,7 @@ export default function ImageCropUpload({
     } catch (error) {
       console.error('Crop failed:', error);
     }
-  }, [image, completedCrop, getCroppedImg, onImageSelect, fieldId]);
+  }, [image, completedCrop, getCroppedImg, onImageSelect, fieldId, applyGrayscaleToImage]);
 
   const handleRotateLeft = useCallback(() => {
     setRotation(prev => prev - 90);
