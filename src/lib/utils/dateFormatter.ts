@@ -64,6 +64,13 @@ export function formatDate(date: Date | string, format: string): string {
   // Replace tokens in order (longest first to avoid conflicts)
   let result = format;
   
+  // AM/PM - Replace BEFORE month names to avoid matching "A" in "Aug", "Apr", etc.
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  // Use a placeholder to temporarily replace AM/PM tokens
+  const ampmPlaceholder = '___AMPM___';
+  result = result.replace(/A/g, ampmPlaceholder);
+  result = result.replace(/a/g, ampmPlaceholder.toLowerCase());
+  
   // Year
   result = result.replace(/YYYY/g, year.toString());
   result = result.replace(/YY/g, year.toString().slice(-2));
@@ -99,10 +106,9 @@ export function formatDate(date: Date | string, format: string): string {
   result = result.replace(/ss/g, pad(seconds));
   result = result.replace(/s/g, seconds.toString());
   
-  // AM/PM
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  result = result.replace(/A/g, ampm);
-  result = result.replace(/a/g, ampm.toLowerCase());
+  // Replace AM/PM placeholder with actual value
+  result = result.replace(new RegExp(ampmPlaceholder, 'g'), ampm);
+  result = result.replace(new RegExp(ampmPlaceholder.toLowerCase(), 'g'), ampm.toLowerCase());
 
   // Replace underscores with spaces (after all token replacements)
   result = result.replace(/_/g, ' ');
