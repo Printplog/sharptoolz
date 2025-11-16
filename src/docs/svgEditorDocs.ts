@@ -413,7 +413,7 @@ export const svgEditorDocs: DocSection[] = [
           },
           {
             title: "Tracking ID with Link",
-            code: "Order_Number.gen.max_10.tracking_id.link_https://parcelfinda.com/track",
+            code: "Order_Number.gen.max_10.tracking_id.link_https://parcelfinda.com",
             description: "Tracking ID with a direct link to the tracking website"
           }
         ]
@@ -548,12 +548,12 @@ export const svgEditorDocs: DocSection[] = [
     codeExamples: [
       { 
         title: "Tracking ID with Link", 
-        code: "Order_Number.gen.max_10.tracking_id.link_https://parcelfinda.com/track",
+        code: "Order_Number.gen.max_10.tracking_id.link_https://parcelfinda.com",
         description: "Creates a tracking ID field with a link to the ParcelFinda tracking website"
       },
       { 
         title: "Flight Tracking with Link", 
-        code: "Booking_Ref.gen.max_8.tracking_id.link_https://myflightlookup.com/track",
+        code: "Booking_Ref.gen.max_8.tracking_id.link_https://myflightlookup.com",
         description: "Creates a flight booking reference with a link to the MyFlightLookup tracking website"
       },
       { 
@@ -640,7 +640,7 @@ export const svgEditorDocs: DocSection[] = [
         title: "ParcelFinda",
         content: "ParcelFinda is our package tracking website. Use these extensions to map SVG fields to the tracking display. ⚠️ IMPORTANT: .track_ extensions must be the LAST extension in the ID chain.",
         codeExamples: [
-          { title: "Tracking ID with Link", code: "Tracking_ID.gen.max_12.link_https://parcelfinda.com/track", description: "Main tracking ID with link to ParcelFinda (no .track_ extension needed)" },
+          { title: "Tracking ID with Link", code: "Tracking_ID.gen.max_12.link_https://parcelfinda.com", description: "Main tracking ID with link to ParcelFinda (no .track_ extension needed)" },
           { title: "Recipient Name", code: "Recipient_Name.text.track_name", description: "Recipient name display (.track_name must be last)" },
           { title: "Recipient Email", code: "Recipient_Email.email.track_email", description: "Recipient email address (.track_email must be last)" },
           { title: "Recipient Address", code: "Recipient_Address.text.track_destination", description: "Delivery address (.track_destination must be last)" },
@@ -659,7 +659,7 @@ export const svgEditorDocs: DocSection[] = [
         title: "MyFlightLookup",
         content: "MyFlightLookup is our flight tracking website. It supports one-way, two-way, and three-way flight itineraries. Use these extensions to map SVG fields to the flight tracking display. ⚠️ IMPORTANT: .track_ extensions must be the LAST extension in the ID chain.",
         codeExamples: [
-          { title: "Booking Reference with Link", code: "Booking_Ref.gen.max_8.tracking_id.link_https://myflightlookup.com/track", description: "Main booking reference with link to MyFlightLookup (no .track_ extension needed)" },
+          { title: "Booking Reference with Link", code: "Booking_Ref.gen.max_8.tracking_id.link_https://myflightlookup.com", description: "Main booking reference with link to MyFlightLookup (no .track_ extension needed)" },
           { title: "Passenger Name", code: "Passenger_Name.text.track_name", description: "Passenger name (.track_name must be last)" },
           { title: "Flight Number", code: "FlightNumber.text.track_flight", description: "Flight number/identifier (.track_flight must be last)" },
           { title: "Status", code: "Status.text.track_status", description: "Booking status (.track_status must be last)" },
