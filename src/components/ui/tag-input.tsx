@@ -17,7 +17,7 @@ export function TagInput({
   placeholder = "Add a keyword and press Enter",
   className,
   maxTags,
-  commonKeywords = ["split-download", "escort", "trackable"],
+  commonKeywords = ["vertical-split-download", "horizontal-split-download", "escort", "trackable"],
 }: TagInputProps) {
   const [inputValue, setInputValue] = React.useState("");
 
