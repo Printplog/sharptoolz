@@ -433,16 +433,18 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
             <Input
               id={field.id}
               type="text"
-              value={(value as string) || generateFieldValue()}
+              value={(value as string) || ""}
               readOnly
               className="bg-white/5 border-white/20 text-gray-400 cursor-not-allowed"
               disabled={isFieldDisabled}
+              placeholder="Click regenerate to generate value"
             />
             <Button
               type="button"
               onClick={() => handleChange(generateFieldValue())}
               className="bg-white/10 border-white/20 text-white hover:bg-white/20"
               disabled={isFieldDisabled}
+              title="Regenerate value"
             >
               <RotateCcw className="w-4 h-4" />
             </Button>
