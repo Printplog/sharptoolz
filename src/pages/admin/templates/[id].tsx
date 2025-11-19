@@ -2,7 +2,7 @@ import { getTemplateForAdmin, updateTemplate } from '@/api/apiEndpoints';
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import DocsPanel from '@/components/Admin/ToolBuilder/SvgEditor/DocsPanel';
 import errorMessage from '@/lib/utils/errorMessage';
-import type { Template } from '@/types';
+import type { Template, TemplateUpdatePayload } from '@/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -30,7 +30,7 @@ export default function SvgTemplateEditor() {
 
   // Save template mutation
   const saveMutation = useMutation({
-    mutationFn: async (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string; keywords?: string[] }) => {
+    mutationFn: async (templateData: TemplateUpdatePayload) => {
       try {
         // If there's a banner file, use FormData
         if (templateData.banner) {
@@ -95,7 +95,7 @@ export default function SvgTemplateEditor() {
     }
   });
 
-  const handleSave = (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string; keywords?: string[]; fontIds?: string[] }) => {
+  const handleSave = (templateData: TemplateUpdatePayload & { isActive?: boolean }) => {
     if (!templateData.name.trim()) {
       toast.error('Template name is required');
       return;

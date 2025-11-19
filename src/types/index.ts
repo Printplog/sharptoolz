@@ -131,6 +131,18 @@ export type Template = {
   banner: string;
 };
 
+export type TemplateUpdatePayload = {
+  name: string;
+  svg: string;
+  banner?: File | null;
+  hot?: boolean;
+  tool?: string;
+  tutorialUrl?: string;
+  tutorialTitle?: string;
+  keywords?: string[];
+  fontIds?: string[];
+};
+
 export type CreateDocument = {
   tracking_id: string;
   svg: string;
