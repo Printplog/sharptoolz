@@ -27,13 +27,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { addTemplate, getTools } from "@/api/apiEndpoints";
-import { useNavigate, useLocation } from "react-router-dom";
+import { addTemplate, getTools, getFonts, addFont } from "@/api/apiEndpoints";
+import { useLocation } from "react-router-dom";
 import { useDialogStore } from "@/store/dialogStore";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { useEffect } from "react";
-import type { Tool } from "@/types";
+import type { Tool, Font } from "@/types";
 
 // ------------------------
 // Validation Schema
@@ -46,13 +46,13 @@ const formSchema = z.object({
   tutorialUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   tutorialTitle: z.string().optional(),
   keywords: z.array(z.string()).optional(),
+  fontIds: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function BuilderDialog() {
   const { closeDialog, dialogs } = useDialogStore();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
   
@@ -72,6 +72,24 @@ export default function BuilderDialog() {
   const { data: tools = [] } = useQuery<Tool[]>({
     queryKey: ["tools"],
     queryFn: getTools,
+  });
+
+  // Fetch fonts
+  const { data: fonts = [] } = useQuery<Font[]>({
+    queryKey: ["fonts"],
+    queryFn: getFonts,
+  });
+
+  // Font upload mutation
+  const fontUploadMutation = useMutation({
+    mutationFn: (data: FormData) => addFont(data),
+    onSuccess: () => {
+      toast.success("Font uploaded successfully");
+      queryClient.invalidateQueries({ queryKey: ["fonts"] });
+    },
+    onError: (error: Error) => {
+      toast.error(errorMessage(error));
+    },
   });
 
   // Reset form when dialog opens, but preserve tool selection if provided via URL
@@ -164,19 +182,7 @@ export default function BuilderDialog() {
         queryClient.invalidateQueries({ queryKey: ["templates", "tool", toolId] });
       }
       
-      // Close dialog and navigate after a brief delay to allow invalidation
-      setTimeout(() => {
-        closeDialog("toolBuilder");
-        
-        // Redirect based on where the dialog was opened from
-        if (toolId) {
-          // If opened from a tool page, redirect back to that tool's templates
-          navigate(`/admin/tools/${toolId}/templates`);
-        } else {
-          // If opened from templates page, redirect to tools page
-          navigate("/admin/tools");
-        }
-      }, 100);
+      closeDialog("toolBuilder");
     },
     onError(error: Error) {
       toast.error(errorMessage(error));
@@ -226,6 +232,13 @@ export default function BuilderDialog() {
       if (values.tutorialTitle?.trim()) {
         formData.append('tutorial_title', values.tutorialTitle);
         console.log('Adding tutorial title:', values.tutorialTitle);
+      }
+
+      // Add font IDs if provided
+      if (values.fontIds && values.fontIds.length > 0) {
+        values.fontIds.forEach((fontId) => {
+          formData.append('font_ids', fontId);
+        });
       }
 
       console.log('Form values:', values);
@@ -475,6 +488,104 @@ export default function BuilderDialog() {
                   />
                 </div>
               )}
+
+              {/* Font Selection */}
+              <FormField
+                control={form.control}
+                name="fontIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fonts (Optional)</FormLabel>
+                    <FormControl>
+                      <div className="space-y-3">
+                        <Select
+                          value=""
+                          onValueChange={(value) => {
+                            if (value && !field.value?.includes(value)) {
+                              field.onChange([...(field.value || []), value]);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0">
+                            <SelectValue placeholder="Select fonts used in this template" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background border border-white/10 z-[999999]">
+                            {fonts.length === 0 ? (
+                              <SelectItem value="none" disabled className="text-white/60 italic">
+                                No fonts available. Upload a font first.
+                              </SelectItem>
+                            ) : (
+                              fonts
+                                .filter((font) => !field.value?.includes(font.id))
+                                .map((font) => (
+                                  <SelectItem
+                                    key={font.id}
+                                    value={font.id}
+                                    className="text-white/90 hover:bg-white/5 focus:bg-white/5 focus:text-white/80"
+                                  >
+                                    {font.name}
+                                  </SelectItem>
+                                ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {field.value && field.value.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {field.value.map((fontId) => {
+                              const font = fonts.find((f) => f.id === fontId);
+                              return (
+                                <div
+                                  key={fontId}
+                                  className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-md text-sm"
+                                >
+                                  <span>{font?.name || fontId}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      field.onChange(field.value?.filter((id) => id !== fontId));
+                                    }}
+                                    className="text-white/60 hover:text-white"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {/* Font Upload */}
+                        <div className="border-t border-white/10 pt-3">
+                          <p className="text-xs text-white/60 mb-2">Need to upload a new font?</p>
+                          <input
+                            type="file"
+                            accept=".ttf,.otf,.woff,.woff2"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const formData = new FormData();
+                                formData.append('name', file.name.replace(/\.[^/.]+$/, ''));
+                                formData.append('font_file', file);
+                                fontUploadMutation.mutate(formData);
+                                e.target.value = '';
+                              }
+                            }}
+                            className="hidden"
+                            id="font-upload"
+                            disabled={fontUploadMutation.isPending}
+                          />
+                          <label
+                            htmlFor="font-upload"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-md text-sm cursor-pointer transition-colors"
+                          >
+                            {fontUploadMutation.isPending ? 'Uploading...' : '📤 Upload Font'}
+                          </label>
+                        </div>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Tool Selection */}
               <FormField

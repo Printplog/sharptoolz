@@ -107,7 +107,12 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
           break;
         }
         default: {
-          el.textContent = value;
+          const stringValue = value === null || value === undefined ? "" : String(value);
+          const shouldSkipUpdate = !field.touched && stringValue === "";
+          if (shouldSkipUpdate) {
+            return;
+          }
+          el.textContent = stringValue;
         }
       }
     }

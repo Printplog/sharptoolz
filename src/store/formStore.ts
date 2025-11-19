@@ -26,25 +26,31 @@ const  useToolStore = create<ToolStore>((set, get) => ({
   setName: (name) => set({ name }),
 
   setFields: (fields, isPurchased) => {
-    const initializedFields = fields?.map((field) => ({
-      ...field,
-      currentValue: field.defaultValue ?? "",
-    }));
+    if (!fields) {
+      set({ fields: [] });
+      return;
+    }
 
     if (isPurchased) {
-      // For purchased documents, also ensure select fields have a currentValue
-      const fieldsWithValues = fields?.map((field) => {
-        // If it's a select field and currentValue is empty, initialize from defaultValue
-        if (field.options && field.options.length > 0 && !field.currentValue) {
-          return {
-            ...field,
-            currentValue: field.defaultValue ?? "",
-          };
-        }
-        return field;
+      const fieldsWithValues = fields.map((field) => {
+        const hasOptions = field.options && field.options.length > 0;
+        const currentValue =
+          field.currentValue ??
+          (hasOptions ? field.defaultValue ?? "" : field.currentValue ?? field.defaultValue ?? "");
+
+        return {
+          ...field,
+          currentValue,
+          touched: false,
+        };
       });
       set({ fields: fieldsWithValues });
     } else {
+      const initializedFields = fields.map((field) => ({
+        ...field,
+        currentValue: field.defaultValue ?? "",
+        touched: false,
+      }));
       set({ fields: initializedFields });
     }
   },
@@ -52,7 +58,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
   updateField: (fieldId, value) => {
     set((state) => ({
       fields: state.fields?.map((field) =>
-        field.id === fieldId ? { ...field, currentValue: value } : field
+        field.id === fieldId ? { ...field, currentValue: value, touched: true } : field
       ),
     }));
   },
@@ -63,7 +69,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
       const dataUrl = e.target?.result as string;
       set((state) => ({
         fields: state.fields?.map((field) =>
-          field.id === fieldId ? { ...field, currentValue: dataUrl } : field
+          field.id === fieldId ? { ...field, currentValue: dataUrl, touched: true } : field
         ),
       }));
     };
@@ -75,6 +81,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
       fields: state.fields?.map((field) => ({
         ...field,
         currentValue: field?.defaultValue ?? "",
+        touched: false,
       })),
     }));
   },

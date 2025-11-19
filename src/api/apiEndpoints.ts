@@ -1,4 +1,4 @@
-import type { Tool, CryptoPaymentData, DownloadData, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
+import type { Tool, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
@@ -199,5 +199,24 @@ export const removeBackground = async (imageFile: File): Promise<{ success: bool
       'Content-Type': 'multipart/form-data',
     },
   });
+  return res.data;
+};
+
+export const getFonts = async (): Promise<Font[]> => {
+  const res = await apiClient.get('/fonts/');
+  return res.data;
+};
+
+export const addFont = async (data: FormData): Promise<Font> => {
+  const res = await apiClient.post('/fonts/', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};
+
+export const deleteFont = async (id: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/fonts/${id}/`);
   return res.data;
 };

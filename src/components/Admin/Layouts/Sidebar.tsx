@@ -4,6 +4,7 @@ import {
   Hammer,
   Users,
   LayoutTemplate,
+  Type,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -26,6 +27,11 @@ export default function Sidebar() {
       icon: <LayoutTemplate className="h-5 w-5" />,
       label: "Templates",
       to: "/admin/templates",
+    },
+    {
+      icon: <Type className="h-5 w-5" />,
+      label: "Fonts",
+      to: "/admin/fonts",
     },
     {
       icon: <Users className="h-5 w-5" />,

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 // import parseSvgToFormFields from "@/lib/utils/parseSvgToFormFields";
 import useToolStore from "@/store/formStore";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
+import { injectFontsIntoSVG } from "@/lib/utils/fontInjector";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { getPurchasedTemplate, getTemplate } from "@/api/apiEndpoints";
@@ -50,7 +51,12 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     })) || [];
     
     // Process SVG with initialized fields to preserve default images
-    const newSvgText = updateSvgFromFormData(data.svg, initializedFields);
+    let newSvgText = updateSvgFromFormData(data.svg, initializedFields);
+    
+    // Inject fonts if available
+    if (data.fonts && data.fonts.length > 0) {
+      newSvgText = injectFontsIntoSVG(newSvgText, data.fonts);
+    }
     
     // Update all state in the correct order
     setSvgText(newSvgText);
@@ -84,13 +90,19 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     if (!svgText || !fields || fields.length === 0) return;
     
     try {
-      const updatedSvg = updateSvgFromFormData(svgText, fields);
+      let updatedSvg = updateSvgFromFormData(svgText, fields);
+      
+      // Inject fonts if available
+      if (data?.fonts && data.fonts.length > 0) {
+        updatedSvg = injectFontsIntoSVG(updatedSvg, data.fonts);
+      }
+      
       setLivePreview(updatedSvg);
     } catch (error) {
       console.error('Error updating SVG preview:', error);
       setLivePreview(svgText); // Fallback to original SVG
     }
-  }, [fields, svgText]);
+  }, [fields, svgText, data]);
 
   // Handle loading state
   if (isLoading) {

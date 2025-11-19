@@ -28,7 +28,7 @@ export default function DocumentCard({ doc }: Props) {
 
   return (
     <div className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5">
-      {/* SVG Preview */}
+      {/* Preview */}
       <div
         className="absolute inset-0 p-2 pointer-events-none z-0"
         style={{
@@ -37,7 +37,16 @@ export default function DocumentCard({ doc }: Props) {
           maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
         }}
       >
-        {doc.svg ? (
+        {doc.banner ? (
+          <div className="h-full rounded-lg overflow-hidden bg-black/30">
+            <img
+              src={doc.banner}
+              alt={`${doc.name} preview`}
+              className="w-full h-full object-cover rounded-lg"
+              loading="lazy"
+            />
+          </div>
+        ) : doc.svg ? (
           <div
             className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden mask-b-to-[80%]"
             dangerouslySetInnerHTML={{ __html: doc.svg }}

@@ -1,8 +1,8 @@
 // Admin Tools Page
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { type ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 import { ConfirmAction } from "@/components/ConfirmAction";
 import ToolDialog from "@/components/Admin/Tools/ToolDialog";
@@ -14,22 +14,15 @@ import {
 } from "@/api/apiEndpoints";
 import type { Tool } from "@/types";
 import { toast } from "sonner";
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Loader,
-  FolderOpen,
-  Eye,
-} from "lucide-react";
+import { Plus, Edit, Trash2, Loader, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { DataTable } from "@/components/ui/data-table";
 
 export default function AdminTools() {
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTool, setEditingTool] = useState<Tool | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Fetch tools
   const { data: tools = [], isLoading } = useQuery<Tool[]>({
@@ -83,14 +76,6 @@ export default function AdminTools() {
     },
   });
 
-  // Filter tools based on search
-  const filteredTools = tools.filter(
-    (tool) =>
-      tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (tool.description &&
-        tool.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
   const handleAddTool = () => {
     setEditingTool(null);
     setDialogOpen(true);
@@ -110,7 +95,10 @@ export default function AdminTools() {
   };
 
   const handleDeleteTool = (toolId: string) => {
-    deleteMutation.mutate(toolId);
+    setDeletingId(toolId);
+    deleteMutation.mutate(toolId, {
+      onSettled: () => setDeletingId(null),
+    });
   };
 
   if (isLoading) {
@@ -126,13 +114,98 @@ export default function AdminTools() {
     );
   }
 
+  const columns: ColumnDef<Tool>[] = [
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => (
+        <div className="font-semibold">{row.original.name}</div>
+      ),
+      filterFn: (row, _id, value) => {
+        const needle = (value as string)?.toLowerCase?.() ?? "";
+        if (!needle) return true;
+        return (
+          row.original.name.toLowerCase().includes(needle) ||
+          (row.original.description ?? "").toLowerCase().includes(needle)
+        );
+      },
+    },
+    {
+      id: "description",
+      header: "Description",
+      cell: ({ row }) => (
+        <div className="max-w-xl text-white/70">
+          {row.original.description || (
+            <span className="text-white/40 italic">No description</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "created_at",
+      header: "Created",
+      cell: ({ row }) => (
+        <span className="hidden md:inline text-white/60">
+          {new Date(row.original.created_at).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      enableSorting: false,
+      enableHiding: false,
+      cell: ({ row }) => {
+        const isDeleting =
+          deletingId === row.original.id && deleteMutation.isPending;
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <Link to={`/admin/tools/${row.original.id}/templates`}>
+              <Button variant="outline" size="icon" title="View templates">
+                <Eye className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handleEditTool(row.original)}
+              title="Edit tool"
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <ConfirmAction
+              title="Delete Tool"
+              description={`Are you sure you want to delete "${row.original.name}"? This action cannot be undone.`}
+              onConfirm={() => handleDeleteTool(row.original.id)}
+              trigger={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="text-red-400 hover:text-red-300"
+                  title="Delete tool"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </Button>
+              }
+            />
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="container mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            🔧 Tools
+          <h1 className="text-2xl font-semibold flex items-center gap-2">
+           Tools
           </h1>
           <p className="text-white/60 mt-1">
             Manage tools to organize your templates
@@ -144,115 +217,48 @@ export default function AdminTools() {
         </Button>
       </div>
 
-      {/* Search and Tools */}
-      <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/60" />
-          <Input
-            placeholder="Search tools..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Tools Grid */}
-        {filteredTools.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="flex flex-col items-center gap-2 text-white/60">
-              <FolderOpen className="w-16 h-16" />
-              <h3 className="text-lg font-semibold">
-                {searchTerm
-                  ? "No tools match your search"
-                  : "No tools created yet"}
-              </h3>
-              {!searchTerm && (
+      <DataTable
+        columns={columns}
+        data={tools}
+        filterKey="name"
+        searchPlaceholder="Search tools..."
+        emptyMessage="No tools created yet."
+        hideColumnToggle
+        selectionActions={(selectedTools, tableInstance) => {
+          const ids = selectedTools.map((tool) => tool.id);
+          return (
+            <ConfirmAction
+              title="Delete selected tools"
+              description={`This will permanently delete ${ids.length} tool${
+                ids.length === 1 ? "" : "s"
+              }. Continue?`}
+              onConfirm={async () => {
+                for (const id of ids) {
+                  await deleteMutation.mutateAsync(id);
+                }
+                tableInstance.resetRowSelection();
+              }}
+              trigger={
                 <Button
-                  variant="outline"
+                  variant="destructive"
                   size="sm"
-                  onClick={handleAddTool}
-                  className="mt-2"
+                  className="inline-flex items-center gap-2"
+                  disabled={deleteMutation.isPending}
                 >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Create your first tool
+                  {deleteMutation.isPending ? (
+                    <Loader className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      Delete Selected
+                    </>
+                  )}
                 </Button>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTools.map((tool) => (
-              <div
-                key={tool.id}
-                className=" border border-white/10 rounded-xl p-[2px]"
-              >
-                <div className="relative border bg-gradient-to-b from-white/5 from-60% to-background border-white/10 rounded-xl p-4 overflow-hidden">
-                  <div className="absolute w-full h-full inset-0 pointer-events-none z-10   mask-b-to-[50%]"></div>
-                  <div className="pb-3 relative z-1">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      {tool.name}
-                    </h3>
-                  </div>
-                  <div className="space-y-4 relative z-1">
-                    <div className="text-sm text-white/70">
-                      {tool.description || (
-                        <span className="text-white/40 italic">
-                          No description
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-xs text-white/60">
-                      Created: {new Date(tool.created_at).toLocaleDateString()}
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-2 mt-10">
-                      <Link
-                        to={`/admin/tools/${tool.id}/templates`}
-                        className="flex-1 w-fit"
-                      >
-                        <Button variant="outline" size="sm" className="">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </Link>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditTool(tool)}
-                        className="h-8 w-8 p-0 hover:bg-white/10"
-                        title="Edit tool"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-
-                      <ConfirmAction
-                        title="Delete Tool"
-                        description={`Are you sure you want to delete "${tool.name}"? This action cannot be undone.`}
-                        onConfirm={() => handleDeleteTool(tool.id)}
-                        trigger={
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-white/10"
-                            title="Delete tool"
-                          >
-                            {deleteMutation.isPending ? (
-                              <Loader className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </Button>
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              }
+            />
+          );
+        }}
+      />
 
       {/* Tool Dialog */}
       <ToolDialog

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Hammer, Users, LayoutTemplate } from "lucide-react";
+import { LayoutDashboard, Hammer, Users, LayoutTemplate, Type } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,11 @@ const navigationItems = [
     icon: LayoutTemplate,
     label: "Templates",
     to: "/admin/templates",
+  },
+  {
+    icon: Type,
+    label: "Fonts",
+    to: "/admin/fonts",
   },
   {
     icon: Users,

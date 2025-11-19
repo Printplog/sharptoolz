@@ -84,6 +84,7 @@ export interface FormField {
   editable?: boolean; // Whether field remains editable after purchase (default: false)
   requiresGrayscale?: boolean; // Whether uploaded images should be forced to grayscale
   grayscaleIntensity?: number; // Grayscale intensity percentage (0-100)
+  touched?: boolean; // Frontend-only flag to know if user modified the field
 } // Updated for signature fields, date formatting, generation/extraction, and helper text
 
 export type Tool = {
@@ -102,6 +103,14 @@ export type Tutorial = {
   updated_at: string;
 };
 
+export type Font = {
+  id: string;
+  name: string;
+  font_file?: string;
+  font_url?: string;
+  created_at: string;
+};
+
 export type Template = {
   id?: string;
   name: string;
@@ -115,6 +124,8 @@ export type Template = {
   tutorial_url?: string;
   tutorial_title?: string;
   keywords: string[];
+  fonts?: Font[];
+  font_ids?: string[];
   created_at: string;
   updated_at: string;
   banner: string;
@@ -140,6 +151,9 @@ export type PurchasedTemplate = {
   status: string;
   link: string;   
   keywords: string[];
+  fonts?: Font[];
+  font_ids?: string[];
+  banner?: string;
 
   created_at: string; // ISO datetime string
   updated_at: string;

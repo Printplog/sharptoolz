@@ -49,6 +49,11 @@ export default function SvgTemplateEditor() {
           }
           formData.append('keywords', JSON.stringify(templateData.keywords ?? []));
           formData.append('banner', templateData.banner);
+          if (templateData.fontIds && templateData.fontIds.length > 0) {
+            templateData.fontIds.forEach((fontId) => {
+              formData.append('font_ids', fontId);
+            });
+          }
           const result = await updateTemplate(id as string, formData);
           console.log('FormData update result:', result);
           return result;
@@ -61,7 +66,8 @@ export default function SvgTemplateEditor() {
             tool: templateData.tool || undefined,
             tutorial_url: templateData.tutorialUrl || undefined,
             tutorial_title: templateData.tutorialTitle || undefined,
-            keywords: templateData.keywords ?? []
+            keywords: templateData.keywords ?? [],
+            font_ids: templateData.fontIds || []
           });
           console.log('JSON update result:', result);
           return result;
@@ -89,7 +95,7 @@ export default function SvgTemplateEditor() {
     }
   });
 
-  const handleSave = (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string; keywords?: string[] }) => {
+  const handleSave = (templateData: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string; keywords?: string[]; fontIds?: string[] }) => {
     if (!templateData.name.trim()) {
       toast.error('Template name is required');
       return;
@@ -151,6 +157,7 @@ export default function SvgTemplateEditor() {
           <div className="lg:col-span-2">
             <SvgEditor 
               ref={svgEditorRef}
+              fonts={data?.fonts || []}
               svgRaw={data.svg} 
               templateName={data.name}
               onSave={handleSave}
