@@ -20,82 +20,42 @@ interface DownloadDocDialogProps {
   svg: string;
   purchasedTemplateId?: string;
   templateName?: string;
+  keywords?: string[]; // Template keywords to check for split download
 }
 
 export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
   svg,
   purchasedTemplateId,
   templateName,
+  keywords = [],
 }) => {
   const [type, setType] = React.useState<"pdf" | "png">("pdf");
+  const [side, setSide] = React.useState<"front" | "back">("front");
+  
+  // Check if split download is enabled
+  const hasSplitDownload = React.useMemo(() => {
+    const normalizedKeywords = keywords.map(k => String(k).toLowerCase().trim());
+    return normalizedKeywords.includes("vertical-split-download") || 
+           normalizedKeywords.includes("horizontal-split-download") ||
+           normalizedKeywords.includes("split-download");
+  }, [keywords]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: DownloadData) => downloadDoc(data),
 
     onSuccess: async (blob) => {
-      // Check if it's a zip file (split download)
-      const contentType = blob.type || '';
-      if (contentType === 'application/zip' || blob.type === 'application/x-zip-compressed') {
-        try {
-          // Try to extract zip and download both files
-          try {
-            const JSZip = (await import('jszip')).default;
-            const zip = await JSZip.loadAsync(blob); 
-            
-            // Download front.png
-            const frontFile = zip.file('front.png');
-            if (frontFile) {
-              const frontBlob = await frontFile.async('blob');
-              const frontUrl = URL.createObjectURL(frontBlob);
-              const frontLink = document.createElement("a");
-              frontLink.href = frontUrl;
-              frontLink.download = templateName ? `${templateName}_front.png` : "front.png";
-              frontLink.click();
-              frontLink.remove();
-              URL.revokeObjectURL(frontUrl);
-            }
-            
-            // Download back.png
-            const backFile = zip.file('back.png');
-            if (backFile) {
-              const backBlob = await backFile.async('blob');
-              const backUrl = URL.createObjectURL(backBlob);
-              const backLink = document.createElement("a");
-              backLink.href = backUrl;
-              backLink.download = templateName ? `${templateName}_back.png` : "back.png";
-              backLink.click();
-              backLink.remove();
-              URL.revokeObjectURL(backUrl);
-            }
-            
-            toast.success("Downloaded front and back images");
-          } catch (importError) {
-            // Fallback: download zip file directly if jszip is not available
-            console.warn("jszip not available, downloading zip file directly");
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = templateName ? `${templateName}_split.zip` : "document_split.zip";
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(url);
-            toast.success("Downloaded zip file - extract to get front.png and back.png");
-          }
-        } catch (error) {
-          console.error("Error handling zip:", error);
-          toast.error("Failed to handle split download");
-        }
-      } else {
-        // Normal single file download
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = templateName ? `${templateName}.${type}` : `document.${type}`;
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        toast.success("Download complete");
-      }
+      // Normal single file download (now handles split downloads as single files)
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const sideSuffix = hasSplitDownload ? `_${side}` : "";
+      link.download = templateName 
+        ? `${templateName}${sideSuffix}.${type}` 
+        : `document${sideSuffix}.${type}`;
+      link.href = url;
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Download complete");
     },
 
     onError: (error: Error) => {
@@ -113,26 +73,85 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <Label>Format</Label>
-          <RadioGroup
-            value={type}
-            onValueChange={(val) => setType(val as "pdf" | "png")}
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="pdf" id="pdf" />
-              <Label htmlFor="pdf">PDF (High quality vector)</Label>
+        <div className="space-y-6">
+          {/* Format Selection */}
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Format</Label>
+            <RadioGroup
+              value={type}
+              onValueChange={(val) => setType(val as "pdf" | "png")}
+              className="space-y-3"
+            >
+              <label
+                htmlFor="pdf"
+                className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
+                  type === "pdf" ? "border-primary bg-primary/10" : ""
+                }`}
+              >
+                <RadioGroupItem value="pdf" id="pdf" />
+                <Label htmlFor="pdf" className="cursor-pointer flex-1">PDF (High quality vector)</Label>
+              </label>
+              <label
+                htmlFor="png"
+                className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
+                  type === "png" ? "border-primary bg-primary/10" : ""
+                }`}
+              >
+                <RadioGroupItem value="png" id="png" />
+                <Label htmlFor="png" className="cursor-pointer flex-1">PNG (Image export)</Label>
+              </label>
+            </RadioGroup>
+          </div>
+
+          {/* Side Selection (only for split downloads) */}
+          {hasSplitDownload && (
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Select Side</Label>
+              <RadioGroup
+                value={side}
+                onValueChange={(val) => setSide(val as "front" | "back")}
+                className="space-y-3"
+              >
+                <label
+                  htmlFor="front"
+                  className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
+                    side === "front" ? "border-primary bg-primary/10" : ""
+                  }`}
+                >
+                  <RadioGroupItem value="front" id="front" />
+                  <Label htmlFor="front" className="cursor-pointer flex-1">Front (First Half)</Label>
+                </label>
+                <label
+                  htmlFor="back"
+                  className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
+                    side === "back" ? "border-primary bg-primary/10" : ""
+                  }`}
+                >
+                  <RadioGroupItem value="back" id="back" />
+                  <Label htmlFor="back" className="cursor-pointer flex-1">Back (Second Half)</Label>
+                </label>
+              </RadioGroup>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="png" id="png" />
-              <Label htmlFor="png">PNG (Image export)</Label>
-            </div>
-          </RadioGroup>
+          )}
         </div>
 
         <DialogFooter>
-          <Button onClick={() => mutate({ svg, type, purchased_template_id: purchasedTemplateId, template_name: templateName })} disabled={isPending}>
-            {isPending ? "Downloading..." : `Download as ${type.toUpperCase()}`}
+          <Button 
+            onClick={() => mutate({ 
+              svg, 
+              type, 
+              purchased_template_id: purchasedTemplateId, 
+              template_name: templateName,
+              side: hasSplitDownload ? side : undefined
+            })} 
+            disabled={isPending}
+          >
+            {isPending 
+              ? "Downloading..." 
+              : hasSplitDownload 
+                ? `Download ${side} as ${type.toUpperCase()}`
+                : `Download as ${type.toUpperCase()}`
+            }
           </Button>
         </DialogFooter>
       </DialogContent>

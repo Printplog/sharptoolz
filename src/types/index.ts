@@ -201,6 +201,7 @@ export type DownloadData = {
   type: "pdf" | "png";
   purchased_template_id?: string;
   template_name?: string;
+  side?: "front" | "back"; // For split downloads: which side to download
 };
 
 export type AdminOverview = {

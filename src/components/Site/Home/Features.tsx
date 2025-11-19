@@ -37,7 +37,7 @@ export default function FeaturesSection() {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-            Why Choose DocsMaker?
+            Why Choose Sharptoolz?
           </h2>
           <p className="text-gray-300 text-lg max-w-2xl mx-auto">
             Experience the perfect blend of affordability, speed, and reliability. 

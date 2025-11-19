@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="container mx-auto px-10 grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div>
-            <h3 className="text-xl font-bold mb-4">DocsMaker</h3>
+            <h3 className="text-xl font-bold mb-4">Sharptoolz</h3>
             <p className="text-sm">
               Create professional sample documents in seconds. Perfect for
               testing, development, and demonstrations.
@@ -121,7 +121,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="container mx-auto px-6 w-[90%] mt-8 border-t border-gray-700 pt-6 text-center text-sm">
-          <p>&copy; 2025 DocsMaker. All rights reserved.</p>
+          <p>&copy; 2025 Sharptoolz. All rights reserved.</p>
         </div>
       </footer>
     </div>

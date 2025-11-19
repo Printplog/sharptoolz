@@ -7,6 +7,13 @@ import IsLoading from "@/components/IsLoading";
 import type { Template, Tool } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
   hot?: boolean;
@@ -22,6 +29,7 @@ interface GroupedTools {
 export default function ToolsList({ hot }: Props) {
   const [tools, setTools] = useState<Template[]>([]);
   const [query, setQuery] = useState("");
+  const [selectedTool, setSelectedTool] = useState<string>("all");
   const pathname = useLocation().pathname;
 
   const { data: templates, isLoading: templatesLoading } = useQuery({
@@ -38,9 +46,11 @@ export default function ToolsList({ hot }: Props) {
     if (templates) setTools(templates);
   }, [templates]);
 
-  const filteredTools = tools.filter((tool) =>
-    tool.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredTools = tools.filter((tool) => {
+    const matchesQuery = tool.name.toLowerCase().includes(query.toLowerCase());
+    const matchesTool = selectedTool === "all" || tool.tool === selectedTool;
+    return matchesQuery && matchesTool;
+  });
 
   // Group templates by their tool category (only for non-hot tools)
   const groupedTools: GroupedTools = {};
@@ -128,18 +138,34 @@ export default function ToolsList({ hot }: Props) {
     <div className="space-y-10">
       {/* Search Box */}
       {!hot && (
-        <div className="flex justify-center bg-gradient-to-b  from-background to-white/5  border-white/10 px-4 py-5 border">
-          <div className="flex flex-col sm:flex-row items-center  w-full relative">
-            <Input
-              type="text"
-              placeholder="Search tools..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full px-5 py-3 h-fit border border-white/30 rounded-full"
-            />
-            <Button className="w-fit rounded-full  absolute right-0 top-0 bottom-0 bg-white/10 hover:bg-white/20 text-white m-1 mr-2">
-              <Search className="w-4 h-4" />
-            </Button>
+        <div className="flex justify-center bg-white/5 border border-white/10 px-4 py-5 rounded-lg">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+            <div className="flex-1 relative w-full">
+              <Input
+                type="text"
+                placeholder="Search tools..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full px-5 py-3 h-fit border border-white/30 rounded-full bg-white/10 text-white placeholder:text-white/50"
+              />
+              <Button className="flex items-center gap-2 rounded-full absolute right-0 top-0 bottom-0 bg-white/10 hover:bg-white/20 text-white m-1 mr-2 px-4">
+                <Search className="w-4 h-4" />
+                <span className="hidden sm:inline">Search</span>
+              </Button>
+            </div>
+            <Select value={selectedTool} onValueChange={setSelectedTool}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Filter by tool" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tools</SelectItem>
+                {toolCategories?.map((tool) => (
+                  <SelectItem key={tool.id} value={tool.id}>
+                    {tool.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       )}

@@ -12,8 +12,8 @@ import useToolStore from "@/store/formStore";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import FormFieldComponent from "./FormField";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { purchaseTemplate, updatePurchasedTemplate } from "@/api/apiEndpoints";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { purchaseTemplate, updatePurchasedTemplate, getPurchasedTemplate } from "@/api/apiEndpoints";
 import type { PurchasedTemplate } from "@/types";
 import errorMessage from "@/lib/utils/errorMessage";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,13 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
   const queryClient = useQueryClient();
   const [showTestDialog, setShowTestDialog] = useState(false);
   const { isAuthenticated } = useAuthStore();
+
+  // Fetch purchased template data to get keywords for split download
+  const { data: purchasedTemplateData } = useQuery<PurchasedTemplate>({
+    queryKey: ["purchased-template", id],
+    queryFn: () => getPurchasedTemplate(id as string),
+    enabled: isPurchased && !!id,
+  });
 
   const { mutate: create, isPending: createPending } = useMutation({
     mutationFn: (data: Partial<PurchasedTemplate>) => purchaseTemplate(data),
@@ -318,7 +325,12 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
             </>
           </Button>
         </Link>
-        <DownloadDocDialog svg={svgRaw} purchasedTemplateId={isPurchased ? id : undefined} templateName={name} />
+        <DownloadDocDialog 
+          svg={svgRaw} 
+          purchasedTemplateId={isPurchased ? id : undefined} 
+          templateName={name}
+          keywords={purchasedTemplateData?.keywords || []}
+        />
         <Dialog open={showTestDialog} onOpenChange={setShowTestDialog}>
           <DialogContent className="max-w-sm text-center space-y-4">
             <h2 className="text-lg font-semibold">Create Document</h2>

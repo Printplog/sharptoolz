@@ -3,6 +3,7 @@ import { getTemplates } from "@/api/apiEndpoints";
 import IsLoading from "@/components/IsLoading";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowRight } from "lucide-react";
 
 export default function ToolsListHorizontal() {
   const { data: tools = [], isLoading } = useQuery({
@@ -72,6 +73,16 @@ export default function ToolsListHorizontal() {
       ))}
 
       {isLoading && <IsLoading />}
+      
+      {/* All Tools Button */}
+      <div className="col-span-full flex justify-center mt-8">
+        <Link to="/all-tools">
+          <button className="bg-white/10 hover:bg-white/15 border border-white/20 text-white flex gap-2 items-center px-8 font-bold py-3 rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500">
+            All Tools
+            <ArrowRight className="group-hover:translate-x-[5px] transition-all duration-500" />
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }
