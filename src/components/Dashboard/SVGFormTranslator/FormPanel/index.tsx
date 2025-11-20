@@ -206,6 +206,10 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
     };
 
     if (fieldUpdates.length > 0) {
+      console.log("[FormPanel] Applying field updates", {
+        count: fieldUpdates.length,
+        fields: fieldUpdates.map((f) => ({ id: f.id, value: f.value })),
+      });
       payload.field_updates = fieldUpdates;
     }
 
