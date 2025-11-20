@@ -87,6 +87,11 @@ export interface FormField {
   touched?: boolean; // Frontend-only flag to know if user modified the field
 } // Updated for signature fields, date formatting, generation/extraction, and helper text
 
+export type FieldUpdate = {
+  id: string;
+  value?: string | number | boolean | null | Record<string, unknown>;
+};
+
 export type Tool = {
   id: string;
   name: string;
@@ -166,6 +171,7 @@ export type PurchasedTemplate = {
   fonts?: Font[];
   font_ids?: string[];
   banner?: string;
+  field_updates?: FieldUpdate[];
 
   created_at: string; // ISO datetime string
   updated_at: string;

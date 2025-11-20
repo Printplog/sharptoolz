@@ -1,0 +1,442 @@
+import { Button } from "@/components/ui/button";
+import {
+  Upload,
+  Download,
+  Loader2,
+  Copy,
+  PenLine,
+} from "lucide-react";
+import useToolStore from "@/store/formStore";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useBeforeUnload,
+  UNSAFE_NavigationContext,
+} from "react-router-dom";
+import { toast } from "sonner";
+import FormFieldComponent from "../FormField";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { purchaseTemplate, updatePurchasedTemplate, getPurchasedTemplate } from "@/api/apiEndpoints";
+import type { PurchasedTemplate, FieldUpdate } from "@/types";
+import errorMessage from "@/lib/utils/errorMessage";
+import { DownloadDocDialog } from "../../Documents/DownloadDoc";
+import { useEffect, useMemo, useState, useRef, useContext, useCallback } from "react";
+import { useAuthStore } from "@/store/authStore";
+import type { Tutorial } from "@/types";
+import { FormPanelHeader } from "./FormPanelHeader";
+import { TestDocumentDialog } from "./TestDocumentDialog";
+import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
+
+type NavigationBlocker = {
+  state: "blocked" | "unblocked";
+  proceed: () => void;
+  reset: () => void;
+};
+
+function useNavigationBlocker(when: boolean): NavigationBlocker {
+  const navigatorContext = useContext(UNSAFE_NavigationContext);
+  const navigator = navigatorContext?.navigator as { block?: (cb: (tx: any) => void) => () => void } | undefined;
+  const [state, setState] = useState<"blocked" | "unblocked">("unblocked");
+  const retryRef = useRef<null | (() => void)>(null);
+
+  useEffect(() => {
+    if (!when || !navigator || typeof navigator.block !== "function") {
+      retryRef.current = null;
+      setState("unblocked");
+      return;
+    }
+    const unblock = navigator.block((tx: any) => {
+      const retry = () => {
+        unblock();
+        tx.retry();
+      };
+      retryRef.current = retry;
+      setState("blocked");
+    });
+    return () => {
+      unblock();
+      retryRef.current = null;
+      setState("unblocked");
+    };
+  }, [navigator, when]);
+
+  const proceed = useCallback(() => {
+    if (retryRef.current) {
+      const retry = retryRef.current;
+      retryRef.current = null;
+      setState("unblocked");
+      retry();
+    }
+  }, []);
+
+  const reset = useCallback(() => {
+    retryRef.current = null;
+    setState("unblocked");
+  }, []);
+
+  return { state, proceed, reset };
+}
+
+export default function FormPanel({ test, tutorial, templateId }: { test: boolean; tutorial?: Tutorial; templateId?: string }) {
+  const {
+    fields,
+    resetForm,
+    name,
+    svgRaw,
+    getFieldValue,
+    setName,
+  } = useToolStore();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
+  const isPurchased = pathname.includes("documents");
+  const queryClient = useQueryClient();
+  const [showTestDialog, setShowTestDialog] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [isSavingBeforeLeave, setIsSavingBeforeLeave] = useState(false);
+  const { isAuthenticated } = useAuthStore();
+
+  const hasUnsavedChanges = useMemo(
+    () => isPurchased && (fields?.some((field) => field.touched) ?? false),
+    [isPurchased, fields]
+  );
+
+  const blocker = useNavigationBlocker(hasUnsavedChanges);
+  const trackingField = useMemo(
+    () =>
+      fields?.find((field) => field.isTrackingId) ||
+      fields?.find((field) => field.id === "Tracking_ID"),
+    [fields]
+  );
+
+  const trackingIdValue = trackingField
+    ? (() => {
+        const value = getFieldValue(trackingField.id);
+        if (value === undefined || value === null) return undefined;
+        return typeof value === "string" ? value : String(value);
+      })()
+    : undefined;
+
+  useBeforeUnload((event) => {
+    if (hasUnsavedChanges) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  });
+
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      setShowUnsavedDialog(true);
+    } else {
+      setShowUnsavedDialog(false);
+    }
+  }, [blocker.state]);
+
+  // Fetch purchased template data to get keywords for split download
+  const { data: purchasedTemplateData } = useQuery<PurchasedTemplate>({
+    queryKey: ["purchased-template", id],
+    queryFn: () => getPurchasedTemplate(id as string),
+    enabled: isPurchased && !!id,
+  });
+
+  const { mutateAsync: createAsync, isPending: createPending } = useMutation({
+    mutationFn: (data: Partial<PurchasedTemplate>) => purchaseTemplate(data),
+    onSuccess: (data) => {
+      toast.success("Doc created successfully, you can download it now");
+      navigate(`/documents/${data?.id}`);
+    },
+    onError: (error: Error) => {
+      toast.error(errorMessage(error));
+    },
+  });
+
+  const { mutateAsync: updateAsync, isPending: updatePending } = useMutation({
+    mutationFn: async (
+      data: Partial<PurchasedTemplate> & { toastMessage?: string }
+    ) => {
+      const { toastMessage, ...payload } = data;
+      await updatePurchasedTemplate(payload); // assume this is an async call
+      return { toastMessage }; // return it so we can access it in onSuccess
+    },
+    onSuccess: (data) => {
+      toast.success(data.toastMessage || "Doc updated successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["purchased-template"],
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(errorMessage(error));
+      console.error(error);
+    },
+  });
+
+  const createDocument = async (isTest: boolean) => {
+    const mutateFn = isPurchased ? updateAsync : createAsync;
+    if (!isAuthenticated) {
+      navigate("/auth/login?dialog=register");
+      toast.info("Please login to continue.");
+      return;
+    }
+    const trackingField =
+      fields?.find((field) => field.isTrackingId) ||
+      fields?.find((field) => field.id === "Tracking_ID");
+    const tracking_id = trackingField ? getFieldValue(trackingField.id) : undefined;
+    const toastMessage =
+      test === isTest ? "Document updated successfully" : "Document is now watermark free";
+
+    const fieldUpdates: FieldUpdate[] =
+      (fields ?? [])
+        .filter((field) => (!isPurchased) || field.touched)
+        .map((field) => ({
+          id: field.id,
+          value: field.currentValue ?? "",
+        }));
+
+    const payload: Partial<PurchasedTemplate> & {
+      toastMessage: string;
+      field_updates?: FieldUpdate[];
+    } = {
+      id: id,
+      ...(!isPurchased ? { template: id ?? undefined } : { name }),
+      tracking_id: tracking_id as string,
+      test: isTest,
+      toastMessage,
+    };
+
+    if (fieldUpdates.length > 0) {
+      payload.field_updates = fieldUpdates;
+    }
+
+    await mutateFn(payload);
+  };
+
+  const handleDownloadClick = () => {
+    if (!isPurchased) {
+      toast.error("Create your document first to download it.");
+      return;
+    }
+    if (hasUnsavedChanges) {
+      toast.error("Please update your document to save recent changes before downloading.");
+      return;
+    }
+    navigate("?dialog=download-doc");
+  };
+
+  const handleCopyTracking = () => {
+    if (!trackingIdValue) return;
+    navigator.clipboard.writeText(trackingIdValue);
+    toast.success("Tracking ID copied!");
+  };
+
+  const handleStayOnPage = () => {
+    setShowUnsavedDialog(false);
+    blocker.reset();
+  };
+
+  const handleLeaveWithoutSaving = () => {
+    setShowUnsavedDialog(false);
+    blocker.proceed();
+  };
+
+  const handleSaveAndLeave = async () => {
+    if (!hasUnsavedChanges) {
+      handleLeaveWithoutSaving();
+      return;
+    }
+    try {
+      setIsSavingBeforeLeave(true);
+      await createDocument(test);
+      setShowUnsavedDialog(false);
+      blocker.proceed();
+    } catch (error) {
+      blocker.reset();
+    } finally {
+      setIsSavingBeforeLeave(false);
+    }
+  };
+
+  return (
+    <>
+    <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-6">
+      <FormPanelHeader
+        isPurchased={isPurchased}
+        tutorial={tutorial}
+        onReset={resetForm}
+        trackingId={trackingIdValue}
+        trackingLink={trackingField?.link}
+        onCopyTracking={handleCopyTracking}
+        name={name}
+        onNameChange={setName}
+      />
+
+      <div className="space-y-3">
+        {fields
+          ?.filter((field) => field.type === "status")
+          .map((field, index) => (
+            <FormFieldComponent
+              key={`${field.id}-${index}`}
+              field={field}
+              allFields={fields}
+              tutorial={tutorial}
+            />
+          ))}
+        <div className="m-0 p-0 border-0 space-y-3">
+          {fields
+            ?.filter((field) => field.type !== "status")
+            .map((field, index) => (
+              <FormFieldComponent 
+                key={`${field.id}-${index}`} 
+                field={field} 
+                allFields={fields} 
+                isPurchased={isPurchased}
+                tutorial={tutorial}
+              />
+            ))}
+        </div>
+      </div>
+
+      {/* Tutorial Button - Only show for regular templates, not purchased ones */}
+      {tutorial && !isPurchased && (
+        <div className="pt-4 border-t border-white/20">
+          <Button
+            asChild
+            variant="outline"
+            className="w-full hover:bg-black/50 hover:text-white"
+          >
+            <a
+              href={tutorial.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              {tutorial.title || "Watch Tutorial"}
+            </a>
+          </Button>
+        </div>
+      )}
+
+      {/* Buttons */}
+      <div className="pt-4 border-t border-white/20 flex flex-col lg:flex-row justify-end gap-5 ">
+        {isPurchased && test && (
+          <Button
+            variant={"outline"}
+            disabled={createPending || updatePending}
+            onClick={() => {
+              void createDocument(false);
+            }}
+            className="py-6 px-10 hover:bg-black/50 hover:text-white"
+          >
+            <>
+              {updatePending ? "Removing Watermark" : "Remove Watermark"}
+              {updatePending ? (
+                <PenLine className="animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 ml-1" />
+              )}
+            </>
+          </Button>
+        )}
+
+        {!isPurchased ? (
+          <Button
+            variant="outline"
+            disabled={createPending || updatePending}
+            onClick={() => {
+              if (!isAuthenticated) {
+                toast.info("Please login to continue");
+                navigate("?dialog=register");
+              } else {
+                setShowTestDialog(true);
+              }
+            }}
+            className="py-6 px-10 hover:bg-black/50 hover:text-white"
+          >
+            <>
+              {createPending ? "Creating Document" : "Create Document"}
+              {createPending ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 ml-1" />
+              )}
+            </>
+          </Button>
+        ) : (
+          <>
+            {templateId && (
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/tools/${templateId}`)}
+                className="py-6 px-10 hover:bg-black/50 hover:text-white"
+              >
+                Create Similar Doc
+                <Copy className="w-4 h-4 ml-1" />
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              disabled={createPending || updatePending}
+              onClick={() => {
+                void createDocument(test);
+              }}
+              className="py-6 px-10 hover:bg-black/50 hover:text-white"
+            >
+              <>
+                {updatePending ? "Updating Document" : "Update Document"}
+                {updatePending ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4 ml-1" />
+                )}
+              </>
+            </Button>
+          </>
+        )}
+
+        <Button
+          disabled={createPending || updatePending}
+          onClick={handleDownloadClick}
+          className="py-6 px-10 bg-primary/90 text-black hover:bg-primary hover:text-black w-full sm:w-auto"
+        >
+          <>
+            Download Document
+            <Download className="w-4 h-4 ml-1" />
+          </>
+        </Button>
+        <DownloadDocDialog 
+          svg={svgRaw} 
+          purchasedTemplateId={isPurchased ? id : undefined} 
+          templateName={name}
+          keywords={purchasedTemplateData?.keywords || []}
+        />
+        <TestDocumentDialog
+          open={showTestDialog}
+          onOpenChange={setShowTestDialog}
+          onCreateTest={() => {
+            void createDocument(true);
+            setShowTestDialog(false);
+          }}
+          onCreatePaid={() => {
+            void createDocument(false);
+            setShowTestDialog(false);
+          }}
+          isSubmitting={createPending || updatePending}
+        />
+      </div>
+    </div>
+
+    <UnsavedChangesDialog
+      open={showUnsavedDialog}
+      onStay={handleStayOnPage}
+      onLeave={handleLeaveWithoutSaving}
+      onSaveAndLeave={handleSaveAndLeave}
+      isSaving={isSavingBeforeLeave}
+      disableActions={createPending || updatePending}
+    />
+    </>
+  );
+}
