@@ -1,11 +1,19 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getTemplates } from "@/api/apiEndpoints";
 import IsLoading from "@/components/IsLoading";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ToolsListHorizontal() {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const { data: tools = [], isLoading } = useQuery({
     queryKey: ["tools", "hot"],
     queryFn: () => getTemplates(true), // always fetch hot tools
@@ -14,17 +22,23 @@ export default function ToolsListHorizontal() {
   const hotTools = tools?.filter((tool) => tool.hot); // just in case
   const placeholders = Array.from({ length: 4 - hotTools.slice(0, 4).length })
 
+  const handlePreview = (banner?: string) => {
+    if (!banner) return;
+    setPreviewImage(banner);
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {hotTools?.map((tool) => (
-        <Link
-          to={`/all-tools/${tool.id}`}
+        <div
           key={tool.id}
           className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-4"
         >
           {/* Banner Preview */}
-          <div
-            className="absolute inset-0 p-2 pointer-events-none z-0"
+          <button
+            type="button"
+            className="absolute inset-0 p-2 z-0 text-left"
+            onClick={() => handlePreview(tool.banner)}
             style={{
               WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
               maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
@@ -43,7 +57,7 @@ export default function ToolsListHorizontal() {
                 No Preview
               </div>
             )}
-          </div>
+          </button>
 
           {/* Bottom Overlay */}
           <div className="absolute bottom-0 left-0 w-full z-10 bg-transparent p-4 flex flex-col gap-2">
@@ -60,7 +74,7 @@ export default function ToolsListHorizontal() {
               </button>
             </Link>
           </div>
-        </Link>
+        </div>
       ))}
 
       {placeholders.map((_, index) => (
@@ -83,6 +97,30 @@ export default function ToolsListHorizontal() {
           </button>
         </Link>
       </div>
+
+      <Dialog
+        open={!!previewImage}
+        onOpenChange={(open) => {
+          if (!open) setPreviewImage(null);
+        }}
+      >
+        <DialogContent className="max-w-4xl bg-black border border-white/20 max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-white">
+              Template Preview
+            </DialogTitle>
+          </DialogHeader>
+          {previewImage && (
+            <div className="w-full overflow-auto flex-1 min-h-0 custom-scrollbar">
+              <img
+                src={previewImage}
+                alt="Template preview"
+                className="h-full w-auto object-contain rounded-lg border border-white/10"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

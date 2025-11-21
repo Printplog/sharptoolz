@@ -324,8 +324,8 @@ export default function SignatureField({
                         style: { backgroundColor }
                       }}
                       penColor={penColor}
-                      minWidth={3}
-                      maxWidth={8}
+                      minWidth={1}
+                      maxWidth={3}
                       velocityFilterWeight={0.7}
                     />
                     {disabled && (
