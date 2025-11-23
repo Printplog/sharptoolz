@@ -1,5 +1,3 @@
-import { Skeleton } from "@/components/ui/skeleton";
-
 export default function PreviewSkeleton() {
   return (
     <div className="w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl">

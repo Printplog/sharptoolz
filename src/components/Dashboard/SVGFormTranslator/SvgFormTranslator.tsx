@@ -1,7 +1,7 @@
 // components/SvgFormTranslator.tsx
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FormPanel from "./FormPanel";
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 // import parseSvgToFormFields from "@/lib/utils/parseSvgToFormFields";
 import useToolStore from "@/store/formStore";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
@@ -15,7 +15,6 @@ import {
   getTemplateSvg 
 } from "@/api/apiEndpoints";
 import type { FormField, PurchasedTemplate, Template } from "@/types";
-import { Loader2Icon } from "lucide-react";
 import SvgFormTranslatorSkeleton from "./SvgFormTranslatorSkeleton";
 import PreviewSkeleton from "./PreviewSkeleton";
 
