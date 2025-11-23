@@ -162,7 +162,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
         {showProgress && (
           <div className="pt-4">
             <DownloadProgress
-              svg={svg}
+              svg={svg || ""} // Provide empty string fallback since svg is optional
               outputType={type}
               isDownloading={isPending}
               onComplete={() => setShowProgress(false)}
