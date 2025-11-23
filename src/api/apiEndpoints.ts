@@ -96,8 +96,18 @@ export const getTemplate = async (id: string): Promise<Template> => {
   return res.data;
 }
 
+export const getTemplateSvg = async (id: string): Promise<{ svg: string }> => {
+  const res = await apiClient.get(`/templates/${id}/svg/`);
+  return res.data;
+}
+
 export const getTemplateForAdmin = async (id: string): Promise<Template> => {
   const res = await apiClient.get(`/admin/templates/${id}/`);
+  return res.data;
+}
+
+export const getTemplateSvgForAdmin = async (id: string): Promise<{ svg: string }> => {
+  const res = await apiClient.get(`/admin/templates/${id}/svg/`);
   return res.data;
 }
 
@@ -124,6 +134,11 @@ export const getPurchasedTemplates = async (): Promise<PurchasedTemplate[]> => {
 
 export const getPurchasedTemplate = async (id: string): Promise<PurchasedTemplate> => {
   const res = await apiClient.get(`/purchased-templates/${id}/`);
+  return res.data;
+}
+
+export const getPurchasedTemplateSvg = async (id: string): Promise<{ svg: string }> => {
+  const res = await apiClient.get(`/purchased-templates/${id}/svg/`);
   return res.data;
 }
 

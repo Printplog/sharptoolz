@@ -15,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import type { DownloadData } from "@/types";
 import { downloadDoc } from "@/api/apiEndpoints";
 import errorMessage from "@/lib/utils/errorMessage";
+import DownloadProgress from "./DownloadProgress";
 
 interface DownloadDocDialogProps {
   svg: string;
@@ -40,6 +41,8 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
            normalizedKeywords.includes("split-download");
   }, [keywords]);
 
+  const [showProgress, setShowProgress] = React.useState(false);
+
   const { mutate, isPending } = useMutation({
     mutationFn: (data: DownloadData) => downloadDoc(data),
 
@@ -55,13 +58,26 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
+      setShowProgress(false);
       toast.success("Download complete");
     },
 
     onError: (error: Error) => {
+      setShowProgress(false);
       toast.error(errorMessage(error));
     },
   });
+
+  const handleDownload = () => {
+    setShowProgress(true);
+    mutate({ 
+      svg, 
+      type, 
+      purchased_template_id: purchasedTemplateId, 
+      template_name: templateName,
+      side: hasSplitDownload ? side : undefined
+    });
+  };
 
   return (
     <CustomDialog dialogName="download-doc">
@@ -73,77 +89,85 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Format Selection */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">Format</Label>
-            <RadioGroup
-              value={type}
-              onValueChange={(val) => setType(val as "pdf" | "png")}
-              className="space-y-3"
-            >
-              <label
-                htmlFor="pdf"
-                className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
-                  type === "pdf" ? "border-primary bg-primary/10" : ""
-                }`}
-              >
-                <RadioGroupItem value="pdf" id="pdf" />
-                <Label htmlFor="pdf" className="cursor-pointer flex-1">PDF (High quality vector)</Label>
-              </label>
-              <label
-                htmlFor="png"
-                className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
-                  type === "png" ? "border-primary bg-primary/10" : ""
-                }`}
-              >
-                <RadioGroupItem value="png" id="png" />
-                <Label htmlFor="png" className="cursor-pointer flex-1">PNG (Image export)</Label>
-              </label>
-            </RadioGroup>
-          </div>
-
-          {/* Side Selection (only for split downloads) */}
-          {hasSplitDownload && (
+        {!isPending && (
+          <div className="space-y-6">
+            {/* Format Selection */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Select Side</Label>
+              <Label className="text-base font-semibold">Format</Label>
               <RadioGroup
-                value={side}
-                onValueChange={(val) => setSide(val as "front" | "back")}
+                value={type}
+                onValueChange={(val) => setType(val as "pdf" | "png")}
                 className="space-y-3"
               >
                 <label
-                  htmlFor="front"
+                  htmlFor="pdf"
                   className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
-                    side === "front" ? "border-primary bg-primary/10" : ""
+                    type === "pdf" ? "border-primary bg-primary/10" : ""
                   }`}
                 >
-                  <RadioGroupItem value="front" id="front" />
-                  <Label htmlFor="front" className="cursor-pointer flex-1">Front (First Half)</Label>
+                  <RadioGroupItem value="pdf" id="pdf" />
+                  <Label htmlFor="pdf" className="cursor-pointer flex-1">PDF (High quality vector)</Label>
                 </label>
                 <label
-                  htmlFor="back"
+                  htmlFor="png"
                   className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
-                    side === "back" ? "border-primary bg-primary/10" : ""
+                    type === "png" ? "border-primary bg-primary/10" : ""
                   }`}
                 >
-                  <RadioGroupItem value="back" id="back" />
-                  <Label htmlFor="back" className="cursor-pointer flex-1">Back (Second Half)</Label>
+                  <RadioGroupItem value="png" id="png" />
+                  <Label htmlFor="png" className="cursor-pointer flex-1">PNG (Image export)</Label>
                 </label>
               </RadioGroup>
             </div>
-          )}
-        </div>
+
+            {/* Side Selection (only for split downloads) */}
+            {hasSplitDownload && (
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Select Side</Label>
+                <RadioGroup
+                  value={side}
+                  onValueChange={(val) => setSide(val as "front" | "back")}
+                  className="space-y-3"
+                >
+                  <label
+                    htmlFor="front"
+                    className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
+                      side === "front" ? "border-primary bg-primary/10" : ""
+                    }`}
+                  >
+                    <RadioGroupItem value="front" id="front" />
+                    <Label htmlFor="front" className="cursor-pointer flex-1">Front (First Half)</Label>
+                  </label>
+                  <label
+                    htmlFor="back"
+                    className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
+                      side === "back" ? "border-primary bg-primary/10" : ""
+                    }`}
+                  >
+                    <RadioGroupItem value="back" id="back" />
+                    <Label htmlFor="back" className="cursor-pointer flex-1">Back (Second Half)</Label>
+                  </label>
+                </RadioGroup>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Download Progress */}
+        {showProgress && (
+          <div className="pt-4">
+            <DownloadProgress
+              svg={svg}
+              outputType={type}
+              isDownloading={isPending}
+              onComplete={() => setShowProgress(false)}
+            />
+          </div>
+        )}
 
         <DialogFooter>
           <Button 
-            onClick={() => mutate({ 
-              svg, 
-              type, 
-              purchased_template_id: purchasedTemplateId, 
-              template_name: templateName,
-              side: hasSplitDownload ? side : undefined
-            })} 
+            onClick={handleDownload}
             disabled={isPending}
           >
             {isPending 

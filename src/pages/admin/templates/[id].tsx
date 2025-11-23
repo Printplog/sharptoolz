@@ -1,4 +1,4 @@
-import { getTemplateForAdmin, updateTemplate } from '@/api/apiEndpoints';
+import { getTemplateForAdmin, getTemplateSvgForAdmin, updateTemplate } from '@/api/apiEndpoints';
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import DocsPanel from '@/components/Admin/ToolBuilder/SvgEditor/DocsPanel';
 import errorMessage from '@/lib/utils/errorMessage';
@@ -10,6 +10,7 @@ import { useRef, useState } from 'react';
 import { Save, Eye } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AdminSvgFormTranslator from '@/components/Admin/ToolBuilder/SvgEditor/AdminSvgFormTranslator';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 export default function SvgTemplateEditor() {
@@ -18,12 +19,20 @@ export default function SvgTemplateEditor() {
   const svgEditorRef = useRef<SvgEditorRef>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Fetch template data
+  // Fetch template data (without SVG for faster loading)
   const { data, isLoading } = useQuery<Template>({
     queryKey: ["template", id],
     queryFn: () => getTemplateForAdmin(id as string),
     enabled: !!id, // Only run query if id exists
     refetchOnMount: false, // Don't refetch on mount to prevent flickering
+  });
+
+  // Fetch SVG separately after template data loads
+  const { data: svgData, isLoading: svgLoading } = useQuery<{ svg: string }>({
+    queryKey: ["template-svg", id],
+    queryFn: () => getTemplateSvgForAdmin(id as string),
+    enabled: !!id && !!data && !isLoading, // Only fetch SVG after template data loads
+    refetchOnMount: false,
   });
 
   console.log(data);
@@ -107,8 +116,16 @@ export default function SvgTemplateEditor() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <span className="text-muted-foreground">Loading template...</span>
+      <div className="container mx-auto space-y-6">
+        <Skeleton className="h-10 w-64 bg-white/5 border border-white/10" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-[600px] w-full bg-white/5 border border-white/10" />
+          </div>
+          <div className="lg:col-span-1">
+            <Skeleton className="h-[400px] w-full bg-white/5 border border-white/10" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -155,23 +172,27 @@ export default function SvgTemplateEditor() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <SvgEditor 
-              ref={svgEditorRef}
-              fonts={data?.fonts || []}
-              svgRaw={data.svg} 
-              templateName={data.name}
-              onSave={handleSave}
-              banner={data.banner}
-              hot={data.hot}
-              isActive={data.hot}
-              tool={data.tool}
-              tutorial={data.tutorial}
-              keywords={data.keywords}
-              isLoading={saveMutation.isPending}
-              onElementSelect={() => {
-                // Simplified - no automatic section selection
-              }}
-            />
+            {svgLoading || !svgData?.svg ? (
+              <Skeleton className="h-[600px] w-full bg-white/5 border border-white/10" />
+            ) : (
+              <SvgEditor 
+                ref={svgEditorRef}
+                fonts={data?.fonts || []}
+                svgRaw={svgData.svg} 
+                templateName={data.name}
+                onSave={handleSave}
+                banner={data.banner}
+                hot={data.hot}
+                isActive={data.hot}
+                tool={data.tool}
+                tutorial={data.tutorial}
+                keywords={data.keywords}
+                isLoading={saveMutation.isPending}
+                onElementSelect={() => {
+                  // Simplified - no automatic section selection
+                }}
+              />
+            )}
           </div>
           <div className="lg:col-span-1">
             <DocsPanel />
@@ -192,11 +213,17 @@ export default function SvgTemplateEditor() {
             </DialogDescription>
           </DialogHeader>
           <div className="overflow-auto max-h-[calc(90vh-120px)] custom-scrollbar">
-            <AdminSvgFormTranslator 
-              svgContent={data.svg} 
-              formFields={data.form_fields} 
-              templateName={data.name}
-            />
+            {svgLoading || !svgData?.svg ? (
+              <div className="flex items-center justify-center h-[400px]">
+                <span className="text-muted-foreground">Loading preview...</span>
+              </div>
+            ) : (
+              <AdminSvgFormTranslator 
+                svgContent={svgData.svg} 
+                formFields={data.form_fields} 
+                templateName={data.name}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

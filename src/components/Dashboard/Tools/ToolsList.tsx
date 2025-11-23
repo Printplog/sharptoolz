@@ -42,11 +42,13 @@ export default function ToolsList({ hot }: Props) {
   const { data: templates, isLoading: templatesLoading } = useQuery({
     queryKey: ["tools", `${hot && "hot"}`],
     queryFn: () => getTemplates(hot),
+    staleTime: 5 * 60 * 1000, // 5 minutes - templates list doesn't change often
   });
 
   const { data: toolCategories, isLoading: toolsLoading } = useQuery({
     queryKey: ["tool-categories"],
     queryFn: () => getTools(),
+    staleTime: 10 * 60 * 1000, // 10 minutes - tool categories rarely change
   });
 
   useEffect(() => {

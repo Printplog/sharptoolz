@@ -17,6 +17,7 @@ export default function ToolsListHorizontal() {
   const { data: tools = [], isLoading } = useQuery({
     queryKey: ["tools", "hot"],
     queryFn: () => getTemplates(true), // always fetch hot tools
+    staleTime: 5 * 60 * 1000, // 5 minutes - hot tools don't change often
   });
 
   const hotTools = tools?.filter((tool) => tool.hot); // just in case

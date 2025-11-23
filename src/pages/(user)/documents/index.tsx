@@ -9,6 +9,7 @@ export default function Documents() {
   const { data, isLoading } = useQuery({
     queryKey: ["purchased-templates"],
     queryFn: getPurchasedTemplates,
+    staleTime: 2 * 60 * 1000, // 2 minutes - user's documents don't change often
   });
   return (
     <div className="space-y-8 w-full">
