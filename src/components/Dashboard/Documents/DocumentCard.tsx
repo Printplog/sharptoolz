@@ -18,7 +18,10 @@ export default function DocumentCard({ doc }: Props) {
     mutationFn: (id: string) => deletePurchasedTemplate(id),
     onSuccess: () => {
       toast.success("Document deleted successfully");
+      // Invalidate all purchased-templates queries (including paginated ones)
       queryClient.invalidateQueries({ queryKey: ["purchased-templates"] });
+      // Also refetch to ensure UI updates immediately
+      queryClient.refetchQueries({ queryKey: ["purchased-templates"] });
     },
   });
 
