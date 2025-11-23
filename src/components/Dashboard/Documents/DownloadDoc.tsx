@@ -78,7 +78,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
     // This significantly reduces request payload size
     mutate({ 
       type, 
-      purchased_template_id: purchasedTemplateId, 
+      purchased_template_id: purchasedTemplateId as string, // Type assertion since we checked above
       template_name: templateName,
       side: hasSplitDownload ? side : undefined
     });
