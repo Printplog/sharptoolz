@@ -203,9 +203,9 @@ export type WalletData = {
 };
 
 export type DownloadData = {
-  svg: string;
+  svg?: string; // Optional - backend will fetch from purchased_template_id if not provided
   type: "pdf" | "png";
-  purchased_template_id?: string;
+  purchased_template_id: string; // Required - backend fetches SVG from this
   template_name?: string;
   side?: "front" | "back"; // For split downloads: which side to download
 };

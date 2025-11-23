@@ -127,21 +127,8 @@ export const deletePurchasedTemplate = async (id: string): Promise<unknown> => {
   return res.data;
 }
 
-export const getPurchasedTemplates = async (page?: number, pageSize?: number): Promise<{
-  results: PurchasedTemplate[];
-  count: number;
-  next: string | null;
-  previous: string | null;
-} | PurchasedTemplate[]> => {
-  const url = page && pageSize 
-    ? `/purchased-templates/?page=${page}&page_size=${pageSize}`
-    : `/purchased-templates/`;
-  const res = await apiClient.get(url);
-  
-  // Handle both paginated and non-paginated responses
-  if (res.data.results) {
-    return res.data;
-  }
+export const getPurchasedTemplates = async (): Promise<PurchasedTemplate[]> => {
+  const res = await apiClient.get(`/purchased-templates/`);
   return res.data;
 }
 

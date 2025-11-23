@@ -18,7 +18,7 @@ import errorMessage from "@/lib/utils/errorMessage";
 import DownloadProgress from "./DownloadProgress";
 
 interface DownloadDocDialogProps {
-  svg: string;
+  svg?: string; // Optional - kept for backward compatibility but not sent to backend
   purchasedTemplateId?: string;
   templateName?: string;
   keywords?: string[]; // Template keywords to check for split download
@@ -69,9 +69,14 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
   });
 
   const handleDownload = () => {
+    if (!purchasedTemplateId) {
+      toast.error("Document ID is required for download");
+      return;
+    }
     setShowProgress(true);
+    // Optimize: Don't send SVG in request - backend will fetch it from purchased_template_id
+    // This significantly reduces request payload size
     mutate({ 
-      svg, 
       type, 
       purchased_template_id: purchasedTemplateId, 
       template_name: templateName,

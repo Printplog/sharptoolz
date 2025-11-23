@@ -19,9 +19,14 @@ export default function DocumentCard({ doc }: Props) {
     onSuccess: () => {
       toast.success("Document deleted successfully");
       // Invalidate all purchased-templates queries (including paginated ones)
-      queryClient.invalidateQueries({ queryKey: ["purchased-templates"] });
-      // Also refetch to ensure UI updates immediately
-      queryClient.refetchQueries({ queryKey: ["purchased-templates"] });
+      // exact: false matches all queries that start with ["purchased-templates"]
+      queryClient.invalidateQueries({ 
+        queryKey: ["purchased-templates"],
+        exact: false, // This will match ["purchased-templates", currentPage, pageSize]
+      });
+    },
+    onError: () => {
+      toast.error("Failed to delete document");
     },
   });
 
