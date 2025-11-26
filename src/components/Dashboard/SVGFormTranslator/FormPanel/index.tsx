@@ -78,7 +78,7 @@ function useNavigationBlocker(when: boolean): NavigationBlocker {
   return { state, proceed, reset };
 }
 
-export default function FormPanel({ test, tutorial, templateId }: { test: boolean; tutorial?: Tutorial; templateId?: string }) {
+export default function FormPanel({ test, tutorial, templateId, isPurchased: isPurchasedProp }: { test: boolean; tutorial?: Tutorial; templateId?: string; isPurchased?: boolean }) {
   const {
     fields,
     resetForm,
@@ -86,12 +86,14 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
     svgRaw,
     getFieldValue,
     setName,
+    markFieldsSaved,
   } = useToolStore();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
-  const isPurchased = pathname.includes("documents");
+  const derivedIsPurchased = pathname.includes("documents");
+  const isPurchased = isPurchasedProp ?? derivedIsPurchased;
   const queryClient = useQueryClient();
   const [showTestDialog, setShowTestDialog] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
@@ -206,14 +208,13 @@ export default function FormPanel({ test, tutorial, templateId }: { test: boolea
     };
 
     if (fieldUpdates.length > 0) {
-      console.log("[FormPanel] Applying field updates", {
-        count: fieldUpdates.length,
-        fields: fieldUpdates.map((f) => ({ id: f.id, value: f.value })),
-      });
       payload.field_updates = fieldUpdates;
     }
 
     await mutateFn(payload);
+    if (isPurchased && fieldUpdates.length > 0) {
+      markFieldsSaved(fieldUpdates.map((field) => field.id));
+    }
   };
 
   const handleDownloadClick = () => {

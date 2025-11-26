@@ -70,6 +70,7 @@ export default function AdminSvgFormTranslator({
             test={false}
             tutorial={undefined}
             templateId={undefined}
+            isPurchased={false}
           />
         </TabsContent>
         

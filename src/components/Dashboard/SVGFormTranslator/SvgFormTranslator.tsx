@@ -48,6 +48,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     staleTime: 5 * 60 * 1000, // 5 minutes - template data doesn't change often
   });
 
+
   // Fetch SVG separately after template data loads
   const { data: svgData, isLoading: svgLoading } = useQuery<{ svg: string }>({
     queryKey: [isPurchased ? "purchased-template-svg" : "template-svg", id],
@@ -64,10 +65,10 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   useEffect(() => {
     if (isLoading || !data) return;
     
-    // Initialize fields with default values first
+    // Initialize fields - use currentValue if available (for purchased templates), otherwise use defaultValue
     const initializedFields = data.form_fields?.map((field: FormField) => ({
       ...field,
-      currentValue: field.defaultValue ?? "",
+      currentValue: field.currentValue ?? field.defaultValue ?? "",
     })) || [];
     
     setName(data.name as string);
@@ -171,6 +172,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
             test={purchasedData?.test} 
             tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
             templateId={isPurchased ? purchasedData?.template : undefined}
+            isPurchased={Boolean(isPurchased)}
           />
         </TabsContent>
         <TabsContent value="preview">

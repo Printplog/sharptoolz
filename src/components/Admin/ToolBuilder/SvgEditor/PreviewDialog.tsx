@@ -94,6 +94,7 @@ export default function PreviewDialog({
                 test={false}
                 tutorial={undefined}
                 templateId={undefined}
+                isPurchased={false}
               />
             </TabsContent>
             <TabsContent value="preview">

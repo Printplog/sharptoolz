@@ -13,6 +13,7 @@ interface ToolStore {
   updateField: (fieldId: string, value: string | number | boolean) => void;
   uploadFile: (fieldId: string, file: File) => void;
   resetForm: () => void;
+  markFieldsSaved: (fieldIds?: string[]) => void;
   getFieldValue: (fieldId: string) => string | number | boolean | undefined;
   setSvgRaw: (svg: string) => void;
   downloadSvg: (fileName?: string) => void;
@@ -83,6 +84,20 @@ const  useToolStore = create<ToolStore>((set, get) => ({
         currentValue: field?.defaultValue ?? "",
         touched: false,
       })),
+    }));
+  },
+
+  markFieldsSaved: (fieldIds) => {
+    set((state) => ({
+      fields: state.fields?.map((field) => {
+        if (fieldIds && fieldIds.length > 0 && !fieldIds.includes(field.id)) {
+          return field;
+        }
+        return {
+          ...field,
+          touched: false,
+        };
+      }),
     }));
   },
 
