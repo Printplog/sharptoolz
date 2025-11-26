@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,8 +27,9 @@ import SignatureField from "@/components/ui/SignatureField";
 import CustomDateTimePicker from "@/components/ui/CustomDateTimePicker";
 import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
 
-const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; isPurchased?: boolean; tutorial?: Tutorial }> = ({ field, allFields = [], isPurchased = false, tutorial }) => {
-  const { updateField } = useToolStore();
+const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; isPurchased?: boolean; tutorial?: Tutorial }> = React.memo(({ field, allFields = [], isPurchased = false, tutorial }) => {
+  // Use selector to only subscribe to updateField function, not the entire store
+  const updateField = useToolStore((state) => state.updateField);
   const value = field.currentValue;
   const dateInputRef = useRef<HTMLInputElement>(null);
   
@@ -117,11 +118,58 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
   // 2. Field is not explicitly marked as editable
   const isFieldDisabled = isPurchased && !field.editable;
 
-  const handleChange = (newValue: string | number | boolean) => {
-    if (!isFieldDisabled) {
-      updateField(field.id, newValue);
+  // Debounce timer for store updates - reduces re-renders when typing
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Local state for text inputs and textarea to avoid store updates on every keystroke
+  const isTextInput = ['text', 'email', 'tel', 'url', 'password', 'textarea'].includes(field.type);
+  const [localValue, setLocalValue] = useState<string>(() => String(value ?? ''));
+
+  // Sync local value when prop value changes (e.g., from reset or external update)
+  useEffect(() => {
+    if (isTextInput) {
+      setLocalValue(String(value ?? ''));
     }
-  };
+  }, [value, isTextInput]);
+
+  const handleChange = useCallback((newValue: string | number | boolean) => {
+    if (isFieldDisabled) return;
+
+    // For text inputs, update local state immediately for responsive UI
+    if (isTextInput) {
+      setLocalValue(String(newValue));
+    }
+
+    // Clear existing debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Debounce store update to reduce re-renders (300ms delay)
+    debounceTimerRef.current = setTimeout(() => {
+      updateField(field.id, newValue);
+    }, 300);
+  }, [field.id, updateField, isFieldDisabled, isTextInput]);
+
+  // Update store immediately on blur for text inputs
+  const handleBlur = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    if (isTextInput && !isFieldDisabled) {
+      updateField(field.id, localValue);
+    }
+  }, [field.id, localValue, updateField, isFieldDisabled, isTextInput]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // If field has options, render as select
   // if (field.options && field.options.length > 0) {
@@ -155,8 +203,9 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
           <Input
             id={field.id}
             type={field.type}
-            value={value as string}
+            value={localValue}
             onChange={(e) => handleChange(e.target.value)}
+            onBlur={handleBlur}
             maxLength={field.max}
             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
             placeholder={`Enter ${field.name}`}
@@ -212,8 +261,9 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
           </label>
           <Textarea
             id={field.id}
-            value={value as string}
+            value={localValue}
             onChange={(e) => handleChange(e.target.value)}
+            onBlur={handleBlur}
             maxLength={field.max}
             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[80px]"
             placeholder={`Enter ${field.name}`}
@@ -479,6 +529,20 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     default:
       return null;
   }
-};
+}, (prevProps, nextProps) => {
+  // Return true to skip re-render if nothing relevant changed
+  // Only re-render if this specific field's value changed
+  const fieldChanged = 
+    prevProps.field.id !== nextProps.field.id ||
+    prevProps.field.currentValue !== nextProps.field.currentValue ||
+    prevProps.field.touched !== nextProps.field.touched ||
+    prevProps.isPurchased !== nextProps.isPurchased;
+  
+  // If field didn't change, skip re-render (return true)
+  // If field changed, allow re-render (return false)
+  return !fieldChanged;
+});
+
+FormFieldComponent.displayName = 'FormFieldComponent';
 
 export default FormFieldComponent;

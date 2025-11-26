@@ -57,11 +57,26 @@ const  useToolStore = create<ToolStore>((set, get) => ({
   },
 
   updateField: (fieldId, value) => {
-    set((state) => ({
-      fields: state.fields?.map((field) =>
-        field.id === fieldId ? { ...field, currentValue: value, touched: true } : field
-      ),
-    }));
+    set((state) => {
+      // Optimize: Only create new array if the value actually changed
+      const field = state.fields?.find(f => f.id === fieldId);
+      if (field && field.currentValue === value) {
+        // Value hasn't changed, skip update to prevent unnecessary re-renders
+        return state;
+      }
+      
+      // Use shallow copy optimization - only create new objects for changed field
+      const newFields = state.fields?.map((field) => {
+        if (field.id === fieldId) {
+          return { ...field, currentValue: value, touched: true };
+        }
+        return field; // Return same reference for unchanged fields
+      });
+      
+      return {
+        fields: newFields,
+      };
+    });
   },
 
   uploadFile: (fieldId, file) => {

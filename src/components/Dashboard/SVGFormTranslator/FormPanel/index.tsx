@@ -21,7 +21,7 @@ import { purchaseTemplate, updatePurchasedTemplate, getPurchasedTemplate } from 
 import type { PurchasedTemplate, FieldUpdate } from "@/types";
 import errorMessage from "@/lib/utils/errorMessage";
 import { DownloadDocDialog } from "../../Documents/DownloadDoc";
-import { useEffect, useMemo, useState, useRef, useContext, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useRef, useContext, useCallback } from "react";
 import { useAuthStore } from "@/store/authStore";
 import type { Tutorial } from "@/types";
 import { FormPanelHeader } from "./FormPanelHeader";
@@ -78,16 +78,15 @@ function useNavigationBlocker(when: boolean): NavigationBlocker {
   return { state, proceed, reset };
 }
 
-export default function FormPanel({ test, tutorial, templateId, isPurchased: isPurchasedProp }: { test: boolean; tutorial?: Tutorial; templateId?: string; isPurchased?: boolean }) {
-  const {
-    fields,
-    resetForm,
-    name,
-    svgRaw,
-    getFieldValue,
-    setName,
-    markFieldsSaved,
-  } = useToolStore();
+const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, isPurchased: isPurchasedProp }: { test: boolean; tutorial?: Tutorial; templateId?: string; isPurchased?: boolean }) {
+  // Use selectors to subscribe only to what we need - prevents re-renders when unrelated fields change
+  const fields = useToolStore((state) => state.fields);
+  const resetForm = useToolStore((state) => state.resetForm);
+  const name = useToolStore((state) => state.name);
+  const svgRaw = useToolStore((state) => state.svgRaw);
+  const getFieldValue = useToolStore((state) => state.getFieldValue);
+  const setName = useToolStore((state) => state.setName);
+  const markFieldsSaved = useToolStore((state) => state.markFieldsSaved);
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,9 +99,15 @@ export default function FormPanel({ test, tutorial, templateId, isPurchased: isP
   const [isSavingBeforeLeave, setIsSavingBeforeLeave] = useState(false);
   const { isAuthenticated } = useAuthStore();
 
+  // Memoize touched fields check to avoid recalculating on every render
+  const touchedFieldsCount = useMemo(
+    () => fields?.filter(f => f.touched).length ?? 0,
+    [fields]
+  );
+  
   const hasUnsavedChanges = useMemo(
-    () => isPurchased && (fields?.some((field) => field.touched) ?? false),
-    [isPurchased, fields]
+    () => isPurchased && touchedFieldsCount > 0,
+    [isPurchased, touchedFieldsCount]
   );
 
   const blocker = useNavigationBlocker(hasUnsavedChanges);
@@ -110,6 +115,17 @@ export default function FormPanel({ test, tutorial, templateId, isPurchased: isP
     () =>
       fields?.find((field) => field.isTrackingId) ||
       fields?.find((field) => field.id === "Tracking_ID"),
+    [fields]
+  );
+
+  // Memoize filtered fields to avoid re-filtering on every render
+  const statusFields = useMemo(
+    () => fields?.filter((field) => field.type === "status") ?? [],
+    [fields]
+  );
+
+  const nonStatusFields = useMemo(
+    () => fields?.filter((field) => field.type !== "status") ?? [],
     [fields]
   );
 
@@ -277,28 +293,24 @@ export default function FormPanel({ test, tutorial, templateId, isPurchased: isP
       />
 
       <div className="space-y-3">
-        {fields
-          ?.filter((field) => field.type === "status")
-          .map((field, index) => (
-            <FormFieldComponent
-              key={`${field.id}-${index}`}
-              field={field}
-              allFields={fields}
+        {statusFields.map((field, index) => (
+          <FormFieldComponent
+            key={`${field.id}-${index}`}
+            field={field}
+            allFields={fields}
+            tutorial={tutorial}
+          />
+        ))}
+        <div className="m-0 p-0 border-0 space-y-3">
+          {nonStatusFields.map((field, index) => (
+            <FormFieldComponent 
+              key={`${field.id}-${index}`} 
+              field={field} 
+              allFields={fields} 
+              isPurchased={isPurchased}
               tutorial={tutorial}
             />
           ))}
-        <div className="m-0 p-0 border-0 space-y-3">
-          {fields
-            ?.filter((field) => field.type !== "status")
-            .map((field, index) => (
-              <FormFieldComponent 
-                key={`${field.id}-${index}`} 
-                field={field} 
-                allFields={fields} 
-                isPurchased={isPurchased}
-                tutorial={tutorial}
-              />
-            ))}
         </div>
       </div>
 
@@ -444,4 +456,8 @@ export default function FormPanel({ test, tutorial, templateId, isPurchased: isP
     />
     </>
   );
-}
+});
+
+FormPanel.displayName = 'FormPanel';
+
+export default FormPanel;
