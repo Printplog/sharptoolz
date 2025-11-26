@@ -39,6 +39,7 @@ export interface SvgEditorRef {
 }
 
 const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, onElementSelect }, ref) => {
+  const [currentSvg, setCurrentSvg] = useState<string>(svgRaw);
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
   const [name, setName] = useState<string>(templateName);
@@ -92,7 +93,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   console.log(tools);
 
   useEffect(() => {
-    const parsed = parseSvgElements(svgRaw);
+    const parsed = parseSvgElements(currentSvg);
     // Filter out non-editable elements completely - these should not appear in the editor
     const nonEditableTags = ['defs', 'style', 'linearGradient', 'radialGradient', 'pattern', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feFlood', 'feComposite', 'feMerge', 'feMergeNode'];
     const editableElements = parsed.filter(el => !nonEditableTags.includes(el.tag));
@@ -100,7 +101,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     
     // Reset refs array
     elementRefs.current = new Array(editableElements.length).fill(null);
-  }, [svgRaw]);
+  }, [currentSvg]);
 
   useEffect(() => {
     setName(templateName);
@@ -164,13 +165,17 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     setElements(updated);
   }
 
+  useEffect(() => {
+    setCurrentSvg(svgRaw);
+  }, [svgRaw]);
+
   function regenerateSvg(): string {
     try {
       console.log('Regenerating SVG - elements count:', elements.length);
       
       // Parse the original SVG
       const parser = new DOMParser();
-      const doc = parser.parseFromString(svgRaw, 'image/svg+xml');
+      const doc = parser.parseFromString(currentSvg, 'image/svg+xml');
       const svg = doc.documentElement;
       
       // Get all editable elements from the original SVG (same filter as parseSvgElements)
@@ -228,7 +233,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       return result;
     } catch (error) {
       console.error('Error regenerating SVG:', error);
-      return svgRaw;
+      return currentSvg;
     }
   }
 
@@ -245,13 +250,13 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     
     console.log('=== SAVE DEBUG ===');
     console.log('Elements to save:', elements);
-    console.log('Original SVG length:', svgRaw.length);
+    console.log('Original SVG length:', currentSvg.length);
     
     // Regenerate SVG and get the updated version immediately
     const updatedSvg = regenerateSvg();
     
     console.log('Updated SVG length:', updatedSvg.length);
-    console.log('SVG changed:', updatedSvg !== svgRaw);
+    console.log('SVG changed:', updatedSvg !== currentSvg);
     console.log('Updated SVG preview:', updatedSvg.substring(0, 200));
     
     onSave({
@@ -266,7 +271,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       keywords: keywordsTags,
       fontIds: selectedFontIds.length > 0 ? selectedFontIds : undefined
     });
-  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, elements, svgRaw]);
+  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, elements, currentSvg]);
 
   // Expose methods and state via ref
   useImperativeHandle(ref, () => ({
@@ -283,6 +288,21 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       setBannerImage(base64);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleSvgUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = (e.target?.result as string) ?? "";
+      if (!content.trim().startsWith("<svg")) {
+        toast.error("Invalid SVG file");
+        return;
+      }
+      setCurrentSvg(content);
+      setSelectedElementIndex(null);
+      toast.success("SVG uploaded successfully");
+    };
+    reader.readAsText(file);
   };
 
   const handleElementSelect = useCallback((index: number) => {
@@ -348,6 +368,42 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     <div className="space-y-6">
       <div className="flex items-center justify-between pb-5 border-b border-white/10">
         <h2 className="text-xl font-semibold">SVG Editor</h2>
+      </div>
+
+      {/* SVG Upload */}
+      <div className="space-y-2">
+        <Label htmlFor="template-svg" className="text-sm font-medium">
+          Upload / Replace SVG
+        </Label>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <input
+            id="template-svg"
+            type="file"
+            accept=".svg"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                handleSvgUpload(file);
+                e.target.value = "";
+              }
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => document.getElementById("template-svg")?.click()}
+            className="w-full sm:w-auto"
+          >
+            Re-upload SVG
+          </Button>
+          <div className="text-xs text-white/60">
+            Current SVG size: {(currentSvg.length / 1024).toFixed(1)} KB
+          </div>
+        </div>
+        <p className="text-xs text-white/50">
+          Upload a new SVG file to replace the existing template. Existing form field definitions will auto-refresh.
+        </p>
       </div>
 
       {/* Template Name */}
@@ -688,6 +744,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
             onUpdate={updateElement}
             isTextElement={isTextElement}
             isImageElement={isImageElement}
+            allElements={elements}
             ref={(el: HTMLDivElement | null) => {
               elementRefs.current[selectedElementIndex] = el;
             }}
@@ -732,7 +789,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       <PreviewDialog
         open={showPreviewDialog}
         onOpenChange={setShowPreviewDialog}
-        svgContent={svgRaw}
+        svgContent={currentSvg}
         formFields={elements.filter(el => el.tag === 'text' && el.attributes['data-field-id']).map(el => ({
           id: el.attributes['data-field-id'] || '',
           name: el.attributes['data-field-name'] || el.attributes['data-field-id'] || '',

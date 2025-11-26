@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
+import IdEditor from "./IdEditor/index";
 
 interface ElementEditorProps {
   element: SvgElement;
@@ -11,10 +12,11 @@ interface ElementEditorProps {
   onUpdate: (index: number, updates: Partial<SvgElement>) => void;
   isTextElement: (el: SvgElement) => boolean;
   isImageElement: (el: SvgElement) => boolean;
+  allElements?: SvgElement[]; // All elements to extract base IDs for depends suggestions
 }
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
-  ({ element, index, onUpdate, isTextElement, isImageElement }, ref) => {
+  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [] }, ref) => {
     const baseId = element.id?.split(".")[0]?.replace(/_/g, " ") || `${element.tag} ${index + 1}`;
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,15 +47,14 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`id-${index}`} className="text-sm font-medium">
+          <Label className="text-sm font-medium">
             ID
           </Label>
-          <Input
-            id={`id-${index}`}
-            placeholder="Element ID"
+          <IdEditor
             value={element.id || ""}
-            onChange={(e) => onUpdate(index, { id: e.target.value })}
-            className="bg-white/10 border-white/20"
+            onChange={(newId) => onUpdate(index, { id: newId })}
+            placeholder="Start typing base ID (e.g. tracking_id)"
+            allElements={allElements}
           />
         </div>
 
