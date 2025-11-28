@@ -113,13 +113,48 @@ export default function SvgTemplateEditor() {
   if (isLoading) {
     return (
       <div className="container mx-auto space-y-6">
-        <Skeleton className="h-10 w-64 bg-white/5 border border-white/10" />
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between pb-5 border-b border-white/10">
+          <Skeleton className="h-7 w-48 bg-white/5" />
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-[600px] w-full bg-white/5 border border-white/10" />
+          <div className="lg:col-span-2 space-y-6">
+            {/* SVG Upload skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-32 bg-white/5" />
+              <div className="border-2 border-dashed border-white/20 rounded-lg h-32 bg-white/5 animate-pulse" />
+            </div>
+            
+            {/* Template Name skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-28 bg-white/5" />
+              <Skeleton className="h-10 w-full bg-white/5" />
+            </div>
+            
+            {/* Fonts skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-24 bg-white/5" />
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-8 w-24 bg-white/5 rounded-md" />
+                ))}
+              </div>
+            </div>
+            
+            {/* Element Navigation skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-40 bg-white/5" />
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} className="h-16 w-full bg-white/5 rounded-lg" />
+                ))}
+              </div>
+            </div>
           </div>
+          
           <div className="lg:col-span-1">
-            <Skeleton className="h-[400px] w-full bg-white/5 border border-white/10" />
+            <Skeleton className="h-[400px] w-full bg-white/5 border border-white/10 rounded-lg" />
           </div>
         </div>
       </div>
@@ -149,7 +184,7 @@ export default function SvgTemplateEditor() {
                 svgEditorRef.current.handleSave();
               }
             }}
-            disabled={saveMutation.isPending}
+            disabled={saveMutation.isPending || svgLoading || !svgData?.svg}
             className="bg-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Save className="h-5 w-5 group-hover:rotate-12 transition-all duration-500" />
@@ -163,7 +198,8 @@ export default function SvgTemplateEditor() {
                 svgEditorRef.current.openPreview();
               }
             }}
-            className="bg-lime-600 border-3 border-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2"
+            disabled={svgLoading || !svgData?.svg}
+            className="bg-lime-600 border-3 border-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Eye className="h-5 w-5 group-hover:translate-x-[2px] transition-all duration-500" />
             <span>Preview</span>
@@ -172,28 +208,25 @@ export default function SvgTemplateEditor() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            {svgLoading || !svgData?.svg ? (
-              <Skeleton className="h-[600px] w-full bg-white/5 border border-white/10" />
-            ) : (
-              <SvgEditor 
-                ref={svgEditorRef}
-                fonts={data?.fonts || []}
-                svgRaw={svgData.svg} 
-                templateName={data.name}
-                onSave={handleSave}
-                banner={data.banner}
-                hot={data.hot}
-                isActive={data.hot}
-                tool={data.tool}
-                tutorial={data.tutorial}
-                keywords={data.keywords}
-                isLoading={saveMutation.isPending}
-                formFields={data.form_fields || []} // Pass backend form fields
-                onElementSelect={() => {
-                  // Simplified - no automatic section selection
-                }}
-              />
-            )}
+            <SvgEditor 
+              ref={svgEditorRef}
+              fonts={data?.fonts || []}
+              svgRaw={svgData?.svg || ""} 
+              templateName={data.name}
+              onSave={handleSave}
+              banner={data.banner}
+              hot={data.hot}
+              isActive={data.hot}
+              tool={data.tool}
+              tutorial={data.tutorial}
+              keywords={data.keywords}
+              isLoading={saveMutation.isPending}
+              isSvgLoading={svgLoading || !svgData?.svg} // Pass SVG loading state
+              formFields={data.form_fields || []} // Pass backend form fields
+              onElementSelect={() => {
+                // Simplified - no automatic section selection
+              }}
+            />
           </div>
           <div className="lg:col-span-1">
             <DocsPanel />

@@ -428,42 +428,61 @@ export default function ImageCropUpload({
         {fieldName}
       </label>
       
-      {!currentValue ? (
+      <div className="relative">
         <div
           {...getRootProps()}
-          className={`relative border border-white/20 rounded-lg p-8 text-center transition-all duration-200 ${
+          className={`block w-full h-40 border-2 border-dashed rounded-lg cursor-pointer transition-colors overflow-hidden ${
             disabled 
-              ? "bg-white/5 cursor-not-allowed opacity-50" 
+              ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50" 
               : isDragActive 
-                ? "bg-white/20 border-white/40 cursor-pointer" 
-                : "bg-white/10 hover:bg-white/15 hover:border-white/30 cursor-pointer"
+                ? "border-white/40 bg-white/10" 
+                : "border-white/20 hover:border-white/40"
           }`}
         >
           <input {...getInputProps()} />
-          <Upload className="mx-auto h-10 w-10 text-white/40 mb-3" />
-          <p className="text-sm text-white/60">
-            {isDragActive ? "Drop image here" : "Click to upload or drag and drop"}
-          </p>
-          <p className="text-xs text-white/40 mt-1">
-            PNG, JPG, GIF up to 10MB
-          </p>
+          {!currentValue ? (
+            <div className="flex flex-col items-center justify-center h-full text-white/60 hover:text-white/80 transition-colors">
+              <div className="w-12 h-12 border-2 border-dashed border-current rounded-full flex items-center justify-center mb-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              <div className="text-center">
+                <div className="text-sm font-medium">
+                  {isDragActive ? "Drop image here" : "Click to upload image"}
+                </div>
+                <div className="text-xs opacity-80">PNG, JPG, GIF up to 10MB</div>
+              </div>
+            </div>
+          ) : (
+            <div className="relative w-full h-full group">
+              <div className="w-full h-full overflow-auto custom-scrollbar">
+                <img 
+                  src={currentValue} 
+                  alt="Uploaded image" 
+                  className="w-full max-w-none h-auto object-contain min-h-full"
+                />
+              </div>
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                <div className="text-center text-white">
+                  <div className="text-sm font-medium">Click to change image</div>
+                  <div className="text-xs opacity-80">Upload a new image</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="relative overflow-hidden rounded-lg border border-white/20 bg-white/5">
-            <img 
-              src={currentValue} 
-              alt="Uploaded image" 
-              className="w-full h-auto max-h-64 object-contain"
-            />
-          </div>
-          <div className="flex gap-2">
+        {currentValue && (
+          <div className="mt-2 flex gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleChangeImage}
-              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleChangeImage();
+              }}
+              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
               disabled={disabled}
             >
               <Upload className="h-3.5 w-3.5 mr-1.5" />
@@ -473,16 +492,19 @@ export default function ImageCropUpload({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => onImageSelect(fieldId, "")}
-              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
+              onClick={(e) => {
+                e.stopPropagation();
+                onImageSelect(fieldId, "");
+              }}
+              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
               disabled={disabled}
             >
               <X className="h-3.5 w-3.5 mr-1.5" />
               Remove
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-5xl max-h-[95vh] flex flex-col bg-gray-900 border-white/20">

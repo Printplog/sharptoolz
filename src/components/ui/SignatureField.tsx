@@ -239,53 +239,86 @@ export default function SignatureField({
         className="hidden"
       />
 
-      {/* Signature buttons */}
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
+      <div className="relative">
+        <div
+          className="block w-full h-40 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-white/40 transition-colors overflow-hidden"
           onClick={() => setIsDialogOpen(true)}
-          className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
-          disabled={disabled}
         >
-          <Pen className="w-4 h-4 mr-2" />
-          {currentValue ? 'Change Signature' : `Add ${fieldName}`}
-        </Button>
-        
+          {currentValue ? (
+            <div className="relative w-full h-full group">
+              <div className="w-full h-full overflow-auto custom-scrollbar">
+                <img 
+                  src={currentValue} 
+                  alt={`${fieldName} signature`}
+                  className="w-full max-w-none h-auto object-contain min-h-full"
+                />
+              </div>
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                <div className="text-center text-white">
+                  <div className="text-sm font-medium">Click to change signature</div>
+                  <div className="text-xs opacity-80">Draw or upload a new signature</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-white/60 hover:text-white/80 transition-colors">
+              <div className="w-12 h-12 border-2 border-dashed border-current rounded-full flex items-center justify-center mb-3">
+                <Pen className="w-6 h-6" />
+              </div>
+              <div className="text-center">
+                <div className="text-sm font-medium">Click to add signature</div>
+                <div className="text-xs opacity-80">Draw or upload a signature</div>
+              </div>
+            </div>
+          )}
+        </div>
         {currentValue && (
-          <>
+          <div className="mt-2 flex gap-2">
             <Button
               type="button"
               variant="outline"
-              onClick={handleDownloadSignature}
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDialogOpen(true);
+              }}
+              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+              disabled={disabled}
+            >
+              <Pen className="h-3.5 w-3.5 mr-1.5" />
+              Draw New
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownloadSignature();
+              }}
               className="bg-blue-500/20 border-blue-500/30 text-blue-400 hover:bg-blue-500/30"
               disabled={disabled}
             >
-              <Download className="w-4 h-4" />
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Download
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={handleRemoveSignature}
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemoveSignature();
+              }}
               className="bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30"
               disabled={disabled}
             >
-              <X className="w-4 h-4" />
+              <X className="h-3.5 w-3.5 mr-1.5" />
+              Remove
             </Button>
-          </>
+          </div>
         )}
       </div>
-
-      {/* Signature preview */}
-      {currentValue && (
-        <div className="mt-2">
-          <img
-            src={currentValue}
-            alt={`${fieldName} signature`}
-            className="w-full max-w-xs h-auto rounded-lg border border-white/20 bg-white"
-          />
-        </div>
-      )}
 
       {/* Signature Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
