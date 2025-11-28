@@ -38,7 +38,7 @@ export default function IdEditor({
     applySuggestion,
     handleValueInput,
     handleInput,
-  } = useIdEditor(value, onChange, allElements);
+  } = useIdEditor(value, onChange);
 
   const suggestions = useSuggestions(internalValue, isFocused);
 

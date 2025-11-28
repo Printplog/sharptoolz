@@ -3,7 +3,6 @@
  */
 
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
-import { filterEditableElements } from "./svgUtils";
 
 /**
  * Regenerate SVG string from edited elements

@@ -75,7 +75,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           if (firstDotIndex > 0) {
             const baseId = el.id.substring(0, firstDotIndex);
             // Get current text content from the element
-            const currentValue = el.text || el.attributes?.text || '';
+            const currentValue = el.innerText || '';
             if (currentValue) {
               values[baseId] = currentValue;
             }

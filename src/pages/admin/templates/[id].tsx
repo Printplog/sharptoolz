@@ -6,7 +6,7 @@ import type { Template, TemplateUpdatePayload } from '@/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Save, Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 

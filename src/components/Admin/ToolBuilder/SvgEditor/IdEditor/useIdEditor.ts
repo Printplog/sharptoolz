@@ -1,11 +1,9 @@
 import { useState, useCallback, useRef } from "react";
 import { parseId, FIELD_TYPES, EXTENSIONS, type ExtensionDefinition } from "../idExtensions";
-import type { SvgElement } from "@/lib/utils/parseSvgElements";
 
 export function useIdEditor(
   value: string,
-  onChange: (value: string) => void,
-  allElements: SvgElement[] = []
+  onChange: (value: string) => void
 ) {
   const [internalValue, setInternalValue] = useState(value || "");
   const [isFocused, setIsFocused] = useState(false);
@@ -19,9 +17,6 @@ export function useIdEditor(
       if (!editorRef.current) return;
 
       const { baseId: currentBase, parts: currentParts } = parseId(internalValue);
-      
-      // Check if this is a field type
-      const isFieldType = FIELD_TYPES.some(ft => ft.key === extension.key);
       
       // Check if there's already a dot at the end of the current value
       const hasTrailingDot = internalValue.trim().endsWith(".");

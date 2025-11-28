@@ -27,10 +27,6 @@ export function useSuggestions(internalValue: string, isFocused: boolean) {
       ? "" 
       : internalValue.substring(lastDotIndex + 1).trim();
     
-    // Get the last part being typed (empty if trailing dot, or partial text if typing)
-    const lastPart = currentPartial || "";
-    const lastPartBase = lastPart.split("_")[0];
-
     // Check if we have a field type (complete, not partial)
     const hasFieldType = FIELD_TYPES.some(ft => 
       currentParts.some(p => p === ft.key)
@@ -97,8 +93,6 @@ export function useSuggestions(internalValue: string, isFocused: boolean) {
       actualLastPart = "";
       actualLastPartBase = "";
     }
-    
-    const actualLastIsFieldType = FIELD_TYPES.some(ft => ft.key === actualLastPartBase);
     
     // If we're right after field type only (no extensions), show extensions that can come after it
     // This works for both ".text" and ".text." (trailing dot triggers suggestions)
