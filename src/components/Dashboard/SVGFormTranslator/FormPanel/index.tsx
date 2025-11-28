@@ -104,7 +104,7 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
     () => fields?.filter(f => f.touched).length ?? 0,
     [fields]
   );
-  
+
   const hasUnsavedChanges = useMemo(
     () => isPurchased && touchedFieldsCount > 0,
     [isPurchased, touchedFieldsCount]
@@ -294,23 +294,23 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
 
       <div className="space-y-3">
         {statusFields.map((field, index) => (
-          <FormFieldComponent
-            key={`${field.id}-${index}`}
-            field={field}
-            allFields={fields}
-            tutorial={tutorial}
-          />
-        ))}
-        <div className="m-0 p-0 border-0 space-y-3">
-          {nonStatusFields.map((field, index) => (
-            <FormFieldComponent 
-              key={`${field.id}-${index}`} 
-              field={field} 
-              allFields={fields} 
-              isPurchased={isPurchased}
+            <FormFieldComponent
+              key={`${field.id}-${index}`}
+              field={field}
+              allFields={fields}
               tutorial={tutorial}
             />
           ))}
+        <div className="m-0 p-0 border-0 space-y-3">
+          {nonStatusFields.map((field, index) => (
+              <FormFieldComponent 
+                key={`${field.id}-${index}`} 
+                field={field} 
+                allFields={fields} 
+                isPurchased={isPurchased}
+                tutorial={tutorial}
+              />
+            ))}
         </div>
       </div>
 

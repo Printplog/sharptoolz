@@ -502,7 +502,7 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "generated-values",
     title: ".gen Extension",
-    content: "Generate values using advanced patterns: random numbers, random letters, prefixes, field extraction, and more.",
+    content: "Generate values using advanced patterns: random numbers, random letters (with case options), prefixes, field dependencies, character repetition, and fill patterns. Use the interactive builder in the admin editor to construct complex generation rules.",
     codeExamples: [
       { 
         title: "Simple Random (Old Style)", 
@@ -515,9 +515,19 @@ export const svgEditorDocs: DocSection[] = [
         description: "Generates 12 random numbers → 245167839145"
       },
       {
-        title: "Random Letters",
+        title: "Random Letters - Mixed Case",
         code: "ID_Letter.gen_(rc[12])",
-        description: "Generates 12 random alphabets → ageyuiosdhet"
+        description: "Generates 12 random letters (mixed uppercase/lowercase) → aGeYuIoSDhEt"
+      },
+      {
+        title: "Random Letters - Uppercase Only",
+        code: "ID_Letter.gen_(ru[12])",
+        description: "Generates 12 random uppercase letters → AGEYUIOSDHET"
+      },
+      {
+        title: "Random Letters - Lowercase Only",
+        code: "ID_Letter.gen_(rl[12])",
+        description: "Generates 12 random lowercase letters → ageyuiosdhet"
       },
       {
         title: "With Prefix",
@@ -527,7 +537,7 @@ export const svgEditorDocs: DocSection[] = [
       {
         title: "Mixed Numbers + Letters",
         code: "Tracking_ID.gen_(rn[6])(rc[6])",
-        description: "6 numbers + 6 letters → 123574qgyiop"
+        description: "6 numbers + 6 letters (mixed case) → 123574qGyIoP"
       },
       {
         title: "Character Duplication",
@@ -535,9 +545,92 @@ export const svgEditorDocs: DocSection[] = [
         description: "Duplicates 'A' 12 times → AAAAAAAAAAAA"
       },
       {
-        title: "With Max Padding",
-        code: "ID_Number.gen_(rn[3]).max_(A[10])",
-        description: "3 random numbers, padded to 10 chars with 'A' → 274AAAAAAA"
+        title: "With Field Dependency",
+        code: "Tracking_ID.gen_P<USA(dep_First_Name)(<[fill]).max_44",
+        description: "Static 'P<USA' + First Name field value + fill to 44 chars with '<'"
+      },
+      {
+        title: "With Dependency Extraction",
+        code: "Code.gen_(dep_FieldName[w1])(rn[6])",
+        description: "First word from FieldName + 6 random numbers"
+      },
+      {
+        title: "Fill Pattern",
+        code: "ID.gen_(rn[3])(<[fill]).max_10",
+        description: "3 random numbers + fill remaining to 10 chars with '<' → 274<<<<<<<"
+      }
+    ],
+    subsections: [
+      {
+        id: "gen-random-types",
+        title: "Random Generation Types",
+        content: "The .gen extension supports different random generation types:",
+        codeExamples: [
+          {
+            title: "Numbers (rn)",
+            code: "(rn[12])",
+            description: "Generates random digits 0-9"
+          },
+          {
+            title: "Letters Mixed (rc)",
+            code: "(rc[12])",
+            description: "Generates random letters in mixed case (uppercase + lowercase)"
+          },
+          {
+            title: "Letters Uppercase (ru)",
+            code: "(ru[12])",
+            description: "Generates random uppercase letters only (A-Z)"
+          },
+          {
+            title: "Letters Lowercase (rl)",
+            code: "(rl[12])",
+            description: "Generates random lowercase letters only (a-z)"
+          }
+        ]
+      },
+      {
+        id: "gen-dependencies",
+        title: "Field Dependencies",
+        content: "You can reference other fields in your generation pattern using (dep_FieldName). You can also extract parts of field values:",
+        codeExamples: [
+          {
+            title: "Simple Dependency",
+            code: "(dep_First_Name)",
+            description: "Uses the value from the First_Name field"
+          },
+          {
+            title: "Word Extraction",
+            code: "(dep_FieldName[w1])",
+            description: "Extracts the first word from FieldName"
+          },
+          {
+            title: "Character Extraction",
+            code: "(dep_FieldName[ch1-4])",
+            description: "Extracts characters 1-4 from FieldName"
+          }
+        ]
+      },
+      {
+        id: "gen-fill-pattern",
+        title: "Fill Pattern",
+        content: "The fill pattern automatically pads the generated value to reach the maximum length specified by .max_ extension. Use (<[fill]) or any character followed by [fill].",
+        codeExamples: [
+          {
+            title: "Fill with Default Character",
+            code: "(<[fill])",
+            description: "Fills remaining space with '<' character"
+          },
+          {
+            title: "Fill with Custom Character",
+            code: "(0[fill])",
+            description: "Fills remaining space with '0' character"
+          },
+          {
+            title: "Complete Example",
+            code: "ID.gen_(rn[3])(<[fill]).max_10",
+            description: "3 random numbers + fill to 10 chars → 274<<<<<<<"
+          }
+        ]
       }
     ]
   },

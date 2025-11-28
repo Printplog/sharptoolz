@@ -1,10 +1,11 @@
 // ElementEditor component for editing individual SVG elements
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import IdEditor from "./IdEditor/index";
+import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 
 interface ElementEditorProps {
   element: SvgElement;
@@ -17,7 +18,72 @@ interface ElementEditorProps {
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
   ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [] }, ref) => {
+    const [showGenBuilder, setShowGenBuilder] = useState(false);
+
+    // --- Normalize legacy / duplicated .gen.gen_ patterns once on load ---
+    useEffect(() => {
+      const id = element.id || "";
+      const parts = id.split(".");
+
+      // If we have "... .gen .gen_XXX ..." collapse to "... .gen_XXX ..."
+      if (parts.length >= 3 && parts[1] === "gen" && parts[2].startsWith("gen_")) {
+        const normalizedParts = [parts[0], ...parts.slice(2)];
+        const normalizedId = normalizedParts.join(".");
+
+        if (normalizedId !== id) {
+          onUpdate(index, { id: normalizedId });
+        }
+      }
+    }, [element.id, index, onUpdate]);
+
     const baseId = element.id?.split(".")[0]?.replace(/_/g, " ") || `${element.tag} ${index + 1}`;
+    
+    // Check if this is a gen field
+    const isGenField = element.id?.includes(".gen");
+    const genRuleMatch = element.id?.match(/gen_(.+?)(?:\.|$)/);
+    const currentGenRule = genRuleMatch ? genRuleMatch[1] : "";
+    const maxLengthMatch = element.id?.match(/max_(\d+)/);
+    const maxLength = maxLengthMatch ? parseInt(maxLengthMatch[1]) : undefined;
+    
+    const handleGenRuleChange = (newRule: string) => {
+      // Only touch the gen_ part of the ID, leave all other extensions (like max_) intact
+      const parts = element.id?.split(".") || [];
+      let replaced = false;
+
+      const newParts = parts.map((p) => {
+        if (p.startsWith("gen_")) {
+          replaced = true;
+          return `gen_${newRule}`;
+        }
+        return p;
+      });
+
+      // If there was no existing gen_ rule, append it as a new extension
+      if (!replaced) {
+        newParts.push(`gen_${newRule}`);
+      }
+
+      onUpdate(index, { id: newParts.join(".") });
+    };
+
+    // Extract current field values from allElements for preview
+    const currentFieldValues = useMemo(() => {
+      const values: Record<string, string> = {};
+      allElements.forEach(el => {
+        if (el.id) {
+          const firstDotIndex = el.id.indexOf(".");
+          if (firstDotIndex > 0) {
+            const baseId = el.id.substring(0, firstDotIndex);
+            // Get current text content from the element
+            const currentValue = el.text || el.attributes?.text || '';
+            if (currentValue) {
+              values[baseId] = currentValue;
+            }
+          }
+        }
+      });
+      return values;
+    }, [allElements]);
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -57,6 +123,32 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
             allElements={allElements}
           />
         </div>
+
+        {/* Generation Rule Builder - For gen fields */}
+        {isGenField && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-white/80">
+              Generation Rule
+            </Label>
+            <GenRuleBuilder
+              value={currentGenRule}
+              onChange={handleGenRuleChange}
+              allElements={allElements}
+              maxLength={maxLength}
+              open={showGenBuilder}
+              onOpenChange={setShowGenBuilder}
+              currentFieldValues={currentFieldValues}
+              trigger={
+                <Input
+                  value={currentGenRule}
+                  readOnly
+                  placeholder="No generation rule set - click to build"
+                  className="bg-white/5 border-white/20 text-white/60 cursor-pointer"
+                />
+              }
+            />
+          </div>
+        )}
 
         {/* Helper Text - Available for all elements */}
         <div className="space-y-2">

@@ -73,6 +73,7 @@ export interface FormField {
   dateFormat?: string; // Date format string (e.g., "MM/DD/YYYY", "MMM DD", "MMMM D, YYYY")
   generationRule?: string; // Generation rule (e.g., "(rn[12])", "FL(rn[6])(rc[6])")
   maxGeneration?: string; // Max padding generation (e.g., "(A[10])")
+  generationMode?: string; // Generation mode: "auto" for auto-generation, undefined for manual
   helperText?: string; // Contextual help text for the field (from data-helper attribute)
   aspectRatio?: number; // For image crop fields (width/height ratio)
   minWidth?: number; // Minimum width for image crop

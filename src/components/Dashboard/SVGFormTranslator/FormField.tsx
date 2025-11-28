@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -55,7 +55,7 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
   
 
   // Generate value based on generation rule or fallback to simple random
-  const generateFieldValue = () => {
+  const generateFieldValue = useCallback(() => {
     // Build field map for cross-field generation
     const fieldMap: Record<string, string | number | boolean> = {};
     allFields.forEach(f => {
@@ -64,9 +64,11 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     
     // If generationRule exists, use comprehensive generation
     if (field.generationRule) {
-      let generated = generateValue(field.generationRule, fieldMap);
+      // Pass max length if available for fill calculation
+      const maxLength = field.max || undefined;
+      let generated = generateValue(field.generationRule, fieldMap, maxLength);
       
-      // Apply max generation padding if specified
+      // Apply max generation padding if specified (legacy support)
       if (field.maxGeneration) {
         generated = applyMaxGeneration(generated, field.maxGeneration);
       }
@@ -82,15 +84,60 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
-  };
+  }, [field.generationRule, field.max, field.maxGeneration, allFields]);
 
-  // Auto-generate value for "gen" type fields when they're first loaded
+  // Get dependencies from generation rule
+  const dependencies = useMemo(() => {
+    if (!field.generationRule) return [];
+    const depMatches = field.generationRule.match(/dep_(\w+)/g) || [];
+    return depMatches.map(match => {
+      // Extract field name (may include extraction pattern like [w1] or [ch1-4])
+      const fieldName = match.replace('dep_', '').split('[')[0];
+      return fieldName;
+    });
+  }, [field.generationRule]);
+
+  // Track dependency values to detect changes
+  const dependencyValuesString = useMemo(() => {
+    return dependencies.map(depId => {
+      const depField = allFields.find(f => f.id === depId);
+      return depField ? String(depField.currentValue || depField.defaultValue || '') : '';
+    }).join('|');
+  }, [dependencies, allFields]);
+
+  // Auto-generate value for "gen" type fields or fields with generationRule
   useEffect(() => {
-    if (field.type === "gen" && !value && !isPurchased) {
+    // Check if field has generation capability (either type is "gen" or has generationRule)
+    const hasGeneration = field.type === "gen" || !!field.generationRule;
+    if (!hasGeneration || isPurchased) return;
+    
+    const isAutoMode = field.generationMode === "auto";
+    
+    // Auto-generate on load if auto mode and no value
+    if (isAutoMode && !value) {
+      const generatedValue = generateFieldValue();
+      updateField(field.id, generatedValue);
+      return;
+    }
+    
+    // Auto-generate when dependencies change (only in auto mode)
+    if (isAutoMode && dependencies.length > 0) {
       const generatedValue = generateFieldValue();
       updateField(field.id, generatedValue);
     }
-  }, [field.type, field.id, value, updateField, isPurchased]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
+    field.type, 
+    field.id, 
+    field.generationRule, // Also depend on generationRule
+    field.generationMode, 
+    value, 
+    updateField, 
+    isPurchased,
+    dependencies.length,
+    dependencyValuesString, // This will change when any dependency value changes
+    generateFieldValue, // Include the function to ensure it has latest fieldMap
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ]);
   
   // Check if this is the Error_Message field and if Status is "Error Message"
   const shouldShowErrorMessage = () => {
@@ -179,12 +226,54 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
   // }
 
   // Render based on field type
-  switch (field.type) {
+  // If field has generationRule, treat it as gen field (even if type is "text")
+  const hasGenerationRule = !!field.generationRule;
+  const effectiveType = hasGenerationRule ? "gen" : field.type;
+  
+  switch (effectiveType) {
     case "text":
     case "email":
     case "tel":
     case "url":
     case "password":
+      // If this field has generationRule but type is text, show generation button
+      if (hasGenerationRule) {
+        return (
+          <div className="space-y-2 w-full">
+            <label htmlFor={field.id} className="text-sm font-medium text-white">
+              {field.name}
+              {field.helperText && (
+                <FieldHelper 
+                  fieldName={field.name}
+                  helperText={field.helperText} 
+                  tutorialUrl={tutorial?.url}
+                />
+              )}
+            </label>
+            <div className="flex gap-2">
+              <Input
+                id={field.id}
+                type="text"
+                value={(value as string) || ""}
+                readOnly
+                className="bg-white/5 border-white/20 text-gray-400 cursor-not-allowed"
+                disabled={isFieldDisabled}
+                placeholder="Click regenerate to generate value"
+              />
+              <Button
+                type="button"
+                onClick={() => handleChange(generateFieldValue())}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                disabled={isFieldDisabled}
+                title="Regenerate value"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        );
+      }
+      
       return (
         <div className="space-y-2 flex flex-col">
           <label htmlFor={field.id} className="text-sm font-medium text-white">

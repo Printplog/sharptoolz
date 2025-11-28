@@ -8,8 +8,6 @@ import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useRef, useState } from 'react';
 import { Save, Eye } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import AdminSvgFormTranslator from '@/components/Admin/ToolBuilder/SvgEditor/AdminSvgFormTranslator';
 import { Skeleton } from '@/components/ui/skeleton';
 
 
@@ -17,7 +15,6 @@ export default function SvgTemplateEditor() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const svgEditorRef = useRef<SvgEditorRef>(null);
-  const [showPreview, setShowPreview] = useState(false);
 
   // Fetch template data (without SVG for faster loading)
   const { data, isLoading } = useQuery<Template>({
@@ -34,8 +31,6 @@ export default function SvgTemplateEditor() {
     enabled: !!id && !!data && !isLoading, // Only fetch SVG after template data loads
     refetchOnMount: false,
   });
-
-  console.log(data);
 
   // Save template mutation
   const saveMutation = useMutation({
@@ -64,7 +59,6 @@ export default function SvgTemplateEditor() {
             });
           }
           const result = await updateTemplate(id as string, formData);
-          console.log('FormData update result:', result);
           return result;
         } else {
           // Otherwise, send as JSON
@@ -78,7 +72,6 @@ export default function SvgTemplateEditor() {
             keywords: templateData.keywords ?? [],
             font_ids: templateData.fontIds || []
           });
-          console.log('JSON update result:', result);
           return result;
         }
       } catch (error) {
@@ -86,17 +79,21 @@ export default function SvgTemplateEditor() {
         throw error;
       }
     },
-    onSuccess: (data) => {
-      console.log('Template saved successfully:', data);
+    onSuccess: async () => {
       toast.success('Template saved successfully!');
       
-      // Invalidate related queries but not the current template to avoid disappearing
-      queryClient.invalidateQueries({ queryKey: ["templates"] });
-      queryClient.invalidateQueries({ queryKey: ["tools"] });
-      queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
+      // Invalidate and refetch related queries to ensure fresh data
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["templates"] }),
+        queryClient.invalidateQueries({ queryKey: ["template", id] }),
+        queryClient.invalidateQueries({ queryKey: ["template-svg", id] }),
+        queryClient.invalidateQueries({ queryKey: ["tools"] }),
+        queryClient.invalidateQueries({ queryKey: ["tool-categories"] }),
+      ]);
       
-      // Optionally navigate back or refresh
-      // navigate('/admin/templates');
+      // Refetch the template data immediately to get updated form_fields
+      await queryClient.refetchQueries({ queryKey: ["template", id] });
+      await queryClient.refetchQueries({ queryKey: ["template-svg", id] });
     },
     onError: (error: Error) => {
       console.error('Save template error:', error);
@@ -110,7 +107,6 @@ export default function SvgTemplateEditor() {
       return;
     }
     
-    console.log('Saving template data:', templateData);
     saveMutation.mutate(templateData);
   };
 
@@ -145,7 +141,7 @@ export default function SvgTemplateEditor() {
     <>
       <div className="container mx-auto relative">
         {/* Floating Action Buttons */}
-        <div className="fixed bottom-8 right-8 z-[9999999] flex gap-3">
+        <div className="hidden md:flex fixed bottom-8 right-8 z-50 gap-3">
           {/* Floating Save Button */}
           <button
             onClick={() => {
@@ -162,7 +158,11 @@ export default function SvgTemplateEditor() {
 
           {/* Floating Preview Button */}
           <button
-            onClick={() => setShowPreview(true)}
+            onClick={() => {
+              if (svgEditorRef.current?.openPreview) {
+                svgEditorRef.current.openPreview();
+              }
+            }}
             className="bg-lime-600 border-3 border-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2"
           >
             <Eye className="h-5 w-5 group-hover:translate-x-[2px] transition-all duration-500" />
@@ -188,6 +188,7 @@ export default function SvgTemplateEditor() {
                 tutorial={data.tutorial}
                 keywords={data.keywords}
                 isLoading={saveMutation.isPending}
+                formFields={data.form_fields || []} // Pass backend form fields
                 onElementSelect={() => {
                   // Simplified - no automatic section selection
                 }}
@@ -199,34 +200,6 @@ export default function SvgTemplateEditor() {
           </div>
         </div>
       </div>
-
-      {/* Preview Dialog */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent 
-          className="max-h-[90vh] overflow-hidden"
-          style={{ width: '70vw', maxWidth: '70vw' }}
-        >
-          <DialogHeader>
-            <DialogTitle>Template Preview - {data.name}</DialogTitle>
-            <DialogDescription>
-              Preview how this template will look and work for users
-            </DialogDescription>
-          </DialogHeader>
-          <div className="overflow-auto max-h-[calc(90vh-120px)] custom-scrollbar">
-            {svgLoading || !svgData?.svg ? (
-              <div className="flex items-center justify-center h-[400px]">
-                <span className="text-muted-foreground">Loading preview...</span>
-              </div>
-            ) : (
-              <AdminSvgFormTranslator 
-                svgContent={svgData.svg} 
-                formFields={data.form_fields} 
-                templateName={data.name}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

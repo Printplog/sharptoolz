@@ -165,7 +165,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
       const previousValue = previousFieldsRef.current.get(field.id);
       if (previousValue !== currentValue) {
         changed.push(field.id);
-      }
+    }
     });
 
     // Update previous values
@@ -296,13 +296,13 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
         {/* Keep editor tab always mounted to prevent re-rendering lag when switching back */}
         <div style={{ display: activeTab === "editor" ? "block" : "none" }}>
           <TabsContent value="editor" forceMount>
-            <FormPanel 
-              test={purchasedData?.test} 
-              tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
-              templateId={isPurchased ? purchasedData?.template : undefined}
-              isPurchased={Boolean(isPurchased)}
-            />
-          </TabsContent>
+          <FormPanel 
+            test={purchasedData?.test} 
+            tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
+            templateId={isPurchased ? purchasedData?.template : undefined}
+            isPurchased={Boolean(isPurchased)}
+          />
+        </TabsContent>
         </div>
         <TabsContent value="preview">
           {svgLoading || !svgText ? (

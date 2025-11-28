@@ -17,6 +17,9 @@ import BannerUpload from "./BannerUpload";
 import FloatingScrollButton from "./FloatingScrollButton";
 import PreviewDialog from "./PreviewDialog";
 import type { Tutorial, Font } from "@/types";
+import { isImageElement, isTextElement, filterEditableElements } from "./utils/svgUtils";
+import { regenerateSvg } from "./utils/regenerateSvg";
+import type { FormField } from "@/types";
 
 interface SvgEditorProps {
   svgRaw: string;
@@ -31,14 +34,16 @@ interface SvgEditorProps {
   fonts?: Font[];
   isLoading?: boolean;
   onElementSelect?: (elementType: string, idPattern?: string) => void;
+  formFields?: FormField[]; // Backend form fields from template
 }
 
 export interface SvgEditorRef {
   handleSave: () => void;
   name: string;
+  openPreview: () => void;
 }
 
-const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, onElementSelect }, ref) => {
+const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, onElementSelect, formFields = [] }, ref) => {
   const [currentSvg, setCurrentSvg] = useState<string>(svgRaw);
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
@@ -90,13 +95,10 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     setSelectedFontIds(initialFonts.map((f) => f.id));
   }, [initialFonts]);
 
-  console.log(tools);
-
   useEffect(() => {
     const parsed = parseSvgElements(currentSvg);
     // Filter out non-editable elements completely - these should not appear in the editor
-    const nonEditableTags = ['defs', 'style', 'linearGradient', 'radialGradient', 'pattern', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feFlood', 'feComposite', 'feMerge', 'feMergeNode'];
-    const editableElements = parsed.filter(el => !nonEditableTags.includes(el.tag));
+    const editableElements = filterEditableElements(parsed);
     setElements(editableElements);
     
     // Reset refs array
@@ -148,11 +150,6 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   }, []);
 
   function updateElement(index: number, updates: Partial<SvgElement>) {
-    console.log('=== UPDATE ELEMENT DEBUG ===');
-    console.log('Updating element at index:', index);
-    console.log('Updates:', updates);
-    console.log('Current element:', elements[index]);
-    
     const updated = [...elements];
     updated[index] = { ...updated[index], ...updates };
     
@@ -161,7 +158,6 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       updated[index].attributes.id = updates.id;
     }
     
-    console.log('Updated element:', updated[index]);
     setElements(updated);
   }
 
@@ -169,95 +165,12 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     setCurrentSvg(svgRaw);
   }, [svgRaw]);
 
-  function regenerateSvg(): string {
-    try {
-      console.log('Regenerating SVG - elements count:', elements.length);
-      
-      // Parse the original SVG
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(currentSvg, 'image/svg+xml');
-      const svg = doc.documentElement;
-      
-      // Get all editable elements from the original SVG (same filter as parseSvgElements)
-      const allOriginalElements = Array.from(svg.querySelectorAll('*')).filter(el => {
-        const tag = el.tagName.toLowerCase();
-        const nonEditableTags = ['defs', 'style', 'linearGradient', 'radialGradient', 'pattern', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feFlood', 'feComposite', 'feMerge', 'feMergeNode'];
-        return !nonEditableTags.includes(tag);
-      });
-      
-      console.log('Found original elements:', allOriginalElements.length);
-      
-      // Update each element with its edited version
-      elements.forEach((editedEl, index) => {
-        if (index < allOriginalElements.length) {
-          const originalEl = allOriginalElements[index];
-          
-          console.log(`Updating element ${index}:`, {
-            original: {
-              tag: originalEl.tagName,
-              id: originalEl.getAttribute('id'),
-              text: originalEl.textContent
-            },
-            edited: {
-              tag: editedEl.tag,
-              id: editedEl.id,
-              text: editedEl.innerText,
-              attributes: editedEl.attributes
-            }
-          });
-          
-          // Update ALL attributes from the edited element
-          // First, clear all existing attributes
-          while (originalEl.attributes.length > 0) {
-            originalEl.removeAttribute(originalEl.attributes[0].name);
-          }
-          
-          // Then set all attributes from the edited element
-          Object.entries(editedEl.attributes).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-              originalEl.setAttribute(key, value);
-              console.log(`  Set attribute: ${key} = "${value}"`);
-            }
-          });
-          
-          // Update text content if applicable
-          if (typeof editedEl.innerText === 'string') {
-            originalEl.textContent = editedEl.innerText;
-            console.log(`  Updated text: "${originalEl.textContent}"`);
-          }
-        }
-      });
-
-      const result = svg.outerHTML;
-      console.log('SVG regeneration complete');
-      return result;
-    } catch (error) {
-      console.error('Error regenerating SVG:', error);
-      return currentSvg;
-    }
-  }
-
-  function isImageElement(el: SvgElement): boolean {
-    return el.tag === 'image' || (typeof el.attributes.href === 'string' && el.attributes.href.startsWith('data:image'));
-  }
-
-  function isTextElement(el: SvgElement): boolean {
-    return ['text', 'tspan', 'textPath'].includes(el.tag);
-  }
 
   const handleSave = useCallback(() => {
     if (!onSave) return;
     
-    console.log('=== SAVE DEBUG ===');
-    console.log('Elements to save:', elements);
-    console.log('Original SVG length:', currentSvg.length);
-    
     // Regenerate SVG and get the updated version immediately
-    const updatedSvg = regenerateSvg();
-    
-    console.log('Updated SVG length:', updatedSvg.length);
-    console.log('SVG changed:', updatedSvg !== currentSvg);
-    console.log('Updated SVG preview:', updatedSvg.substring(0, 200));
+    const updatedSvg = regenerateSvg(currentSvg, elements);
     
     onSave({
       name: name.trim(),
@@ -276,7 +189,8 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   // Expose methods and state via ref
   useImperativeHandle(ref, () => ({
     handleSave,
-    name
+    name,
+    openPreview: () => setShowPreviewDialog(true)
   }), [handleSave, name]);
 
   const handleBannerUpload = (file: File) => {
@@ -785,25 +699,14 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       {/* Floating Scroll to Top Button */}
       <FloatingScrollButton show={showScrollTop} onClick={scrollToTop} />
 
-      {/* Preview Dialog */}
+      {/* Preview Dialog - Use regenerated SVG with all current edits and backend form fields */}
       <PreviewDialog
         open={showPreviewDialog}
         onOpenChange={setShowPreviewDialog}
-        svgContent={currentSvg}
-        formFields={elements.filter(el => el.tag === 'text' && el.attributes['data-field-id']).map(el => ({
-          id: el.attributes['data-field-id'] || '',
-          name: el.attributes['data-field-name'] || el.attributes['data-field-id'] || '',
-          type: el.attributes['data-field-type'] || 'text',
-          defaultValue: el.innerText || '',
-          currentValue: el.innerText || '',
-          required: el.attributes['data-field-required'] === 'true',
-          max: el.attributes['data-field-max'] ? parseInt(el.attributes['data-field-max']) : undefined,
-          min: el.attributes['data-field-min'] ? parseInt(el.attributes['data-field-min']) : undefined,
-          options: el.attributes['data-field-options'] ? JSON.parse(el.attributes['data-field-options']) : undefined,
-          helperText: el.attributes['data-helper'] || '',
-          editable: el.attributes['data-field-editable'] !== 'false',
-        }))}
+        svgContent={regenerateSvg(currentSvg, elements)}
+        formFields={formFields} // Use backend form fields instead of extracting from elements
         templateName={name}
+        fonts={fonts.filter(f => selectedFontIds.includes(f.id))}
       />
     </div>
   );

@@ -200,9 +200,17 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     key: "gen_rule",
     label: "Generation Rule",
     helper:
-      "Custom generation rule (e.g., gen_(rn[12]) or gen_FL(rn[12])(rc[6]))",
+      "Custom generation rule with static text, dependencies (dep_FieldName), random parts (rn[12], rc[6]), repeats (<[5]), and fill (<[fill]). Use the interactive builder for best experience.",
     requiresValue: true,
-    valuePlaceholder: "Enter rule (e.g., (rn[12]) or FL(rn[12])(rc[6]))",
+    valuePlaceholder: "Click 'Build Rule' button to use interactive builder",
+    allowedAfter: ["gen"],
+  },
+  {
+    key: "mode",
+    label: "Generation Mode",
+    helper: "Set generation mode: mode[auto] for auto-generation on load and when dependencies change, or omit for manual generation only.",
+    requiresValue: true,
+    valuePlaceholder: "auto",
     allowedAfter: ["gen"],
   },
   {
