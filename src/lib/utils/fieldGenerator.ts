@@ -154,7 +154,7 @@ function generateRandomChars(count: number, kind: 'rc' | 'ru' | 'rl' = 'rc'): st
     // rc - mixed case
     chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   }
-  
+   
   let result = '';
   for (let i = 0; i < count; i++) {
     result += chars[Math.floor(Math.random() * chars.length)];
