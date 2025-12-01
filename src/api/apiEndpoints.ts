@@ -1,4 +1,4 @@
-import type { Tool, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
+import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
@@ -233,5 +233,15 @@ export const addFont = async (data: FormData): Promise<Font> => {
 
 export const deleteFont = async (id: string): Promise<unknown> => {
   const res = await apiClient.delete(`/fonts/${id}/`);
+  return res.data;
+};
+
+// Tutorials API
+export const getTutorials = async (toolId?: string): Promise<Tutorial[]> => {
+  const params = new URLSearchParams();
+  if (toolId) params.append('tool', toolId);
+  
+  const queryString = params.toString();
+  const res = await apiClient.get(`/tutorials/${queryString ? `?${queryString}` : ''}`);
   return res.data;
 };

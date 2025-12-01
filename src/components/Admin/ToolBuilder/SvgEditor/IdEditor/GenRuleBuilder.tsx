@@ -46,6 +46,7 @@ export default function GenRuleBuilder({
   trigger,
   currentFieldValues = {},
 }: GenRuleBuilderProps) {
+  const [isAuto, setIsAuto] = useState<boolean>(() => value?.startsWith("AUTO:") || false);
   const [parts, setParts] = useState<PatternPart[]>(() => parsePattern(value));
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [countInputs, setCountInputs] = useState<Record<number, string>>({});
@@ -56,6 +57,7 @@ export default function GenRuleBuilder({
     if (!open) {
       setParts(parsePattern(value));
       setCountInputs({}); // Clear count inputs when dropdown closes
+      setIsAuto(value?.startsWith("AUTO:") || false);
     }
   }, [value, open]);
 
@@ -77,7 +79,8 @@ export default function GenRuleBuilder({
   // Generate preview using current field values
   const preview = useMemo(() => {
     try {
-      const pattern = buildPattern(parts);
+      const basePattern = buildPattern(parts);
+      const pattern = isAuto ? `AUTO:${basePattern}` : basePattern;
       const previewFields: Record<string, string> = {};
       
       // Use current field values if available, otherwise use sample values
@@ -95,7 +98,7 @@ export default function GenRuleBuilder({
     } catch (error) {
       return `Error: ${error instanceof Error ? error.message : 'Invalid pattern'}`;
     }
-  }, [parts, availableFields, maxLength, currentFieldValues]);
+  }, [parts, availableFields, maxLength, currentFieldValues, isAuto]);
 
   const handleAddPart = useCallback((type: PatternPart['type']) => {
     const newPart: PatternPart = 
@@ -138,10 +141,11 @@ export default function GenRuleBuilder({
   }, [parts, editingIndex]);
 
   const handleApply = useCallback(() => {
-    const pattern = buildPattern(parts);
-    onChange(pattern);
+    const basePattern = buildPattern(parts);
+    const finalPattern = isAuto ? `AUTO:${basePattern}` : basePattern;
+    onChange(finalPattern);
     onOpenChange(false);
-  }, [parts, onChange, onOpenChange]);
+  }, [parts, isAuto, onChange, onOpenChange]);
 
   const handleCancel = useCallback(() => {
     setParts(parsePattern(value)); // Reset to original value
@@ -405,7 +409,7 @@ export default function GenRuleBuilder({
             <div className="p-2 rounded border border-white/20 bg-white/5 flex flex-col">
               <div className="text-white/60 text-xs mb-1 shrink-0">Pattern:</div>
               <div className="font-mono text-white text-xs mb-2 break-all shrink-0">
-                {buildPattern(parts) || '(empty)'}
+                {(isAuto ? `AUTO:${buildPattern(parts)}` : buildPattern(parts)) || '(empty)'}
               </div>
               <div className="text-white/60 text-xs mb-1 shrink-0">Result:</div>
               <div className="font-mono text-green-400 text-xs overflow-x-auto custom-scrollbar whitespace-nowrap shrink-0">
@@ -421,7 +425,22 @@ export default function GenRuleBuilder({
 
           {/* Add Buttons */}
           <div className="shrink-0">
-            <div className="text-white/60 text-xs mb-2">Add Rule</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-white/60 text-xs">Add Rule</div>
+              <button
+                type="button"
+                onClick={() => setIsAuto((prev) => !prev)}
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] border transition-colors",
+                  isAuto
+                    ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
+                    : "bg-white/5 border-white/20 text-white/60 hover:bg-white/10"
+                )}
+                title="When enabled, this gen field will be auto-generated before save (AUTO: prefix)."
+              >
+                AUTO
+              </button>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => handleAddPart('static')}

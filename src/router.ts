@@ -20,6 +20,7 @@ export type Path =
   | `/auth/login`
   | `/auth/register`
   | `/auth/reset-password`
+  | `/contact`
   | `/dashboard`
   | `/documents`
   | `/documents/:id`

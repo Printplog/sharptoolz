@@ -42,6 +42,11 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     const isGenField = element.id?.includes(".gen");
     const genRuleMatch = element.id?.match(/gen_(.+?)(?:\.|$)/);
     const currentGenRule = genRuleMatch ? genRuleMatch[1] : "";
+    const MAX_GEN_RULE_PREVIEW = 40;
+    const isLongGenRule = currentGenRule.length > MAX_GEN_RULE_PREVIEW;
+    const previewGenRule = isLongGenRule
+      ? `${currentGenRule.slice(0, MAX_GEN_RULE_PREVIEW)}...`
+      : currentGenRule;
     const maxLengthMatch = element.id?.match(/max_(\d+)/);
     const maxLength = maxLengthMatch ? parseInt(maxLengthMatch[1]) : undefined;
     
@@ -140,8 +145,9 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               currentFieldValues={currentFieldValues}
               trigger={
                 <Input
-                  value={currentGenRule}
+                  value={previewGenRule}
                   readOnly
+                  title={isLongGenRule ? currentGenRule : undefined}
                   placeholder="No generation rule set - click to build"
                   className="bg-white/5 border-white/20 text-white/60 cursor-pointer"
                 />

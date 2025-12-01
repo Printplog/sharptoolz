@@ -103,6 +103,9 @@ export type Tool = {
 export type Tutorial = {
   id: string;
   template: string;
+  template_name?: string;
+  template_tool?: string;
+  template_tool_name?: string;
   url: string;
   title?: string;
   created_at: string;

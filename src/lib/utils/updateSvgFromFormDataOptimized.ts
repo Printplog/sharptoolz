@@ -16,9 +16,19 @@ export default function updateSvgFromFormDataOptimized(
   const doc = parser.parseFromString(svgRaw, "image/svg+xml");
 
   // Build field value map for dependencies
+  // For select fields, use the human-readable option text instead of the raw id,
+  // so .gen and other dependency-based fields see the actual value.
   const allFieldValues: Record<string, string | number | boolean | any> = {};
-  allFields.forEach(f => {
-    allFieldValues[f.id] = f.currentValue || '';
+  allFields.forEach((f) => {
+    if (f.type === "select" && f.options && f.options.length > 0) {
+      const selected = f.options.find(
+        (opt) => String(opt.value) === String(f.currentValue)
+      );
+      allFieldValues[f.id] =
+        selected?.displayText ?? selected?.label ?? f.currentValue ?? "";
+    } else {
+      allFieldValues[f.id] = f.currentValue ?? "";
+    }
   });
 
   // Find all fields that need updating (changed fields + their dependents)
