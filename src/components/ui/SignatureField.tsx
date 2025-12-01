@@ -241,8 +241,16 @@ export default function SignatureField({
 
       <div className="relative">
         <div
-          className="block w-full h-40 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-white/40 transition-colors overflow-hidden"
-          onClick={() => setIsDialogOpen(true)}
+          className={`block w-full h-40 border-2 border-dashed rounded-lg transition-colors overflow-hidden ${
+            disabled
+              ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50"
+              : "border-white/20 cursor-pointer hover:border-white/40"
+          }`}
+          onClick={() => {
+            if (!disabled) {
+              setIsDialogOpen(true);
+            }
+          }}
         >
           {currentValue ? (
             <div className="relative w-full h-full group">

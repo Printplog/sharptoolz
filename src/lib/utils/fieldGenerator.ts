@@ -245,8 +245,15 @@ export function applyMaxGeneration(value: string, maxGeneration: string): string
 /**
  * Generate values for AUTO fields and return fields with generated values.
  * This is used for preview and save operations.
+ * @param fields - Array of form fields
+ * @param isPurchased - If true, skip generation for purchased docs (use existing values)
  */
-export function generateAutoFields(fields: FormField[]): FormField[] {
+export function generateAutoFields(fields: FormField[], isPurchased: boolean = false): FormField[] {
+  // For purchased docs, don't regenerate AUTO fields - use existing values
+  if (isPurchased) {
+    return fields;
+  }
+
   // Build field value map for dependencies
   // For select fields, use the human-readable option text instead of the raw id,
   // so .gen and other dependency-based fields see the actual value.
