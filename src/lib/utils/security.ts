@@ -36,7 +36,7 @@ export function disableTextSelection() {
     `;
     document.head.appendChild(style);
   });
-}
+} 
 
 // Disable common DevTools keyboard shortcuts and redirect immediately
 export function disableDevToolsShortcuts() {
