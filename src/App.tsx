@@ -17,6 +17,7 @@ export default function App() {
       disableCopyPaste: true,
       detectDebugger: true,
       disablePrintScreen: true,
+      aggressiveDetection: true, // Most important - detects DevTools via browser menu
     })
   }, [])
 
