@@ -38,49 +38,51 @@ export function disableTextSelection() {
   });
 }
 
-// Disable common DevTools keyboard shortcuts
+// Disable common DevTools keyboard shortcuts and redirect immediately
 export function disableDevToolsShortcuts() {
   document.addEventListener('keydown', (e) => {
+    let shouldRedirect = false;
+
     // F12 - Open DevTools
     if (e.key === 'F12') {
       e.preventDefault();
-      return false;
+      shouldRedirect = true;
     }
 
     // Ctrl+Shift+I (Windows/Linux) or Cmd+Option+I (Mac) - Open DevTools
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
       e.preventDefault();
-      return false;
+      shouldRedirect = true;
     }
 
     // Ctrl+Shift+J (Windows/Linux) or Cmd+Option+J (Mac) - Open Console
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
       e.preventDefault();
-      return false;
+      shouldRedirect = true;
     }
 
     // Ctrl+Shift+C (Windows/Linux) or Cmd+Option+C (Mac) - Open Element Inspector
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
       e.preventDefault();
-      return false;
+      shouldRedirect = true;
     }
 
     // Ctrl+U (Windows/Linux) or Cmd+Option+U (Mac) - View Source
     if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
       e.preventDefault();
-      return false;
+      shouldRedirect = true;
     }
 
     // Ctrl+Shift+K (Windows/Linux) - Open Console (Firefox)
     if (e.ctrlKey && e.shiftKey && e.key === 'K') {
       e.preventDefault();
-      return false;
+      shouldRedirect = true;
     }
 
     // Ctrl+Shift+E (Windows/Linux) - Open Network Monitor (Firefox)
     if (e.ctrlKey && e.shiftKey && e.key === 'E') {
       e.preventDefault();
-      return false;
+      shouldRedirect = true;
     }
 
     // Disable Ctrl+S (Save Page)
@@ -94,6 +96,15 @@ export function disableDevToolsShortcuts() {
       e.preventDefault();
       return false;
     }
+
+    // If DevTools shortcut was pressed, redirect immediately
+    if (shouldRedirect) {
+      console.clear();
+      console.log('%c⚠️ Developer Tools Access Denied', 'color: red; font-size: 30px; font-weight: bold;');
+      // Redirect immediately - don't wait for DevTools to open
+      window.location.replace('about:blank');
+      return false;
+    }
   }, { capture: true });
 }
 
@@ -104,32 +115,47 @@ export function detectDevTools() {
   setInterval(() => {
     if (devtoolsDetected) {
       // Keep redirecting if already detected
-      window.location.href = 'about:blank';
+      window.location.replace('about:blank');
       return;
     }
 
     const element = new Image();
+    let detected = false;
     
     Object.defineProperty(element, 'id', {
       get: function() {
         // This getter only executes if DevTools console is open and inspecting
-        devtoolsDetected = true;
-        console.clear();
-        console.log('%c⚠️ Access Denied', 'color: red; font-size: 50px; font-weight: bold;');
-        console.log('%cThis browser feature is restricted for security reasons.', 'color: red; font-size: 16px;');
-        // Redirect immediately
-        window.location.href = 'about:blank';
+        detected = true;
         return '';
-      }
+      },
+      configurable: false
+    });
+
+    // Add toString to catch more inspection cases
+    Object.defineProperty(element, 'toString', {
+      value: function() {
+        detected = true;
+        return '[object Image]';
+      },
+      configurable: false
     });
 
     try {
       console.log(element);
       console.clear();
+      
+      if (detected) {
+        devtoolsDetected = true;
+        console.clear();
+        console.log('%c⚠️ Access Denied', 'color: red; font-size: 50px; font-weight: bold;');
+        console.log('%cThis browser feature is restricted for security reasons.', 'color: red; font-size: 16px;');
+        // Redirect immediately using replace (can't go back)
+        window.location.replace('about:blank');
+      }
     } catch (e) {
       // Ignore errors
     }
-  }, 200); // Check more frequently
+  }, 100); // Check every 100ms for very fast detection
 }
 
 // Disable console methods (but don't use dimension detection - too unreliable)
@@ -164,31 +190,47 @@ export function clearConsolePeriodically() {
   setInterval(() => {
     if (devtoolsDetected) {
       // Keep redirecting if already detected
-      window.location.href = 'about:blank';
+      window.location.replace('about:blank');
       return;
     }
 
     // Console detection - most reliable method
     const element = new Image();
+    let detected = false;
+    
     Object.defineProperty(element, 'id', {
       get: function() {
         // This only executes if DevTools console is actually open
-        devtoolsDetected = true;
-        console.clear();
-        console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
-        // Redirect immediately
-        window.location.href = 'about:blank';
+        detected = true;
         return '';
-      }
+      },
+      configurable: false
+    });
+
+    // Add toString to catch more inspection cases
+    Object.defineProperty(element, 'toString', {
+      value: function() {
+        detected = true;
+        return '[object Image]';
+      },
+      configurable: false
     });
     
     try {
       console.log(element);
       console.clear();
+      
+      if (detected) {
+        devtoolsDetected = true;
+        console.clear();
+        console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
+        // Redirect immediately using replace
+        window.location.replace('about:blank');
+      }
     } catch (e) {
       // Ignore errors
     }
-  }, 200); // Check more frequently
+  }, 100); // Check every 100ms for very fast detection
 }
 
 // Disable drag and drop to prevent saving assets
@@ -277,23 +319,28 @@ export function detectDebugger() {
   setInterval(() => {
     if (devtoolsDetected) {
       // Keep redirecting if already detected
-      window.location.href = 'about:blank';
+      window.location.replace('about:blank');
       return;
     }
 
     (function() {
       const start = performance.now();
-      debugger; // This will pause if DevTools is open
+      try {
+        debugger; // This will pause if DevTools is open
+      } catch (e) {
+        // Ignore
+      }
       const end = performance.now();
-      if (end - start > 100) {
+      // Lower threshold for faster detection
+      if (end - start > 50) {
         // Debugger detected - redirect immediately
         devtoolsDetected = true;
         console.clear();
         console.log('%c⚠️ Debugger Detected', 'color: red; font-size: 30px; font-weight: bold;');
-        window.location.href = 'about:blank';
+        window.location.replace('about:blank');
       }
     })();
-  }, 300); // Check more frequently
+  }, 150); // Check every 150ms for faster detection
 }
 
 // Disable print screen (partial - can't fully prevent but can detect)
@@ -312,68 +359,162 @@ export function disablePrintScreen() {
 // Check if we're in development mode
 const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
 
-// Aggressive DevTools detection with reliable methods only
+// Aggressive DevTools detection with multiple reliable methods
 export function aggressiveDevToolsDetection() {
   let devtoolsDetected = false;
+  let checkCount = 0;
   
   const redirect = () => {
     // Once DevTools is detected, keep redirecting immediately
-    console.clear();
-    console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
-    console.log('%cAccess to developer tools is restricted.', 'color: red; font-size: 16px;');
+    if (!devtoolsDetected) {
+      devtoolsDetected = true;
+      console.clear();
+      console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
+      console.log('%cAccess to developer tools is restricted.', 'color: red; font-size: 16px;');
+    }
     // Redirect immediately to browser home page (about:blank)
-    window.location.href = 'about:blank';
+    // Use replace so they can't go back
+    window.location.replace('about:blank');
   };
 
-  // Method 1: Console detection - Most reliable (only triggers when console is actually accessed)
-  // Run more frequently for immediate detection
-  setInterval(() => {
+  // Method 1: Console detection using getter - Most reliable
+  // This works because when DevTools console is open, it inspects logged objects
+  const checkConsole = () => {
     if (devtoolsDetected) {
-      redirect(); // Keep redirecting if already detected
+      redirect();
       return;
     }
 
     const element = new Image();
+    let detected = false;
+    
     Object.defineProperty(element, 'id', {
       get: function() {
-        // This getter only executes if DevTools console is open and inspecting
-        devtoolsDetected = true;
-        redirect(); // Redirect immediately
+        // This getter only executes if DevTools console is open and inspecting the object
+        detected = true;
         return '';
-      }
+      },
+      configurable: false
     });
+
+    // Also add toString to catch more inspection cases
+    Object.defineProperty(element, 'toString', {
+      value: function() {
+        detected = true;
+        return '[object Image]';
+      },
+      configurable: false
+    });
+
     try {
       console.log(element);
       console.clear();
+      
+      if (detected) {
+        redirect();
+      }
     } catch (e) {
       // Ignore errors
     }
-  }, 200); // Check every 200ms for faster detection
+  };
 
-  // Method 2: Debugger detection - Very reliable (only pauses if DevTools is open)
-  setInterval(() => {
+  // Method 2: Debugger detection - Very reliable
+  const checkDebugger = () => {
     if (devtoolsDetected) {
-      redirect(); // Keep redirecting if already detected
+      redirect();
       return;
     }
 
     (function() {
       const start = performance.now();
       try {
-        // This will only pause if DevTools is open
+        // This will pause if DevTools is open (even without breakpoints in some cases)
         debugger;
       } catch (e) {
         // Ignore
       }
       const end = performance.now();
-      // Only trigger if debugger actually paused (took significant time)
-      // Using a threshold to detect if DevTools paused execution
-      if (end - start > 100) {
-        devtoolsDetected = true;
-        redirect(); // Redirect immediately
+      // If execution took longer than expected, DevTools likely paused it
+      if (end - start > 50) {
+        redirect();
       }
     })();
-  }, 300); // Check every 300ms for faster detection
+  };
+
+  // Method 3: Console.dir detection (alternative console method)
+  const checkConsoleDir = () => {
+    if (devtoolsDetected) {
+      redirect();
+      return;
+    }
+
+    const testObj: any = {};
+    let detected = false;
+    
+    Object.defineProperty(testObj, 'test', {
+      get: function() {
+        detected = true;
+        return 'test';
+      },
+      configurable: false
+    });
+
+    try {
+      console.dir(testObj);
+      console.clear();
+      
+      if (detected) {
+        redirect();
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+  };
+
+  // Also add a MutationObserver to detect DOM inspection
+  const observer = new MutationObserver(() => {
+    if (devtoolsDetected) {
+      redirect();
+    }
+  });
+
+  // Observe document changes (DevTools might cause mutations)
+  try {
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeOldValue: true
+    });
+  } catch (e) {
+    // Ignore
+  }
+
+  // Run all checks very frequently
+  setInterval(() => {
+    if (devtoolsDetected) {
+      redirect(); // Keep redirecting
+      return;
+    }
+
+    checkCount++;
+    
+    // Run console check every iteration (most reliable)
+    checkConsole();
+    
+    // Run debugger check every iteration for faster detection
+    checkDebugger();
+    
+    // Run console.dir check every 2 iterations
+    if (checkCount % 2 === 0) {
+      checkConsoleDir();
+    }
+    
+    // Reset counter periodically
+    if (checkCount > 100) {
+      checkCount = 0;
+    }
+  }, 50); // Check every 50ms for very fast detection - almost immediate
 }
 
 // Initialize all security measures
