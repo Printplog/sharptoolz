@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Logo from "../Logo";
 
 export default function Footer() {
   return (
@@ -7,7 +8,9 @@ export default function Footer() {
         <div className="container mx-auto px-10 grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div>
-            <h3 className="text-xl font-bold mb-4">Sharptoolz</h3>
+            <div className="mb-4">
+              <Logo noLink={true} size={30} />
+            </div>
             <p className="text-sm">
               Create professional sample documents in seconds. Perfect for
               testing, development, and demonstrations.

@@ -38,74 +38,91 @@ export function disableTextSelection() {
   });
 } 
 
-// Disable common DevTools keyboard shortcuts and redirect immediately
+// Disable common DevTools keyboard shortcuts completely (just block, no redirect)
 export function disableDevToolsShortcuts() {
-  document.addEventListener('keydown', (e) => {
-    let shouldRedirect = false;
-
+  // Use both keydown and keyup to catch all cases
+  const blockShortcut = (e: KeyboardEvent) => {
     // F12 - Open DevTools
     if (e.key === 'F12') {
       e.preventDefault();
-      shouldRedirect = true;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
     }
 
     // Ctrl+Shift+I (Windows/Linux) or Cmd+Option+I (Mac) - Open DevTools
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
       e.preventDefault();
-      shouldRedirect = true;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
     }
 
     // Ctrl+Shift+J (Windows/Linux) or Cmd+Option+J (Mac) - Open Console
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
       e.preventDefault();
-      shouldRedirect = true;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
     }
 
     // Ctrl+Shift+C (Windows/Linux) or Cmd+Option+C (Mac) - Open Element Inspector
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
       e.preventDefault();
-      shouldRedirect = true;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
     }
 
     // Ctrl+U (Windows/Linux) or Cmd+Option+U (Mac) - View Source
-    if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
       e.preventDefault();
-      shouldRedirect = true;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
     }
 
     // Ctrl+Shift+K (Windows/Linux) - Open Console (Firefox)
-    if (e.ctrlKey && e.shiftKey && e.key === 'K') {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
       e.preventDefault();
-      shouldRedirect = true;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
     }
 
     // Ctrl+Shift+E (Windows/Linux) - Open Network Monitor (Firefox)
-    if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
       e.preventDefault();
-      shouldRedirect = true;
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
     }
 
     // Disable Ctrl+S (Save Page)
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) {
       e.preventDefault();
+      e.stopPropagation();
       return false;
     }
 
     // Disable Ctrl+P (Print - can expose source)
-    if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'P' || e.key === 'p')) {
       e.preventDefault();
+      e.stopPropagation();
       return false;
     }
+  };
 
-    // If DevTools shortcut was pressed, redirect immediately
-    if (shouldRedirect) {
-      console.clear();
-      console.log('%c⚠️ Developer Tools Access Denied', 'color: red; font-size: 30px; font-weight: bold;');
-      // Redirect immediately - don't wait for DevTools to open
-      window.location.replace('about:blank');
-      return false;
-    }
-  }, { capture: true });
+  // Block on keydown (before browser processes it) - highest priority
+  document.addEventListener('keydown', blockShortcut, { capture: true, passive: false });
+  // Also block on keyup as backup
+  document.addEventListener('keyup', blockShortcut, { capture: true, passive: false });
+  // Block on keypress as well
+  document.addEventListener('keypress', blockShortcut, { capture: true, passive: false });
+  
+  // Also block at window level for extra security
+  window.addEventListener('keydown', blockShortcut, { capture: true, passive: false });
+  window.addEventListener('keyup', blockShortcut, { capture: true, passive: false });
 }
 
 // Detect DevTools opening using console detection (reliable method)
@@ -388,11 +405,35 @@ export function aggressiveDevToolsDetection() {
     const element = new Image();
     let detected = false;
     
+    // Create multiple getters to catch all inspection methods
     Object.defineProperty(element, 'id', {
       get: function() {
-        // This getter only executes if DevTools console is open and inspecting the object
         detected = true;
         return '';
+      },
+      configurable: false
+    });
+
+    Object.defineProperty(element, 'src', {
+      get: function() {
+        detected = true;
+        return '';
+      },
+      configurable: false
+    });
+
+    Object.defineProperty(element, 'width', {
+      get: function() {
+        detected = true;
+        return 0;
+      },
+      configurable: false
+    });
+
+    Object.defineProperty(element, 'height', {
+      get: function() {
+        detected = true;
+        return 0;
       },
       configurable: false
     });
@@ -406,8 +447,19 @@ export function aggressiveDevToolsDetection() {
       configurable: false
     });
 
+    Object.defineProperty(element, 'valueOf', {
+      value: function() {
+        detected = true;
+        return '[object Image]';
+      },
+      configurable: false
+    });
+
     try {
+      // Use multiple console methods to catch manual menu opening
       console.log(element);
+      console.info(element);
+      console.warn(element);
       console.clear();
       
       if (detected) {
@@ -490,6 +542,42 @@ export function aggressiveDevToolsDetection() {
     // Ignore
   }
 
+  // Also monitor for focus loss (DevTools often steals focus when opened manually)
+  let focusLostCount = 0;
+  const checkFocus = () => {
+    if (devtoolsDetected) {
+      redirect();
+      return;
+    }
+
+    if (document.hasFocus && !document.hasFocus()) {
+      focusLostCount++;
+      // If focus is lost multiple times quickly, might be DevTools
+      if (focusLostCount > 2) {
+        // Double-check with console detection
+        const testElement = new Image();
+        let detected = false;
+        Object.defineProperty(testElement, 'id', {
+          get: function() {
+            detected = true;
+            return '';
+          }
+        });
+        try {
+          console.log(testElement);
+          console.clear();
+          if (detected) {
+            redirect();
+          }
+        } catch (e) {
+          // Ignore
+        }
+      }
+    } else {
+      focusLostCount = 0;
+    }
+  };
+
   // Run all checks very frequently
   setInterval(() => {
     if (devtoolsDetected) {
@@ -499,22 +587,23 @@ export function aggressiveDevToolsDetection() {
 
     checkCount++;
     
-    // Run console check every iteration (most reliable)
+    // Run console check every iteration (most reliable) - catches manual menu trigger
     checkConsole();
     
     // Run debugger check every iteration for faster detection
     checkDebugger();
     
-    // Run console.dir check every 2 iterations
-    if (checkCount % 2 === 0) {
-      checkConsoleDir();
-    }
+    // Run console.dir check every iteration for manual menu detection
+    checkConsoleDir();
+    
+    // Check focus every iteration
+    checkFocus();
     
     // Reset counter periodically
     if (checkCount > 100) {
       checkCount = 0;
     }
-  }, 50); // Check every 50ms for very fast detection - almost immediate
+  }, 30); // Check every 30ms for very fast detection - almost immediate
 }
 
 // Initialize all security measures
