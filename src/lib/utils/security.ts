@@ -99,16 +99,26 @@ export function disableDevToolsShortcuts() {
 
 // Detect DevTools opening using console detection (reliable method)
 export function detectDevTools() {
-  let devtools = false;
+  let devtoolsDetected = false;
   
   setInterval(() => {
-    devtools = false;
+    if (devtoolsDetected) {
+      // Keep redirecting if already detected
+      window.location.href = 'about:blank';
+      return;
+    }
+
     const element = new Image();
     
     Object.defineProperty(element, 'id', {
       get: function() {
         // This getter only executes if DevTools console is open and inspecting
-        devtools = true;
+        devtoolsDetected = true;
+        console.clear();
+        console.log('%c⚠️ Access Denied', 'color: red; font-size: 50px; font-weight: bold;');
+        console.log('%cThis browser feature is restricted for security reasons.', 'color: red; font-size: 16px;');
+        // Redirect immediately
+        window.location.href = 'about:blank';
         return '';
       }
     });
@@ -116,21 +126,10 @@ export function detectDevTools() {
     try {
       console.log(element);
       console.clear();
-      
-      // Only redirect if we confirmed DevTools is open
-      if (devtools) {
-        console.clear();
-        console.log('%c⚠️ Access Denied', 'color: red; font-size: 50px; font-weight: bold;');
-        console.log('%cThis browser feature is restricted for security reasons.', 'color: red; font-size: 16px;');
-        // Redirect to browser home page (about:blank)
-        setTimeout(() => {
-          window.location.href = 'about:blank';
-        }, 100);
-      }
     } catch (e) {
       // Ignore errors
     }
-  }, 500);
+  }, 200); // Check more frequently
 }
 
 // Disable console methods (but don't use dimension detection - too unreliable)
@@ -160,15 +159,25 @@ export function detectDevToolsByDimensions() {
 
 // Clear console periodically and detect DevTools (console method only)
 export function clearConsolePeriodically() {
-  let devtoolsOpen = false;
+  let devtoolsDetected = false;
   
   setInterval(() => {
+    if (devtoolsDetected) {
+      // Keep redirecting if already detected
+      window.location.href = 'about:blank';
+      return;
+    }
+
     // Console detection - most reliable method
     const element = new Image();
     Object.defineProperty(element, 'id', {
       get: function() {
         // This only executes if DevTools console is actually open
-        devtoolsOpen = true;
+        devtoolsDetected = true;
+        console.clear();
+        console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
+        // Redirect immediately
+        window.location.href = 'about:blank';
         return '';
       }
     });
@@ -176,20 +185,10 @@ export function clearConsolePeriodically() {
     try {
       console.log(element);
       console.clear();
-      
-      // Only redirect if we confirmed DevTools is open
-      if (devtoolsOpen) {
-        console.clear();
-        console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
-        setTimeout(() => {
-          window.location.href = 'about:blank';
-        }, 100);
-        devtoolsOpen = false;
-      }
     } catch (e) {
       // Ignore errors
     }
-  }, 500);
+  }, 200); // Check more frequently
 }
 
 // Disable drag and drop to prevent saving assets
@@ -273,21 +272,28 @@ export function disableCopyPaste() {
 
 // Detect if page is being inspected via debugger
 export function detectDebugger() {
+  let devtoolsDetected = false;
+  
   setInterval(() => {
+    if (devtoolsDetected) {
+      // Keep redirecting if already detected
+      window.location.href = 'about:blank';
+      return;
+    }
+
     (function() {
       const start = performance.now();
       debugger; // This will pause if DevTools is open
       const end = performance.now();
       if (end - start > 100) {
-        // Debugger detected - redirect to home page
+        // Debugger detected - redirect immediately
+        devtoolsDetected = true;
         console.clear();
         console.log('%c⚠️ Debugger Detected', 'color: red; font-size: 30px; font-weight: bold;');
-        setTimeout(() => {
-          window.location.href = 'about:blank';
-        }, 100);
+        window.location.href = 'about:blank';
       }
     })();
-  }, 500);
+  }, 300); // Check more frequently
 }
 
 // Disable print screen (partial - can't fully prevent but can detect)
@@ -308,65 +314,66 @@ const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'developme
 
 // Aggressive DevTools detection with reliable methods only
 export function aggressiveDevToolsDetection() {
-  let redirectTriggered = false;
-  let devtoolsOpen = false;
+  let devtoolsDetected = false;
   
   const redirect = () => {
-    if (!redirectTriggered && devtoolsOpen) {
-      redirectTriggered = true;
-      console.clear();
-      console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
-      console.log('%cAccess to developer tools is restricted.', 'color: red; font-size: 16px;');
-      // Redirect to browser home page (about:blank)
-      setTimeout(() => {
-        window.location.href = 'about:blank';
-      }, 50);
-    }
+    // Once DevTools is detected, keep redirecting immediately
+    console.clear();
+    console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
+    console.log('%cAccess to developer tools is restricted.', 'color: red; font-size: 16px;');
+    // Redirect immediately to browser home page (about:blank)
+    window.location.href = 'about:blank';
   };
 
   // Method 1: Console detection - Most reliable (only triggers when console is actually accessed)
+  // Run more frequently for immediate detection
   setInterval(() => {
-    devtoolsOpen = false;
+    if (devtoolsDetected) {
+      redirect(); // Keep redirecting if already detected
+      return;
+    }
+
     const element = new Image();
     Object.defineProperty(element, 'id', {
       get: function() {
         // This getter only executes if DevTools console is open and inspecting
-        devtoolsOpen = true;
+        devtoolsDetected = true;
+        redirect(); // Redirect immediately
         return '';
       }
     });
     try {
       console.log(element);
       console.clear();
-      // Only redirect if we confirmed DevTools is open
-      if (devtoolsOpen) {
-        redirect();
-      }
     } catch (e) {
       // Ignore errors
     }
-  }, 500);
+  }, 200); // Check every 200ms for faster detection
 
   // Method 2: Debugger detection - Very reliable (only pauses if DevTools is open)
   setInterval(() => {
+    if (devtoolsDetected) {
+      redirect(); // Keep redirecting if already detected
+      return;
+    }
+
     (function() {
       const start = performance.now();
       try {
-        // This will only pause if DevTools is open with breakpoints enabled
-        // We use a very short timeout to avoid false positives
+        // This will only pause if DevTools is open
         debugger;
       } catch (e) {
         // Ignore
       }
       const end = performance.now();
       // Only trigger if debugger actually paused (took significant time)
-      // Using a higher threshold to avoid false positives from normal execution
-      if (end - start > 200) {
-        devtoolsOpen = true;
-        redirect();
+      // Using a threshold to detect if DevTools paused execution
+      if (end - start > 100) {
+        devtoolsDetected = true;
+        redirect(); // Redirect immediately
       }
     })();
-  }, 1000);
+  }, 300); // Check every 300ms for faster detection
 }
 
 // Initialize all security measures
