@@ -97,16 +97,28 @@ export function disableDevToolsShortcuts() {
   }, { capture: true });
 }
 
-// Detect DevTools opening using console detection
+// Detect DevTools opening using console detection (reliable method)
 export function detectDevTools() {
   let devtools = false;
-  const element = new Image();
   
-  Object.defineProperty(element, 'id', {
-    get: function() {
-      if (!devtools) {
+  setInterval(() => {
+    devtools = false;
+    const element = new Image();
+    
+    Object.defineProperty(element, 'id', {
+      get: function() {
+        // This getter only executes if DevTools console is open and inspecting
         devtools = true;
-        // DevTools detected - redirect to home page
+        return '';
+      }
+    });
+
+    try {
+      console.log(element);
+      console.clear();
+      
+      // Only redirect if we confirmed DevTools is open
+      if (devtools) {
         console.clear();
         console.log('%c⚠️ Access Denied', 'color: red; font-size: 50px; font-weight: bold;');
         console.log('%cThis browser feature is restricted for security reasons.', 'color: red; font-size: 16px;');
@@ -115,36 +127,21 @@ export function detectDevTools() {
           window.location.href = 'about:blank';
         }, 100);
       }
-      return '';
+    } catch (e) {
+      // Ignore errors
     }
-  });
-
-  setInterval(() => {
-    devtools = false;
-    console.log(element);
-    console.clear();
   }, 500);
 }
 
-// Disable console methods and detect DevTools
+// Disable console methods (but don't use dimension detection - too unreliable)
 export function disableConsole() {
-  // Override console methods with detection
+  // Override console methods
   const methods = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd'];
   
   methods.forEach(method => {
     (window.console as any)[method] = function(..._args: any[]) {
-      // If console method is called and we're not in dev mode, DevTools might be open
-      if (!isDevelopment) {
-        // Check if DevTools is actually open
-        const widthDiff = window.outerWidth - window.innerWidth;
-        const heightDiff = window.outerHeight - window.innerHeight;
-        if (widthDiff > 160 || heightDiff > 160) {
-          setTimeout(() => {
-            window.location.href = 'about:blank';
-          }, 100);
-        }
-      }
-      // Don't actually log anything
+      // Don't actually log anything in production
+      // Detection is handled by other methods (console detection and debugger)
     };
   });
 
@@ -153,76 +150,46 @@ export function disableConsole() {
 }
 
 // Detect if DevTools is open by checking window dimensions
+// DISABLED - Too many false positives on different screen sizes
 export function detectDevToolsByDimensions() {
-  let lastWidth = window.innerWidth;
-  let lastHeight = window.innerHeight;
-  
-  setInterval(() => {
-    const threshold = 160; // DevTools usually makes window wider
-    const widthDiff = window.outerWidth - window.innerWidth;
-    const heightDiff = window.outerHeight - window.innerHeight;
-    
-    // Check if dimensions changed significantly (DevTools opened)
-    if (
-      widthDiff > threshold ||
-      heightDiff > threshold ||
-      (Math.abs(window.innerWidth - lastWidth) > 100) ||
-      (Math.abs(window.innerHeight - lastHeight) > 100)
-    ) {
-      // DevTools detected - redirect to home page
-      console.clear();
-      console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
-      console.log('%cAccess to developer tools is restricted.', 'color: red; font-size: 16px;');
-      setTimeout(() => {
-        window.location.href = 'about:blank';
-      }, 100);
-    }
-    
-    lastWidth = window.innerWidth;
-    lastHeight = window.innerHeight;
-  }, 200);
+  // This method is disabled as it causes false positives
+  // Different devices and screen sizes trigger it incorrectly
+  // Using console and debugger detection instead which are more reliable
+  return;
 }
 
-// Clear console periodically and detect DevTools
+// Clear console periodically and detect DevTools (console method only)
 export function clearConsolePeriodically() {
   let devtoolsOpen = false;
   
   setInterval(() => {
-    // Multiple detection methods
-    const widthDiff = window.outerWidth - window.innerHeight;
-    const heightDiff = window.outerHeight - window.innerHeight;
-    
-    // Method 1: Console detection
+    // Console detection - most reliable method
     const element = new Image();
     Object.defineProperty(element, 'id', {
       get: function() {
+        // This only executes if DevTools console is actually open
         devtoolsOpen = true;
         return '';
       }
     });
-    console.log(element);
-    console.clear();
     
-    // Method 2: Dimension check
-    if (widthDiff > 160 || heightDiff > 160) {
-      devtoolsOpen = true;
-    }
-    
-    // Method 3: Focus check (DevTools often steals focus)
-    if (document.hasFocus && !document.hasFocus()) {
-      // Additional check needed here
-    }
-    
-    // If DevTools detected, redirect
-    if (devtoolsOpen) {
+    try {
+      console.log(element);
       console.clear();
-      console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
-      setTimeout(() => {
-        window.location.href = 'about:blank';
-      }, 100);
-      devtoolsOpen = false;
+      
+      // Only redirect if we confirmed DevTools is open
+      if (devtoolsOpen) {
+        console.clear();
+        console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
+        setTimeout(() => {
+          window.location.href = 'about:blank';
+        }, 100);
+        devtoolsOpen = false;
+      }
+    } catch (e) {
+      // Ignore errors
     }
-  }, 300);
+  }, 500);
 }
 
 // Disable drag and drop to prevent saving assets
@@ -339,12 +306,13 @@ export function disablePrintScreen() {
 // Check if we're in development mode
 const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
 
-// Aggressive DevTools detection with multiple methods
+// Aggressive DevTools detection with reliable methods only
 export function aggressiveDevToolsDetection() {
   let redirectTriggered = false;
+  let devtoolsOpen = false;
   
   const redirect = () => {
-    if (!redirectTriggered) {
+    if (!redirectTriggered && devtoolsOpen) {
       redirectTriggered = true;
       console.clear();
       console.log('%c⚠️ Developer Tools Detected', 'color: red; font-size: 30px; font-weight: bold;');
@@ -356,98 +324,49 @@ export function aggressiveDevToolsDetection() {
     }
   };
 
-  // Method 1: Console detection (runs every 200ms)
+  // Method 1: Console detection - Most reliable (only triggers when console is actually accessed)
   setInterval(() => {
+    devtoolsOpen = false;
     const element = new Image();
     Object.defineProperty(element, 'id', {
       get: function() {
-        redirect();
+        // This getter only executes if DevTools console is open and inspecting
+        devtoolsOpen = true;
         return '';
       }
     });
     try {
       console.log(element);
       console.clear();
+      // Only redirect if we confirmed DevTools is open
+      if (devtoolsOpen) {
+        redirect();
+      }
     } catch (e) {
-      // Console might be disabled, but if we get here, DevTools might be open
+      // Ignore errors
     }
-  }, 200);
+  }, 500);
 
-  // Method 2: Dimension detection (runs every 100ms)
-  let lastInnerWidth = window.innerWidth;
-  let lastInnerHeight = window.innerHeight;
-  
-  setInterval(() => {
-    const widthDiff = window.outerWidth - window.innerWidth;
-    const heightDiff = window.outerHeight - window.innerHeight;
-    const widthChange = Math.abs(window.innerWidth - lastInnerWidth);
-    const heightChange = Math.abs(window.innerHeight - lastInnerHeight);
-    
-    // DevTools usually causes significant dimension changes
-    if (
-      widthDiff > 150 ||
-      heightDiff > 150 ||
-      widthChange > 100 ||
-      heightChange > 100
-    ) {
-      redirect();
-    }
-    
-    lastInnerWidth = window.innerWidth;
-    lastInnerHeight = window.innerHeight;
-  }, 100);
-
-  // Method 3: Debugger detection (runs every 300ms)
+  // Method 2: Debugger detection - Very reliable (only pauses if DevTools is open)
   setInterval(() => {
     (function() {
       const start = performance.now();
       try {
+        // This will only pause if DevTools is open with breakpoints enabled
+        // We use a very short timeout to avoid false positives
         debugger;
       } catch (e) {
         // Ignore
       }
       const end = performance.now();
-      if (end - start > 50) {
+      // Only trigger if debugger actually paused (took significant time)
+      // Using a higher threshold to avoid false positives from normal execution
+      if (end - start > 200) {
+        devtoolsOpen = true;
         redirect();
       }
     })();
-  }, 300);
-
-  // Method 4: Console method override detection
-  let consoleCallCount = 0;
-  const originalLog = console.log;
-  console.log = function(..._args: any[]) {
-    consoleCallCount++;
-    if (consoleCallCount > 5) {
-      // If console is being used, DevTools might be open
-      const widthDiff = window.outerWidth - window.innerWidth;
-      const heightDiff = window.outerHeight - window.innerHeight;
-      if (widthDiff > 150 || heightDiff > 150) {
-        redirect();
-      }
-    }
-    // Don't actually log in production
-    if (isDevelopment) {
-      originalLog.apply(console, _args);
-    }
-  };
-
-  // Method 5: Focus detection (DevTools often steals focus)
-  let focusCheckCount = 0;
-  setInterval(() => {
-    if (document.hasFocus && !document.hasFocus()) {
-      focusCheckCount++;
-      if (focusCheckCount > 3) {
-        const widthDiff = window.outerWidth - window.innerWidth;
-        const heightDiff = window.outerHeight - window.innerHeight;
-        if (widthDiff > 150 || heightDiff > 150) {
-          redirect();
-        }
-      }
-    } else {
-      focusCheckCount = 0;
-    }
-  }, 200);
+  }, 1000);
 }
 
 // Initialize all security measures
