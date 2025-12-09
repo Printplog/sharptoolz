@@ -31,7 +31,12 @@ import { extractFromDependency } from "@/lib/utils/fieldExtractor";
 const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; isPurchased?: boolean; tutorial?: Tutorial }> = React.memo(({ field, allFields = [], isPurchased = false, tutorial }) => {
   // Use selector to only subscribe to updateField function, not the entire store
   const updateField = useToolStore((state) => state.updateField);
+  // Also subscribe to fields to get latest values for dependencies
+  const storeFields = useToolStore((state) => state.fields);
   const value = field.currentValue;
+  
+  // Use storeFields if available, otherwise fall back to allFields prop
+  const fieldsForDependencies = storeFields.length > 0 ? storeFields : allFields;
   const dateInputRef = useRef<HTMLInputElement>(null);
   
   // Track raw date value for date inputs (YYYY-MM-DD format)
@@ -108,17 +113,32 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
   // Track dependency values to detect changes
   const dependencyValuesString = useMemo(() => {
     return dependencies.map(depId => {
-      const depField = allFields.find(f => f.id === depId);
+      const depField = fieldsForDependencies.find(f => f.id === depId);
       return depField ? String(depField.currentValue || depField.defaultValue || '') : '';
     }).join('|');
-  }, [dependencies, allFields]);
+  }, [dependencies, fieldsForDependencies]);
 
   // Track dependsOn field value to detect changes
+  // For images, we need to track the actual value, not just a string representation
   const dependsOnValue = useMemo(() => {
-    if (!dependsOnFieldId) return '';
-    const depField = allFields.find(f => f.id === dependsOnFieldId);
-    return depField ? String(depField.currentValue || depField.defaultValue || '') : '';
-  }, [dependsOnFieldId, allFields]);
+    if (!dependsOnFieldId) return null;
+    const depField = fieldsForDependencies.find(f => f.id === dependsOnFieldId);
+    if (!depField) return null;
+    // Return the actual value (could be image data URL, string, number, etc.)
+    return depField.currentValue ?? depField.defaultValue ?? null;
+  }, [dependsOnFieldId, fieldsForDependencies]);
+
+  // Create a hash/identifier for the dependency value to detect changes
+  // For images, use a substring of the data URL to detect changes without storing the full URL
+  const dependsOnValueHash = useMemo(() => {
+    if (!dependsOnValue) return '';
+    // For image data URLs, use first 100 chars + last 50 chars as a hash to detect changes
+    if (typeof dependsOnValue === 'string' && (dependsOnValue.startsWith('data:image/') || dependsOnValue.startsWith('blob:'))) {
+      const str = dependsOnValue;
+      return str.length > 150 ? `${str.substring(0, 100)}...${str.substring(str.length - 50)}` : str;
+    }
+    return String(dependsOnValue);
+  }, [dependsOnValue]);
 
   // Auto-generate value for "gen" type fields or fields with generationRule
   useEffect(() => {
@@ -159,9 +179,9 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     // Skip if field has generationRule (handled by above effect)
     if (field.generationRule || !field.dependsOn || isPurchased) return;
     
-    // Build field value map for dependency extraction
+    // Build field value map for dependency extraction using latest store values
     const allFieldValues: Record<string, string | number | boolean | any> = {};
-    allFields.forEach((f) => {
+    fieldsForDependencies.forEach((f) => {
       if (f.type === "select" && f.options && f.options.length > 0) {
         const selected = f.options.find(
           (opt) => String(opt.value) === String(f.currentValue)
@@ -169,6 +189,7 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
         allFieldValues[f.id] =
           selected?.displayText ?? selected?.label ?? f.currentValue ?? "";
       } else {
+        // For image fields, use the actual value (data URL), not empty string
         allFieldValues[f.id] = f.currentValue ?? "";
       }
     });
@@ -176,22 +197,36 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     // Extract value from dependency
     const extractedValue = extractFromDependency(field.dependsOn, allFieldValues);
     
-    // Only update if:
-    // 1. The extracted value is different from current value, AND
-    // 2. The extracted value is not empty (to avoid clearing user-uploaded images)
-    // For image fields, we want to sync even if current value exists (dependency takes precedence)
-    if (extractedValue && extractedValue !== value) {
+    // For image fields, compare properly (data URLs can be very long)
+    const isImageValue = typeof value === 'string' && (value.startsWith('data:image/') || value.startsWith('blob:'));
+    const isExtractedImage = typeof extractedValue === 'string' && (extractedValue.startsWith('data:image/') || extractedValue.startsWith('blob:'));
+    
+    // Only update if the value has actually changed
+    // For images, do a more thorough comparison
+    let shouldUpdate = false;
+    if (isImageValue && isExtractedImage) {
+      // For images, compare the full data URL
+      shouldUpdate = extractedValue !== value;
+    } else if (isExtractedImage && !isImageValue) {
+      // If dependency has image but current value doesn't, update
+      shouldUpdate = true;
+    } else {
+      // For non-images, simple comparison
+      shouldUpdate = extractedValue !== value && extractedValue !== '';
+    }
+    
+    if (shouldUpdate) {
       updateField(field.id, extractedValue);
     }
   }, [
     field.id,
     field.dependsOn,
     field.generationRule,
-    dependsOnValue, // This will change when the dependency field changes
+    dependsOnValueHash, // Use hash to detect changes (works better for images)
     value,
     updateField,
     isPurchased,
-    allFields,
+    fieldsForDependencies, // Use store fields for latest values
   ]);
   
   // Check if this is the Error_Message field and if Status is "Error Message"
