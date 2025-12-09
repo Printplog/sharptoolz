@@ -26,6 +26,7 @@ import ImageCropUpload from "@/components/ui/ImageCropUpload";
 import SignatureField from "@/components/ui/SignatureField";
 import CustomDateTimePicker from "@/components/ui/CustomDateTimePicker";
 import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
+import { extractFromDependency } from "@/lib/utils/fieldExtractor";
 
 const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; isPurchased?: boolean; tutorial?: Tutorial }> = React.memo(({ field, allFields = [], isPurchased = false, tutorial }) => {
   // Use selector to only subscribe to updateField function, not the entire store
@@ -97,6 +98,13 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     });
   }, [field.generationRule]);
 
+  // Get dependency from dependsOn property (for non-generation fields like images)
+  const dependsOnFieldId = useMemo(() => {
+    if (!field.dependsOn) return null;
+    // Extract base field name from dependency (e.g., "field_name[w1]" -> "field_name")
+    return field.dependsOn.split('[')[0];
+  }, [field.dependsOn]);
+
   // Track dependency values to detect changes
   const dependencyValuesString = useMemo(() => {
     return dependencies.map(depId => {
@@ -104,6 +112,13 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
       return depField ? String(depField.currentValue || depField.defaultValue || '') : '';
     }).join('|');
   }, [dependencies, allFields]);
+
+  // Track dependsOn field value to detect changes
+  const dependsOnValue = useMemo(() => {
+    if (!dependsOnFieldId) return '';
+    const depField = allFields.find(f => f.id === dependsOnFieldId);
+    return depField ? String(depField.currentValue || depField.defaultValue || '') : '';
+  }, [dependsOnFieldId, allFields]);
 
   // Auto-generate value for "gen" type fields or fields with generationRule
   useEffect(() => {
@@ -137,6 +152,46 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     dependencyValuesString, // This will change when any dependency value changes
     generateFieldValue, // Include the function to ensure it has latest fieldMap
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  ]);
+
+  // Handle dependsOn for non-generation fields (like images, signatures, etc.)
+  useEffect(() => {
+    // Skip if field has generationRule (handled by above effect)
+    if (field.generationRule || !field.dependsOn || isPurchased) return;
+    
+    // Build field value map for dependency extraction
+    const allFieldValues: Record<string, string | number | boolean | any> = {};
+    allFields.forEach((f) => {
+      if (f.type === "select" && f.options && f.options.length > 0) {
+        const selected = f.options.find(
+          (opt) => String(opt.value) === String(f.currentValue)
+        );
+        allFieldValues[f.id] =
+          selected?.displayText ?? selected?.label ?? f.currentValue ?? "";
+      } else {
+        allFieldValues[f.id] = f.currentValue ?? "";
+      }
+    });
+    
+    // Extract value from dependency
+    const extractedValue = extractFromDependency(field.dependsOn, allFieldValues);
+    
+    // Only update if:
+    // 1. The extracted value is different from current value, AND
+    // 2. The extracted value is not empty (to avoid clearing user-uploaded images)
+    // For image fields, we want to sync even if current value exists (dependency takes precedence)
+    if (extractedValue && extractedValue !== value) {
+      updateField(field.id, extractedValue);
+    }
+  }, [
+    field.id,
+    field.dependsOn,
+    field.generationRule,
+    dependsOnValue, // This will change when the dependency field changes
+    value,
+    updateField,
+    isPurchased,
+    allFields,
   ]);
   
   // Check if this is the Error_Message field and if Status is "Error Message"
