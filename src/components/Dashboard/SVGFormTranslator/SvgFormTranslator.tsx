@@ -20,6 +20,93 @@ import type { FormField, PurchasedTemplate, Template } from "@/types";
 import SvgFormTranslatorSkeleton from "./SvgFormTranslatorSkeleton";
 import PreviewSkeleton from "./PreviewSkeleton";
 
+// Component to render action buttons by cloning and connecting to FormPanel buttons
+function ActionButtonsRenderer() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const cloneButtons = () => {
+      const formPanel = document.querySelector('[data-form-panel-user]');
+      const targetContainer = containerRef.current;
+      
+      if (!formPanel || !targetContainer) return;
+      
+      // Find the buttons container in FormPanel
+      const buttonsContainer = formPanel.querySelector('div.pt-4.border-t.border-white\\/20.flex:last-child') as HTMLElement;
+      if (!buttonsContainer) return;
+      
+      // Get all buttons from FormPanel
+      const originalButtons = buttonsContainer.querySelectorAll('button, a');
+      
+      // Clear existing content
+      targetContainer.innerHTML = '';
+      
+      // Clone each button and connect click handlers
+      originalButtons.forEach((originalBtn) => {
+        const cloned = originalBtn.cloneNode(true) as HTMLElement;
+        
+        // Preserve all attributes and styles
+        if (originalBtn instanceof HTMLElement) {
+          cloned.className = originalBtn.className;
+          const originalStyle = originalBtn.getAttribute('style');
+          if (originalStyle) {
+            cloned.setAttribute('style', originalStyle);
+          }
+          
+          // Copy disabled state
+          if (originalBtn.hasAttribute('disabled')) {
+            cloned.setAttribute('disabled', '');
+          }
+          
+          // Connect click handler to trigger original button
+          cloned.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Trigger click on original button
+            (originalBtn as HTMLElement).click();
+          });
+          
+          targetContainer.appendChild(cloned);
+        }
+      });
+    };
+
+    // Wait for FormPanel to render, then clone buttons
+    const timeout = setTimeout(cloneButtons, 200);
+    
+    // Use MutationObserver to watch for changes in FormPanel buttons
+    const formPanel = document.querySelector('[data-form-panel-user]');
+    const buttonsContainer = formPanel?.querySelector('div.pt-4.border-t.border-white\\/20.flex:last-child');
+    
+    let observer: MutationObserver | null = null;
+    if (buttonsContainer) {
+      observer = new MutationObserver(() => {
+        cloneButtons();
+      });
+      observer.observe(buttonsContainer, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['disabled', 'class', 'style']
+      });
+    }
+    
+    return () => {
+      clearTimeout(timeout);
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, []); // Empty dependency array - only run once on mount
+
+  return (
+    <div 
+      ref={containerRef}
+      className="pt-4 border-t border-white/20 flex flex-col lg:flex-row justify-end gap-5"
+    />
+  );
+}
+
 interface Props {
   isPurchased?: boolean;
 }
@@ -147,96 +234,96 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   const rafRef = useRef<number | null>(null);
   
   // Track changed fields for optimized updates - ONLY when preview tab is active
-  // Skip entirely on editor tab to avoid unnecessary processing
+  // Always run the hook to maintain consistent hook count, but only process when preview is active
   useEffect(() => {
-    // Skip change tracking when on editor tab - no need to track changes
-    if (activeTab !== "preview") {
-      return;
+    // Only track changes when on preview tab
+    if (activeTab === "preview") {
+      if (!fields || fields.length === 0) {
+        previousFieldsRef.current.clear();
+        changedFieldsRef.current = [];
+        return;
+      }
+
+      const changed: string[] = [];
+      const currentValues = new Map<string, string | number | boolean>();
+
+      fields.forEach(field => {
+        const currentValue = field.currentValue ?? "";
+        currentValues.set(field.id, currentValue);
+        
+        const previousValue = previousFieldsRef.current.get(field.id);
+        if (previousValue !== currentValue) {
+          changed.push(field.id);
+        }
+      });
+
+      // Update previous values
+      previousFieldsRef.current = currentValues;
+      changedFieldsRef.current = changed;
+    } else {
+      // On editor tab, just clear changed fields
+      changedFieldsRef.current = [];
     }
-
-    if (!fields || fields.length === 0) {
-      previousFieldsRef.current.clear();
-      return;
-    }
-
-    const changed: string[] = [];
-    const currentValues = new Map<string, string | number | boolean>();
-
-    fields.forEach(field => {
-      const currentValue = field.currentValue ?? "";
-      currentValues.set(field.id, currentValue);
-      
-      const previousValue = previousFieldsRef.current.get(field.id);
-      if (previousValue !== currentValue) {
-        changed.push(field.id);
-    }
-    });
-
-    // Update previous values
-    previousFieldsRef.current = currentValues;
-    changedFieldsRef.current = changed;
-
   }, [fields, activeTab]);
 
   useEffect(() => {
-    // CRITICAL: Only update if preview tab is active - skip entirely if on editor tab
-    if (activeTab !== "preview") {
-      return;
-    }
+    // Always run cleanup to maintain consistent hook count
+    // Only process updates when preview tab is active
+    if (activeTab === "preview") {
+      // Clear any existing timeout and RAF
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
 
-    // Clear any existing timeout and RAF
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-    }
+      // Don't debounce if SVG or fields aren't ready
+      if (!svgText || !fields || fields.length === 0) {
+        return;
+      }
 
-    // Don't debounce if SVG or fields aren't ready
-    if (!svgText || !fields || fields.length === 0) {
-      return;
-    }
+      // If no fields changed, skip update
+      if (changedFieldsRef.current.length === 0) {
+        return;
+      }
 
-    // If no fields changed, skip update
-    if (changedFieldsRef.current.length === 0) {
-      return;
-    }
-
-    // Set a new timeout to update preview after 500ms of inactivity
-    debounceTimeoutRef.current = setTimeout(() => {
-      // Use requestAnimationFrame for smoother updates
-      rafRef.current = requestAnimationFrame(() => {
-        try {
-          // Generate AUTO fields before updating preview (skip for purchased docs)
-          const fieldsWithAutoGenerated = generateAutoFields(fields, isPurchased);
-          
-          // Use current live preview as base for incremental updates (much faster)
-          // If no preview exists yet, use base SVG with fonts
-          const baseForUpdate = livePreview || baseSvgRef.current || svgText;
-          
-          // OPTIMIZED: Only update changed fields instead of all fields
-          const updatedSvg = updateSvgFromFormDataOptimized(
-            baseForUpdate, // Use current preview as base (incremental updates)
-            fieldsWithAutoGenerated,
-            changedFieldsRef.current
-          );
-          
-          setLivePreview(updatedSvg);
-        } catch (error) {
-          console.error('[SvgFormTranslator] ❌ Error updating SVG preview:', error);
-          // Fallback to full update if optimized version fails
+      // Set a new timeout to update preview after 500ms of inactivity
+      debounceTimeoutRef.current = setTimeout(() => {
+        // Use requestAnimationFrame for smoother updates
+        rafRef.current = requestAnimationFrame(() => {
           try {
+            // Generate AUTO fields before updating preview (skip for purchased docs)
             const fieldsWithAutoGenerated = generateAutoFields(fields, isPurchased);
-            const baseSvg = baseSvgRef.current || svgText;
-            const updatedSvg = updateSvgFromFormData(baseSvg, fieldsWithAutoGenerated);
+            
+            // Use current live preview as base for incremental updates (much faster)
+            // If no preview exists yet, use base SVG with fonts
+            const baseForUpdate = livePreview || baseSvgRef.current || svgText;
+            
+            // OPTIMIZED: Only update changed fields instead of all fields
+            const updatedSvg = updateSvgFromFormDataOptimized(
+              baseForUpdate, // Use current preview as base (incremental updates)
+              fieldsWithAutoGenerated,
+              changedFieldsRef.current
+            );
+            
             setLivePreview(updatedSvg);
-          } catch (fallbackError) {
-            console.error('[SvgFormTranslator] ❌ Fallback also failed:', fallbackError);
-            setLivePreview(svgText);
+          } catch (error) {
+            console.error('[SvgFormTranslator] ❌ Error updating SVG preview:', error);
+            // Fallback to full update if optimized version fails
+            try {
+              const fieldsWithAutoGenerated = generateAutoFields(fields, isPurchased);
+              const baseSvg = baseSvgRef.current || svgText;
+              const updatedSvg = updateSvgFromFormData(baseSvg, fieldsWithAutoGenerated);
+              setLivePreview(updatedSvg);
+            } catch (fallbackError) {
+              console.error('[SvgFormTranslator] ❌ Fallback also failed:', fallbackError);
+              setLivePreview(svgText);
+            }
           }
-        }
-      });
-    }, 500); // 500ms debounce delay for better performance
+        });
+      }, 500); // 500ms debounce delay for better performance
+    }
 
     // Cleanup timeout and RAF on unmount or when dependencies change
     return () => {
@@ -247,14 +334,38 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [fields, svgText, fonts, activeTab, livePreview]);
+  }, [fields, svgText, fonts, activeTab, livePreview, isPurchased]);
+
+  // Hide FormPanel buttons when component mounts/updates
+  // MUST be called before any early returns to maintain consistent hook count
+  useEffect(() => {
+    // Only hide buttons if not loading and no error (FormPanel is rendered)
+    if (isLoading || error) return;
+    
+    const hideFormPanelButtons = () => {
+      const formPanel = document.querySelector('[data-form-panel-user]');
+      if (formPanel) {
+        // Find the buttons container (last div with pt-4 border-t)
+        const buttonsContainer = formPanel.querySelector('div.pt-4.border-t.border-white\\/20.flex:last-child');
+        if (buttonsContainer) {
+          (buttonsContainer as HTMLElement).style.display = 'none';
+        }
+      }
+    };
+
+    // Hide buttons after a short delay to ensure FormPanel has rendered
+    const timeout = setTimeout(hideFormPanelButtons, 100);
+    return () => clearTimeout(timeout);
+  }, [activeTab, data, isLoading, error]);
 
   // Handle loading state - show skeleton while template data loads
+  // MUST be after all hooks to maintain consistent hook count
   if (isLoading) {
     return <SvgFormTranslatorSkeleton />;
   }
 
   // Handle error state
+  // MUST be after all hooks to maintain consistent hook count
   if (error) {
     return (
       <div className="flex flex-col gap-5 items-center justify-center h-100">
@@ -305,16 +416,20 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
         </TabsList>
         {/* Keep editor tab always mounted to prevent re-rendering lag when switching back */}
         <div style={{ display: activeTab === "editor" ? "block" : "none" }}>
-          <TabsContent value="editor" forceMount>
-          <FormPanel 
-            test={purchasedData?.test} 
-            tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
-            templateId={isPurchased ? purchasedData?.template : undefined}
-            isPurchased={Boolean(isPurchased)}
-          />
-        </TabsContent>
+          <TabsContent value="editor" forceMount className="space-y-4">
+            <div data-form-panel-user>
+              <FormPanel 
+                test={purchasedData?.test} 
+                tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
+                templateId={isPurchased ? purchasedData?.template : undefined}
+                isPurchased={Boolean(isPurchased)}
+              />
+            </div>
+            {/* Action Buttons - cloned from FormPanel to show in both tabs */}
+            <ActionButtonsRenderer />
+          </TabsContent>
         </div>
-        <TabsContent value="preview">
+        <TabsContent value="preview" className="space-y-4">
           {svgLoading || !svgText ? (
             <PreviewSkeleton />
           ) : (
@@ -329,6 +444,8 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
               </div>
             </div>
           )}
+          {/* Action Buttons - always rendered in preview tab to maintain consistent hook count */}
+          <ActionButtonsRenderer />
         </TabsContent>
       </Tabs>
     </div>

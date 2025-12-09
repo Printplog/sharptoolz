@@ -6,6 +6,7 @@ import {
   Copy,
   PenLine,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import useToolStore from "@/store/formStore";
 import {
   useLocation,
@@ -98,6 +99,8 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
   const [showTestDialog, setShowTestDialog] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isSavingBeforeLeave, setIsSavingBeforeLeave] = useState(false);
+  const [documentProgress, setDocumentProgress] = useState(0);
+  const [isCreatingDocument, setIsCreatingDocument] = useState(false);
   const { isAuthenticated } = useAuthStore();
 
   // Memoize touched fields check to avoid recalculating on every render
@@ -204,6 +207,14 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
       toast.info("Please login to continue.");
       return;
     }
+    
+    // Show progress bar
+    setIsCreatingDocument(true);
+    setDocumentProgress(0);
+    
+    // Simulate progress
+    let progressInterval: NodeJS.Timeout | null = null;
+    
     const trackingField =
       fields?.find((field) => field.isTrackingId) ||
       fields?.find((field) => field.id === "Tracking_ID");
@@ -277,9 +288,39 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
       payload.field_updates = fieldUpdates;
     }
 
-    await mutateFn(payload);
-    if (isPurchased && fieldUpdates.length > 0) {
-      markFieldsSaved(fieldUpdates.map((field) => field.id));
+    // Start progress simulation
+    progressInterval = setInterval(() => {
+      setDocumentProgress((prev) => {
+        if (prev >= 90) {
+          return 90; // Stop at 90% until request completes
+        }
+        return prev + 15;
+      });
+    }, 300);
+
+    try {
+      await mutateFn(payload);
+      // Complete progress
+      if (progressInterval) clearInterval(progressInterval);
+      setDocumentProgress(100);
+      // Wait a moment before hiding
+      setTimeout(() => {
+        setIsCreatingDocument(false);
+        setDocumentProgress(0);
+        // Close dialog only after successful creation
+        setShowTestDialog(false);
+      }, 500);
+      
+      if (isPurchased && fieldUpdates.length > 0) {
+        markFieldsSaved(fieldUpdates.map((field) => field.id));
+      }
+    } catch (error) {
+      // Reset on error
+      if (progressInterval) clearInterval(progressInterval);
+      setIsCreatingDocument(false);
+      setDocumentProgress(0);
+      // Don't close dialog on error - let user see the error and try again
+      throw error;
     }
   };
 
@@ -330,6 +371,28 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
 
   return (
     <>
+    {/* Document Creation Progress Bar */}
+    {isCreatingDocument && (
+      <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-4 mb-4">
+        <div className="flex items-center justify-between text-sm text-white/80">
+          <span className="font-medium">
+            {isPurchased 
+              ? (updatePending ? "Updating Document..." : "Document Updated!")
+              : (createPending ? "Creating Document..." : "Document Created!")
+            }
+          </span>
+          <span className="text-white/60">{documentProgress}%</span>
+        </div>
+        <Progress value={documentProgress} className="h-2" />
+        <p className="text-xs text-white/50 text-center">
+          {documentProgress < 100 
+            ? "Processing your document, please wait..."
+            : "Document ready!"
+          }
+        </p>
+      </div>
+    )}
+    
     <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-6">
       <FormPanelHeader
         isPurchased={isPurchased}
@@ -412,7 +475,7 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
         {!isPurchased ? (
           <Button
             variant="outline"
-            disabled={createPending || updatePending}
+            disabled={createPending || updatePending || isCreatingDocument}
             onClick={() => {
               if (!isAuthenticated) {
                 toast.info("Please login to continue");
@@ -424,8 +487,8 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
             className="py-6 px-10 hover:bg-black/50 hover:text-white"
           >
             <>
-              {createPending ? "Creating Document" : "Create Document"}
-              {createPending ? (
+              {createPending || isCreatingDocument ? "Creating Document" : "Create Document"}
+              {createPending || isCreatingDocument ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 <Upload className="w-4 h-4 ml-1" />
@@ -446,15 +509,15 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
             )}
             <Button
               variant="outline"
-              disabled={createPending || updatePending}
+              disabled={createPending || updatePending || isCreatingDocument}
               onClick={() => {
                 void createDocument(test);
               }}
               className="py-6 px-10 hover:bg-black/50 hover:text-white"
             >
               <>
-                {updatePending ? "Updating Document" : "Update Document"}
-                {updatePending ? (
+                {updatePending || isCreatingDocument ? "Updating Document" : "Update Document"}
+                {updatePending || isCreatingDocument ? (
                   <Loader2 className="animate-spin" />
                 ) : (
                   <Upload className="w-4 h-4 ml-1" />
@@ -482,16 +545,21 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
         />
         <TestDocumentDialog
           open={showTestDialog}
-          onOpenChange={setShowTestDialog}
+          onOpenChange={(open) => {
+            // Only allow closing if not submitting
+            if (!createPending && !updatePending && !isCreatingDocument) {
+              setShowTestDialog(open);
+            }
+          }}
           onCreateTest={() => {
             void createDocument(true);
-            setShowTestDialog(false);
+            // Don't close dialog here - it will close after successful creation
           }}
           onCreatePaid={() => {
             void createDocument(false);
-            setShowTestDialog(false);
+            // Don't close dialog here - it will close after successful creation
           }}
-          isSubmitting={createPending || updatePending}
+          isSubmitting={createPending || updatePending || isCreatingDocument}
         />
       </div>
     </div>
