@@ -5,6 +5,22 @@
 // Disable right-click context menu
 export function disableRightClick() {
   document.addEventListener('contextmenu', (e) => {
+    // Allow right-click on admin routes
+    if (isAdminRoute()) {
+      return;
+    }
+
+    const target = e.target as HTMLElement;
+    // Allow right-click in form fields and contentEditable elements for better UX
+    if (
+      target.tagName === 'INPUT' || 
+      target.tagName === 'TEXTAREA' || 
+      target.isContentEditable ||
+      target.closest('input, textarea, [contenteditable]')
+    ) {
+      return; // Allow right-click in form fields
+    }
+
     e.preventDefault();
     return false;
   }, { capture: true });
@@ -13,6 +29,16 @@ export function disableRightClick() {
 // Disable text selection
 export function disableTextSelection() {
   document.addEventListener('selectstart', (e) => {
+    const target = e.target as HTMLElement;
+    // Allow text selection in form fields and contentEditable elements
+    if (
+      target.tagName === 'INPUT' || 
+      target.tagName === 'TEXTAREA' || 
+      target.isContentEditable ||
+      target.closest('input, textarea, [contenteditable]')
+    ) {
+      return; // Allow selection in form fields and contentEditable
+    }
     e.preventDefault();
     return false;
   }, { capture: true });
@@ -27,7 +53,7 @@ export function disableTextSelection() {
         -ms-user-select: none !important;
         user-select: none !important;
       }
-      input, textarea, [contenteditable] {
+      input, textarea, [contenteditable], [contenteditable] * {
         -webkit-user-select: text !important;
         -moz-user-select: text !important;
         -ms-user-select: text !important;
@@ -42,6 +68,27 @@ export function disableTextSelection() {
 export function disableDevToolsShortcuts() {
   // Use both keydown and keyup to catch all cases
   const blockShortcut = (e: KeyboardEvent) => {
+    const target = e.target as HTMLElement;
+    // Allow all keyboard input in form fields and contentEditable elements
+    if (
+      target.tagName === 'INPUT' || 
+      target.tagName === 'TEXTAREA' || 
+      target.isContentEditable ||
+      target.closest('input, textarea, [contenteditable]')
+    ) {
+      // Only block DevTools shortcuts even in form fields
+      // Allow normal typing and other shortcuts
+      const isDevToolsShortcut = 
+        e.key === 'F12' ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c'));
+      
+      if (!isDevToolsShortcut) {
+        return; // Allow normal typing in form fields
+      }
+    }
+
     // F12 - Open DevTools
     if (e.key === 'F12') {
       e.preventDefault();
@@ -98,7 +145,7 @@ export function disableDevToolsShortcuts() {
       return false;
     }
 
-    // Disable Ctrl+S (Save Page)
+    // Disable Ctrl+S (Save Page) - but allow in form fields
     if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) {
       e.preventDefault();
       e.stopPropagation();
@@ -130,6 +177,11 @@ export function detectDevTools() {
   let devtoolsDetected = false;
   
   setInterval(() => {
+    // Skip detection on admin routes
+    if (isAdminRoute()) {
+      return;
+    }
+
     if (devtoolsDetected) {
       // Keep redirecting if already detected
       window.location.replace('about:blank');
@@ -205,6 +257,11 @@ export function clearConsolePeriodically() {
   let devtoolsDetected = false;
   
   setInterval(() => {
+    // Skip detection on admin routes
+    if (isAdminRoute()) {
+      return;
+    }
+
     if (devtoolsDetected) {
       // Keep redirecting if already detected
       window.location.replace('about:blank');
@@ -334,6 +391,11 @@ export function detectDebugger() {
   let devtoolsDetected = false;
   
   setInterval(() => {
+    // Skip detection on admin routes
+    if (isAdminRoute()) {
+      return;
+    }
+
     if (devtoolsDetected) {
       // Keep redirecting if already detected
       window.location.replace('about:blank');
@@ -376,12 +438,23 @@ export function disablePrintScreen() {
 // Check if we're in development mode
 const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
 
+// Check if we're on an admin route
+const isAdminRoute = () => {
+  if (typeof window === 'undefined') return false;
+  return window.location.pathname.startsWith('/admin');
+};
+
 // Aggressive DevTools detection with multiple reliable methods
 export function aggressiveDevToolsDetection() {
   let devtoolsDetected = false;
   let checkCount = 0;
   
   const redirect = () => {
+    // Skip redirect on admin routes
+    if (isAdminRoute()) {
+      return;
+    }
+
     // Once DevTools is detected, keep redirecting immediately
     if (!devtoolsDetected) {
       devtoolsDetected = true;
@@ -580,6 +653,11 @@ export function aggressiveDevToolsDetection() {
 
   // Run all checks very frequently
   setInterval(() => {
+    // Skip all checks on admin routes
+    if (isAdminRoute()) {
+      return;
+    }
+
     if (devtoolsDetected) {
       redirect(); // Keep redirecting
       return;
@@ -624,6 +702,12 @@ export function initSecurity(options: {
   // Skip security in development mode (allow debugging)
   if (isDevelopment) {
     console.log('%c🔧 Development Mode - Security measures disabled', 'color: orange; font-size: 14px;');
+    return;
+  }
+
+  // Skip security on admin routes (admin needs full functionality)
+  if (isAdminRoute()) {
+    console.log('%c🔧 Admin Route - Security measures disabled', 'color: orange; font-size: 14px;');
     return;
   }
 
