@@ -460,42 +460,52 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "dependencies",
     title: ".depends_ Extension",
-    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters.",
+    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. For text fields, use FieldName.depends_SourceField directly. For image/signature fields, include the type: FieldName.upload.depends_Source or FieldName.sign.depends_Source.",
     codeExamples: [
       { 
-        title: "Simple Copy", 
-        code: "Confirm_Email.text.depends_Email",
-        description: "Copies entire value from Email field"
+        title: "Simple Copy (Text)", 
+        code: "Email.text\nConfirm_Email.depends_Email",
+        description: "Copies entire value from Email field. No field type needed for text dependencies."
       },
       {
         title: "Extract First Word",
-        code: "Full_Name.text\nFirst_Name.text.depends_Full_Name[w1]",
+        code: "Full_Name.text\nFirst_Name.depends_Full_Name[w1]",
         description: "Extracts first word → 'Johnson Jojo' becomes 'Johnson'"
       },
       {
         title: "Extract Second Word",
-        code: "Full_Name.text\nLast_Name.text.depends_Full_Name[w2]",
+        code: "Full_Name.text\nLast_Name.depends_Full_Name[w2]",
         description: "Extracts second word → 'Johnson Jojo' becomes 'Jojo'"
       },
       {
         title: "Extract First Character",
-        code: "Name.text\nInitial.text.depends_Name[ch1]",
+        code: "Name.text\nInitial.depends_Name[ch1]",
         description: "Extracts first character → 'Johnson' becomes 'J'"
       },
       {
         title: "Extract Specific Characters",
-        code: "Name.text\nCode.text.depends_Name[ch1,2,5]",
+        code: "Name.text\nCode.depends_Name[ch1,2,5]",
         description: "Extracts 1st, 2nd, 5th characters → 'Johnson' becomes 'Jos'"
       },
       {
         title: "Extract Character Range",
-        code: "Name.text\nShort.text.depends_Name[ch1-4]",
+        code: "Name.text\nShort.depends_Name[ch1-4]",
         description: "Extracts characters 1 to 4 → 'Johnson' becomes 'John'"
       },
       {
         title: "With Tracking",
-        code: "Customer.text\nDisplay_Name.text.depends_Customer.track_name",
+        code: "Customer.text\nDisplay_Name.depends_Customer.track_name",
         description: "Copies value and tracks with role 'name'"
+      },
+      {
+        title: "Image Dependency (requires .upload)",
+        code: "Photo.upload\nPhoto_Copy.upload.depends_Photo",
+        description: "Photo_Copy automatically copies the image from Photo. For image dependencies, you MUST use .upload.depends_SourceField format. The dependent field is hidden from the form. Field name must be unique."
+      },
+      {
+        title: "Signature Dependency (requires .sign)",
+        code: "Signature.sign\nSignature_Copy.sign.depends_Signature",
+        description: "Signature_Copy automatically copies the signature. For signature dependencies, you MUST use .sign.depends_SourceField format."
       }
     ]
   }, 

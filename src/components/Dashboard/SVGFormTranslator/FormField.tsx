@@ -574,6 +574,10 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
 
     case "upload":
     case "file":
+      // Hide upload fields that have dependencies (they're auto-populated)
+      if (field.dependsOn) {
+        return null;
+      }
       return (
         <div className="space-y-2 w-full">
           {field.helperText && (
