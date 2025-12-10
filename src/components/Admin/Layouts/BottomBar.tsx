@@ -1,4 +1,4 @@
-import { LayoutDashboard, Hammer, Users, LayoutTemplate, Type } from "lucide-react";
+import { LayoutDashboard, Hammer, Users, LayoutTemplate, Type, ArrowLeft } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,11 @@ const navigationItems = [
     label: "Users",
     to: "/admin/users",
   },
+  {
+    icon: ArrowLeft,
+    label: "User",
+    to: "/dashboard",
+  },
   // {
   //   icon: ClipboardList,
   //   label: "Documents",
@@ -46,7 +51,14 @@ export default function BottomBar() {
   return (
     <nav className="fixed bottom-0 z-50 w-full bg-background border-t border-white/10 flex justify-around items-center py-4 lg:hidden">
       {navigationItems.map((item) => {
-        const isActive = pathname.includes(item.to);
+        // Special handling for "Switch to User" link - only active if pathname is exactly /dashboard or starts with /dashboard/ (but not /admin/dashboard)
+        let isActive = false;
+        if (item.to === "/dashboard") {
+          isActive = pathname === "/dashboard" || (pathname.startsWith("/dashboard/") && !pathname.startsWith("/admin/"));
+        } else {
+          // For admin routes, check if pathname includes the route (normal behavior)
+          isActive = pathname.includes(item.to);
+        }
         const Icon = item.icon;
 
         return (

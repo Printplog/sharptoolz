@@ -42,8 +42,9 @@ export function extractFromDependency(
     }
   }
   
-  // Simple field reference (no extraction) - current behavior
-  const fieldValue = allFields[dependsOn];
+  // Simple field reference (no extraction)
+  const baseFieldName = dependsOn.split('[')[0];
+  const fieldValue = allFields[baseFieldName];
   
   // For image and signature fields, return the full value
   if (fieldValue && (typeof fieldValue === 'string' && (fieldValue.startsWith('data:image/') || fieldValue.startsWith('blob:')))) {

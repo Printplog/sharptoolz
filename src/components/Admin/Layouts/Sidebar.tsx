@@ -5,6 +5,7 @@ import {
   Users,
   LayoutTemplate,
   Type,
+  ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -38,6 +39,11 @@ export default function Sidebar() {
       label: "Users",
       to: "/admin/users",
     },
+    {
+      icon: <ArrowLeft className="h-5 w-5" />,
+      label: "Switch to User",
+      to: "/dashboard",
+    },
   ];
 
   return (
@@ -54,7 +60,14 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-2 mt-[40px]">
         {navigationItems.map((item) => {
-          const isActive = pathname.includes(item.to);
+          // Special handling for "Switch to User" link - only active if pathname is exactly /dashboard or starts with /dashboard/ (but not /admin/dashboard)
+          let isActive = false;
+          if (item.to === "/dashboard") {
+            isActive = pathname === "/dashboard" || (pathname.startsWith("/dashboard/") && !pathname.startsWith("/admin/"));
+          } else {
+            // For admin routes, check if pathname includes the route (normal behavior)
+            isActive = pathname.includes(item.to);
+          }
 
           return (
             <div key={item.to}>

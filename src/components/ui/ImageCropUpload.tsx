@@ -122,6 +122,27 @@ export default function ImageCropUpload({
   // Get SVG text from store
   const { svgRaw } = useToolStore();
 
+  // Sync with external currentValue changes (e.g., from dependsOn updates)
+  useEffect(() => {
+    // If currentValue is set externally (e.g., from dependsOn) and is different from our local state
+    if (currentValue && currentValue !== image && (currentValue.startsWith('data:image/') || currentValue.startsWith('blob:'))) {
+      console.log(`[ImageCropUpload.${fieldId}] Syncing with external currentValue change:`, {
+        hasCurrentValue: !!currentValue,
+        currentValueLength: currentValue.length,
+        hasLocalImage: !!image,
+        valuesEqual: currentValue === image
+      });
+      // Update local image state to reflect the external change
+      setImage(currentValue);
+      setOriginalImage(currentValue);
+    } else if (!currentValue && image) {
+      // If currentValue is cleared externally, clear local state
+      console.log(`[ImageCropUpload.${fieldId}] Clearing image due to external currentValue change`);
+      setImage(null);
+      setOriginalImage(null);
+    }
+  }, [currentValue, fieldId]); // Only depend on currentValue and fieldId
+
   // Analyze default image for annotations when component mounts
   useEffect(() => {
     const analyzeDefaultImage = async () => {

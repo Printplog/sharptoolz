@@ -11,6 +11,7 @@ interface ToolStore {
   setName: (name: string) => void;
   setFields: (fields: FormField[], isPurchased?: boolean) => void;
   updateField: (fieldId: string, value: string | number | boolean) => void;
+  notifyDependents: (sourceFieldId: string, value: string | number | boolean) => void;
   uploadFile: (fieldId: string, file: File) => void;
   resetForm: () => void;
   markFieldsSaved: (fieldIds?: string[]) => void;
@@ -76,6 +77,22 @@ const  useToolStore = create<ToolStore>((set, get) => ({
       return {
         fields: newFields,
       };
+    });
+  },
+
+  notifyDependents: (sourceFieldId, value) => {
+    set((state) => {
+      const newFields = state.fields?.map((field) => {
+        // Check if this field depends on the source field
+        if (field.dependsOn) {
+          const baseDependsOn = field.dependsOn.split('[')[0];
+          if (baseDependsOn === sourceFieldId) {
+            return { ...field, currentValue: value, touched: true };
+          }
+        }
+        return field;
+      });
+      return { fields: newFields };
     });
   },
 

@@ -31,6 +31,8 @@ import { extractFromDependency } from "@/lib/utils/fieldExtractor";
 const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; isPurchased?: boolean; tutorial?: Tutorial }> = React.memo(({ field, allFields = [], isPurchased = false, tutorial }) => {
   // Use selector to only subscribe to updateField function, not the entire store
   const updateField = useToolStore((state) => state.updateField);
+  // Get notifyDependents to update dependent fields when an image changes
+  const notifyDependents = useToolStore((state) => state.notifyDependents);
   // Also subscribe to fields to get latest values for dependencies
   const storeFields = useToolStore((state) => state.fields);
   const value = field.currentValue;
@@ -119,17 +121,15 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
   }, [dependencies, fieldsForDependencies]);
 
   // Track dependsOn field value to detect changes
-  // For images, we need to track the actual value, not just a string representation
   const dependsOnValue = useMemo(() => {
     if (!dependsOnFieldId) return null;
     const depField = fieldsForDependencies.find(f => f.id === dependsOnFieldId);
     if (!depField) return null;
-    // Return the actual value (could be image data URL, string, number, etc.)
     return depField.currentValue ?? depField.defaultValue ?? null;
   }, [dependsOnFieldId, fieldsForDependencies]);
 
   // Create a hash/identifier for the dependency value to detect changes
-  // For images, use a substring of the data URL to detect changes without storing the full URL
+  // For images, use a substring of the data URL to detect changes
   const dependsOnValueHash = useMemo(() => {
     if (!dependsOnValue) return '';
     // For image data URLs, use first 100 chars + last 50 chars as a hash to detect changes
@@ -174,12 +174,17 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
-  // Handle dependsOn for non-generation fields (like images, signatures, etc.)
+  // Handle dependsOn for non-image fields (text dependencies)
+  // Note: Image dependencies are now handled directly via notifyDependents when the source image is uploaded
   useEffect(() => {
     // Skip if field has generationRule (handled by above effect)
     if (field.generationRule || !field.dependsOn || isPurchased) return;
     
-    // Build field value map for dependency extraction using latest store values
+    // Skip for image/upload/sign fields - these are handled via notifyDependents
+    const isImageField = field.type === "upload" || field.type === "file" || field.type === "sign";
+    if (isImageField) return;
+    
+    // Build field value map for dependency extraction
     const allFieldValues: Record<string, string | number | boolean | any> = {};
     fieldsForDependencies.forEach((f) => {
       if (f.type === "select" && f.options && f.options.length > 0) {
@@ -189,7 +194,6 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
         allFieldValues[f.id] =
           selected?.displayText ?? selected?.label ?? f.currentValue ?? "";
       } else {
-        // For image fields, use the actual value (data URL), not empty string
         allFieldValues[f.id] = f.currentValue ?? "";
       }
     });
@@ -197,36 +201,20 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     // Extract value from dependency
     const extractedValue = extractFromDependency(field.dependsOn, allFieldValues);
     
-    // For image fields, compare properly (data URLs can be very long)
-    const isImageValue = typeof value === 'string' && (value.startsWith('data:image/') || value.startsWith('blob:'));
-    const isExtractedImage = typeof extractedValue === 'string' && (extractedValue.startsWith('data:image/') || extractedValue.startsWith('blob:'));
-    
-    // Only update if the value has actually changed
-    // For images, do a more thorough comparison
-    let shouldUpdate = false;
-    if (isImageValue && isExtractedImage) {
-      // For images, compare the full data URL
-      shouldUpdate = extractedValue !== value;
-    } else if (isExtractedImage && !isImageValue) {
-      // If dependency has image but current value doesn't, update
-      shouldUpdate = true;
-    } else {
-      // For non-images, simple comparison
-      shouldUpdate = extractedValue !== value && extractedValue !== '';
-    }
-    
-    if (shouldUpdate) {
+    // Only update if value changed and is not empty
+    if (extractedValue !== value && extractedValue !== '') {
       updateField(field.id, extractedValue);
     }
   }, [
     field.id,
+    field.type,
     field.dependsOn,
     field.generationRule,
-    dependsOnValueHash, // Use hash to detect changes (works better for images)
-    value,
+    dependsOnValueHash, // This changes when dependency field changes
     updateField,
     isPurchased,
-    fieldsForDependencies, // Use store fields for latest values
+    fieldsForDependencies,
+    value,
   ]);
   
   // Check if this is the Error_Message field and if Status is "Error Message"
@@ -604,6 +592,8 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
             currentValue={value as string}
             onImageSelect={(fieldId: string, croppedImageDataUrl: string) => {
               updateField(fieldId, croppedImageDataUrl);
+              // Notify dependent fields when an image changes
+              notifyDependents(fieldId, croppedImageDataUrl);
             }}
             svgElementId={field.svgElementId}
             disabled={isFieldDisabled}
@@ -633,6 +623,8 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
             currentValue={value as string}
             onSignatureSelect={(fieldId: string, signatureDataUrl: string) => {
               updateField(fieldId, signatureDataUrl);
+              // Notify dependent fields when a signature changes
+              notifyDependents(fieldId, signatureDataUrl);
             }}
             width={signatureField.signatureWidth || 400}
             height={signatureField.signatureHeight || 150}

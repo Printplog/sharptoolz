@@ -24,6 +24,7 @@ interface GenRuleBuilderProps {
   onOpenChange: (open: boolean) => void;
   trigger: React.ReactNode;
   currentFieldValues?: Record<string, string>; // Current field values from the page
+  defaultTextContent?: string; // Default text content of the element
 }
 
 type RandomType = 'number' | 'letter' | 'both';
@@ -45,9 +46,12 @@ export default function GenRuleBuilder({
   onOpenChange,
   trigger,
   currentFieldValues = {},
+  defaultTextContent,
 }: GenRuleBuilderProps) {
   const [isAuto, setIsAuto] = useState<boolean>(() => value?.startsWith("AUTO:") || false);
-  const [parts, setParts] = useState<PatternPart[]>(() => parsePattern(value));
+  // Strip AUTO: prefix before parsing to avoid showing it as a rule
+  const patternWithoutAuto = value?.startsWith("AUTO:") ? value.substring(5) : value;
+  const [parts, setParts] = useState<PatternPart[]>(() => parsePattern(patternWithoutAuto || ""));
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [countInputs, setCountInputs] = useState<Record<number, string>>({});
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,7 +59,9 @@ export default function GenRuleBuilder({
   // Reset parts when value changes externally
   useEffect(() => {
     if (!open) {
-      setParts(parsePattern(value));
+      // Strip AUTO: prefix before parsing to avoid showing it as a rule
+      const patternWithoutAuto = value?.startsWith("AUTO:") ? value.substring(5) : value;
+      setParts(parsePattern(patternWithoutAuto || ""));
       setCountInputs({}); // Clear count inputs when dropdown closes
       setIsAuto(value?.startsWith("AUTO:") || false);
     }
@@ -148,7 +154,9 @@ export default function GenRuleBuilder({
   }, [parts, isAuto, onChange, onOpenChange]);
 
   const handleCancel = useCallback(() => {
-    setParts(parsePattern(value)); // Reset to original value
+    // Strip AUTO: prefix before parsing to avoid showing it as a rule
+    const patternWithoutAuto = value?.startsWith("AUTO:") ? value.substring(5) : value;
+    setParts(parsePattern(patternWithoutAuto || "")); // Reset to original value
     onOpenChange(false);
   }, [value, onOpenChange]);
 
@@ -164,11 +172,21 @@ export default function GenRuleBuilder({
           "w-[700px] max-w-[90vw] h-[350px]",
           "bg-black/95 backdrop-blur-sm border-white/20",
           "p-3 shadow-xl text-white flex flex-col",
-          "z-[100]"
+          "z-[100] overflow-y-auto custom-scrollbar"
         )}
       >
-      <div className="mb-2 text-sm font-semibold text-white shrink-0">
-        Generation Rule Builder
+      <div className="mb-2 flex flex-col gap-1 shrink-0">
+        <div className="text-sm font-semibold text-white">
+          Generation Rule Builder
+        </div>
+        {defaultTextContent && (
+          <div className="text-xs text-white/60 flex items-center gap-2">
+            <span>Default text:</span>
+            <span className="font-mono text-white/80 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+              {defaultTextContent}
+            </span>
+          </div>
+        )}
       </div>
       
       {/* Two Column Layout */}

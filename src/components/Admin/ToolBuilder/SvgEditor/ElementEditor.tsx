@@ -143,6 +143,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               open={showGenBuilder}
               onOpenChange={setShowGenBuilder}
               currentFieldValues={currentFieldValues}
+              defaultTextContent={element.innerText}
               trigger={
                 <Input
                   value={previewGenRule}

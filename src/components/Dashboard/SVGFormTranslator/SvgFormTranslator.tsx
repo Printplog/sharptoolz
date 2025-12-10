@@ -261,8 +261,9 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
       previousFieldsRef.current = currentValues;
       changedFieldsRef.current = changed;
     } else {
-      // On editor tab, just clear changed fields
+      // On editor tab, clear both refs so next preview visit detects all changes
       changedFieldsRef.current = [];
+      previousFieldsRef.current = new Map(); // Create new Map instead of clear()
     }
   }, [fields, activeTab]);
 
