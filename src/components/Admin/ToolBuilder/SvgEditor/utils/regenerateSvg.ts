@@ -9,10 +9,14 @@ import type { SvgElement } from "@/lib/utils/parseSvgElements";
  * Create a unique identifier for an element to match edited elements with DOM elements
  */
 function getElementKey(element: SvgElement): string {
-  // Prefer ID if available (most reliable)
-  if (element.id) {
-    return `id:${element.id}`;
+  // Prefer originalId if available (handles renamed IDs)
+  if (element.originalId) {
+    return `id:${element.originalId}`;
   }
+  
+  // If originalId is not present, it means the element didn't have an ID originally.
+  // We should NOT use element.id here because the original element won't have it.
+  
   // For elements without ID, use tag + text content + key attributes
   const tag = element.tag;
   const text = element.innerText || '';

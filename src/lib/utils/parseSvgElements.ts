@@ -2,6 +2,7 @@
 
 export type SvgElement = {
   id?: string;
+  originalId?: string;
   tag: string;
   attributes: Record<string, string>;
   innerText?: string;
@@ -32,6 +33,7 @@ export default function parseSvgElements(svgString: string): SvgElement[] {
       return {
         tag,
         id,
+        originalId: id,
         attributes,
         innerText: innerText ? innerText.toLowerCase() : undefined,
       };
