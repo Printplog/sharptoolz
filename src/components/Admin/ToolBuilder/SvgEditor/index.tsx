@@ -1,12 +1,7 @@
 // Main SvgEditor component
 import { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import parseSvgElements, { type SvgElement } from "@/lib/utils/parseSvgElements";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TagInput } from "@/components/ui/tag-input";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getTools, getFonts, addFont } from "@/api/apiEndpoints";
 import { toast } from "sonner";
@@ -16,6 +11,12 @@ import ElementEditor from "./ElementEditor";
 import BannerUpload from "./BannerUpload";
 import FloatingScrollButton from "./FloatingScrollButton";
 import PreviewDialog from "./PreviewDialog";
+import SvgUpload from "./sections/SvgUpload";
+import MetadataSection from "./sections/MetadataSection";
+import FontSelection from "./sections/FontSelection";
+import ToolSelection from "./sections/ToolSelection";
+import TutorialSection from "./sections/TutorialSection";
+import TemplateToggles from "./sections/TemplateToggles";
 import type { Tutorial, Font } from "@/types";
 import { isImageElement, isTextElement, filterEditableElements } from "./utils/svgUtils";
 import { regenerateSvg } from "./utils/regenerateSvg";
@@ -286,378 +287,47 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       </div>
 
       {/* SVG Upload */}
-      <div className="space-y-2">
-        <Label htmlFor="template-svg" className="text-sm font-medium">
-          Upload / Replace SVG
-        </Label>
-        <div className="relative">
-          <input
-            id="template-svg"
-            type="file"
-            accept=".svg"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                handleSvgUpload(file);
-                e.target.value = "";
-              }
-            }}
-          />
-          <label
-            htmlFor="template-svg"
-            className="block w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-white/40 transition-colors overflow-hidden"
-          >
-            {currentSvg ? (
-              <div className="relative w-full h-full group">
-                <div className="w-full h-full flex flex-col items-center justify-center text-white/60">
-                  <svg className="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <div className="text-center text-sm">
-                    <div className="font-medium mb-1">Current SVG loaded</div>
-                    <div className="text-xs opacity-80">Size: {(currentSvg.length / 1024).toFixed(1)} KB</div>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                  <div className="text-center text-white">
-                    <div className="text-sm font-medium">Click to replace SVG</div>
-                    <div className="text-xs opacity-80">Upload a new SVG file</div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-white/60 hover:text-white/80 transition-colors">
-                <div className="w-12 h-12 border-2 border-dashed border-current rounded-full flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-medium">Click to upload SVG</div>
-                  <div className="text-xs opacity-80">Upload an SVG file for this template</div>
-                </div>
-              </div>
-            )}
-          </label>
-        </div>
-        <p className="text-xs text-white/50">
-          Upload a new SVG file to replace the existing template. Existing form field definitions will auto-refresh.
-        </p>
-      </div>
+      <SvgUpload currentSvg={currentSvg} onSvgUpload={handleSvgUpload} />
 
-      {/* Template Name */}
-      <div className="space-y-2">
-        <Label htmlFor="template-name" className="text-sm font-medium">
-          Template Name
-        </Label>
-        <Input
-          id="template-name"
-          placeholder="Enter template name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
-        />
-      </div>
-
-      {/* Keywords */}
-      <div className="space-y-2">
-        <Label htmlFor="template-keywords" className="text-sm font-medium">
-          Keywords
-        </Label>
-        <TagInput
-          tags={keywordsTags}
-          onChange={setKeywordsTags}
-          placeholder="Add a keyword and press Enter"
-          className="w-full"
-        />
-        <p className="text-xs text-white/50">
-          These tags help trigger tool-specific logic. Press Enter or comma to add keywords.
-        </p>
-      </div>
+      {/* Template Name & Keywords */}
+      <MetadataSection 
+        name={name}
+        keywords={keywordsTags}
+        onNameChange={setName}
+        onKeywordsChange={setKeywordsTags}
+      />
 
       {/* Font Selection */}
-      <div className="space-y-2">
-        <Label htmlFor="template-fonts" className="text-sm font-medium">
-          Fonts (Optional)
-        </Label>
-        <div className="space-y-3">
-          <Select
-            value=""
-            onValueChange={(value) => {
-              if (value && !selectedFontIds.includes(value)) {
-                setSelectedFontIds([...selectedFontIds, value]);
-              }
-            }}
-          >
-            <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0">
-              <SelectValue placeholder="Select fonts used in this template" />
-            </SelectTrigger>
-            <SelectContent className="bg-background border border-white/10 z-[999999]">
-              {fonts.length === 0 ? (
-                <SelectItem value="none" disabled className="text-white/60 italic">
-                  No fonts available. Upload a font first.
-                </SelectItem>
-              ) : (
-                fonts
-                  .filter((font) => !selectedFontIds.includes(font.id))
-                  .map((font) => (
-                    <SelectItem
-                      key={font.id}
-                      value={font.id}
-                      className="text-white/90 hover:bg-white/5 focus:bg-white/5 focus:text-white/80"
-                    >
-                      {font.name}
-                    </SelectItem>
-                  ))
-              )}
-            </SelectContent>
-          </Select>
-          {selectedFontIds.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {selectedFontIds.map((fontId) => {
-                const font = fonts.find((f) => f.id === fontId);
-                return (
-                  <div
-                    key={fontId}
-                    className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-md text-sm"
-                  >
-                    <span>{font?.name || fontId}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedFontIds(selectedFontIds.filter((id) => id !== fontId));
-                      }}
-                      className="text-white/60 hover:text-white"
-                    >
-                      ×
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          {/* Font Upload */}
-          <div className="border-t border-white/10 pt-3">
-            <p className="text-xs text-white/60 mb-2">Need to upload a new font?</p>
-            <input
-              type="file"
-              accept=".ttf,.otf,.woff,.woff2"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const formData = new FormData();
-                  formData.append('name', file.name.replace(/\.[^/.]+$/, ''));
-                  formData.append('font_file', file);
-                  fontUploadMutation.mutate(formData);
-                  e.target.value = '';
-                }
-              }}
-              className="hidden"
-              id="font-upload-editor"
-              disabled={fontUploadMutation.isPending}
-            />
-            <label
-              htmlFor="font-upload-editor"
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-md text-sm cursor-pointer transition-colors"
-            >
-              {fontUploadMutation.isPending ? 'Uploading...' : '📤 Upload Font'}
-            </label>
-          </div>
-        </div>
-        <p className="text-xs text-white/50">
-          Select fonts used in your SVG template. Fonts will be embedded in previews and downloads.
-        </p>
-      </div>
+      <FontSelection
+        fonts={fonts}
+        selectedFontIds={selectedFontIds}
+        onFontSelect={(fontId) => setSelectedFontIds([...selectedFontIds, fontId])}
+        onFontRemove={(fontId) => setSelectedFontIds(selectedFontIds.filter(id => id !== fontId))}
+        fontUploadMutation={fontUploadMutation}
+      />
 
       {/* Tool Selection */}
-      <div className="space-y-2">
-        <Label htmlFor="tool-select" className="text-sm font-medium">
-          Tool
-        </Label>
-        <Select value={selectedTool || "none"} onValueChange={(value) => setSelectedTool(value === "none" ? "" : value)}>
-          <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0">
-            <SelectValue placeholder="Select a tool (optional)" />
-          </SelectTrigger>
-          <SelectContent className="bg-background border border-white/10 ">
-            <SelectItem value="none" className="text-white/90 focus:bg-white/5 focus:text-white/80">
-              <span className="text-white/60 italic">No tool</span>
-            </SelectItem>
-            {tools.map((tool) => (
-              <SelectItem key={tool.id} value={tool.id} className="text-white/90 hover:bg-white/5 focus:bg-white/5 focus:text-white/80">
-                <div className="flex items-center gap-2">
-                  <span>{tool.name}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {selectedTool && (
-          <div className="text-xs text-white/60">
-            Selected: {tools.find(tool => tool.id === selectedTool)?.name}
-          </div>
-        )}
-      </div>
+      <ToolSelection
+        tools={tools}
+        selectedTool={selectedTool}
+        onToolChange={setSelectedTool}
+      />
 
       {/* Tutorial Section */}
-      <div className="relative">
-        <div 
-          className={`
-            p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
-            ${tutorialUrlState.trim() 
-              ? 'border-white/50 bg-white/10' 
-              : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/8'
-            }
-          `}
-        >
-          <div className="flex items-center gap-3">
-            <div className={`
-              w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200
-              ${tutorialUrlState.trim() ? 'bg-white text-black' : 'bg-white/20 text-white/60'}
-            `}>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-white">Tutorial</h3>
-              <p className="text-sm text-white/60">Add a tutorial video to help users</p>
-            </div>
-          </div>
-          
-          <div className="mt-4 space-y-4">
-            {/* Tutorial URL */}
-            <div className="space-y-2">
-              <Label htmlFor="tutorial-url" className="text-sm font-medium">
-                Tutorial URL
-              </Label>
-              <Input
-                id="tutorial-url"
-                placeholder="https://youtube.com/watch?v=..."
-                value={tutorialUrlState}
-                onChange={(e) => setTutorialUrlState(e.target.value)}
-                className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
-              />
-            </div>
+      <TutorialSection
+        tutorialUrl={tutorialUrlState}
+        tutorialTitle={tutorialTitleState}
+        onUrlChange={setTutorialUrlState}
+        onTitleChange={setTutorialTitleState}
+      />
 
-            {/* Tutorial Title */}
-            <div className="space-y-2">
-              <Label htmlFor="tutorial-title" className="text-sm font-medium">
-                Tutorial Title
-              </Label>
-              <Input
-                id="tutorial-title"
-                placeholder="How to use the tool"
-                value={tutorialTitleState}
-                onChange={(e) => setTutorialTitleState(e.target.value)}
-                className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Hot Template Toggle */}
-      <div className="relative">
-        <div 
-          className={`
-            p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
-            ${isHot 
-              ? 'border-orange-500/50 bg-orange-500/10 shadow-lg shadow-orange-500/20' 
-              : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10'
-            }
-          `}
-          onClick={() => setIsHot(!isHot)}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`
-                text-2xl transition-all duration-200
-                ${isHot ? 'animate-pulse' : 'grayscale opacity-50'}
-              `}>
-                🔥
-              </div>
-              <div>
-                <div className="font-medium text-sm">
-                  Hot Template
-                </div>
-                <div className="text-xs text-white/60">
-                  Featured prominently on homepage
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center">
-              <Checkbox 
-                id="hot-template"
-                checked={isHot}
-                onCheckedChange={(checked) => setIsHot(checked === true)}
-                className="pointer-events-none"
-              />
-            </div>
-          </div>
-          
-          {isHot && (
-            <div className="mt-2 pt-2 border-t border-orange-500/20">
-              <div className="flex items-center gap-1 text-xs text-orange-400">
-                <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
-                This template will be featured on the homepage
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Active Template Toggle */}
-      <div className="relative">
-        <div 
-          className={`
-            p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
-            ${isActiveState 
-              ? 'border-green-500/50 bg-green-500/10 shadow-lg shadow-green-500/20' 
-              : 'border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10'
-            }
-          `}
-          onClick={() => setIsActiveState(!isActiveState)}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`
-                text-2xl transition-all duration-200
-                ${isActiveState ? 'animate-pulse' : 'grayscale opacity-50'}
-              `}>
-                ✓
-              </div>
-              <div>
-                <div className="font-medium text-sm">
-                  Published
-                </div>
-                <div className="text-xs text-white/60">
-                  Make this template visible to users in listings
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center">
-              <Checkbox 
-                id="active-template"
-                checked={isActiveState}
-                onCheckedChange={(checked) => setIsActiveState(checked === true)}
-                className="pointer-events-none"
-              />
-            </div>
-          </div>
-          
-          {!isActiveState && (
-            <div className="mt-2 pt-2 border-t border-red-500/20">
-              <div className="flex items-center gap-1 text-xs text-red-400">
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                This template will be hidden from users
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Hot & Active Template Toggles */}
+      <TemplateToggles
+        isHot={isHot}
+        isActive={isActiveState}
+        onHotChange={setIsHot}
+        onActiveChange={setIsActiveState}
+      />
 
       {/* Banner Upload */}
       <BannerUpload 

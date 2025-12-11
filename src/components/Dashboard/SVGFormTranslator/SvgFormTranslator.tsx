@@ -311,16 +311,16 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
         <div style={{ display: activeTab === "editor" ? "block" : "none" }}>
           <TabsContent value="editor" forceMount className="space-y-4">
             <div data-form-panel-user>
-              <FormPanel 
-                test={purchasedData?.test} 
-                tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
-                templateId={isPurchased ? purchasedData?.template : undefined}
-                isPurchased={Boolean(isPurchased)}
-              />
+          <FormPanel 
+            test={purchasedData?.test} 
+            tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
+            templateId={isPurchased ? purchasedData?.template : undefined}
+            isPurchased={Boolean(isPurchased)}
+          />
             </div>
             {/* Action Buttons - cloned from FormPanel to show in both tabs */}
             <ActionButtonsRenderer />
-          </TabsContent>
+        </TabsContent>
         </div>
         <TabsContent value="preview" className="space-y-4">
           {svgLoading || !svgText ? (
