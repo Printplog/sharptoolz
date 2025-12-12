@@ -594,8 +594,8 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
             fieldId={field.id}
             fieldName={field.helperText ? "" : field.name}
             currentValue={value as string}
-            onImageSelect={(fieldId: string, croppedImageDataUrl: string) => {
-              updateField(fieldId, croppedImageDataUrl);
+            onImageSelect={(fieldId: string, croppedImageDataUrl: string, rotation?: number) => {
+              updateField(fieldId, croppedImageDataUrl, rotation ? { rotation } : undefined);
               // Notify dependent fields when an image changes
               notifyDependents(fieldId, croppedImageDataUrl);
             }}

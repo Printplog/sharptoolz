@@ -63,7 +63,7 @@ export interface FormField {
   type: string; // Field type extracted from extension
   svgElementId?: string;
   defaultValue?: string | number | boolean;
-  currentValue?: string | number | boolean;
+  currentValue?: string | number | boolean | null;
   max?: number; // Max value for number OR max length for text
   options?: SelectOption[]; // If options exist, it's automatically a select field
   dependsOn?: string; // Field dependency with optional extraction (e.g., "field_name[w1]", "field[ch1-4]")
@@ -86,6 +86,7 @@ export interface FormField {
   requiresGrayscale?: boolean; // Whether uploaded images should be forced to grayscale
   grayscaleIntensity?: number; // Grayscale intensity percentage (0-100)
   touched?: boolean; // Frontend-only flag to know if user modified the field
+  rotation?: number; // Rotation in degrees for image fields (applied via transform)
 } // Updated for signature fields, date formatting, generation/extraction, and helper text
 
 export type FieldUpdate = {
