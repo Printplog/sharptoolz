@@ -27,6 +27,11 @@ export interface AnnotationResult {
     height: number;
     aspectRatio: number;
   };
+  center?: {
+    x: number;
+    y: number;
+  };
+  rotation?: number;
   borderThickness: number;
   bluePixelCount: number;
   confidence: number;
@@ -43,15 +48,27 @@ export class AnnotationDetector {
   
   private readonly COLOR_TOLERANCE = 100;
 
+  private readonly RED_COLORS: BlueColor[] = [
+    { r: 255, g: 0, b: 0, name: 'Pure Red' },
+    { r: 200, g: 0, b: 0, name: 'Dark Red' },
+    { r: 255, g: 50, b: 50, name: 'Light Red' }
+  ];
+
+  private readonly GREEN_COLORS: BlueColor[] = [
+    { r: 0, g: 255, b: 0, name: 'Pure Green' },
+    { r: 0, g: 200, b: 0, name: 'Dark Green' },
+    { r: 50, g: 255, b: 50, name: 'Light Green' }
+  ];
+
   /**
    * Check if a pixel matches any of the defined blue colors
    */
   private isBluePixel(r: number, g: number, b: number): boolean {
-    for (const blueColor of this.BLUE_COLORS) {
+    for (const color of this.BLUE_COLORS) {
       if (
-        Math.abs(r - blueColor.r) <= this.COLOR_TOLERANCE &&
-        Math.abs(g - blueColor.g) <= this.COLOR_TOLERANCE &&
-        Math.abs(b - blueColor.b) <= this.COLOR_TOLERANCE
+        Math.abs(r - color.r) <= this.COLOR_TOLERANCE &&
+        Math.abs(g - color.g) <= this.COLOR_TOLERANCE &&
+        Math.abs(b - color.b) <= this.COLOR_TOLERANCE
       ) {
         return true;
       }
@@ -60,13 +77,47 @@ export class AnnotationDetector {
   }
 
   /**
-   * Detect blue border annotations in image data
+   * Check if a pixel matches any of the defined red colors
    */
-  detectBlueBorderAnnotations(imageData: ImageData): AnnotationResult | null {
+  private isRedPixel(r: number, g: number, b: number): boolean {
+    for (const color of this.RED_COLORS) {
+      if (
+        Math.abs(r - color.r) <= this.COLOR_TOLERANCE &&
+        Math.abs(g - color.g) <= this.COLOR_TOLERANCE &&
+        Math.abs(b - color.b) <= this.COLOR_TOLERANCE
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Check if a pixel matches any of the defined green colors
+   */
+  private isGreenPixel(r: number, g: number, b: number): boolean {
+    for (const color of this.GREEN_COLORS) {
+      if (
+        Math.abs(r - color.r) <= this.COLOR_TOLERANCE &&
+        Math.abs(g - color.g) <= this.COLOR_TOLERANCE &&
+        Math.abs(b - color.b) <= this.COLOR_TOLERANCE
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Detect annotations (blue border, red dot, green line) in image data
+   */
+  detectAnnotations(imageData: ImageData): AnnotationResult | null {
     const { data, width, height } = imageData;
     
-    // Find blue pixels
-    const bluePixels: { x: number; y: number; r: number; g: number; b: number }[] = [];
+    // Store pixels of interest
+    const bluePixels: { x: number; y: number }[] = [];
+    const redPixels: { x: number; y: number }[] = [];
+    const greenPixels: { x: number; y: number }[] = [];
     
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
@@ -74,9 +125,17 @@ export class AnnotationDetector {
         const r = data[index];
         const g = data[index + 1];
         const b = data[index + 2];
+        const a = data[index + 3];
+
+        // Skip transparent pixels
+        if (a < 50) continue;
         
         if (this.isBluePixel(r, g, b)) {
-          bluePixels.push({ x, y, r, g, b });
+          bluePixels.push({ x, y });
+        } else if (this.isRedPixel(r, g, b)) {
+          redPixels.push({ x, y });
+        } else if (this.isGreenPixel(r, g, b)) {
+          greenPixels.push({ x, y });
         }
       }
     }
@@ -85,7 +144,7 @@ export class AnnotationDetector {
       return null;
     }
     
-    // Find border boundaries
+    // --- Blue Border Analysis ---
     const xs = bluePixels.map(p => p.x);
     const ys = bluePixels.map(p => p.y);
     
@@ -94,10 +153,47 @@ export class AnnotationDetector {
     const minY = Math.min(...ys);
     const maxY = Math.max(...ys);
     
-    // Calculate content dimensions (area inside the blue border)
     const contentWidth = maxX - minX;
     const contentHeight = maxY - minY;
     const borderThickness = Math.min(minX, minY, width - maxX, height - maxY);
+
+    // --- Red Dot Analysis (Center) ---
+    let center = { x: width / 2, y: height / 2 }; // Default to image center
+    if (redPixels.length > 0) {
+      const sumX = redPixels.reduce((sum, p) => sum + p.x, 0);
+      const sumY = redPixels.reduce((sum, p) => sum + p.y, 0);
+      center = {
+        x: sumX / redPixels.length,
+        y: sumY / redPixels.length
+      };
+    }
+
+    // --- Green Line Analysis (Rotation) ---
+    let rotation = 0;
+    if (greenPixels.length > 10) { // Need enough pixels for a line
+      // Find leftmost and rightmost green pixels to determine slope
+      // Sort by x coordinate
+      greenPixels.sort((a, b) => a.x - b.x);
+      
+      // Take average of first 10% and last 10% to be more robust against noise
+      const sampleSize = Math.max(1, Math.floor(greenPixels.length * 0.1));
+      
+      const startPixels = greenPixels.slice(0, sampleSize);
+      const endPixels = greenPixels.slice(-sampleSize);
+      
+      const startX = startPixels.reduce((sum, p) => sum + p.x, 0) / sampleSize;
+      const startY = startPixels.reduce((sum, p) => sum + p.y, 0) / sampleSize;
+      
+      const endX = endPixels.reduce((sum, p) => sum + p.x, 0) / sampleSize;
+      const endY = endPixels.reduce((sum, p) => sum + p.y, 0) / sampleSize;
+      
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+      
+      // Calculate angle in degrees
+      // Math.atan2 returns angle in radians between -PI and PI
+      rotation = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+    }
     
     const result: AnnotationResult = {
       imageWidth: width,
@@ -113,12 +209,21 @@ export class AnnotationDetector {
         height: contentHeight,
         aspectRatio: contentWidth / contentHeight
       },
+      center,
+      rotation,
       borderThickness,
       bluePixelCount: bluePixels.length,
-      confidence: Math.min(1, bluePixels.length / (width * height * 0.01)) // Simple confidence metric
+      confidence: Math.min(1, bluePixels.length / (width * height * 0.01))
     };
     
     return result;
+  }
+
+  /**
+   * Legacy method alias for backward compatibility
+   */
+  detectBlueBorderAnnotations(imageData: ImageData): AnnotationResult | null {
+    return this.detectAnnotations(imageData);
   }
 
   /**

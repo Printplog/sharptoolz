@@ -221,6 +221,14 @@ export default function ImageCropUpload({
             canvas.width = annotationResult.content.width;
             canvas.height = annotationResult.content.height;
             
+            // Apply rotation if detected
+            if (annotationResult.rotation) {
+              ctx.save();
+              ctx.translate(canvas.width / 2, canvas.height / 2);
+              ctx.rotate((annotationResult.rotation * Math.PI) / 180);
+              ctx.translate(-canvas.width / 2, -canvas.height / 2);
+            }
+            
             ctx.drawImage(
               image,
               scaledCrop.x,
@@ -232,6 +240,10 @@ export default function ImageCropUpload({
               annotationResult.content.width,
               annotationResult.content.height
             );
+
+            if (annotationResult.rotation) {
+              ctx.restore();
+            }
           } else {
             // Use the actual crop dimensions
             canvas.width = scaledCrop.width;
