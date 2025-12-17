@@ -86,20 +86,11 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
           // Apply rotation if present
           if (field.rotation !== undefined && field.rotation !== null) {
-            // To rotate around center, we need the element's center coordinates
-            const x = parseFloat(el.getAttribute("x") || "0");
-            const y = parseFloat(el.getAttribute("y") || "0");
-            const width = parseFloat(el.getAttribute("width") || "0");
-            const height = parseFloat(el.getAttribute("height") || "0");
-            
-            if (width > 0 && height > 0) {
-              const cx = x + width / 2;
-              const cy = y + height / 2;
-              el.setAttribute("transform", `rotate(${field.rotation}, ${cx}, ${cy})`);
-            } else {
-              // Fallback if dimensions are missing/invalid (unlikely directly on image tags usually)
-              // Inspect typical placeholder usage. Often placeholders have set width/height.
-            }
+            // Use CSS transform-box and transform-origin for reliable center rotation
+            // This avoids manual calculation of cx, cy which can be tricky with units/viewBox
+            el.style.transformBox = "fill-box";
+            el.style.transformOrigin = "center";
+            el.setAttribute("transform", `rotate(${field.rotation})`);
           }
           break;
         }

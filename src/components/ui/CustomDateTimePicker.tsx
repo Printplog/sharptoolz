@@ -23,15 +23,16 @@ export default function CustomDateTimePicker({
 }: CustomDateTimePickerProps) {
   // Parse the format to determine what components are needed
   // Check in order of most specific to least specific to avoid conflicts
+  // Check for components using standard format tokens
   const hasDate = /[YMD]/.test(format);
-  // For minute: look for mm specifically (not MM or MMM)
-  const hasMinute = /\bmm\b/.test(format);
-  // For second: look for ss specifically
-  const hasSecond = /\bss\b/.test(format);
-  // For hour: look for HH, H (24-hour) or hh, h (12-hour)
+  // Minute: mm or m
+  const hasMinute = /mm?/.test(format);
+  // Second: ss or s
+  const hasSecond = /ss?/.test(format);
+  // Hour: HH, H (24-hour) or hh, h (12-hour)
   const hasHour = /[Hh]/.test(format);
-  // Check if it's 12-hour format (lowercase h or presence of AM/PM)
-  const is12Hour = /[ha]/.test(format) || /[Aa]/.test(format);
+  // Check if it's 12-hour format (lowercase h or presence of AM/PM markers A/a)
+  const is12Hour = /h/.test(format) || /[Aa]/.test(format);
   const hasMeridian = /[Aa]/.test(format);
 
   // Parse initial value or use current date/time

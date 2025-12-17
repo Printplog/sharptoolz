@@ -365,7 +365,19 @@ export default function ImageCropUpload({
     try {
       const croppedImageDataUrl = await getCroppedImg(image, completedCrop);
       const processedImageDataUrl = await applyGrayscaleToImage(croppedImageDataUrl);
+      
+      // Debug: Log the rotation being passed
+      console.log('[ImageCropUpload] Confirming crop with rotation:', {
+        fieldId,
+        hasAnnotationResult: !!annotationResult,
+        rotation: annotationResult?.rotation,
+        center: annotationResult?.center
+      });
+      
       onImageSelect(fieldId, processedImageDataUrl, annotationResult?.rotation);
+      
+      // Close the dialog
+      setIsDialogOpen(false);
       
       setOriginalImage(null);
       setOriginalFile(null);
@@ -377,7 +389,7 @@ export default function ImageCropUpload({
     } catch (error) {
       console.error('Crop failed:', error);
     }
-  }, [image, completedCrop, getCroppedImg, onImageSelect, fieldId, applyGrayscaleToImage]);
+  }, [image, completedCrop, getCroppedImg, onImageSelect, fieldId, applyGrayscaleToImage, annotationResult]);
 
   const handleRotateLeft = useCallback(() => {
     setRotation(prev => prev - 90);

@@ -1,5 +1,6 @@
 // Main SvgEditor component
-import { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 import parseSvgElements, { type SvgElement } from "@/lib/utils/parseSvgElements";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -280,14 +281,29 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // Debounce elements changes to prevent lag during rapid editing (e.g. unslided/typed rotation)
+  const debouncedElements = useDebounce(elements, 300);
+  
+  // Memoize the preview generation
+  const previewSvg = useMemo(() => {
+    return regenerateSvg(
+      currentSvg, 
+      debouncedElements,
+      selectedElementIndex !== null ? elements[selectedElementIndex] : null
+    );
+  }, [currentSvg, debouncedElements, selectedElementIndex, elements]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between pb-5 border-b border-white/10">
         <h2 className="text-xl font-semibold">SVG Editor</h2>
       </div>
 
-      {/* SVG Upload */}
-      <SvgUpload currentSvg={currentSvg} onSvgUpload={handleSvgUpload} />
+      {/* SVG Upload & Preview */}
+      <SvgUpload 
+        currentSvg={previewSvg} 
+        onSvgUpload={handleSvgUpload} 
+      />
 
       {/* Template Name & Keywords */}
       <MetadataSection 

@@ -71,7 +71,11 @@ function findMatchingElement(
  * Regenerate SVG string from edited elements
  * Elements are matched by ID/identity, not index, so reordering doesn't change content
  */
-export function regenerateSvg(currentSvg: string, elements: SvgElement[]): string {
+export function regenerateSvg(
+  currentSvg: string, 
+  elements: SvgElement[], 
+  highlightElement?: SvgElement | null
+): string {
   try {
     // Parse the original SVG
     const parser = new DOMParser();
@@ -162,6 +166,17 @@ export function regenerateSvg(currentSvg: string, elements: SvgElement[]): strin
         // Update text content if applicable
         if (typeof editedEl.innerText === 'string') {
           matchingOriginalEl.textContent = editedEl.innerText;
+        }
+
+        // --- Apply Highlight if this is the selected element ---
+        if (highlightElement && 
+            (editedEl === highlightElement || 
+             (editedEl.id && highlightElement.id && editedEl.id === highlightElement.id) ||
+             editedEl === highlightElement // Fallback for reference check
+            )) {
+          const currentStyle = matchingOriginalEl.getAttribute("style") || "";
+          // Green dashed outline for high visibility against most backgrounds
+          matchingOriginalEl.setAttribute("style", `${currentStyle}; outline: 2px dashed #4ade80; outline-offset: 2px;`);
         }
         
         updatedElements.add(matchingOriginalEl);

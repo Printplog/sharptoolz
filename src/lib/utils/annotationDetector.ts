@@ -4,12 +4,7 @@
  * Detects blue border annotations in images to extract content dimensions
  */
 
-export interface BlueColor {
-  r: number;
-  g: number;
-  b: number;
-  name: string;
-}
+
 
 export interface BorderDetection {
   left: number;
@@ -38,74 +33,44 @@ export interface AnnotationResult {
 }
 
 export class AnnotationDetector {
-  private readonly BLUE_COLORS: BlueColor[] = [
-    { r: 0, g: 0, b: 255, name: 'Pure Blue' },
-    { r: 0, g: 100, b: 255, name: 'Light Blue' },
-    { r: 0, g: 0, b: 200, name: 'Dark Blue' },
-    { r: 50, g: 50, b: 255, name: 'Blue-ish' },
-    { r: 0, g: 150, b: 255, name: 'Sky Blue' }
-  ];
-  
-  private readonly COLOR_TOLERANCE = 100;
-
-  private readonly RED_COLORS: BlueColor[] = [
-    { r: 255, g: 0, b: 0, name: 'Pure Red' },
-    { r: 200, g: 0, b: 0, name: 'Dark Red' },
-    { r: 255, g: 50, b: 50, name: 'Light Red' }
-  ];
-
-  private readonly GREEN_COLORS: BlueColor[] = [
-    { r: 0, g: 255, b: 0, name: 'Pure Green' },
-    { r: 0, g: 200, b: 0, name: 'Dark Green' },
-    { r: 50, g: 255, b: 50, name: 'Light Green' }
-  ];
+  // Threshold for color dominance checks to filter out gray/noise
+  private readonly DOMINANCE_THRESHOLD = 40;
+  private readonly MIN_BRIGHTNESS = 80;
 
   /**
-   * Check if a pixel matches any of the defined blue colors
+   * Check if a pixel is predominantly blue
+   * Criteria: Blue channel must be significantly higher than Red and Green
    */
   private isBluePixel(r: number, g: number, b: number): boolean {
-    for (const color of this.BLUE_COLORS) {
-      if (
-        Math.abs(r - color.r) <= this.COLOR_TOLERANCE &&
-        Math.abs(g - color.g) <= this.COLOR_TOLERANCE &&
-        Math.abs(b - color.b) <= this.COLOR_TOLERANCE
-      ) {
-        return true;
-      }
-    }
-    return false;
+    return (
+      b > this.MIN_BRIGHTNESS &&
+      b > r + this.DOMINANCE_THRESHOLD &&
+      b > g + this.DOMINANCE_THRESHOLD
+    );
   }
 
   /**
-   * Check if a pixel matches any of the defined red colors
+   * Check if a pixel is predominantly red
+   * Criteria: Red channel must be significantly higher than Green and Blue
    */
   private isRedPixel(r: number, g: number, b: number): boolean {
-    for (const color of this.RED_COLORS) {
-      if (
-        Math.abs(r - color.r) <= this.COLOR_TOLERANCE &&
-        Math.abs(g - color.g) <= this.COLOR_TOLERANCE &&
-        Math.abs(b - color.b) <= this.COLOR_TOLERANCE
-      ) {
-        return true;
-      }
-    }
-    return false;
+    return (
+      r > this.MIN_BRIGHTNESS &&
+      r > g + this.DOMINANCE_THRESHOLD &&
+      r > b + this.DOMINANCE_THRESHOLD
+    );
   }
 
   /**
-   * Check if a pixel matches any of the defined green colors
+   * Check if a pixel is predominantly green
+   * Criteria: Green channel must be significantly higher than Red and Blue
    */
   private isGreenPixel(r: number, g: number, b: number): boolean {
-    for (const color of this.GREEN_COLORS) {
-      if (
-        Math.abs(r - color.r) <= this.COLOR_TOLERANCE &&
-        Math.abs(g - color.g) <= this.COLOR_TOLERANCE &&
-        Math.abs(b - color.b) <= this.COLOR_TOLERANCE
-      ) {
-        return true;
-      }
-    }
-    return false;
+    return (
+      g > this.MIN_BRIGHTNESS &&
+      g > r + this.DOMINANCE_THRESHOLD &&
+      g > b + this.DOMINANCE_THRESHOLD
+    );
   }
 
   /**
@@ -169,30 +134,55 @@ export class AnnotationDetector {
     }
 
     // --- Green Line Analysis (Rotation) ---
+    // Robust Slope Method
+    // We calculate the angle of the Green Line itself from left to right.
+    // To ensure precision:
+    // 1. We ignore the first and last 10% of pixels to avoid edge noise/outliers.
+    // 2. We use the averages of the next 20% chunks to establish stable start/end points.
     let rotation = 0;
-    if (greenPixels.length > 10) { // Need enough pixels for a line
-      // Find leftmost and rightmost green pixels to determine slope
-      // Sort by x coordinate
+    if (greenPixels.length > 20) {
+      // Sort in reading order (left to right) to determine direction
       greenPixels.sort((a, b) => a.x - b.x);
       
-      // Take average of first 10% and last 10% to be more robust against noise
-      const sampleSize = Math.max(1, Math.floor(greenPixels.length * 0.1));
+      const total = greenPixels.length;
       
-      const startPixels = greenPixels.slice(0, sampleSize);
-      const endPixels = greenPixels.slice(-sampleSize);
+      // Define sampling windows (10-30% and 70-90%)
+      const startIdx = Math.floor(total * 0.1);
+      const startLen = Math.floor(total * 0.2);
+      const endIdx = Math.floor(total * 0.7);
       
-      const startX = startPixels.reduce((sum, p) => sum + p.x, 0) / sampleSize;
-      const startY = startPixels.reduce((sum, p) => sum + p.y, 0) / sampleSize;
+      // Calculate start cluster centroid
+      let startSumX = 0, startSumY = 0;
+      for(let i=0; i<startLen; i++) {
+        startSumX += greenPixels[startIdx + i].x;
+        startSumY += greenPixels[startIdx + i].y;
+      }
+      const startX = startSumX / startLen;
+      const startY = startSumY / startLen;
       
-      const endX = endPixels.reduce((sum, p) => sum + p.x, 0) / sampleSize;
-      const endY = endPixels.reduce((sum, p) => sum + p.y, 0) / sampleSize;
+      // Calculate end cluster centroid
+      let endSumX = 0, endSumY = 0;
+      for(let i=0; i<startLen; i++) {
+        endSumX += greenPixels[endIdx + i].x;
+        endSumY += greenPixels[endIdx + i].y;
+      }
+      const endX = endSumX / startLen;
+      const endY = endSumY / startLen;
       
       const deltaX = endX - startX;
       const deltaY = endY - startY;
       
       // Calculate angle in degrees
-      // Math.atan2 returns angle in radians between -PI and PI
+      // A horizontal line from left to right is 0 degrees.
       rotation = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+      
+      // Debug: Log the calculated rotation
+      console.log('[AnnotationDetector] Robust Slope Rotation:', {
+        startX, startY,
+        endX, endY,
+        deltaX, deltaY,
+        rotation
+      });
     }
     
     const result: AnnotationResult = {

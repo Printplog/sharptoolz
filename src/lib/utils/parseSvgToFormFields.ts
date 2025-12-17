@@ -18,6 +18,7 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
     const name = baseId.replace(/_/g, " ");
     let type = id.split(".")[0];
     let max: number | undefined;
+    let dateFormat: string | undefined;
     const svgElementId = id;
 
     // If it's a select option
@@ -35,6 +36,17 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
     for (const part of parts.slice(1)) {
       if (part.startsWith("max_")) {
         max = parseInt(part.replace("max_", ""));
+      } else if (part.startsWith("format_")) {
+        // Extract format and replace underscores with spaces (common convention for IDs)
+        // e.g. format_YYYY-MM-DD_HH:mm -> YYYY-MM-DD HH:mm
+        const rawFormat = part.replace("format_", "");
+        // If the format contains typical time separators like colon, it might be preserved
+        // But if it uses underscores for spaces, we convert them
+        if (rawFormat.includes("_")) {
+           dateFormat = rawFormat.replace(/_/g, " ");
+        } else {
+           dateFormat = rawFormat;
+        }
       } else if (
         [
           "text", "textarea", "checkbox", "date", "upload", "number",
@@ -52,7 +64,8 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
       svgElementId,
       defaultValue: type === "checkbox" ? false : textContent,
       currentValue: type === "checkbox" ? false : textContent,
-      ...(max ? { max } : {})
+      ...(max ? { max } : {}),
+      ...(dateFormat ? { dateFormat } : {})
     };
   }
 
