@@ -303,6 +303,16 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       <SvgUpload 
         currentSvg={previewSvg} 
         onSvgUpload={handleSvgUpload} 
+        onSelectElement={(id) => {
+          const index = elements.findIndex(el => el.id === id);
+          if (index >= 0) {
+            handleElementSelect(index);
+            // Wait for DOM update then scroll
+            setTimeout(() => {
+              elementRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }
+        }}
       />
 
       {/* Template Name & Keywords */}

@@ -1,6 +1,8 @@
 // ElementNavigation component for selecting SVG elements
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import {
   DndContext,
@@ -295,6 +297,7 @@ export default function ElementNavigation({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -322,7 +325,20 @@ export default function ElementNavigation({
   }
 
   // Create display list based on current expanded state
-  const displayList = createDisplayList(elements, expandedGroups);
+  const allItems = createDisplayList(elements, expandedGroups);
+  
+  // Filter list based on search query
+  const displayList = searchQuery.trim() === "" 
+    ? allItems 
+    : allItems.filter(item => {
+        if (item.type === 'group') {
+          return item.groupName?.toLowerCase().includes(searchQuery.toLowerCase());
+        }
+        const name = item.element?.id || `${item.element?.tag} ${item.originalIndex! + 1}`;
+        return name.toLowerCase().includes(searchQuery.toLowerCase());
+      });
+
+  const isSearching = searchQuery.trim() !== "";
 
   function handleDragStart(event: DragStartEvent) {
     const id = event.active.id as string;
@@ -447,13 +463,23 @@ export default function ElementNavigation({
           Select Element to Edit
         </h3>
         <div className="text-xs text-white/60 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1">
-            <span className="text-primary">⋮⋮</span>
-            <span>Drag to reorder</span>
-          </span>
-          <span className="text-white/40">•</span>
           <span>{elements.length} element{elements.length !== 1 ? 's' : ''}</span>
         </div>
+      </div>
+
+      <div className="relative mb-4">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/40" />
+        <Input
+          placeholder="Search by ID or type..."
+          className="pl-9 bg-white/5 border-white/10 h-9 text-xs focus:ring-primary/50"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {isSearching && (
+          <div className="absolute right-3 top-2.5 text-[10px] text-primary/80 font-medium">
+            Search active - Drag-and-drop disabled
+          </div>
+        )}
       </div>
       
       <DndContext

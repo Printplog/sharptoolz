@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { RotateCcw, Move } from "lucide-react";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
@@ -22,10 +24,12 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
   ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [] }, ref) => {
     const [showGenBuilder, setShowGenBuilder] = useState(false);
 
-    // --- Normalize legacy / duplicated .gen.gen_ patterns once on load ---
     useEffect(() => {
       const id = element.id || "";
       const parts = id.split(".");
+
+      // Focus ID editor if this element was just selected (optional UX)
+      // We can use a ref for this if we want to be fancy.
 
       // If we have "... .gen .gen_XXX ..." collapse to "... .gen_XXX ..."
       if (parts.length >= 3 && parts[1] === "gen" && parts[2].startsWith("gen_")) {
@@ -341,7 +345,29 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         {/* Transform Controls (Rotate, Scale, Translate) */}
         {!isGenField && (
         <div className="space-y-4 pt-2 border-t border-white/10">
-          <Label className="text-sm font-medium">Transform</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Move className="w-3 h-3 opacity-50" />
+              Transform
+            </Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-[10px] text-white/40 hover:text-white"
+              onClick={() => {
+                onUpdate(index, {
+                  attributes: {
+                    ...element.attributes,
+                    style: (element.attributes.style || "").replace(/transform:[^;]+;?/, "").replace(/transform-box:[^;]+;?/, "").replace(/transform-origin:[^;]+;?/, "").replace(/;;/g, ";"),
+                    transform: ""
+                  }
+                });
+              }}
+            >
+              <RotateCcw className="w-3 h-3 mr-1" />
+              Reset
+            </Button>
+          </div>
           
           <div className="grid grid-cols-2 gap-3 bg-white/5 p-3 rounded-lg">
             {/* Translate X/Y */}
