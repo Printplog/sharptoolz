@@ -1,6 +1,5 @@
 // Main SvgEditor component
-import { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
-import { useDebounce } from "@/lib/hooks/useDebounce";
+import { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import parseSvgElements, { type SvgElement } from "@/lib/utils/parseSvgElements";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,15 +8,19 @@ import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import ElementNavigation from "./ElementNavigation";
 import ElementEditor from "./ElementEditor";
-import BannerUpload from "./BannerUpload";
 import FloatingScrollButton from "./FloatingScrollButton";
 import PreviewDialog from "./PreviewDialog";
 import SvgUpload from "./sections/SvgUpload";
-import MetadataSection from "./sections/MetadataSection";
-import FontSelection from "./sections/FontSelection";
-import ToolSelection from "./sections/ToolSelection";
-import TutorialSection from "./sections/TutorialSection";
-import TemplateToggles from "./sections/TemplateToggles";
+import SettingsDialog from "./sections/SettingsDialog";
+import DocsPanel from "./DocsPanel";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { BookOpen, Eye } from "lucide-react";
 import type { Tutorial, Font } from "@/types";
 import { isImageElement, isTextElement, filterEditableElements } from "./utils/svgUtils";
 import { regenerateSvg } from "./utils/regenerateSvg";
@@ -281,157 +284,154 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Debounce elements changes to prevent lag during rapid editing (e.g. unslided/typed rotation)
-  const debouncedElements = useDebounce(elements, 300);
+
   
-  // Memoize the preview generation
-  const previewSvg = useMemo(() => {
-    return regenerateSvg(
-      currentSvg, 
-      debouncedElements,
-      selectedElementIndex !== null ? elements[selectedElementIndex] : null
-    );
-  }, [currentSvg, debouncedElements, selectedElementIndex, elements]);
+
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between pb-5 border-b border-white/10">
         <h2 className="text-xl font-semibold">SVG Editor</h2>
-      </div>
+        <div className="flex items-center gap-3">
+           <SettingsDialog 
+              name={name}
+              keywords={keywordsTags}
+              onNameChange={setName}
+              onKeywordsChange={setKeywordsTags}
+              fonts={fonts}
+              selectedFontIds={selectedFontIds}
+              onFontSelect={(id) => setSelectedFontIds([...selectedFontIds, id])}
+              onFontRemove={(id) => setSelectedFontIds(selectedFontIds.filter(fid => fid !== id))}
+              fontUploadMutation={fontUploadMutation}
+              tools={tools}
+              selectedTool={selectedTool}
+              onToolChange={setSelectedTool}
+              tutorialUrl={tutorialUrlState}
+              tutorialTitle={tutorialTitleState}
+              onUrlChange={setTutorialUrlState}
+              onTitleChange={setTutorialTitleState}
+              isHot={isHot}
+              isActive={isActiveState}
+              onHotChange={setIsHot}
+              onActiveChange={setIsActiveState}
+              bannerImage={bannerImage}
+              onBannerUpload={handleBannerUpload}
+           />
+           
+           <Dialog>
+             <DialogTrigger asChild>
+               <Button variant="outline" className="gap-2">
+                 <BookOpen className="h-4 w-4" />
+                 Docs
+               </Button>
+             </DialogTrigger>
+             <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+               <div className="p-6 overflow-y-auto flex-1 relative custom-scrollbar">
+                 <DocsPanel />
+               </div>
+             </DialogContent>
+           </Dialog>
 
-      {/* SVG Upload & Preview */}
-      <SvgUpload 
-        currentSvg={previewSvg} 
-        onSvgUpload={handleSvgUpload} 
-        onSelectElement={(id) => {
-          const index = elements.findIndex(el => el.id === id);
-          if (index >= 0) {
-            handleElementSelect(index);
-            // Wait for DOM update then scroll
-            setTimeout(() => {
-              elementRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-          }
-        }}
-      />
+           <Button 
+             onClick={() => setShowPreviewDialog(true)}
+             variant="outline"
+             className="gap-2"
+           >
+             <Eye className="h-4 w-4" />
+             Final Preview
+           </Button>
 
-      {/* Template Name & Keywords */}
-      <MetadataSection 
-        name={name}
-        keywords={keywordsTags}
-        onNameChange={setName}
-        onKeywordsChange={setKeywordsTags}
-      />
-
-      {/* Font Selection */}
-      <FontSelection
-        fonts={fonts}
-        selectedFontIds={selectedFontIds}
-        onFontSelect={(fontId) => setSelectedFontIds([...selectedFontIds, fontId])}
-        onFontRemove={(fontId) => setSelectedFontIds(selectedFontIds.filter(id => id !== fontId))}
-        fontUploadMutation={fontUploadMutation}
-      />
-
-      {/* Tool Selection */}
-      <ToolSelection
-        tools={tools}
-        selectedTool={selectedTool}
-        onToolChange={setSelectedTool}
-      />
-
-      {/* Tutorial Section */}
-      <TutorialSection
-        tutorialUrl={tutorialUrlState}
-        tutorialTitle={tutorialTitleState}
-        onUrlChange={setTutorialUrlState}
-        onTitleChange={setTutorialTitleState}
-      />
-
-      {/* Hot & Active Template Toggles */}
-      <TemplateToggles
-        isHot={isHot}
-        isActive={isActiveState}
-        onHotChange={setIsHot}
-        onActiveChange={setIsActiveState}
-      />
-
-      {/* Banner Upload */}
-      <BannerUpload 
-        bannerImage={bannerImage}
-        onUpload={handleBannerUpload}
-      />
-
-      {/* Element Selection - Show loading skeleton when SVG is loading */}
-      {isSvgLoading ? (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="h-5 w-40 bg-white/5 rounded animate-pulse"></div>
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-16 w-full bg-white/5 rounded-lg animate-pulse"></div>
-              ))}
-            </div>
-          </div>
+           {onSave && (
+              <Button 
+                onClick={handleSave} 
+                disabled={!name.trim() || isLoading}
+                className="min-w-32"
+              >
+                {isLoading ? "Saving..." : "Save Template"}
+              </Button>
+           )}
         </div>
-      ) : (
-        <>
-          <ElementNavigation 
-            elements={elements}
-            onElementClick={handleElementSelect}
-            onElementReorder={handleElementReorder}
-            selectedElementIndex={selectedElementIndex}
-            isTextElement={isTextElement}
-            isImageElement={isImageElement}
-          />
-
-          {/* Show only selected element */}
-          {selectedElementIndex !== null && elements[selectedElementIndex] && (
-            <div className="space-y-4">
-              <ElementEditor
-                element={elements[selectedElementIndex]}
-                index={selectedElementIndex}
-                onUpdate={updateElement}
-                isTextElement={isTextElement}
-                isImageElement={isImageElement}
-                allElements={elements}
-                ref={(el: HTMLDivElement | null) => {
-                  elementRefs.current[selectedElementIndex] = el;
-                }}
-              />
-            </div>
-          )}
-
-          {/* Show message when no element is selected */}
-          {selectedElementIndex === null && (
-            <div className="text-center py-8 text-white/60">
-              <p>Select an element from above to start editing</p>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Action Buttons at Bottom */}
-      <div className="flex justify-center gap-4 pt-6 border-t border-white/10">
-        {/* Preview Button */}
-        <Button 
-          onClick={() => setShowPreviewDialog(true)}
-          variant="outline"
-          className="min-w-32 px-8 py-2"
-        >
-          Preview
-        </Button>
-        
-        {/* Save Template Button */}
-        {onSave && (
-          <Button 
-            onClick={handleSave} 
-            disabled={!name.trim() || isLoading}
-            className="min-w-32 px-8 py-2"
-          >
-            {isLoading ? "Saving..." : "Save Template"}
-          </Button>
-        )}
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Col: Navigation (List) */}
+        <div className="lg:col-span-6 space-y-4">
+             {/* Show loading skeleton when SVG is loading */}
+            {isSvgLoading ? (
+                <div className="space-y-4">
+                <div className="h-5 w-40 bg-white/5 rounded animate-pulse"></div>
+                <div className="space-y-2">
+                    {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-16 w-full bg-white/5 rounded-lg animate-pulse"></div>
+                    ))}
+                </div>
+                </div>
+            ) : (
+                <ElementNavigation 
+                    elements={elements}
+                    onElementClick={(index) => {
+                       handleElementSelect(index);
+                    }}
+                    onElementReorder={handleElementReorder}
+                    selectedElementIndex={selectedElementIndex}
+                    isTextElement={isTextElement}
+                    isImageElement={isImageElement}
+                />
+            )}
+            
+            {!currentSvg && (
+                <div className="p-8 border border-dashed border-white/20 rounded-xl text-center text-white/40">
+                   <p>Upload an SVG to view elements</p>
+                </div>
+            )}
+        </div>
+
+        {/* Right Col: Sticky Preview */}
+        <div className="lg:col-span-6 sticky top-6">
+            <SvgUpload 
+                currentSvg={currentSvg} 
+                onSvgUpload={handleSvgUpload} 
+                onSelectElement={(id) => {
+                    const index = elements.findIndex(el => el.id === id);
+                    if (index >= 0) {
+                        handleElementSelect(index);
+                    }
+                }}
+                elements={elements}
+                activeElementId={selectedElementIndex !== null ? elements[selectedElementIndex]?.id : null}
+            />
+        </div>
+      </div>
+
+      {/* Element Editor Dialog */}
+      <Dialog 
+        open={selectedElementIndex !== null} 
+        onOpenChange={(open) => {
+           if (!open) setSelectedElementIndex(null);
+        }}
+      >
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar">
+           {selectedElementIndex !== null && elements[selectedElementIndex] && (
+              <>
+                 <DialogHeader>
+                    <DialogTitle>Edit Element</DialogTitle>
+                 </DialogHeader>
+                 <ElementEditor
+                    element={elements[selectedElementIndex]}
+                    index={selectedElementIndex}
+                    onUpdate={updateElement}
+                    isTextElement={isTextElement}
+                    isImageElement={isImageElement}
+                    allElements={elements}
+                    ref={(el: HTMLDivElement | null) => {
+                        elementRefs.current[selectedElementIndex] = el;
+                    }}
+                />
+              </>
+           )}
+        </DialogContent>
+      </Dialog>
+
 
       {/* Floating Scroll to Top Button */}
       <FloatingScrollButton show={showScrollTop} onClick={scrollToTop} />
@@ -441,7 +441,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
         open={showPreviewDialog}
         onOpenChange={setShowPreviewDialog}
         svgContent={regenerateSvg(currentSvg, elements)}
-        formFields={formFields} // Use backend form fields instead of extracting from elements
+        formFields={formFields} 
         templateName={name}
         fonts={fonts.filter(f => selectedFontIds.includes(f.id))}
       />

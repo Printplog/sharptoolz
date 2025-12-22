@@ -1,6 +1,5 @@
 import { getTemplateForAdmin, getTemplateSvgForAdmin, updateTemplate } from '@/api/apiEndpoints';
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
-import DocsPanel from '@/components/Admin/ToolBuilder/SvgEditor/DocsPanel';
 import errorMessage from '@/lib/utils/errorMessage';
 import type { Template, TemplateUpdatePayload } from '@/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -206,8 +205,7 @@ export default function SvgTemplateEditor() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+        <div className="w-full">
             <SvgEditor 
               ref={svgEditorRef}
               fonts={data?.fonts || []}
@@ -227,10 +225,6 @@ export default function SvgTemplateEditor() {
                 // Simplified - no automatic section selection
               }}
             />
-          </div>
-          <div className="lg:col-span-1">
-            <DocsPanel />
-          </div>
         </div>
       </div>
     </>

@@ -1,17 +1,26 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ZoomIn, ZoomOut, RefreshCw } from "lucide-react";
+import { useSvgLiveUpdate } from "../hooks/useSvgLiveUpdate";
+import type { SvgElement } from "@/lib/utils/parseSvgElements";
 
 interface SvgUploadProps {
   currentSvg: string | null;
   onSvgUpload: (file: File) => void;
   onSelectElement?: (id: string) => void;
+  elements?: SvgElement[];
+  activeElementId?: string | null;
 }
 
-export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement }: SvgUploadProps) {
+export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, elements = [], activeElementId }: SvgUploadProps) {
   const [zoom, setZoom] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Use the live update hook to modify the DOM imperatively
+  useSvgLiveUpdate(containerRef as React.RefObject<HTMLDivElement>, elements, activeElementId);
+
   const handlePreviewClick = (e: React.MouseEvent) => {
     if (!onSelectElement) return;
     
@@ -107,6 +116,7 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement }: 
                 }}
                 className="[&_svg]:max-w-full [&_svg]:max-h-[600px] [&_svg]:h-auto [&_svg]:w-auto"
                 dangerouslySetInnerHTML={{ __html: currentSvg }} 
+                ref={containerRef} 
               />
             </div>
           ) : (

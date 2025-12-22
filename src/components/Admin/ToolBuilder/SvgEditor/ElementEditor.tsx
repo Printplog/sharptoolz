@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Move } from "lucide-react";
+import { RotateCcw, RotateCw, Move, Minus, Plus } from "lucide-react";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
@@ -159,7 +159,8 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       let rotate = getVal(/rotate\s*\(\s*(-?\d+\.?\d*)/);
       let scale = getVal(/scale\s*\(\s*(-?\d+\.?\d*)/);
       let translateX = getVal(/translate\s*\(\s*(-?\d+\.?\d*)/); // Capture 1st arg
-      let translateY = getVal(/translate\s*\([^\)]*?[\s,]+(-?\d+\.?\d*)\s*\)/); // Capture 2nd arg
+      // Fix regex to be less strict about closing parenthesis and handle units implicitly by parseFloat
+      let translateY = getVal(/translate\s*\([^,]+,\s*(-?\d+\.?\d*)/); // Capture 2nd arg
 
       // 2. Fallback to matrix decomposition if explicit values are missing
       // matrix(a, b, c, d, e, f)
@@ -370,31 +371,85 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           </div>
           
           <div className="grid grid-cols-2 gap-3 bg-white/5 p-3 rounded-lg">
-            {/* Translate X/Y */}
+            {/* Translate X */}
             <div className="space-y-1">
               <Label className="text-xs text-white/60">Position X (px)</Label>
-              <Input
-                type="number"
-                value={currentTransform.translateX || 0}
-                onChange={(e) => updateTransform('translateX', parseFloat(e.target.value) || 0)}
-                className="h-8 bg-white/10 border-white/20 text-xs"
-              />
+              <div className="flex items-center gap-1">
+                 <Button
+                    variant="glass" size="icon" 
+                    className="h-8 w-8 shrink-0 text-white/60 hover:text-white"
+                    onClick={() => updateTransform('translateX', (currentTransform.translateX || 0) - 1)}
+                 >
+                    <Minus className="w-3 h-3" />
+                 </Button>
+                 <Input
+                    type="number"
+                    value={currentTransform.translateX || 0}
+                    onChange={(e) => updateTransform('translateX', parseFloat(e.target.value) || 0)}
+                    className="h-8 bg-white/10 border-white/20 text-xs text-center px-1"
+                 />
+                 <Button
+                    variant="glass" size="icon" 
+                    className="h-8 w-8 shrink-0 text-white/60 hover:text-white"
+                    onClick={() => updateTransform('translateX', (currentTransform.translateX || 0) + 1)}
+                 >
+                    <Plus className="w-3 h-3" />
+                 </Button>
+              </div>
             </div>
+
+            {/* Translate Y */}
             <div className="space-y-1">
               <Label className="text-xs text-white/60">Position Y (px)</Label>
-              <Input
-                type="number"
-                value={currentTransform.translateY || 0}
-                onChange={(e) => updateTransform('translateY', parseFloat(e.target.value) || 0)}
-                className="h-8 bg-white/10 border-white/20 text-xs"
-              />
+              <div className="flex items-center gap-1">
+                 <Button
+                    variant="glass" size="icon" 
+                    className="h-8 w-8 shrink-0 text-white/60 hover:text-white"
+                    onClick={() => updateTransform('translateY', (currentTransform.translateY || 0) - 1)}
+                 >
+                    <Minus className="w-3 h-3" />
+                 </Button>
+                 <Input
+                    type="number"
+                    value={currentTransform.translateY || 0}
+                    onChange={(e) => updateTransform('translateY', parseFloat(e.target.value) || 0)}
+                    className="h-8 bg-white/10 border-white/20 text-xs text-center px-1"
+                 />
+                 <Button
+                    variant="glass" size="icon" 
+                    className="h-8 w-8 shrink-0 text-white/60 hover:text-white"
+                    onClick={() => updateTransform('translateY', (currentTransform.translateY || 0) + 1)}
+                 >
+                    <Plus className="w-3 h-3" />
+                 </Button>
+              </div>
             </div>
 
             {/* Scale */}
-             <div className="col-span-2 space-y-2">
-              <div className="flex justify-between">
+             <div className="col-span-2 space-y-2 pt-2 border-t border-white/10">
+              <div className="flex justify-between items-center">
                 <Label className="text-xs text-white/60">Scale</Label>
-                <span className="text-xs text-white/60">{currentTransform.scale}x</span>
+                <div className="flex items-center gap-2">
+                   <Button
+                      variant="glass" size="icon" className="h-6 w-6 shrink-0 text-white/60 hover:text-white"
+                      onClick={() => {
+                        const newScale = Math.max(0.1, (currentTransform.scale || 1) - 0.1);
+                        updateTransform('scale', Math.round(newScale * 10) / 10);
+                      }}
+                   >
+                      <Minus className="w-3 h-3" />
+                   </Button>
+                   <span className="text-xs text-white/60 w-8 text-center">{currentTransform.scale.toFixed(1)}x</span>
+                   <Button
+                      variant="glass" size="icon" className="h-6 w-6 shrink-0 text-white/60 hover:text-white"
+                      onClick={() => {
+                        const newScale = (currentTransform.scale || 1) + 0.1;
+                        updateTransform('scale', Math.round(newScale * 10) / 10);
+                      }}
+                   >
+                      <Plus className="w-3 h-3" />
+                   </Button>
+                </div>
               </div>
               <div className="flex gap-2 items-center">
                  <Slider
@@ -408,21 +463,53 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               </div>
             </div>
 
-            {/* Scale & Rotate Inputs */}
-            <div className="col-span-2 space-y-2">
-               <div className="flex justify-between">
+            {/* Rotation */}
+            <div className="col-span-2 space-y-2 pt-2 border-t border-white/10">
+               <div className="flex justify-between items-center">
                 <Label className="text-xs text-white/60">Rotation</Label>
-                <span className="text-xs text-white/60">{Math.round(currentTransform.rotate)}°</span>
+                <div className="flex items-center gap-2">
+                    <Button
+                      variant="glass" size="icon" className="h-6 w-6 shrink-0 text-white/60 hover:text-white"
+                      title="Rotate Counter-Clockwise"
+                      onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) - 1)}
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                    </Button>
+                    <span className="text-xs text-white/60 w-8 text-center">{Math.round(currentTransform.rotate)}°</span>
+                    <Button
+                      variant="glass" size="icon" className="h-6 w-6 shrink-0 text-white/60 hover:text-white"
+                      title="Rotate Clockwise"
+                      onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) + 1)}
+                    >
+                      <RotateCw className="w-3 h-3" />
+                    </Button>
+                </div>
               </div>
                <div className="flex gap-2 items-center">
+                 <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 px-0 text-white/40"
+                    onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) - 45)}
+                 >
+                    -45
+                 </Button>
                  <Slider
                   value={[currentTransform.rotate]}
-                  min={0}
-                  max={360}
+                  min={-180}
+                  max={180}
                   step={1}
                   onValueChange={(vals) => updateTransform('rotate', vals[0])}
                   className="flex-1"
                 />
+                 <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 px-0 text-white/40"
+                    onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) + 45)}
+                 >
+                    +45
+                 </Button>
               </div>
             </div>
           </div>

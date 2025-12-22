@@ -175,10 +175,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
 
   return (
     <div 
-      className="bg-white/5 border border-white/10 rounded-lg p-4 overflow-auto custom-scrollbar sticky top-20"
-      style={{
-        maxHeight: 'calc(100vh - 100px)',
-      }}
+      className="overflow-auto custom-scrollbar h-full"
     >
       <h2 className="text-lg font-semibold mb-4">SVG Editor Documentation</h2>
       
