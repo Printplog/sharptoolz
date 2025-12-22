@@ -13,12 +13,7 @@ import PreviewDialog from "./PreviewDialog";
 import SvgUpload from "./sections/SvgUpload";
 import SettingsDialog from "./sections/SettingsDialog";
 import DocsPanel from "./DocsPanel";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import { Eye } from "lucide-react";
 import type { Tutorial, Font } from "@/types";
 import { isImageElement, isTextElement, filterEditableElements } from "./utils/svgUtils";
