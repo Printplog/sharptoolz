@@ -240,7 +240,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     return (
       <div
         ref={ref}
-        className="border p-4 rounded-md bg-white/5 border-white/10 space-y-3"
+        className="space-y-4"
       >
         <div className="text-sm font-medium text-white/80 capitalize">
           {baseId}

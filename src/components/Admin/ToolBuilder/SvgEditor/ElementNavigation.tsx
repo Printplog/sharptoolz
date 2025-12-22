@@ -128,7 +128,7 @@ const SortableElementButton = memo(({
           <span className="text-xs leading-none inline-block">⋮⋮</span>
         </span>
         <span className="pointer-events-none">{elementType}</span>
-        <span className="truncate max-w-20 pointer-events-none">{displayName}</span>
+        <span className="truncate flex-1 text-left pointer-events-none">{displayName}</span>
       </Button>
     </div>
   );
@@ -300,7 +300,7 @@ function GroupButton({
           ⋮⋮
         </span>
         <span className="pointer-events-none">📋</span>
-        <span className="truncate max-w-20 pointer-events-none">{groupName}</span>
+        <span className="truncate flex-1 text-left pointer-events-none">{groupName}</span>
         <span className="pointer-events-none text-xs opacity-60">({elementCount})</span>
       </Button>
     </div>
@@ -516,7 +516,7 @@ function ElementNavigationComponent({
           items={displayList.map(item => item.id)}
           strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 auto-rows-fr">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 auto-rows-fr">
             {displayList.map((item) => {
               if (item.type === 'group') {
                 return (

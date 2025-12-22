@@ -18,13 +18,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { BookOpen, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import type { Tutorial, Font } from "@/types";
 import { isImageElement, isTextElement, filterEditableElements } from "./utils/svgUtils";
 import { regenerateSvg } from "./utils/regenerateSvg";
 import type { FormField } from "@/types";
+import { CollapsiblePanel } from "./components/CollapsiblePanel";
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 
 interface SvgEditorProps {
   svgRaw: string;
@@ -65,6 +67,10 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Layout State
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [rightPanelOrder, setRightPanelOrder] = useState(['preview', 'docs']);
 
   // Fetch tools for the dropdown
   const { data: tools = [] } = useQuery({
@@ -227,6 +233,9 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
 
   const handleElementSelect = useCallback((index: number) => {
     setSelectedElementIndex(index);
+    if (index !== null) {
+      setIsEditorOpen(true);
+    }
     
     // Notify parent component about selection for docs context
     if (onElementSelect && index >= 0 && index < elements.length) {
@@ -284,10 +293,19 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id && over?.id) {
+      setRightPanelOrder((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   
-
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between pb-5 border-b border-white/10">
@@ -318,20 +336,6 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
               onBannerUpload={handleBannerUpload}
            />
            
-           <Dialog>
-             <DialogTrigger asChild>
-               <Button variant="outline" className="gap-2">
-                 <BookOpen className="h-4 w-4" />
-                 Docs
-               </Button>
-             </DialogTrigger>
-             <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
-               <div className="p-6 overflow-y-auto flex-1 relative custom-scrollbar">
-                 <DocsPanel />
-               </div>
-             </DialogContent>
-           </Dialog>
-
            <Button 
              onClick={() => setShowPreviewDialog(true)}
              variant="outline"
@@ -353,9 +357,9 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Col: Navigation (List) */}
-        <div className="lg:col-span-6 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start h-full">
+        {/* Left Col: Navigation (List) & Editor */}
+        <div className="flex flex-col gap-4">
              {/* Show loading skeleton when SVG is loading */}
             {isSvgLoading ? (
                 <div className="space-y-4">
@@ -367,71 +371,115 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                 </div>
                 </div>
             ) : (
-                <ElementNavigation 
-                    elements={elements}
-                    onElementClick={(index) => {
-                       handleElementSelect(index);
-                    }}
-                    onElementReorder={handleElementReorder}
-                    selectedElementIndex={selectedElementIndex}
-                    isTextElement={isTextElement}
-                    isImageElement={isImageElement}
-                />
-            )}
-            
-            {!currentSvg && (
-                <div className="p-8 border border-dashed border-white/20 rounded-xl text-center text-white/40">
-                   <p>Upload an SVG to view elements</p>
-                </div>
+                <>
+                  <CollapsiblePanel 
+                    id="elements" 
+                    title="Elements" 
+                    defaultOpen={true}
+                    className="max-h-[50vh] flex flex-col"
+                  >
+                     <div className="overflow-y-auto custom-scrollbar max-h-[40vh] pr-2">
+                        <ElementNavigation 
+                            elements={elements}
+                            onElementClick={(index) => {
+                              handleElementSelect(index);
+                            }}
+                            onElementReorder={handleElementReorder}
+                            selectedElementIndex={selectedElementIndex}
+                            isTextElement={isTextElement}
+                            isImageElement={isImageElement}
+                        />
+                         {!currentSvg && (
+                            <div className="p-8 border border-dashed border-white/20 rounded-xl text-center text-white/40 mt-4">
+                              <p>Upload an SVG to view elements</p>
+                            </div>
+                        )}
+                     </div>
+                  </CollapsiblePanel>
+
+                  <CollapsiblePanel 
+                    id="editor" 
+                    title="Element Editor" 
+                    isOpen={isEditorOpen}
+                    onOpenChange={setIsEditorOpen}
+                  >
+                     {selectedElementIndex !== null && elements[selectedElementIndex] ? (
+                        <ElementEditor
+                          element={elements[selectedElementIndex]}
+                          index={selectedElementIndex}
+                          onUpdate={updateElement}
+                          isTextElement={isTextElement}
+                          isImageElement={isImageElement}
+                          allElements={elements}
+                          ref={(el: HTMLDivElement | null) => {
+                              elementRefs.current[selectedElementIndex] = el;
+                          }}
+                        />
+                     ) : (
+                       <div className="p-8 text-center text-white/40">
+                         <p>Select an element to edit</p>
+                       </div>
+                     )}
+                  </CollapsiblePanel>
+                </>
             )}
         </div>
 
-        {/* Right Col: Sticky Preview */}
-        <div className="lg:col-span-6 sticky top-6">
-            <SvgUpload 
-                currentSvg={currentSvg} 
-                onSvgUpload={handleSvgUpload} 
-                onSelectElement={(id) => {
-                    const index = elements.findIndex(el => el.id === id);
-                    if (index >= 0) {
-                        handleElementSelect(index);
-                    }
-                }}
-                elements={elements}
-                activeElementId={selectedElementIndex !== null ? elements[selectedElementIndex]?.id : null}
-            />
+        {/* Right Col: Sortable Preview & Docs */}
+        <div className="space-y-4">
+            <DndContext 
+              collisionDetection={closestCenter} 
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext 
+                items={rightPanelOrder} 
+                strategy={verticalListSortingStrategy}
+              >
+                  {rightPanelOrder.map(id => {
+                     if (id === 'preview') {
+                        return (
+                          <CollapsiblePanel 
+                            key="preview" 
+                            id="preview" 
+                            title="Preview" 
+                            dragHandle={true}
+                          >
+                             <SvgUpload 
+                                currentSvg={currentSvg} 
+                                onSvgUpload={handleSvgUpload} 
+                                onSelectElement={(id) => {
+                                    const index = elements.findIndex(el => el.id === id);
+                                    if (index >= 0) {
+                                        handleElementSelect(index);
+                                    }
+                                }}
+                                elements={elements}
+                                activeElementId={selectedElementIndex !== null ? elements[selectedElementIndex]?.id : null}
+                            />
+                          </CollapsiblePanel>
+                        );
+                     }
+                     if (id === 'docs') {
+                        return (
+                          <CollapsiblePanel 
+                            key="docs" 
+                            id="docs" 
+                            title="Documentation" 
+                            dragHandle={true}
+                            defaultOpen={false} 
+                          >
+                             <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                                <DocsPanel />
+                             </div>
+                          </CollapsiblePanel>
+                        );
+                     }
+                     return null;
+                  })}
+              </SortableContext>
+            </DndContext>
         </div>
       </div>
-
-      {/* Element Editor Dialog */}
-      <Dialog 
-        open={selectedElementIndex !== null} 
-        onOpenChange={(open) => {
-           if (!open) setSelectedElementIndex(null);
-        }}
-      >
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar">
-           {selectedElementIndex !== null && elements[selectedElementIndex] && (
-              <>
-                 <DialogHeader>
-                    <DialogTitle>Edit Element</DialogTitle>
-                 </DialogHeader>
-                 <ElementEditor
-                    element={elements[selectedElementIndex]}
-                    index={selectedElementIndex}
-                    onUpdate={updateElement}
-                    isTextElement={isTextElement}
-                    isImageElement={isImageElement}
-                    allElements={elements}
-                    ref={(el: HTMLDivElement | null) => {
-                        elementRefs.current[selectedElementIndex] = el;
-                    }}
-                />
-              </>
-           )}
-        </DialogContent>
-      </Dialog>
-
 
       {/* Floating Scroll to Top Button */}
       <FloatingScrollButton show={showScrollTop} onClick={scrollToTop} />
