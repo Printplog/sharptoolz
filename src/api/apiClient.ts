@@ -2,20 +2,20 @@ import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
 
 
+const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:8003";
+
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_PUBLIC_API_URL,
+  baseURL: BASE_URL,
   withCredentials: true, 
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-const apiUrl = import.meta.env.ENV === "development" ? "" : import.meta.env.VITE_PUBLIC_API_URL
-
 
 const refreshToken = async () => {
   const response = await axios.post(
-    `${import.meta.env.VITE_PUBLIC_API_URL}accounts/refresh-token/`,
+    `${BASE_URL}accounts/refresh-token/`,
     {},
     {
       withCredentials: true, 
@@ -43,8 +43,6 @@ apiClient.interceptors.response.use(
         // window.location.href = "/auth/login"; // ✅ Redirect to login if needed
       }
     }
-
-    console.log(apiUrl)
 
     return Promise.reject(error);
   }
