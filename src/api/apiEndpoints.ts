@@ -1,4 +1,4 @@
-import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User } from "@/types";
+import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings } from "@/types";
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
@@ -243,5 +243,20 @@ export const getTutorials = async (toolId?: string): Promise<Tutorial[]> => {
   
   const queryString = params.toString();
   const res = await apiClient.get(`/tutorials/${queryString ? `?${queryString}` : ''}`);
+  return res.data;
+};
+
+export const getSiteSettings = async (): Promise<SiteSettings> => {
+  const res = await apiClient.get('/settings/');
+  return res.data;
+};
+
+export const updateSiteSettings = async (data: Partial<SiteSettings> & { otp: string }): Promise<SiteSettings> => {
+  const res = await apiClient.patch('/settings/1/', data);
+  return res.data;
+};
+
+export const requestSettingsVerificationCode = async (): Promise<{ message: string }> => {
+  const res = await apiClient.post('/settings/request-code/');
   return res.data;
 };

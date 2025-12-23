@@ -293,3 +293,10 @@ export interface DocSection {
     site: 'parcelfinda' | 'myflightlookup';
   };
 }
+
+export type SiteSettings = {
+  crypto_address: string;
+  whatsapp_number: string;
+  manual_purchase_text: string;
+  updated_at: string;
+};

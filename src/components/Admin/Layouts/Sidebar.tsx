@@ -5,6 +5,7 @@ import {
   Users,
   LayoutTemplate,
   Type,
+  Settings,
   ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,11 @@ export default function Sidebar() {
       icon: <Users className="h-5 w-5" />,
       label: "Users",
       to: "/admin/users",
+    },
+    {
+      icon: <Settings className="h-5 w-5" />,
+      label: "Settings",
+      to: "/admin/settings",
     },
     {
       icon: <ArrowLeft className="h-5 w-5" />,

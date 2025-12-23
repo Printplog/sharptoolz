@@ -8,6 +8,7 @@ export type Path =
   | `/about`
   | `/admin/dashboard`
   | `/admin/fonts`
+  | `/admin/settings`
   | `/admin/templates`
   | `/admin/templates/:id`
   | `/admin/tools`
