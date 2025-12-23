@@ -70,7 +70,7 @@ export default function Sidebar() {
           let isActive = false;
           if (item.to === "/dashboard") {
             isActive = pathname === "/dashboard" || (pathname.startsWith("/dashboard/") && !pathname.startsWith("/admin/"));
-          } else {
+          } else { 
             // For admin routes, check if pathname includes the route (normal behavior)
             isActive = pathname.includes(item.to);
           }
