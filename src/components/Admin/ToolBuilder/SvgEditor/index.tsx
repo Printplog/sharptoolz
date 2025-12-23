@@ -372,8 +372,17 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                     title="Elements" 
                     defaultOpen={true}
                     className="max-h-[50vh] flex flex-col"
+                    forceMount={true}
+                    animate={elements.length < 100}
                   >
-                     <div className="overflow-y-auto custom-scrollbar max-h-[40vh] pr-2">
+                     <div 
+                        className="overflow-y-auto custom-scrollbar max-h-[40vh] pr-2"
+                        style={{ 
+                          // CSS Optimization: Virtualize layout for off-screen items
+                          contentVisibility: 'auto', 
+                          containIntrinsicSize: '36px' // approx height of one item
+                        }}
+                     >
                         <ElementNavigation 
                             elements={elements}
                             onElementClick={(index) => {

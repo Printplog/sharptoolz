@@ -1,7 +1,6 @@
 // ElementEditor component for editing individual SVG elements
 import { forwardRef, useEffect, useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,8 @@ import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
+import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
+import { useRef } from "react";
 
 interface ElementEditorProps {
   element: SvgElement;
@@ -23,6 +24,29 @@ interface ElementEditorProps {
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
   ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [] }, ref) => {
     const [showGenBuilder, setShowGenBuilder] = useState(false);
+    const lastUpdateRef = useRef<number>(0);
+    const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Throttled update for frequent events (like sliders)
+    // Ensures updates happen at most every 32ms (approx 30fps) but guarantees trailing update
+    const throttledUpdate = (idx: number, updates: Partial<SvgElement>) => {
+      const now = Date.now();
+      const timeSinceLast = now - lastUpdateRef.current;
+      const LIMIT = 32;
+
+      if (timeSinceLast >= LIMIT) {
+        if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+        onUpdate(idx, updates);
+        lastUpdateRef.current = now;
+      } else {
+        // Schedule trailing update
+        if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+        updateTimeoutRef.current = setTimeout(() => {
+           onUpdate(idx, updates);
+           lastUpdateRef.current = Date.now();
+        }, LIMIT - timeSinceLast);
+      }
+    };
 
     useEffect(() => {
       const id = element.id || "";
@@ -191,7 +215,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const currentTransform = getTransform();
 
-    const updateTransform = (key: 'rotate' | 'scale' | 'translateX' | 'translateY', value: number) => {
+    const updateTransform = (key: 'rotate' | 'scale' | 'translateX' | 'translateY', value: number, useThrottle = false) => {
       const newTransform = { ...currentTransform, [key]: value };
       
       let newStyle = element.attributes.style || "";
@@ -222,7 +246,9 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
       newStyle = newStyle.replace(/;;/g, ";");
 
-      onUpdate(index, {
+      const updateFn = useThrottle ? throttledUpdate : onUpdate;
+      
+      updateFn(index, {
         attributes: {
           ...element.attributes,
           style: newStyle,
@@ -231,11 +257,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       });
     };
 
-    const handleOpacityChange = (value: number) => {
-       onUpdate(index, {
-        attributes: { ...element.attributes, opacity: value.toString() }
-       });
-    };
+
 
     return (
       <div
@@ -292,12 +314,12 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
             Helper Text
             <span className="text-xs text-white/50 ml-2">(Optional - shows info icon for users)</span>
           </Label>
-          <Textarea
+          <DebouncedTextarea
             id={`helper-${index}`}
             placeholder="Add helpful instructions for this field..."
             value={element.attributes['data-helper'] || ""}
-            onChange={(e) => onUpdate(index, { 
-              attributes: { ...element.attributes, 'data-helper': e.target.value }
+            onChange={(value: string) => onUpdate(index, { 
+              attributes: { ...element.attributes, 'data-helper': value }
             })}
             rows={2}
             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 text-sm"
@@ -309,11 +331,11 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
             <Label htmlFor={`text-${index}`} className="text-sm font-medium">
               Text Content
             </Label>
-            <Textarea
+            <DebouncedTextarea
               id={`text-${index}`}
               placeholder="Enter text content"
               value={element.innerText || ""}
-              onChange={(e) => onUpdate(index, { innerText: e.target.value })}
+              onChange={(value: string) => onUpdate(index, { innerText: value })}
               rows={3} 
               className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
             />
@@ -457,7 +479,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                   min={0.1}
                   max={3}
                   step={0.1}
-                  onValueChange={(vals) => updateTransform('scale', vals[0])}
+                  onValueChange={(vals) => {
+                    const newScale = vals[0];
+                    updateTransform('scale', newScale, true); // true = useThrottle
+                  }}
                   className="flex-1"
                 />
               </div>
@@ -499,7 +524,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                   min={-180}
                   max={180}
                   step={1}
-                  onValueChange={(vals) => updateTransform('rotate', vals[0])}
+                  onValueChange={(vals) => updateTransform('rotate', vals[0], true)}
                   className="flex-1"
                 />
                  <Button 
@@ -527,7 +552,12 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
             min={0}
             max={1}
             step={0.01}
-            onValueChange={(vals) => handleOpacityChange(vals[0])}
+            onValueChange={(vals) => {
+                const newValue = vals[0];
+                throttledUpdate(index, {
+                    attributes: { ...element.attributes, opacity: newValue.toString() }
+                });
+            }}
           />
         </div>
 
@@ -543,8 +573,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                  // Check if value is potentially a color (hex, rgb, named) - simple heuristic
                  // If it's a url(...) (gradient/pattern), we still show the input but maybe disable the picker preview?
                  const isGradient = value.startsWith("url(");
-                 
-                 return (
+                                 return (
                   <div key={attr} className="space-y-1">
                      <Label className="text-xs text-white/60 capitalize">{attr}</Label>
                      <div className="flex gap-2 items-center">
@@ -568,10 +597,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                              />
                            )}
                         </div>
-                        <Input 
+                        <DebouncedInput 
                            value={value} 
-                           onChange={(e) => onUpdate(index, { 
-                              attributes: { ...element.attributes, [attr]: e.target.value } 
+                           onChange={(val: string | number) => onUpdate(index, { 
+                              attributes: { ...element.attributes, [attr]: String(val) } 
                            })}
                            className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 text-xs h-8"
                            placeholder="none"
@@ -588,10 +617,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                     <Label className="text-xs text-white/60 capitalize">
                       {attr.replace('-', ' ')}
                     </Label>
-                    <Input
+                    <DebouncedInput
                       value={element.attributes[attr] || ""}
-                      onChange={(e) => onUpdate(index, { 
-                        attributes: { ...element.attributes, [attr]: e.target.value }
+                      onChange={(val: string | number) => onUpdate(index, { 
+                        attributes: { ...element.attributes, [attr]: String(val) }
                       })}
                       className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 text-xs h-8"
                     />

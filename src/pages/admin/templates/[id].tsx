@@ -5,7 +5,7 @@ import type { Template, TemplateUpdatePayload } from '@/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Save, Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -24,12 +24,35 @@ export default function SvgTemplateEditor() {
   });
 
   // Fetch SVG separately after template data loads
-  const { data: svgData, isLoading: svgLoading } = useQuery<{ svg: string }>({
+  // Fetch SVG separately after template data loads
+  const { data: svgData, isLoading: svgLoading } = useQuery<{ svg: string | null; url?: string }>({
     queryKey: ["template-svg", id],
     queryFn: () => getTemplateSvgForAdmin(id as string),
     enabled: !!id && !!data && !isLoading, // Only fetch SVG after template data loads
     refetchOnMount: false,
   });
+
+  const [svgContent, setSvgContent] = useState<string>("");
+  const [isFetchingSvg, setIsFetchingSvg] = useState(false);
+
+  useEffect(() => {
+    if (svgData?.url) {
+      setIsFetchingSvg(true);
+      fetch(svgData.url)
+        .then(res => res.text())
+        .then(text => {
+            setSvgContent(text);
+            setIsFetchingSvg(false);
+        })
+        .catch(err => {
+            console.error("Failed to load SVG file", err);
+            toast.error("Failed to load SVG content");
+            setIsFetchingSvg(false);
+        });
+    } else if (svgData?.svg) {
+      setSvgContent(svgData.svg);
+    }
+  }, [svgData]);
 
   // Save template mutation
   const saveMutation = useMutation({
@@ -183,7 +206,7 @@ export default function SvgTemplateEditor() {
                 svgEditorRef.current.handleSave();
               }
             }}
-            disabled={saveMutation.isPending || svgLoading || !svgData?.svg}
+            disabled={saveMutation.isPending || svgLoading || isFetchingSvg || !svgContent}
             className="bg-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Save className="h-5 w-5 group-hover:rotate-12 transition-all duration-500" />
@@ -197,7 +220,7 @@ export default function SvgTemplateEditor() {
                 svgEditorRef.current.openPreview();
               }
             }}
-            disabled={svgLoading || !svgData?.svg}
+            disabled={svgLoading || isFetchingSvg || !svgContent}
             className="bg-lime-600 border-3 border-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Eye className="h-5 w-5 group-hover:translate-x-[2px] transition-all duration-500" />
@@ -209,7 +232,7 @@ export default function SvgTemplateEditor() {
             <SvgEditor 
               ref={svgEditorRef}
               fonts={data?.fonts || []}
-              svgRaw={svgData?.svg || ""} 
+              svgRaw={svgContent} 
               templateName={data.name}
               onSave={handleSave}
               banner={data.banner}
@@ -219,7 +242,7 @@ export default function SvgTemplateEditor() {
               tutorial={data.tutorial}
               keywords={data.keywords}
               isLoading={saveMutation.isPending}
-              isSvgLoading={svgLoading || !svgData?.svg} // Pass SVG loading state
+              isSvgLoading={svgLoading || isFetchingSvg || !svgContent} // Pass SVG loading state
               formFields={data.form_fields || []} // Pass backend form fields
               onElementSelect={() => {
                 // Simplified - no automatic section selection

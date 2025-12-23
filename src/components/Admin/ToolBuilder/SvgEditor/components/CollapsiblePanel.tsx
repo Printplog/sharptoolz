@@ -15,6 +15,8 @@ interface CollapsiblePanelProps {
   dragHandle?: boolean;
   className?: string;
   headerActions?: React.ReactNode;
+  forceMount?: boolean;
+  animate?: boolean;
 }
 
 export function CollapsiblePanel({
@@ -27,6 +29,8 @@ export function CollapsiblePanel({
   dragHandle = false,
   className,
   headerActions,
+  forceMount = false,
+  animate = true,
 }: CollapsiblePanelProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(defaultOpen);
   const isOpen = controlledIsOpen ?? internalIsOpen;
@@ -56,6 +60,15 @@ export function CollapsiblePanel({
       opacity: isDragging ? 0.8 : 1,
   };
 
+  // Optimization: If not animating, we just toggle visibility instantly
+  // If forceMount is true, we keep it in DOM but hidden
+  
+  const content = (
+    <div className={cn("p-4 border-t border-white/5", !isOpen && forceMount && "hidden")}>
+        {children}
+    </div>
+  );
+
   return (
     <div 
         ref={dragHandle ? setNodeRef : undefined}
@@ -76,12 +89,9 @@ export function CollapsiblePanel({
                 onClick={toggle}
                 className="flex items-center gap-2 flex-1 text-left min-w-0"
             >
-                <motion.div
-                    animate={{ rotate: isOpen ? 0 : -90 }}
-                    transition={{ duration: 0.2 }}
-                >
+                <div className="transition-transform duration-200" style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
                     <ChevronDown className="h-4 w-4 text-white/50" />
-                </motion.div>
+                </div>
                 <span className="text-sm font-medium text-white/90 truncate">{title}</span>
             </button>
         </div>
@@ -92,21 +102,26 @@ export function CollapsiblePanel({
       </div>
 
       {/* Content */}
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <div className="p-4 border-t border-white/5">
-                {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {animate ? (
+        <AnimatePresence initial={false}>
+            {(isOpen || forceMount) && (
+              <motion.div
+                initial={false}
+                animate={{ 
+                    height: isOpen ? "auto" : 0,
+                    opacity: isOpen ? 1 : 0
+                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className={cn("overflow-hidden", !isOpen && forceMount && "hidden")} // Ensure hidden applies even during animation
+                style={{ display: !isOpen && forceMount ? 'none' : 'block' }}
+              >
+               {content}
+              </motion.div>
+            )}
+        </AnimatePresence>
+      ) : (
+          (isOpen || forceMount) ? content : null
+      )}
     </div>
   );
 }
