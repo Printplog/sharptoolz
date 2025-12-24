@@ -4,13 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, RotateCw, Move, Minus, Plus } from "lucide-react";
+import { RotateCcw, RotateCw, Move, Minus, Plus, Save, Bookmark, Trash2, Loader2 } from "lucide-react";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
-import { useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   getTransformVariables, 
@@ -25,7 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
-import { Save, Bookmark, Trash2, Loader2 } from "lucide-react";
 import type { TransformVariable } from "@/types";
 import { CollapsiblePanel } from "./components/CollapsiblePanel";
 
@@ -145,66 +143,53 @@ interface ElementEditorProps {
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
   ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [] }, ref) => {
+    const [localElement, setLocalElement] = useState<SvgElement>(element);
+    const [isDirty, setIsDirty] = useState(false);
     const [showGenBuilder, setShowGenBuilder] = useState(false);
-    const lastUpdateRef = useRef<number>(0);
-    const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    
+    // Sync local state when the target element changes (e.g. user selects a different element)
+    useEffect(() => {
+      setLocalElement(element);
+      setIsDirty(false);
+    }, [element.id, element.innerText, index]);
 
-    // Throttled update for frequent events (like sliders)
-    // Ensures updates happen at most every 32ms (approx 30fps) but guarantees trailing update
-    const throttledUpdate = (idx: number, updates: Partial<SvgElement>) => {
-      const now = Date.now();
-      const timeSinceLast = now - lastUpdateRef.current;
-      const LIMIT = 32;
-
-      if (timeSinceLast >= LIMIT) {
-        if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
-        onUpdate(idx, updates);
-        lastUpdateRef.current = now;
-      } else {
-        // Schedule trailing update
-        if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
-        updateTimeoutRef.current = setTimeout(() => {
-           onUpdate(idx, updates);
-           lastUpdateRef.current = Date.now();
-        }, LIMIT - timeSinceLast);
-      }
+    const handleLocalUpdate = (updates: Partial<SvgElement>) => {
+      setLocalElement(prev => ({
+        ...prev,
+        ...updates,
+        attributes: { ...prev.attributes, ...(updates.attributes || {}) }
+      }));
+      setIsDirty(true);
     };
 
-    useEffect(() => {
-      const id = element.id || "";
-      const parts = id.split(".");
+    const handleApply = () => {
+      onUpdate(index, localElement);
+      setIsDirty(false);
+      toast.success("Changes applied to SVG");
+    };
 
-      // Focus ID editor if this element was just selected (optional UX)
-      // We can use a ref for this if we want to be fancy.
+    const handleDiscard = () => {
+      setLocalElement(element);
+      setIsDirty(false);
+      toast.info("Changes discarded");
+    };
 
-      // If we have "... .gen .gen_XXX ..." collapse to "... .gen_XXX ..."
-      if (parts.length >= 3 && parts[1] === "gen" && parts[2].startsWith("gen_")) {
-        const normalizedParts = [parts[0], ...parts.slice(2)];
-        const normalizedId = normalizedParts.join(".");
-
-        if (normalizedId !== id) {
-          onUpdate(index, { id: normalizedId });
-        }
-      }
-    }, [element.id, index, onUpdate]);
-
-    const baseId = element.id?.split(".")[0]?.replace(/_/g, " ") || `${element.tag} ${index + 1}`;
+    const baseId = localElement.id?.split(".")[0]?.replace(/_/g, " ") || `${localElement.tag} ${index + 1}`;
     
     // Check if this is a gen field
-    const isGenField = element.id?.includes(".gen");
-    const genRuleMatch = element.id?.match(/gen_(.+?)(?:\.|$)/);
+    const isGenField = localElement.id?.includes(".gen");
+    const genRuleMatch = localElement.id?.match(/gen_(.+?)(?:\.|$)/);
     const currentGenRule = genRuleMatch ? genRuleMatch[1] : "";
     const MAX_GEN_RULE_PREVIEW = 40;
     const isLongGenRule = currentGenRule.length > MAX_GEN_RULE_PREVIEW;
     const previewGenRule = isLongGenRule
       ? `${currentGenRule.slice(0, MAX_GEN_RULE_PREVIEW)}...`
       : currentGenRule;
-    const maxLengthMatch = element.id?.match(/max_(\d+)/);
+    const maxLengthMatch = localElement.id?.match(/max_(\d+)/);
     const maxLength = maxLengthMatch ? parseInt(maxLengthMatch[1]) : undefined;
     
     const handleGenRuleChange = (newRule: string) => {
-      // Only touch the gen_ part of the ID, leave all other extensions (like max_) intact
-      const parts = element.id?.split(".") || [];
+      const parts = localElement.id?.split(".") || [];
       let replaced = false;
 
       const newParts = parts.map((p: string) => {
@@ -215,12 +200,11 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         return p;
       });
 
-      // If there was no existing gen_ rule, append it as a new extension
       if (!replaced) {
         newParts.push(`gen_${newRule}`);
       }
 
-      onUpdate(index, { id: newParts.join(".") });
+      handleLocalUpdate({ id: newParts.join(".") });
     };
 
     // Extract current field values from allElements for preview
@@ -251,10 +235,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
         
-        // 1. Update the image normally
-        onUpdate(index, { 
+        // 1. Update the image locally
+        handleLocalUpdate({ 
           attributes: { 
-            ...element.attributes, 
+            ...localElement.attributes, 
             href: base64,
             'xlink:href': base64 
           }
@@ -290,13 +274,11 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     };
 
     // --- Transform Logic (Rotate, Scale, Translate) ---
-    // --- Transform Logic (Rotate, Scale, Translate) ---
     const getTransform = () => {
-      const style = element.attributes.style || "";
-      const transformAttr = element.attributes.transform || "";
-      const combined = `${style} ${transformAttr}`; // Check both for maximum discovery
+      const style = localElement.attributes.style || "";
+      const transformAttr = localElement.attributes.transform || "";
+      const combined = `${style} ${transformAttr}`; 
 
-      // 1. Try explicit functional notation first (translate, rotate, scale)
       const getVal = (regex: RegExp) => {
         const match = combined.match(regex);
         return match ? parseFloat(match[1]) : null;
@@ -304,24 +286,18 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
       let rotate = getVal(/rotate\s*\(\s*(-?\d+\.?\d*)/);
       let scale = getVal(/scale\s*\(\s*(-?\d+\.?\d*)/);
-      let translateX = getVal(/translate\s*\(\s*(-?\d+\.?\d*)/); // Capture 1st arg
-      // Fix regex to be less strict about closing parenthesis and handle units implicitly by parseFloat
-      let translateY = getVal(/translate\s*\([^,]+,\s*(-?\d+\.?\d*)/); // Capture 2nd arg
+      let translateX = getVal(/translate\s*\(\s*(-?\d+\.?\d*)/); 
+      let translateY = getVal(/translate\s*\((?:[^,]+,)?\s*(-?\d+\.?\d*)/); 
 
-      // 2. Fallback to matrix decomposition if explicit values are missing
-      // matrix(a, b, c, d, e, f)
       if (rotate === null && scale === null && translateX === null) {
          const matrixMatch = combined.match(/matrix\s*\(([^)]+)\)/);
          if (matrixMatch) {
             const params = matrixMatch[1].split(/[\s,]+/).map(parseFloat).filter(n => !isNaN(n));
             if (params.length === 6) {
                const [a, b, , , e, f] = params;
-               // Decompose
                translateX = e;
                translateY = f;
-               // Scale = length of column vector (a, b)
                scale = Math.sqrt(a*a + b*b);
-               // Rotation = atan2(b, a) in degrees
                rotate = Math.atan2(b, a) * (180 / Math.PI);
             }
          }
@@ -363,16 +339,14 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       }
     });
 
-    const updateTransform = (key: 'rotate' | 'scale' | 'translateX' | 'translateY', value: number, useThrottle = false) => {
+    const updateTransform = (key: 'rotate' | 'scale' | 'translateX' | 'translateY', value: number) => {
       const newTransform = { ...currentTransform, [key]: value };
       
-      let newStyle = element.attributes.style || "";
+      let newStyle = localElement.attributes.style || "";
       
-      // Ensure transform-box and origin are set for predictable transforms
       if (!newStyle.includes("transform-box")) newStyle = `transform-box: fill-box; ${newStyle}`;
       if (!newStyle.includes("transform-origin")) newStyle = `transform-origin: center; ${newStyle}`;
 
-      // Construct transform string
       const transformString = [
         newTransform.translateX || newTransform.translateY ? `translate(${newTransform.translateX}px, ${newTransform.translateY}px)` : '',
         newTransform.rotate ? `rotate(${newTransform.rotate}deg)` : '',
@@ -390,12 +364,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       }
 
       newStyle = newStyle.replace(/;;/g, ";");
-
-      const updateFn = useThrottle ? throttledUpdate : onUpdate;
       
-      updateFn(index, {
+      handleLocalUpdate({
         attributes: {
-          ...element.attributes,
+          ...localElement.attributes,
           style: newStyle,
           transform: ""
         }
@@ -407,6 +379,23 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         ref={ref}
         className="space-y-4"
       >
+        {isDirty && (
+          <div className="sticky top-0 z-50 flex items-center justify-between p-1.5 px-3 bg-[#0a0a0c]/60 backdrop-blur-md border border-white/5 rounded-full -mx-1 animate-in slide-in-from-top duration-500">
+            <div className="flex items-center gap-2 ml-1">
+              <div className="w-1 h-1 rounded-full bg-primary/60" />
+              <span className="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em]">Draft Mode</span>
+            </div>
+            <div className="flex gap-1">
+              <Button size="sm" variant="ghost" className="h-7 text-[10px] text-white/30 hover:text-white px-3 rounded-full" onClick={handleDiscard}>
+                Discard
+              </Button>
+              <Button size="sm" variant="vibrant" className="h-7 text-[10px] px-5 font-bold rounded-full border-0 shadow-none" onClick={handleApply}>
+                Apply
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="text-sm font-medium text-white/80 capitalize">
           {baseId}
         </div>
@@ -416,8 +405,8 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
             ID
           </Label>
           <IdEditor
-            value={element.id || ""}
-            onChange={(newId) => onUpdate(index, { id: newId })}
+            value={localElement.id || ""}
+            onChange={(newId) => handleLocalUpdate({ id: newId })}
             placeholder="Start typing base ID (e.g. tracking_id)"
             allElements={allElements}
           />
@@ -435,9 +424,9 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               allElements={allElements}
               maxLength={maxLength}
               open={showGenBuilder}
-              onOpenChange={setShowGenBuilder}
+              onOpenChange={setShowGenBuilder} 
               currentFieldValues={currentFieldValues}
-              defaultTextContent={element.innerText || ""}
+              defaultTextContent={localElement.innerText || ""}
               trigger={
                 <Input
                   value={previewGenRule}
@@ -460,16 +449,16 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           <DebouncedTextarea
             id={`helper-${index}`}
             placeholder="Add helpful instructions..."
-            value={element.attributes['data-helper'] || ""}
-            onChange={(value: string) => onUpdate(index, { 
-              attributes: { ...element.attributes, 'data-helper': value }
+            value={localElement.attributes['data-helper'] || ""}
+            onChange={(value: string) => handleLocalUpdate({ 
+              attributes: { ...localElement.attributes, 'data-helper': value }
             })}
             rows={2}
             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 text-sm"
           />
         </div>
 
-        {isTextElement(element) && (
+        {isTextElement(localElement) && (
           <div className="space-y-4 border-t border-white/5 pt-4">
             <div className="space-y-2">
               <Label htmlFor={`text-${index}`} className="text-sm font-medium">
@@ -478,8 +467,8 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               <DebouncedTextarea
                 id={`text-${index}`}
                 placeholder="Enter text content"
-                value={element.innerText || ""}
-                onChange={(value: string) => onUpdate(index, { innerText: value })}
+                value={localElement.innerText || ""}
+                onChange={(value: string) => handleLocalUpdate({ innerText: value })}
                 rows={3} 
                 className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
               />
@@ -495,9 +484,9 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               <DebouncedInput
                 id={`max-width-${index}`}
                 type="number"
-                value={element.attributes['data-max-width'] || "0"}
-                onChange={(val: string | number) => onUpdate(index, { 
-                  attributes: { ...element.attributes, 'data-max-width': String(val) }
+                value={localElement.attributes['data-max-width'] || "0"}
+                onChange={(val: string | number) => handleLocalUpdate({ 
+                  attributes: { ...localElement.attributes, 'data-max-width': String(val) }
                 })}
                 className="h-8 bg-white/10 border-white/20 text-white text-xs"
                 placeholder="0 = No wrap"
@@ -506,7 +495,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           </div>
         )}
 
-        {isImageElement(element) && (
+        {isImageElement(localElement) && (
           <div className="space-y-2">
             <Label htmlFor={`image-${index}`} className="text-sm font-medium">
               Image (Base64)
@@ -544,10 +533,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                 size="sm"
                 className="h-7 px-3 text-[10px] text-white/50 hover:text-white transition-all uppercase tracking-wider font-bold"
                 onClick={() => {
-                  onUpdate(index, {
+                  handleLocalUpdate({
                     attributes: {
-                      ...element.attributes,
-                      style: (element.attributes.style || "").replace(/transform:[^;]+;?/, "").replace(/transform-box:[^;]+;?/, "").replace(/transform-origin:[^;]+;?/, "").replace(/;;/g, ";"),
+                      ...localElement.attributes,
+                      style: (localElement.attributes.style || "").replace(/transform:[^;]+;?/, "").replace(/transform-box:[^;]+;?/, "").replace(/transform-origin:[^;]+;?/, "").replace(/;;/g, ";"),
                       transform: ""
                     }
                   });
@@ -682,7 +671,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                   min={0.1}
                   max={3}
                   step={0.1}
-                  onValueChange={(vals) => updateTransform('scale', vals[0], true)}
+                  onValueChange={(vals) => updateTransform('scale', vals[0])}
                   className="py-1 cursor-pointer"
                 />
               </div>
@@ -735,7 +724,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                     min={-180}
                     max={180}
                     step={1}
-                    onValueChange={(vals) => updateTransform('rotate', vals[0], true)}
+                    onValueChange={(vals) => updateTransform('rotate', vals[0])}
                     className="flex-1 py-1 cursor-pointer"
                   />
                   <Button 
@@ -757,52 +746,48 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         <div className="space-y-3 pt-2">
            <div className="flex items-center justify-between">
             <Label className="text-sm font-medium">Opacity</Label>
-            <span className="text-xs text-white/60">{Math.round((parseFloat(element.attributes.opacity || "1") * 100))}%</span>
+            <span className="text-xs text-white/60">{Math.round((parseFloat(localElement.attributes.opacity || "1") * 100))}%</span>
           </div>
           <Slider
-            value={[parseFloat(element.attributes.opacity || "1")]}
+            value={[parseFloat(localElement.attributes.opacity || "1")]}
             min={0}
             max={1}
             step={0.01}
             onValueChange={(vals) => {
                 const newValue = vals[0];
-                throttledUpdate(index, {
-                    attributes: { ...element.attributes, opacity: newValue.toString() }
+                handleLocalUpdate({
+                    attributes: { ...localElement.attributes, opacity: newValue.toString() }
                 });
             }}
           />
         </div>
 
         {/* Color & Style Attributes */}
-        {!isTextElement(element) && !isImageElement(element) && (
+        {!isTextElement(localElement) && !isImageElement(localElement) && (
           <div className="space-y-3 pt-2 border-t border-white/10">
             <div className="grid grid-cols-2 gap-3">
               {/* Specialized Color Inputs */}
               {['fill', 'stroke'].map(attr => {
-                 if (element.attributes[attr] === undefined) return null;
+                 if (localElement.attributes[attr] === undefined) return null;
                  
-                 const value = element.attributes[attr] || "";
-                 // Check if value is potentially a color (hex, rgb, named) - simple heuristic
-                 // If it's a url(...) (gradient/pattern), we still show the input but maybe disable the picker preview?
+                 const value = localElement.attributes[attr] || "";
                  const isGradient = value.startsWith("url(");
                                  return (
                   <div key={attr} className="space-y-1">
                      <Label className="text-xs text-white/60 capitalize">{attr}</Label>
                      <div className="flex gap-2 items-center">
                         <div className="relative w-8 h-8 rounded border border-white/20 overflow-hidden shrink-0 bg-white/5 bg-[url('/checker.png')] bg-[length:8px_8px]">
-                           {/* Show actual color/gradient if possible */}
                            <div 
                               className="absolute inset-0 w-full h-full" 
                               style={{ background: value }} 
                            />
                            
-                           {/* Native color picker - only works well for simple colors, but we allow it to write Hex values */}
                            {!isGradient && (
                              <input 
                                 type="color" 
                                 value={/^#[0-9A-F]{6}$/i.test(value) ? value : "#000000"}
-                                onChange={(e) => onUpdate(index, { 
-                                  attributes: { ...element.attributes, [attr]: e.target.value } 
+                                onChange={(e) => handleLocalUpdate({ 
+                                  attributes: { ...localElement.attributes, [attr]: e.target.value } 
                                 })}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 title="Pick a color"
@@ -811,8 +796,8 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                         </div>
                         <DebouncedInput 
                            value={value} 
-                           onChange={(val: string | number) => onUpdate(index, { 
-                              attributes: { ...element.attributes, [attr]: String(val) } 
+                           onChange={(val: string | number) => handleLocalUpdate({ 
+                              attributes: { ...localElement.attributes, [attr]: String(val) } 
                            })}
                            className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 text-xs h-8"
                            placeholder="none"
@@ -824,15 +809,15 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
               {/* Other Common Attributes */}
               {['stroke-width', 'font-size', 'font-family', 'letter-spacing'].map(attr => (
-                element.attributes[attr] !== undefined && (
+                localElement.attributes[attr] !== undefined && (
                   <div key={attr} className="space-y-1">
                     <Label className="text-xs text-white/60 capitalize">
                       {attr.replace('-', ' ')}
                     </Label>
                     <DebouncedInput
-                      value={element.attributes[attr] || ""}
-                      onChange={(val: string | number) => onUpdate(index, { 
-                        attributes: { ...element.attributes, [attr]: String(val) }
+                      value={localElement.attributes[attr] || ""}
+                      onChange={(val: string | number) => handleLocalUpdate({ 
+                        attributes: { ...localElement.attributes, [attr]: String(val) }
                       })}
                       className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 text-xs h-8"
                     />
