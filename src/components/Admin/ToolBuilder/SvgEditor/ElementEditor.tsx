@@ -349,7 +349,6 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["transformVariables"] });
         toast.success("Variable saved!");
-        setVariableName("");
       },
       onError: (err: any) => {
         toast.error(err.response?.data?.error || "Failed to save variable");
