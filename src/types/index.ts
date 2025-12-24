@@ -300,3 +300,12 @@ export type SiteSettings = {
   manual_purchase_text: string;
   updated_at: string;
 };
+
+export interface TransformVariable {
+  id: number;
+  name: string;
+  category: 'rotate' | 'scale' | 'translateX' | 'translateY';
+  value: number;
+  created_at: string;
+  updated_at: string;
+}

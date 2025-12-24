@@ -1,4 +1,4 @@
-import { LayoutDashboard, Hammer, Users, LayoutTemplate, Type, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Hammer, Users, LayoutTemplate, Type, ArrowLeft, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -33,16 +33,11 @@ const navigationItems = [
     label: "User",
     to: "/dashboard",
   },
-  // {
-  //   icon: ClipboardList,
-  //   label: "Documents",
-  //   to: "/admin/documents",
-  // },
-  // {
-  //   icon: Settings,
-  //   label: "Settings",
-  //   to: "/admin/settings",
-  // },
+  {
+    icon: Settings,
+    label: "Settings",
+    to: "/admin/settings",
+  },
 ];
 
 export default function BottomBar() {

@@ -260,3 +260,20 @@ export const requestSettingsVerificationCode = async (): Promise<{ message: stri
   const res = await apiClient.post('/settings/request-code/');
   return res.data;
 };
+
+import type { TransformVariable } from "@/types";
+
+export const getTransformVariables = async (): Promise<TransformVariable[]> => {
+  const res = await apiClient.get('/transform-variables/');
+  return res.data;
+};
+
+export const createTransformVariable = async (data: Partial<TransformVariable>): Promise<TransformVariable> => {
+  const res = await apiClient.post('/transform-variables/', data);
+  return res.data;
+};
+
+export const deleteTransformVariable = async (id: number): Promise<unknown> => {
+  const res = await apiClient.delete(`/transform-variables/${id}/`);
+  return res.data;
+};

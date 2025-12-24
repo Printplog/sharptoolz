@@ -11,6 +11,128 @@ import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
 import { useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  getTransformVariables, 
+  createTransformVariable, 
+  deleteTransformVariable 
+} from "@/api/apiEndpoints";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from "@/components/ui/dropdown-menu";
+import { Save, Bookmark, Trash2, Loader2 } from "lucide-react";
+import type { TransformVariable } from "@/types";
+import { CollapsiblePanel } from "./components/CollapsiblePanel";
+
+interface VariableDropdownProps {
+  category: TransformVariable['category'];
+  currentValue: number;
+  onApply: (val: number) => void;
+  variables: TransformVariable[];
+  saveMutation: any;
+  deleteMutation: any;
+}
+
+const VariableDropdown = ({ 
+  category, 
+  currentValue, 
+  onApply,
+  variables,
+  saveMutation,
+  deleteMutation
+}: VariableDropdownProps) => {
+  const [variableName, setVariableName] = useState("");
+  const filteredVars = variables.filter(v => v.category === category);
+  
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="glass" 
+          size="icon" 
+          className="h-8 w-8 text-white/40 hover:text-white transition-all duration-300 hover:scale-110 active:scale-95 group shrink-0"
+          title={`Save or apply ${category} variable`}
+        >
+          <Bookmark className="w-3.5 h-3.5 group-hover:text-primary transition-colors" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="bg-[#0f0f12]/95 border-white/10 text-white w-64 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
+        <DropdownMenuLabel className="text-[11px] uppercase tracking-widest text-white/40 font-bold px-3 py-2">
+          {category.replace('translate', 'Position ')} Variables
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-white/5 mx-1" />
+        
+        <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
+          {filteredVars.length > 0 ? (
+            filteredVars.map((v) => (
+              <div key={v.id} className="flex items-center px-1 group/item">
+                <DropdownMenuItem 
+                  className="flex-1 text-xs hover:bg-white/5 cursor-pointer focus:bg-white/10 focus:text-white rounded-md transition-colors"
+                  onClick={() => {
+                    onApply(v.value);
+                    toast.success(`Applied ${v.name}: ${v.value}`);
+                  }}
+                >
+                  <span className="truncate flex-1 font-medium">{v.name}</span>
+                  <span className="text-[10px] text-white/30 ml-2 font-mono">
+                    {v.value}{category === 'rotate' ? '°' : category === 'scale' ? 'x' : 'px'}
+                  </span>
+                </DropdownMenuItem>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 text-white/10 hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-all"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteMutation.mutate(v.id);
+                  }}
+                >
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              </div>
+            ))
+          ) : (
+            <div className="px-2 py-6 text-[10px] text-white/30 text-center italic">No {category} variables yet</div>
+          )}
+        </div>
+        
+        <DropdownMenuSeparator className="bg-white/5 mx-1" />
+        <div className="p-3 space-y-3 bg-white/[0.02]">
+          <Label className="text-[10px] text-white/50 block">Save current: <span className="text-white font-mono">{currentValue}</span></Label>
+          <div className="flex gap-2">
+            <Input 
+              placeholder="Name..." 
+              className="h-8 text-[11px] bg-white/5 border-white/10 focus:border-primary/50 transition-all rounded-md"
+              value={variableName}
+              onChange={(e) => setVariableName(e.target.value)}
+            />
+            <Button 
+              size="icon"
+              variant="vibrant"
+              className="h-8 w-8 shrink-0 rounded-md"
+              disabled={!variableName || saveMutation.isPending}
+              onClick={() => {
+                saveMutation.mutate({
+                  name: variableName,
+                  category: category,
+                  value: currentValue
+                });
+                setVariableName("");
+              }}
+            >
+              {saveMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+            </Button>
+          </div>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 interface ElementEditorProps {
   element: SvgElement;
@@ -85,7 +207,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       const parts = element.id?.split(".") || [];
       let replaced = false;
 
-      const newParts = parts.map((p) => {
+      const newParts = parts.map((p: string) => {
         if (p.startsWith("gen_")) {
           replaced = true;
           return `gen_${newRule}`;
@@ -104,7 +226,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     // Extract current field values from allElements for preview
     const currentFieldValues = useMemo(() => {
       const values: Record<string, string> = {};
-      allElements.forEach(el => {
+      allElements.forEach((el: SvgElement) => {
         if (el.id) {
           const firstDotIndex = el.id.indexOf(".");
           if (firstDotIndex > 0) {
@@ -215,6 +337,33 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const currentTransform = getTransform();
 
+    const queryClient = useQueryClient();
+
+    const { data: variables = [] } = useQuery<TransformVariable[]>({
+      queryKey: ["transformVariables"],
+      queryFn: getTransformVariables
+    });
+
+    const saveMutation = useMutation({
+      mutationFn: createTransformVariable,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["transformVariables"] });
+        toast.success("Variable saved!");
+        setVariableName("");
+      },
+      onError: (err: any) => {
+        toast.error(err.response?.data?.error || "Failed to save variable");
+      }
+    });
+
+    const deleteMutation = useMutation({
+      mutationFn: deleteTransformVariable,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["transformVariables"] });
+        toast.success("Variable deleted");
+      }
+    });
+
     const updateTransform = (key: 'rotate' | 'scale' | 'translateX' | 'translateY', value: number, useThrottle = false) => {
       const newTransform = { ...currentTransform, [key]: value };
       
@@ -225,8 +374,6 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       if (!newStyle.includes("transform-origin")) newStyle = `transform-origin: center; ${newStyle}`;
 
       // Construct transform string
-      // Order matters: translate -> rotate -> scale (usually)
-      // But for "center" rotation/scaling, standard CSS order is fine if origin is center.
       const transformString = [
         newTransform.translateX || newTransform.translateY ? `translate(${newTransform.translateX}px, ${newTransform.translateY}px)` : '',
         newTransform.rotate ? `rotate(${newTransform.rotate}deg)` : '',
@@ -239,7 +386,6 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         newStyle = `${newStyle}; transform: ${transformString}`;
       }
       
-      // Cleanup empty transform
       if (!transformString) {
         newStyle = newStyle.replace(/transform:[^;]+;?/, '');
       }
@@ -252,12 +398,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         attributes: {
           ...element.attributes,
           style: newStyle,
-          transform: "" // Clear legacy attribute
+          transform: ""
         }
       });
     };
-
-
 
     return (
       <div
@@ -280,7 +424,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           />
         </div>
 
-        {/* Generation Rule Builder - For gen fields */}
+        {/* Generation Rule Builder */}
         {isGenField && (
           <div className="space-y-2">
             <Label className="text-sm font-medium text-white/80">
@@ -308,15 +452,15 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           </div>
         )}
 
-        {/* Helper Text - Available for all elements */}
+        {/* Helper Text */}
         <div className="space-y-2">
           <Label htmlFor={`helper-${index}`} className="text-sm font-medium text-white/80">
             Helper Text
-            <span className="text-xs text-white/50 ml-2">(Optional - shows info icon for users)</span>
+            <span className="text-xs text-white/50 ml-2">(Optional)</span>
           </Label>
           <DebouncedTextarea
             id={`helper-${index}`}
-            placeholder="Add helpful instructions for this field..."
+            placeholder="Add helpful instructions..."
             value={element.attributes['data-helper'] || ""}
             onChange={(value: string) => onUpdate(index, { 
               attributes: { ...element.attributes, 'data-helper': value }
@@ -356,189 +500,233 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                 onChange={handleImageUpload}
                 className="block w-full text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-white/10 file:text-white hover:file:bg-white/20"
               />
-              {element.attributes.href && (
-                <div className="text-xs text-white/60 break-all">
-                  Current: {element.attributes.href.substring(0, 50)}...
-                </div>
-              )}
             </div>
           </div>
         )}
 
-        {/* Transform Controls (Rotate, Scale, Translate) */}
+        {/* Transform Controls */}
         {!isGenField && (
-        <div className="space-y-4 pt-2 border-t border-white/10">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <Move className="w-3 h-3 opacity-50" />
-              Transform
-            </Label>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-[10px] text-white/40 hover:text-white"
-              onClick={() => {
-                onUpdate(index, {
-                  attributes: {
-                    ...element.attributes,
-                    style: (element.attributes.style || "").replace(/transform:[^;]+;?/, "").replace(/transform-box:[^;]+;?/, "").replace(/transform-origin:[^;]+;?/, "").replace(/;;/g, ";"),
-                    transform: ""
-                  }
-                });
-              }}
-            >
-              <RotateCcw className="w-3 h-3 mr-1" />
-              Reset
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3 bg-white/5 p-3 rounded-lg">
-            {/* Translate X */}
-            <div className="space-y-1">
-              <Label className="text-xs text-white/60">Position X (px)</Label>
-              <div className="flex items-center gap-1">
-                 <Button
-                    variant="glass" size="icon" 
-                    className="h-8 w-8 shrink-0 text-white/60 hover:text-white"
-                    onClick={() => updateTransform('translateX', (currentTransform.translateX || 0) - 1)}
-                 >
-                    <Minus className="w-3 h-3" />
-                 </Button>
-                 <Input
-                    type="number"
-                    value={currentTransform.translateX || 0}
-                    onChange={(e) => updateTransform('translateX', parseFloat(e.target.value) || 0)}
-                    className="h-8 bg-white/10 border-white/20 text-xs text-center px-1"
-                 />
-                 <Button
-                    variant="glass" size="icon" 
-                    className="h-8 w-8 shrink-0 text-white/60 hover:text-white"
-                    onClick={() => updateTransform('translateX', (currentTransform.translateX || 0) + 1)}
-                 >
-                    <Plus className="w-3 h-3" />
-                 </Button>
-              </div>
+        <CollapsiblePanel 
+          id={`transform-${index}`} 
+          title="Transformations" 
+          defaultOpen={false}
+          className="bg-transparent border-0 p-0"
+        >
+          <div className="space-y-6 pt-0">
+             <div className="flex items-center justify-between">
+              <Label className="text-[11px] uppercase tracking-widest text-primary/80 font-bold flex items-center gap-2">
+                <Move className="w-3.5 h-3.5" />
+                Actions
+              </Label>
+              
+              <Button
+                variant="glass"
+                size="sm"
+                className="h-7 px-3 text-[10px] text-white/50 hover:text-white transition-all uppercase tracking-wider font-bold"
+                onClick={() => {
+                  onUpdate(index, {
+                    attributes: {
+                      ...element.attributes,
+                      style: (element.attributes.style || "").replace(/transform:[^;]+;?/, "").replace(/transform-box:[^;]+;?/, "").replace(/transform-origin:[^;]+;?/, "").replace(/;;/g, ";"),
+                      transform: ""
+                    }
+                  });
+                }}
+              >
+                <RotateCcw className="w-3 h-3 mr-2" />
+                Reset All
+              </Button>
             </div>
-
-            {/* Translate Y */}
-            <div className="space-y-1">
-              <Label className="text-xs text-white/60">Position Y (px)</Label>
-              <div className="flex items-center gap-1">
-                 <Button
-                    variant="glass" size="icon" 
-                    className="h-8 w-8 shrink-0 text-white/60 hover:text-white"
-                    onClick={() => updateTransform('translateY', (currentTransform.translateY || 0) - 1)}
-                 >
-                    <Minus className="w-3 h-3" />
-                 </Button>
-                 <Input
-                    type="number"
-                    value={currentTransform.translateY || 0}
-                    onChange={(e) => updateTransform('translateY', parseFloat(e.target.value) || 0)}
-                    className="h-8 bg-white/10 border-white/20 text-xs text-center px-1"
-                 />
-                 <Button
-                    variant="glass" size="icon" 
-                    className="h-8 w-8 shrink-0 text-white/60 hover:text-white"
-                    onClick={() => updateTransform('translateY', (currentTransform.translateY || 0) + 1)}
-                 >
-                    <Plus className="w-3 h-3" />
-                 </Button>
-              </div>
-            </div>
-
-            {/* Scale */}
-             <div className="col-span-2 space-y-2 pt-2 border-t border-white/10">
-              <div className="flex justify-between items-center">
-                <Label className="text-xs text-white/60">Scale</Label>
-                <div className="flex items-center gap-2">
-                   <Button
-                      variant="glass" size="icon" className="h-6 w-6 shrink-0 text-white/60 hover:text-white"
-                      onClick={() => {
-                        const newScale = Math.max(0.1, (currentTransform.scale || 1) - 0.1);
-                        updateTransform('scale', Math.round(newScale * 10) / 10);
-                      }}
-                   >
+            
+            <div className="grid grid-cols-2 gap-x-6 gap-y-8 bg-white/[0.03] p-5 rounded-2xl border border-white/5 shadow-inner">
+              {/* Position X */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Pos X (px)</Label>
+                  <VariableDropdown 
+                    category="translateX" 
+                    currentValue={currentTransform.translateX} 
+                    onApply={(val) => updateTransform('translateX', val)}
+                    variables={variables}
+                    saveMutation={saveMutation}
+                    deleteMutation={deleteMutation}
+                  />
+                </div>
+                <div className="flex items-center gap-2 group">
+                  <Button
+                      variant="glass" size="icon" 
+                      className="h-8 w-8 shrink-0 rounded-lg group-hover:border-primary/20 transition-all"
+                      onClick={() => updateTransform('translateX', (currentTransform.translateX || 0) - 1)}
+                  >
                       <Minus className="w-3 h-3" />
-                   </Button>
-                   <span className="text-xs text-white/60 w-8 text-center">{currentTransform.scale.toFixed(1)}x</span>
-                   <Button
-                      variant="glass" size="icon" className="h-6 w-6 shrink-0 text-white/60 hover:text-white"
-                      onClick={() => {
-                        const newScale = (currentTransform.scale || 1) + 0.1;
-                        updateTransform('scale', Math.round(newScale * 10) / 10);
-                      }}
-                   >
+                  </Button>
+                  <Input
+                      type="number"
+                      value={currentTransform.translateX || 0}
+                      onChange={(e) => updateTransform('translateX', parseFloat(e.target.value) || 0)}
+                      className="h-9 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
+                  />
+                  <Button
+                      variant="glass" size="icon" 
+                      className="h-8 w-8 shrink-0 rounded-lg group-hover:border-primary/20 transition-all"
+                      onClick={() => updateTransform('translateX', (currentTransform.translateX || 0) + 1)}
+                  >
                       <Plus className="w-3 h-3" />
-                   </Button>
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-2 items-center">
-                 <Slider
+
+              {/* Position Y */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Pos Y (px)</Label>
+                  <VariableDropdown 
+                    category="translateY" 
+                    currentValue={currentTransform.translateY} 
+                    onApply={(val) => updateTransform('translateY', val)}
+                    variables={variables}
+                    saveMutation={saveMutation}
+                    deleteMutation={deleteMutation}
+                  />
+                </div>
+                <div className="flex items-center gap-2 group">
+                  <Button
+                      variant="glass" size="icon" 
+                      className="h-8 w-8 shrink-0 rounded-lg group-hover:border-primary/20 transition-all"
+                      onClick={() => updateTransform('translateY', (currentTransform.translateY || 0) - 1)}
+                  >
+                      <Minus className="w-3 h-3" />
+                  </Button>
+                  <Input
+                      type="number"
+                      value={currentTransform.translateY || 0}
+                      onChange={(e) => updateTransform('translateY', parseFloat(e.target.value) || 0)}
+                      className="h-9 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
+                  />
+                  <Button
+                      variant="glass" size="icon" 
+                      className="h-8 w-8 shrink-0 rounded-lg group-hover:border-primary/20 transition-all"
+                      onClick={() => updateTransform('translateY', (currentTransform.translateY || 0) + 1)}
+                  >
+                      <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Scale */}
+              <div className="col-span-2 space-y-4 pt-4 border-t border-white/5">
+                <div className="flex justify-between items-center">
+                  <Label className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Scale (Ratio)</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                        variant="glass" size="icon" className="h-8 w-8 shrink-0 rounded-lg"
+                        onClick={() => {
+                          const newScale = Math.max(0.1, (currentTransform.scale || 1) - 0.1);
+                          updateTransform('scale', Math.round(newScale * 10) / 10);
+                        }}
+                    >
+                        <Minus className="w-3 h-3" />
+                    </Button>
+                    <Input
+                        type="number"
+                        step="0.1"
+                        min="0.1"
+                        value={currentTransform.scale}
+                        onChange={(e) => updateTransform('scale', parseFloat(e.target.value) || 1)}
+                        className="h-8 w-20 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
+                    />
+                    <Button
+                        variant="glass" size="icon" className="h-8 w-8 shrink-0 rounded-lg"
+                        onClick={() => {
+                          const newScale = (currentTransform.scale || 1) + 0.1;
+                          updateTransform('scale', Math.round(newScale * 10) / 10);
+                        }}
+                    >
+                        <Plus className="w-3 h-3" />
+                    </Button>
+                    <VariableDropdown 
+                      category="scale" 
+                      currentValue={currentTransform.scale} 
+                      onApply={(val) => updateTransform('scale', val)}
+                      variables={variables}
+                      saveMutation={saveMutation}
+                      deleteMutation={deleteMutation}
+                    />
+                  </div>
+                </div>
+                <Slider
                   value={[currentTransform.scale]}
                   min={0.1}
                   max={3}
                   step={0.1}
-                  onValueChange={(vals) => {
-                    const newScale = vals[0];
-                    updateTransform('scale', newScale, true); // true = useThrottle
-                  }}
-                  className="flex-1"
+                  onValueChange={(vals) => updateTransform('scale', vals[0], true)}
+                  className="py-1 cursor-pointer"
                 />
               </div>
-            </div>
 
-            {/* Rotation */}
-            <div className="col-span-2 space-y-2 pt-2 border-t border-white/10">
-               <div className="flex justify-between items-center">
-                <Label className="text-xs text-white/60">Rotation</Label>
-                <div className="flex items-center gap-2">
-                    <Button
-                      variant="glass" size="icon" className="h-6 w-6 shrink-0 text-white/60 hover:text-white"
-                      title="Rotate Counter-Clockwise"
-                      onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) - 1)}
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                    </Button>
-                    <span className="text-xs text-white/60 w-8 text-center">{Math.round(currentTransform.rotate)}°</span>
-                    <Button
-                      variant="glass" size="icon" className="h-6 w-6 shrink-0 text-white/60 hover:text-white"
-                      title="Rotate Clockwise"
-                      onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) + 1)}
-                    >
-                      <RotateCw className="w-3 h-3" />
-                    </Button>
+              {/* Rotation */}
+              <div className="col-span-2 space-y-4 pt-4 border-t border-white/5">
+                <div className="flex justify-between items-center">
+                  <Label className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Rotation (Degrees)</Label>
+                  <div className="flex items-center gap-2">
+                      <Button
+                        variant="glass" size="icon" className="h-8 w-8 shrink-0 rounded-lg"
+                        onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) - 1)}
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                      </Button>
+                      <Input
+                        type="number"
+                        value={Math.round(currentTransform.rotate)}
+                        onChange={(e) => updateTransform('rotate', parseFloat(e.target.value) || 0)}
+                        className="h-8 w-20 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
+                    />
+                      <Button
+                        variant="glass" size="icon" className="h-8 w-8 shrink-0 rounded-lg"
+                        onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) + 1)}
+                      >
+                        <RotateCw className="w-3 h-3" />
+                      </Button>
+                      <VariableDropdown 
+                        category="rotate" 
+                        currentValue={currentTransform.rotate} 
+                        onApply={(val) => updateTransform('rotate', val)}
+                        variables={variables}
+                        saveMutation={saveMutation}
+                        deleteMutation={deleteMutation}
+                      />
+                  </div>
                 </div>
-              </div>
-               <div className="flex gap-2 items-center">
-                 <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 w-6 px-0 text-white/40"
-                    onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) - 45)}
-                 >
-                    -45
-                 </Button>
-                 <Slider
-                  value={[currentTransform.rotate]}
-                  min={-180}
-                  max={180}
-                  step={1}
-                  onValueChange={(vals) => updateTransform('rotate', vals[0], true)}
-                  className="flex-1"
-                />
-                 <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 w-6 px-0 text-white/40"
-                    onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) + 45)}
-                 >
-                    +45
-                 </Button>
+                <div className="flex gap-4 items-center pl-1">
+                  <Button 
+                      variant="glass" 
+                      size="sm" 
+                      className="h-8 px-3 text-[10px] text-white/40 hover:text-white rounded-lg transition-all"
+                      onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) - 45)}
+                  >
+                      -45°
+                  </Button>
+                  <Slider
+                    value={[currentTransform.rotate]}
+                    min={-180}
+                    max={180}
+                    step={1}
+                    onValueChange={(vals) => updateTransform('rotate', vals[0], true)}
+                    className="flex-1 py-1 cursor-pointer"
+                  />
+                  <Button 
+                      variant="glass" 
+                      size="sm" 
+                      className="h-8 px-3 text-[10px] text-white/40 hover:text-white rounded-lg transition-all"
+                      onClick={() => updateTransform('rotate', (currentTransform.rotate || 0) + 45)}
+                  >
+                      +45°
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </CollapsiblePanel>
         )}
 
         {/* Opacity Control - For all elements */}
