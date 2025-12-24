@@ -374,10 +374,10 @@ export default function ImageCropUpload({
         center: annotationResult?.center
       });
       
-      onImageSelect(fieldId, processedImageDataUrl, annotationResult?.rotation);
-      
-      // Close the dialog
+      // Close the dialog immediately
       setIsDialogOpen(false);
+      
+      onImageSelect(fieldId, processedImageDataUrl, annotationResult?.rotation);
       
       setOriginalImage(null);
       setOriginalFile(null);

@@ -87,6 +87,7 @@ export interface FormField {
   grayscaleIntensity?: number; // Grayscale intensity percentage (0-100)
   touched?: boolean; // Frontend-only flag to know if user modified the field
   rotation?: number; // Rotation in degrees for image fields (applied via transform)
+  attributes?: Record<string, string>; // Store additional SVG attributes like data-max-width
 } // Updated for signature fields, date formatting, generation/extraction, and helper text
 
 export type FieldUpdate = {

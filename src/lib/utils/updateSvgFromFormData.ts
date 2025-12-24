@@ -131,7 +131,43 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
           if (shouldSkipUpdate) {
             return;
           }
-          el.textContent = stringValue;
+
+          const maxWidth = parseFloat(field.attributes?.['data-max-width'] || '0');
+          // For text elements with a max width, we apply tspan wrapping
+          if (el.tagName.toLowerCase() === 'text' && maxWidth > 0) {
+            const fontSize = parseFloat(field.attributes?.['font-size'] || '16');
+            
+            // Manual local implementation of wrapping to avoid complicated external dependency imports in utility
+            const words = stringValue.split(/\s+/);
+            const lines: string[] = [];
+            let currentLine = "";
+            const charWidthRatio = 0.55; 
+            const getWidth = (str: string) => str.length * fontSize * charWidthRatio;
+
+            for (const word of words) {
+              const testLine = currentLine ? `${currentLine} ${word}` : word;
+              if (getWidth(testLine) > maxWidth && currentLine !== "") {
+                lines.push(currentLine);
+                currentLine = word;
+              } else {
+                currentLine = testLine;
+              }
+            }
+            if (currentLine) lines.push(currentLine);
+
+            el.textContent = "";
+            const x = el.getAttribute("x") || "0";
+            
+            lines.forEach((line, i) => {
+              const tspan = doc.createElementNS("http://www.w3.org/2000/svg", "tspan");
+              tspan.textContent = line;
+              tspan.setAttribute("x", x);
+              if (i > 0) tspan.setAttribute("dy", "1.2em");
+              el.appendChild(tspan);
+            });
+          } else {
+            el.textContent = stringValue;
+          }
         }
       }
     }

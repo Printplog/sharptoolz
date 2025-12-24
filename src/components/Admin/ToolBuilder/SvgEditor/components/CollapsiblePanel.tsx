@@ -87,7 +87,7 @@ export function CollapsiblePanel({
              )}
             <button 
                 onClick={toggle}
-                className="flex items-center gap-2 flex-1 text-left min-w-0"
+                className="flex items-center gap-2 flex-1 text-left min-w-0 cursor-pointer"
             >
                 <div className="transition-transform duration-200" style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
                     <ChevronDown className="h-4 w-4 text-white/50" />

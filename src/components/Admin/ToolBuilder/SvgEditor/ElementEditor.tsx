@@ -470,18 +470,39 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         </div>
 
         {isTextElement(element) && (
-          <div className="space-y-2">
-            <Label htmlFor={`text-${index}`} className="text-sm font-medium">
-              Text Content
-            </Label>
-            <DebouncedTextarea
-              id={`text-${index}`}
-              placeholder="Enter text content"
-              value={element.innerText || ""}
-              onChange={(value: string) => onUpdate(index, { innerText: value })}
-              rows={3} 
-              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
-            />
+          <div className="space-y-4 border-t border-white/5 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor={`text-${index}`} className="text-sm font-medium">
+                Text Content
+              </Label>
+              <DebouncedTextarea
+                id={`text-${index}`}
+                placeholder="Enter text content"
+                value={element.innerText || ""}
+                onChange={(value: string) => onUpdate(index, { innerText: value })}
+                rows={3} 
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`max-width-${index}`} className="text-xs text-white/60">
+                  Max Width (px)
+                </Label>
+                <span className="text-[10px] text-white/30">Auto-wraps via tspan</span>
+              </div>
+              <DebouncedInput
+                id={`max-width-${index}`}
+                type="number"
+                value={element.attributes['data-max-width'] || "0"}
+                onChange={(val: string | number) => onUpdate(index, { 
+                  attributes: { ...element.attributes, 'data-max-width': String(val) }
+                })}
+                className="h-8 bg-white/10 border-white/20 text-white text-xs"
+                placeholder="0 = No wrap"
+              />
+            </div>
           </div>
         )}
 

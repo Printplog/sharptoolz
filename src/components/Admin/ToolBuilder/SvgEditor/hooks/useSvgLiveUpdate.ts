@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
+import { wrapSvgText, applyWrappedText } from "@/lib/utils/textWrapping";
 
 /**
  * Hook to imperatively update an SVG DOM based on edited elements.
@@ -48,9 +49,18 @@ export function useSvgLiveUpdate(
             }
           });
 
-          // Update text
-          if (activeElement.innerText !== undefined && domEl.textContent !== activeElement.innerText) {
-            domEl.textContent = activeElement.innerText;
+          // Update text with wrapping support
+          if (activeElement.innerText !== undefined) {
+            const maxWidth = parseFloat(activeElement.attributes['data-max-width'] || '0');
+            if (activeElement.tag === 'text' && maxWidth > 0) {
+              const fontSize = parseFloat(activeElement.attributes['font-size'] || window.getComputedStyle(domEl).fontSize || '16');
+              const fontFamily = activeElement.attributes['font-family'] || window.getComputedStyle(domEl).fontFamily || 'Arial';
+              
+              const lines = wrapSvgText(activeElement.innerText, { maxWidth, fontSize, fontFamily });
+              applyWrappedText(domEl as SVGTextElement, lines);
+            } else if (domEl.textContent !== activeElement.innerText) {
+              domEl.textContent = activeElement.innerText;
+            }
           }
 
           // Update style
