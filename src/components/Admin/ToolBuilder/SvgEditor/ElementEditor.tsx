@@ -560,10 +560,11 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                   >
                       <Minus className="w-3 h-3" />
                   </Button>
-                  <Input
+                  <DebouncedInput
                       type="number"
-                      value={currentTransform.translateX || 0}
-                      onChange={(e) => updateTransform('translateX', parseFloat(e.target.value) || 0)}
+                      value={currentTransform.translateX}
+                      debounce={50}
+                      onChange={(val) => updateTransform('translateX', parseFloat(String(val)) || 0)}
                       className="h-9 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
                   />
                   <Button
@@ -597,10 +598,11 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                   >
                       <Minus className="w-3 h-3" />
                   </Button>
-                  <Input
+                  <DebouncedInput
                       type="number"
-                      value={currentTransform.translateY || 0}
-                      onChange={(e) => updateTransform('translateY', parseFloat(e.target.value) || 0)}
+                      value={currentTransform.translateY}
+                      debounce={50}
+                      onChange={(val) => updateTransform('translateY', parseFloat(String(val)) || 0)}
                       className="h-9 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
                   />
                   <Button
@@ -627,12 +629,13 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                     >
                         <Minus className="w-3 h-3" />
                     </Button>
-                    <Input
+                    <DebouncedInput
                         type="number"
                         step="0.1"
                         min="0.1"
                         value={currentTransform.scale}
-                        onChange={(e) => updateTransform('scale', parseFloat(e.target.value) || 1)}
+                        debounce={50}
+                        onChange={(val) => updateTransform('scale', parseFloat(String(val)) || 1)}
                         className="h-8 w-20 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
                     />
                     <Button
@@ -675,10 +678,11 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                       >
                         <RotateCcw className="w-3 h-3" />
                       </Button>
-                      <Input
+                      <DebouncedInput
                         type="number"
                         value={Math.round(currentTransform.rotate)}
-                        onChange={(e) => updateTransform('rotate', parseFloat(e.target.value) || 0)}
+                        debounce={50}
+                        onChange={(val) => updateTransform('rotate', parseFloat(String(val)) || 0)}
                         className="h-8 w-20 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
                     />
                       <Button

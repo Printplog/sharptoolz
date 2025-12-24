@@ -111,7 +111,7 @@ export function CollapsiblePanel({
                     height: isOpen ? "auto" : 0,
                     opacity: isOpen ? 1 : 0
                 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "circOut" }}
                 className={cn("overflow-hidden", !isOpen && forceMount && "hidden")} // Ensure hidden applies even during animation
                 style={{ display: !isOpen && forceMount ? 'none' : 'block' }}
               >
