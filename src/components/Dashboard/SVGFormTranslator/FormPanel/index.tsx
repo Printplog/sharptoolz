@@ -88,6 +88,7 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
   const svgRaw = useToolStore((state) => state.svgRaw);
   const getFieldValue = useToolStore((state) => state.getFieldValue);
   const setName = useToolStore((state) => state.setName);
+  const updateField = useToolStore((state) => state.updateField);
   const markFieldsSaved = useToolStore((state) => state.markFieldsSaved);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -153,6 +154,36 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
       event.returnValue = "";
     }
   });
+
+  // Check for startValues in location state (from duplicate feature)
+  useEffect(() => {
+    if (location.state && location.state.startValues && fields && fields.length > 0) {
+      const { startValues } = location.state as { startValues: Record<string, any> };
+      
+      // We only want to do this once, so we'll check if we need to apply values
+      const shouldApply = Object.entries(startValues).some(([key, value]) => {
+        const field = fields.find(f => f.id === key);
+        return field && field.currentValue !== value;
+      });
+
+      if (shouldApply) {
+         Object.entries(startValues).forEach(([key, value]) => {
+            // Find field to ensure it exists before updating
+            const field = fields.find(f => f.id === key);
+            if (field) {
+                 // For select fields, we might need to handle value matching differently if values are objects/complex
+                 // But assuming simple values for now as per store logic
+                 updateField(key, value as string | number | boolean);
+            }
+         });
+         
+         // Optional: Clear state so it doesn't re-apply on refresh? 
+         // React Router state persists on refresh, so we might want to clear it 
+         // or just let it be (feature: "restore from duplicate" persists).
+         // For now, let's leave it, but we could navigate with replace to clear it if needed.
+      }
+    }
+  }, [location.state, fields, updateField]); // Depend on fields to ensure they are loaded
 
   useEffect(() => {
     if (blocker.state === "blocked") {
@@ -500,10 +531,22 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
             {templateId && (
               <Button
                 variant="outline"
-                onClick={() => navigate(`/tools/${templateId}`)}
+                onClick={() => {
+                   // Gather current values
+                   const currentValues: Record<string, any> = {};
+                   fields?.forEach(f => {
+                       currentValues[f.id] = f.currentValue;
+                   });
+                   
+                   navigate(`/tools/${templateId}`, { 
+                       state: { 
+                           startValues: currentValues 
+                       } 
+                   });
+                }}
                 className="py-6 px-10 hover:bg-black/50 hover:text-white"
               >
-                Create Similar Doc
+                Duplicate Document
                 <Copy className="w-4 h-4 ml-1" />
               </Button>
             )}
