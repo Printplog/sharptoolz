@@ -107,7 +107,7 @@ export default function AdminSettings() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="crypto">Crypto Wallet Address (USDT/TRC20)</Label>
+            <Label htmlFor="crypto">Crypto Wallet Address (USDT/BEP20)</Label>
             <Input 
               id="crypto"
               value={formData.crypto_address}

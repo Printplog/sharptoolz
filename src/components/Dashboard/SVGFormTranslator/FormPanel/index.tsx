@@ -155,35 +155,31 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
     }
   });
 
+  // Track if we've applied duplicate values to prevent re-application
+  const appliedDuplicateValuesRef = useRef(false);
+
   // Check for startValues in location state (from duplicate feature)
   useEffect(() => {
-    if (location.state && location.state.startValues && fields && fields.length > 0) {
+    if (location.state && location.state.startValues && fields && fields.length > 0 && !appliedDuplicateValuesRef.current) {
       const { startValues } = location.state as { startValues: Record<string, any> };
       
-      // We only want to do this once, so we'll check if we need to apply values
-      const shouldApply = Object.entries(startValues).some(([key, value]) => {
+      Object.entries(startValues).forEach(([key, value]) => {
+        // Find field to ensure it exists before updating
         const field = fields.find(f => f.id === key);
-        return field && field.currentValue !== value;
+        if (field) {
+          updateField(key, value as string | number | boolean);
+        }
       });
-
-      if (shouldApply) {
-         Object.entries(startValues).forEach(([key, value]) => {
-            // Find field to ensure it exists before updating
-            const field = fields.find(f => f.id === key);
-            if (field) {
-                 // For select fields, we might need to handle value matching differently if values are objects/complex
-                 // But assuming simple values for now as per store logic
-                 updateField(key, value as string | number | boolean);
-            }
-         });
-         
-         // Optional: Clear state so it doesn't re-apply on refresh? 
-         // React Router state persists on refresh, so we might want to clear it 
-         // or just let it be (feature: "restore from duplicate" persists).
-         // For now, let's leave it, but we could navigate with replace to clear it if needed.
-      }
+      
+      // Mark as applied so we don't do it again
+      appliedDuplicateValuesRef.current = true;
     }
-  }, [location.state, fields, updateField]); // Depend on fields to ensure they are loaded
+  }, [location.state, fields, updateField]);
+  
+  // Reset the ref when location changes (navigating to a different page)
+  useEffect(() => {
+    appliedDuplicateValuesRef.current = false;
+  }, [location.pathname]);
 
   useEffect(() => {
     if (blocker.state === "blocked") {
