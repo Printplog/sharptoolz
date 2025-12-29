@@ -608,6 +608,10 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
       );
 
     case "sign": {
+      // Hide sign fields that have dependencies (they're auto-populated)
+      if (field.dependsOn) {
+        return null;
+      }
       const signatureField = field as ExtendedFormField;
       return (
         <div className="space-y-2 w-full">
