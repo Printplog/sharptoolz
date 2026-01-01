@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   getTransformVariables, 
@@ -139,10 +140,11 @@ interface ElementEditorProps {
   isTextElement: (el: SvgElement) => boolean;
   isImageElement: (el: SvgElement) => boolean;
   allElements?: SvgElement[]; // All elements to extract base IDs for depends suggestions
+  onLiveUpdate?: (element: SvgElement) => void;
 }
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
-  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [] }, ref) => {
+  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onLiveUpdate }, ref) => {
     const [localElement, setLocalElement] = useState<SvgElement>(element);
     const [isDirty, setIsDirty] = useState(false);
     const [showGenBuilder, setShowGenBuilder] = useState(false);
@@ -151,14 +153,21 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     useEffect(() => {
       setLocalElement(element);
       setIsDirty(false);
+      // Ensure specific draft override is cleared on selection change if needed, 
+      // but parent handles draft state reset usually
     }, [element.id, element.innerText, index]);
 
     const handleLocalUpdate = (updates: Partial<SvgElement>) => {
-      setLocalElement(prev => ({
-        ...prev,
-        ...updates,
-        attributes: { ...prev.attributes, ...(updates.attributes || {}) }
-      }));
+      setLocalElement(prev => {
+        const updated = {
+          ...prev,
+          ...updates,
+          attributes: { ...prev.attributes, ...(updates.attributes || {}) }
+        };
+        // Emit live update
+        onLiveUpdate?.(updated);
+        return updated;
+      });
       setIsDirty(true);
     };
 
@@ -465,33 +474,15 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                 Text Content
               </Label>
               <DebouncedTextarea
-                id={`text-${index}`}
-                placeholder="Enter text content"
                 value={localElement.innerText || ""}
                 onChange={(value: string) => handleLocalUpdate({ innerText: value })}
-                rows={3} 
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
+                placeholder="Enter text content"
+                rows={6}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 text-sm font-mono leading-relaxed"
               />
             </div>
             
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor={`max-width-${index}`} className="text-xs text-white/60">
-                  Max Width (px)
-                </Label>
-                <span className="text-[10px] text-white/30">Auto-wraps via tspan</span>
-              </div>
-              <DebouncedInput
-                id={`max-width-${index}`}
-                type="number"
-                value={localElement.attributes['data-max-width'] || "0"}
-                onChange={(val: string | number) => handleLocalUpdate({ 
-                  attributes: { ...localElement.attributes, 'data-max-width': String(val) }
-                })}
-                className="h-8 bg-white/10 border-white/20 text-white text-xs"
-                placeholder="0 = No wrap"
-              />
-            </div>
+
           </div>
         )}
 

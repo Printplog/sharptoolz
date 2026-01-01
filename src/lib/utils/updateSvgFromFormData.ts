@@ -1,5 +1,6 @@
-import type { FormField } from "@/types";
 import { extractFromDependency } from "./fieldExtractor";
+import { applyWrappedText } from "./textWrapping";
+import type { FormField } from "@/types";
 
 export default function updateSvgFromFormData(svgRaw: string, fields: FormField[]): string {
   if (!svgRaw) return "";
@@ -24,7 +25,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
       fields.forEach((f) => {
         if (f.type === "select" && f.options && f.options.length > 0) {
           const selected = f.options.find(
-            (opt) => String(opt.value) === String(f.currentValue)
+            (opt: any) => String(opt.value) === String(f.currentValue)
           );
           allFieldValues[f.id] =
             selected?.displayText ?? selected?.label ?? f.currentValue ?? "";
@@ -42,7 +43,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
     // Handle select fields (options)
     if (field.options && field.options.length > 0) {
       // Hide all options first
-      field.options.forEach((opt) => {
+      field.options.forEach((opt: any) => {
         if (opt.svgElementId) {
           const optEl = doc.getElementById(opt.svgElementId);
           if (optEl) {
@@ -58,7 +59,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
       // Show only the selected option
       const selectedOption = field.options.find(
-        (opt) => String(opt.value) === String(field.currentValue)
+        (opt: any) => String(opt.value) === String(field.currentValue)
       );
       if (selectedOption?.svgElementId) {
         const selectedEl = doc.getElementById(selectedOption.svgElementId);
@@ -133,38 +134,71 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
           }
 
           const maxWidth = parseFloat(field.attributes?.['data-max-width'] || '0');
-          // For text elements with a max width, we apply tspan wrapping
-          if (el.tagName.toLowerCase() === 'text' && maxWidth > 0) {
-            const fontSize = parseFloat(field.attributes?.['font-size'] || '16');
-            
-            // Manual local implementation of wrapping to avoid complicated external dependency imports in utility
-            const words = stringValue.split(/\s+/);
-            const lines: string[] = [];
-            let currentLine = "";
-            const charWidthRatio = 0.55; 
-            const getWidth = (str: string) => str.length * fontSize * charWidthRatio;
+          
+          // Improved font-size detection: Check SVG element attributes directly, then field attributes, then style string
+          let fontSize = parseFloat(el.getAttribute('font-size') || field.attributes?.['font-size'] || '0');
+          
+          if (!fontSize) {
+             const styleStr = el.getAttribute('style') || '';
+             const match = styleStr.match(/font-size:\s*([\d.]+)/);
+             if (match) {
+                fontSize = parseFloat(match[1]);
+                 // Simple heuristic: if pt, convert to px (roughly * 1.33)
+                 if (styleStr.match(/font-size:\s*[\d.]+pt/)) fontSize *= 1.33;
+             } else {
+                fontSize = 16;
+             }
+          }
 
-            for (const word of words) {
-              const testLine = currentLine ? `${currentLine} ${word}` : word;
-              if (getWidth(testLine) > maxWidth && currentLine !== "") {
-                lines.push(currentLine);
-                currentLine = word;
+          // Check if we need special handling: manual newlines OR max width wrapping
+          if (el.tagName.toLowerCase() === 'text' && (stringValue.includes('\n') || maxWidth > 0)) {
+            // Split by line breaks to respect user's intentional newlines (from SeamlessEditor)
+            const userLines = stringValue.split('\n');
+            let finalLines: string[] = [];
+
+            // Helper for measuring text width (canvas or heuristic)
+            const getWidth = (str: string) => {
+               // Try to use canvas if available in this context
+               if (typeof document !== 'undefined') {
+                   const canvas = document.createElement('canvas');
+                   const ctx = canvas.getContext('2d');
+                   if (ctx) {
+                       ctx.font = `${fontSize}px Arial`; // Use a default font if we can't determine the exact one easily
+                       return ctx.measureText(str).width;
+                   }
+               }
+               // Fallback
+               return str.length * fontSize * 0.6;
+            };
+
+            for (const line of userLines) {
+              // If max width is set, wrap this line further
+              if (maxWidth > 0 && line.trim() !== "") {
+                  const words = line.split(/\s+/);
+                  let currentLine = "";
+                  
+                  for (const word of words) {
+                    const testLine = currentLine ? `${currentLine} ${word}` : word;
+                    if (getWidth(testLine) > maxWidth && currentLine !== "") {
+                      finalLines.push(currentLine);
+                      currentLine = word;
+                    } else {
+                      currentLine = testLine;
+                    }
+                  }
+                  if (currentLine) finalLines.push(currentLine);
               } else {
-                currentLine = testLine;
+                  // No wrapping, just keep the line (even if empty, to preserve spacing)
+                  finalLines.push(line);
               }
             }
-            if (currentLine) lines.push(currentLine);
-
-            el.textContent = "";
-            const x = el.getAttribute("x") || "0";
             
-            lines.forEach((line, i) => {
-              const tspan = doc.createElementNS("http://www.w3.org/2000/svg", "tspan");
-              tspan.textContent = line;
-              tspan.setAttribute("x", x);
-              if (i > 0) tspan.setAttribute("dy", "1.2em");
-              el.appendChild(tspan);
-            });
+            // If the resulting lines are empty (e.g. empty input), ensure at least one empty line to clear
+            if (finalLines.length === 0) finalLines = [""];
+
+            // Render using shared logic (pixel-perfect spacing)
+            // Pass 'doc' since we are using a DOMParser document
+            applyWrappedText(el, finalLines, fontSize, doc);
           } else {
             el.textContent = stringValue;
           }

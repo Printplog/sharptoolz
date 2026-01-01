@@ -22,6 +22,7 @@ interface ExtendedFormField extends FormField {
   signaturePenColor?: string;
 }
 import { Textarea } from "@/components/ui/textarea";
+
 import ImageCropUpload from "@/components/ui/ImageCropUpload";
 import SignatureField from "@/components/ui/SignatureField";
 import CustomDateTimePicker from "@/components/ui/CustomDateTimePicker";
@@ -94,16 +95,27 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     return result;
   }, [field.generationRule, field.max, field.maxGeneration, allFields]);
 
-  // Get dependencies from generation rule
+  // Get dependencies from generation rule and dependsOn
   const dependencies = useMemo(() => {
-    if (!field.generationRule) return [];
-    const depMatches = field.generationRule.match(/dep_(\w+)/g) || [];
-    return depMatches.map(match => {
-      // Extract field name (may include extraction pattern like [w1] or [ch1-4])
-      const fieldName = match.replace('dep_', '').split('[')[0];
-      return fieldName;
-    });
-  }, [field.generationRule]);
+    const deps = new Set<string>();
+    
+    if (field.generationRule) {
+      const depMatches = field.generationRule.match(/dep_(\w+)/g) || [];
+      depMatches.forEach(match => {
+        // Extract field name (may include extraction pattern like [w1] or [ch1-4])
+        const fieldName = match.replace('dep_', '').split('[')[0];
+        deps.add(fieldName);
+      });
+    }
+    
+    // Also include explicit dependsOn field if present
+    // This allows auto-gen to trigger when dependsOn dependency changes
+    if (field.dependsOn) {
+      deps.add(field.dependsOn.split('[')[0]);
+    }
+    
+    return Array.from(deps);
+  }, [field.generationRule, field.dependsOn]);
 
   // Get dependency from dependsOn property (for non-generation fields like images)
   const dependsOnFieldId = useMemo(() => {
@@ -146,7 +158,7 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
     const hasGeneration = field.type === "gen" || !!field.generationRule;
     if (!hasGeneration || isPurchased) return;
     
-    const isAutoMode = field.generationMode === "auto";
+    const isAutoMode = field.generationMode === "auto" || field.isTrackingId;
     
     // Auto-generate on load if auto mode and no value
     if (isAutoMode && !value) {
@@ -432,7 +444,7 @@ const FormFieldComponent: React.FC<{ field: FormField; allFields?: FormField[]; 
             onChange={(e) => handleChange(e.target.value)}
             onBlur={handleBlur}
             maxLength={field.max}
-            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[80px]"
+            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 min-h-[80px]"
             placeholder={`Enter ${field.name}`}
             disabled={isFieldDisabled}
           />

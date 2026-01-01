@@ -34,6 +34,7 @@ interface SvgEditorProps {
   keywords?: string[];
   onSave?: (data: { name: string; svg: string; banner?: File | null; hot?: boolean; isActive?: boolean; tool?: string; tutorialUrl?: string; tutorialTitle?: string; keywords?: string[]; fontIds?: string[] }) => void;
   fonts?: Font[];
+  templateId?: string;
   isLoading?: boolean;
   isSvgLoading?: boolean; // Loading state for SVG data
   onElementSelect?: (elementType: string, idPattern?: string) => void;
@@ -46,7 +47,7 @@ export interface SvgEditorRef {
   openPreview: () => void;
 }
 
-const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, isSvgLoading = false, onElementSelect, formFields = [] }, ref) => {
+const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, isSvgLoading = false, onElementSelect, formFields = [], templateId }, ref) => {
   const [currentSvg, setCurrentSvg] = useState<string>(svgRaw);
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
@@ -62,6 +63,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [draftElement, setDraftElement] = useState<SvgElement | null>(null);
 
   // Layout State
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -228,6 +230,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
 
   const handleElementSelect = useCallback((index: number) => {
     setSelectedElementIndex(index);
+    setDraftElement(null);
     if (index !== null) {
       setIsEditorOpen(true);
     }
@@ -303,9 +306,9 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between pb-5 border-b border-white/10">
+      <div className="flex flex-wrap items-center justify-between pb-5 border-b border-white/10 gap-4">
         <h2 className="text-xl font-semibold">SVG Editor</h2>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
            <SettingsDialog 
               name={name}
               keywords={keywordsTags}
@@ -331,13 +334,26 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
               onBannerUpload={handleBannerUpload}
            />
            
+           {/* Public View Button */}
+           {templateId && (
+              <a 
+                href={`/tools/${templateId}`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 gap-2 border border-white/20 bg-white/5 text-white hover:bg-white/20 hover:text-white"
+              >
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Public View</span>
+              </a>
+           )}
+
            <Button 
              onClick={() => setShowPreviewDialog(true)}
              variant="outline"
              className="gap-2"
            >
              <Eye className="h-4 w-4" />
-             Final Preview
+             <span className="hidden sm:inline">Final Preview</span>
            </Button>
 
            {onSave && (
@@ -383,6 +399,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                           containIntrinsicSize: '36px' // approx height of one item
                         }}
                      >
+
                         <ElementNavigation 
                             elements={elements}
                             onElementClick={(index) => {
@@ -411,7 +428,11 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                         <ElementEditor
                           element={elements[selectedElementIndex]}
                           index={selectedElementIndex}
-                          onUpdate={updateElement}
+                          onUpdate={(idx, updates) => {
+                            updateElement(idx, updates);
+                            setDraftElement(null); // Clear draft upon commit
+                          }}
+                          onLiveUpdate={setDraftElement} // Update draft state live
                           isTextElement={isTextElement}
                           isImageElement={isImageElement}
                           allElements={elements}
@@ -459,6 +480,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                                 }}
                                 elements={elements}
                                 activeElementId={selectedElementIndex !== null ? elements[selectedElementIndex]?.id : null}
+                                draftElement={draftElement} // Pass draft element for live preview
                             />
                           </CollapsiblePanel>
                         );

@@ -164,6 +164,15 @@ export const adminOverview = async () => {
   return res.data;
 };
 
+export const getAdminAnalytics = async () => {
+  const res = await apiClient.get('/analytics/dashboard/');
+  return res.data;
+};
+
+export const logVisit = async (path: string): Promise<void> => {
+    await apiClient.post('/analytics/log-visit/', { path });
+};
+
 export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string }) => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());

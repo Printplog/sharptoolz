@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
-import { wrapSvgText, applyWrappedText } from "@/lib/utils/textWrapping";
+import { applyWrappedText } from "@/lib/utils/textWrapping";
 
 /**
  * Hook to imperatively update an SVG DOM based on edited elements.
@@ -9,7 +9,8 @@ import { wrapSvgText, applyWrappedText } from "@/lib/utils/textWrapping";
 export function useSvgLiveUpdate(
   containerRef: React.RefObject<HTMLDivElement>,
   elements: SvgElement[],
-  highlightId?: string | null
+  highlightId?: string | null,
+  overrideElement?: SvgElement | null
 ) {
   // Track previous highlight to clear it efficiently without scanning the whole tree
   const prevHighlightIdRef = useRef<string | null>(null);
@@ -29,7 +30,10 @@ export function useSvgLiveUpdate(
     }
 
     // 2. Update ONLY the active element
-    const activeElement = highlightId ? elements.find(e => e.id === highlightId) : null;
+    // Use overrideElement if provided and matches the highlighted ID, otherwise find in elements
+    const activeElement = (overrideElement && overrideElement.id === highlightId) 
+      ? overrideElement 
+      : (highlightId ? elements.find(e => e.id === highlightId) : null);
     
     if (activeElement) {
       try {
@@ -49,18 +53,18 @@ export function useSvgLiveUpdate(
             }
           });
 
-          // Update text with wrapping support
+          // Update text with wrapping support (Manual newlines)
           if (activeElement.innerText !== undefined) {
-            const maxWidth = parseFloat(activeElement.attributes['data-max-width'] || '0');
-            if (activeElement.tag === 'text' && maxWidth > 0) {
-              const fontSize = parseFloat(activeElement.attributes['font-size'] || window.getComputedStyle(domEl).fontSize || '16');
-              const fontFamily = activeElement.attributes['font-family'] || window.getComputedStyle(domEl).fontFamily || 'Arial';
-              
-              const lines = wrapSvgText(activeElement.innerText, { maxWidth, fontSize, fontFamily });
-              applyWrappedText(domEl as SVGTextElement, lines);
-            } else if (domEl.textContent !== activeElement.innerText) {
-              domEl.textContent = activeElement.innerText;
-            }
+             if (activeElement.tag === 'text') {
+               // Calculate font size for pixel-based dy
+               const fontSize = parseFloat(activeElement.attributes['font-size'] || window.getComputedStyle(domEl).fontSize || '16');
+
+
+               // Use shared logic for wrapping (renders tspans)
+               applyWrappedText(domEl as SVGTextElement, activeElement.innerText, fontSize);
+             } else if (domEl.textContent !== activeElement.innerText) {
+               domEl.textContent = activeElement.innerText;
+             }
           }
 
           // Update style

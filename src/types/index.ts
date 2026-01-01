@@ -222,6 +222,17 @@ export type AdminOverview = {
   total_purchased_docs: number;
   total_downloads: number;
   total_wallet_balance: number;
+  documents_chart: Array<{
+    date: string;
+    total: number;
+    paid: number;
+    test: number;
+  }>;
+  revenue_chart: Array<{
+    date: string;
+    users: number;
+    downloads: number;
+  }>;
 };
 
 export type AdminUsers = {

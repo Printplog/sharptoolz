@@ -12,16 +12,65 @@ interface SvgUploadProps {
   onSelectElement?: (id: string) => void;
   elements?: SvgElement[];
   activeElementId?: string | null;
+  draftElement?: SvgElement | null;
 }
 
-export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, elements = [], activeElementId }: SvgUploadProps) {
+export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, elements = [], activeElementId, draftElement }: SvgUploadProps) {
   const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  
   const containerRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ x: number, y: number, startPanX: number, startPanY: number } | null>(null);
+  const hasDraggedRef = useRef(false);
 
   // Use the live update hook to modify the DOM imperatively
-  useSvgLiveUpdate(containerRef as React.RefObject<HTMLDivElement>, elements, activeElementId);
+  useSvgLiveUpdate(containerRef as React.RefObject<HTMLDivElement>, elements, activeElementId, draftElement);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!currentSvg) return;
+    setIsDragging(true);
+    hasDraggedRef.current = false;
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      startPanX: pan.x,
+      startPanY: pan.y
+    };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !dragStartRef.current) return;
+    
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      hasDraggedRef.current = true;
+    }
+
+    setPan({
+      x: dragStartRef.current.startPanX + dx,
+      y: dragStartRef.current.startPanY + dy
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      dragStartRef.current = null;
+    }
+  };
 
   const handlePreviewClick = (e: React.MouseEvent) => {
+    // If we dragged, don't select elements
+    if (hasDraggedRef.current) return;
+
     if (!onSelectElement) return;
     
     // Find the closest parent with an ID
@@ -32,6 +81,11 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
         onSelectElement(id);
       }
     }
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
   };
 
   return (
@@ -46,8 +100,8 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
               <ZoomOut className="w-3 h-3 text-white/40" />
               <Slider
                 value={[zoom]}
-                min={0.5}
-                max={3}
+                min={0.1}
+                max={5}
                 step={0.1}
                 className="w-24"
                 onValueChange={(vals) => setZoom(vals[0])}
@@ -57,8 +111,8 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
                 variant="ghost" 
                 size="icon" 
                 className="w-6 h-6 hover:bg-white/10" 
-                onClick={() => setZoom(1)}
-                title="Reset Zoom"
+                onClick={resetView}
+                title="Reset View"
               >
                 <RefreshCw className="w-3 h-3" />
               </Button>
@@ -88,12 +142,13 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
             if (file) {
               onSvgUpload(file);
               e.target.value = "";
+              resetView();
             }
           }}
         />
         
         <div
-          className={`block w-full min-h-[400px] border border-white/10 rounded-xl overflow-hidden relative group shadow-2xl transition-all ${
+          className={`block w-full min-h-[400px] max-h-[600px] border border-white/10 rounded-xl overflow-hidden relative group shadow-2xl transition-all select-none ${
             !currentSvg ? "cursor-pointer hover:border-white/30" : ""
           }`}
           onClick={!currentSvg ? () => document.getElementById('template-svg')?.click() : undefined}
@@ -104,17 +159,24 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
 
           {currentSvg ? (
             <div 
-              className="relative w-full h-full p-8 flex items-center justify-center min-h-[400px] cursor-crosshair z-10 overflow-auto scrollbar-hide"
+              className={`relative w-full h-full min-h-[400px] flex items-center justify-center overflow-hidden ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              }`}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
               onClick={handlePreviewClick}
-              title="Click any element to select it for editing"
+              title="Click to select, drag to pan"
             >
               <div 
                 style={{ 
-                  transform: `scale(${zoom})`, 
-                  transition: 'transform 0.1s ease-out',
-                  transformOrigin: 'center center'
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, 
+                  transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                  transformOrigin: 'center center',
+                  willChange: 'transform'
                 }}
-                className="[&_svg]:max-w-full [&_svg]:max-h-[600px] [&_svg]:h-auto [&_svg]:w-auto"
+                className="[&_svg]:max-w-full [&_svg]:max-h-full [&_svg]:h-auto [&_svg]:w-auto pointer-events-none [&_svg]:pointer-events-auto"
                 dangerouslySetInnerHTML={{ __html: currentSvg }} 
                 ref={containerRef} 
               />
@@ -137,7 +199,7 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
       
       <div className="flex justify-between items-center text-[10px] text-white/40 px-2">
         <div className="flex gap-3">
-          <span>🎯 Hint: Click an element in preview to select</span>
+          <span>🎯 Hint: Click to select, Drag to pan</span>
           {currentSvg && <span>📏 {(currentSvg.length / 1024).toFixed(1)} KB</span>}
         </div>
         <span>Preview is debounced for performance</span>

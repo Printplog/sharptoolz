@@ -1,64 +1,46 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { adminOverview } from "@/api/apiEndpoints";
+import { adminOverview, getAdminAnalytics } from "@/api/apiEndpoints";
 import type { AdminOverview } from "@/types";
 import IsLoading from "@/components/IsLoading";
 import Overview from "@/components/Admin/Dashboard/Overview";
+import WalletFlowChart from "@/components/Admin/Dashboard/WalletFlowChart";
+import VisitorChart from "@/components/Admin/Dashboard/VisitorChart";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
-  const { data, isLoading } = useQuery<AdminOverview>({
+  const { data: overviewData, isLoading: isOverviewLoading } = useQuery<AdminOverview>({
     queryFn: () => adminOverview(),
     queryKey: ["adminOverview"],
   });
 
-  if (isLoading) return <IsLoading />;
+  const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery({
+    queryFn: () => getAdminAnalytics(),
+    queryKey: ["adminAnalytics"],
+  });
+
+  if (isOverviewLoading || isAnalyticsLoading) return <IsLoading />;
+  
   return (
     <div className="space-y-6">
       {/* Analytics Cards */}
-      <Overview data={data} />
+      <Overview data={overviewData} />
 
-      {/* Chart & Recent Activity Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Monthly Activity Chart Placeholder */}
-        <Card className="lg:col-span-2 bg-white/5 border border-white/10 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Monthly Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full flex items-center justify-center bg-white/5 rounded-lg border border-white/10">
-              <Activity className="h-10 w-10 text-muted-foreground opacity-30" />
-              <span className="ml-2 text-sm text-muted-foreground">
-                Chart goes here
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Wallet / Money Inflow */}
+        <WalletFlowChart data={analyticsData?.chart_data} />
+        
+        {/* Visitor Traffic */}
+        <VisitorChart data={analyticsData?.chart_data} />
+      </div>
 
-        {/* Recent Activity */}
-        <Card className="bg-white/5 border border-white/10 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span>New document created</span>
-              <span className="text-xs text-muted-foreground">10m ago</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Profile updated</span>
-              <span className="text-xs text-muted-foreground">32m ago</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Payment received</span>
-              <span className="text-xs text-muted-foreground">1h ago</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Login from new device</span>
-              <span className="text-xs text-muted-foreground">2h ago</span>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex justify-end">
+          <Link to="/admin/analytics">
+             <Button variant="outline" className="text-white border-white/20 hover:bg-white/10">
+                View All Analytics
+             </Button>
+          </Link>
       </div>
     </div>
   );

@@ -234,6 +234,7 @@ export default function SvgTemplateEditor() {
               fonts={data?.fonts || []}
               svgRaw={svgContent} 
               templateName={data.name}
+              templateId={id}
               onSave={handleSave}
               banner={data.banner}
               hot={data.hot}

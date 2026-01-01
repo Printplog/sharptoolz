@@ -3,6 +3,7 @@
  * Matches elements by ID/identity instead of index to preserve content during reordering
  */
 
+import { applyWrappedText } from "@/lib/utils/textWrapping";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 
 /**
@@ -129,11 +130,12 @@ export function regenerateSvg(
         const hrefNS = 'http://www.w3.org/1999/xlink';
         Object.entries(editedEl.attributes).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
+            const stringValue = String(value);
             // Handle xlink:href namespace for image elements
             // The key might be stored as 'xlink:href' or 'href' in the attributes object
             if (editedEl.tag === 'image' && (key === 'href' || key === 'xlink:href')) {
               // Always use xlink namespace for image href
-              matchingOriginalEl.setAttributeNS(hrefNS, 'href', value);
+              matchingOriginalEl.setAttributeNS(hrefNS, 'href', stringValue);
             } else if (key.startsWith('xlink:') || key.startsWith('xmlns:')) {
               // Handle other namespaced attributes (preserve namespace)
               const parts = key.split(':');
@@ -141,11 +143,11 @@ export function regenerateSvg(
                 const ns = key.startsWith('xmlns:') 
                   ? 'http://www.w3.org/2000/xmlns/'
                   : hrefNS;
-                matchingOriginalEl.setAttributeNS(ns, parts[1], value);
+                matchingOriginalEl.setAttributeNS(ns, parts[1], stringValue);
               }
             } else {
               // Regular attribute
-              matchingOriginalEl.setAttribute(key, value);
+              matchingOriginalEl.setAttribute(key, stringValue);
             }
           }
         });
@@ -164,8 +166,32 @@ export function regenerateSvg(
         }
         
         // Update text content if applicable
+        // Update text content with manual line break support
         if (typeof editedEl.innerText === 'string') {
-          matchingOriginalEl.textContent = editedEl.innerText;
+          // Check for manual newlines in text elements
+          if (matchingOriginalEl.tagName.toLowerCase() === 'text' && editedEl.innerText.includes('\n')) {
+             // Improved font-size detection
+             let fontSize = parseFloat(editedEl.attributes['font-size'] || '0');
+             if (!fontSize) {
+               // Try to parse from style
+               const style = editedEl.attributes.style || '';
+               const match = style.match(/font-size:\s*([\d.]+)/); // Capture number, ignore unit for now (assume px/pt are close enough or handle conversion)
+               if (match) {
+                 fontSize = parseFloat(match[1]);
+                 // Simple heuristic: if pt, convert to px (roughly * 1.33)
+                 if (style.match(/font-size:\s*[\d.]+pt/)) fontSize *= 1.33;
+               } else {
+                 fontSize = 16;
+               }
+             }
+             
+             // Use shared logic for wrapping (renders tspans)
+             // MUST pass 'doc' because we are working with a detached DOMParser document, not window.document
+             applyWrappedText(matchingOriginalEl, editedEl.innerText, fontSize, doc);
+             
+          } else {
+             matchingOriginalEl.textContent = editedEl.innerText;
+          }
         }
 
         // --- Apply Highlight if this is the selected element ---

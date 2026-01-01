@@ -7,6 +7,7 @@ import {
   Type,
   Settings,
   ArrowLeft,
+  LineChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -19,6 +20,11 @@ export default function Sidebar() {
       icon: <LayoutDashboard className="h-5 w-5" />,
       label: "Dashboard",
       to: "/admin/dashboard",
+    },
+    {
+      icon: <LineChart className="h-5 w-5" />,
+      label: "Analytics",
+      to: "/admin/analytics",
     },
     {
       icon: <Hammer className="h-5 w-5" />,
