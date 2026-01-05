@@ -78,20 +78,62 @@ export function wrapSvgText(text: string, options: WrapOptions): string[] {
 }
 
 /**
- * Injects wrapped text into an SVG text element using tspan.
+ * Measure actual font metrics (ascent and descent) for accurate line spacing.
+ * Different fonts have different internal spacing, so we measure the actual bounding box.
+ * 
+ * @param fontSize Font size in pixels
+ * @param fontFamily Font family name (e.g., 'Arial', 'Times New Roman')
+ * @returns Object with ascent and descent in pixels
  */
+function getFontMetrics(fontSize: number, fontFamily: string = 'Arial'): { ascent: number; descent: number } {
+  // Try to use canvas for accurate measurement
+  if (typeof document !== 'undefined') {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (ctx) {
+        ctx.font = `${fontSize}px ${fontFamily}`;
+        // Use 'Mg' - M has maximum ascent, g has maximum descent
+        const metrics = ctx.measureText('Mg');
+        
+        // actualBoundingBoxAscent/Descent give us the actual font metrics
+        if (metrics.actualBoundingBoxAscent && metrics.actualBoundingBoxDescent) {
+          return {
+            ascent: metrics.actualBoundingBoxAscent,
+            descent: metrics.actualBoundingBoxDescent,
+          };
+        }
+      }
+    } catch (e) {
+      // Fall through to default calculation
+      console.warn('Failed to measure font metrics, using defaults:', e);
+    }
+  }
+  
+  // Fallback: Use typical font metrics ratios
+  // Most fonts have ~80% ascent and ~20% descent of the font size
+  return {
+    ascent: fontSize * 0.8,
+    descent: fontSize * 0.2,
+  };
+}
+
 /**
  * Injects wrapped text into an SVG text element using tspan.
- * Supports manual newlines and pixel-perfect line spacing.
+ * Supports manual newlines and font-aware line spacing.
+ * 
  * @param el The target SVG text element
  * @param linesOrText The text content (string) or array of lines. If string, it will be split by newline.
  * @param fontSize Font size in pixels for line height calculation.
+ * @param fontFamily Optional font family for accurate spacing. Defaults to 'Arial'.
  * @param doc Optional document context (for server-side/DOMParser usage). Defaults to window.document.
  */
 export function applyWrappedText(
   el: SVGTextElement | Element, 
   linesOrText: string | string[], 
   fontSize: number = 16,
+  fontFamily: string = 'Arial',
   doc: Document = document
 ) {
   // Normalize input to array of lines
@@ -105,9 +147,13 @@ export function applyWrappedText(
   // Get original coordinates
   const x = el.getAttribute("x") || "0";
   
-  // Calculate line height using a multiplier for consistent spacing across resolutions.
-  // 1.5 gives a ~0.5em gap (approx 8px for 16px font), scaling with the document.
-  const lineHeight = fontSize * 1.5;
+  // Calculate font-aware line height based on actual font metrics
+  const metrics = getFontMetrics(fontSize, fontFamily);
+  
+  // Line height = ascent + descent + padding
+  // Padding provides breathing room between lines (default 0.2em = 20% of font size)
+  const padding = fontSize * 0.2;
+  const lineHeight = metrics.ascent + metrics.descent + padding;
 
   lines.forEach((line, i) => {
     const tspan = doc.createElementNS("http://www.w3.org/2000/svg", "tspan");

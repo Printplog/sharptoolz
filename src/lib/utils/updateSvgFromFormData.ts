@@ -156,6 +156,15 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
             const userLines = stringValue.split('\n');
             let finalLines: string[] = [];
 
+            // Extract font family for accurate spacing
+            const fontFamily = el.getAttribute('font-family') || 
+                              field.attributes?.['font-family'] || 
+                              (() => {
+                                const styleStr = el.getAttribute('style') || '';
+                                const match = styleStr.match(/font-family:\s*([^;]+)/);
+                                return match ? match[1].trim() : 'Arial';
+                              })();
+
             // Helper for measuring text width (canvas or heuristic)
             const getWidth = (str: string) => {
                // Try to use canvas if available in this context
@@ -163,7 +172,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
                    const canvas = document.createElement('canvas');
                    const ctx = canvas.getContext('2d');
                    if (ctx) {
-                       ctx.font = `${fontSize}px Arial`; // Use a default font if we can't determine the exact one easily
+                       ctx.font = `${fontSize}px ${fontFamily}`; // Use actual font family
                        return ctx.measureText(str).width;
                    }
                }
@@ -196,9 +205,9 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
             // If the resulting lines are empty (e.g. empty input), ensure at least one empty line to clear
             if (finalLines.length === 0) finalLines = [""];
 
-            // Render using shared logic (pixel-perfect spacing)
-            // Pass 'doc' since we are using a DOMParser document
-            applyWrappedText(el, finalLines, fontSize, doc);
+            // Render using shared logic (font-aware spacing)
+            // Pass 'fontFamily' and 'doc' since we are using a DOMParser document
+            applyWrappedText(el, finalLines, fontSize, fontFamily, doc);
           } else {
             el.textContent = stringValue;
           }

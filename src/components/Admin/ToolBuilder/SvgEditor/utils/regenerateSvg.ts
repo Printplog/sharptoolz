@@ -185,9 +185,17 @@ export function regenerateSvg(
                }
              }
              
-             // Use shared logic for wrapping (renders tspans)
-             // MUST pass 'doc' because we are working with a detached DOMParser document, not window.document
-             applyWrappedText(matchingOriginalEl, editedEl.innerText, fontSize, doc);
+             // Extract font family for accurate spacing
+             const fontFamily = editedEl.attributes['font-family'] || 
+                               (() => {
+                                 const style = editedEl.attributes.style || '';
+                                 const match = style.match(/font-family:\s*([^;]+)/);
+                                 return match ? match[1].trim() : 'Arial';
+                               })();
+             
+             // Use shared logic for wrapping with font-aware spacing (renders tspans)
+             // MUST pass 'fontFamily' and 'doc' because we are working with a detached DOMParser document, not window.document
+             applyWrappedText(matchingOriginalEl, editedEl.innerText, fontSize, fontFamily, doc);
              
           } else {
              matchingOriginalEl.textContent = editedEl.innerText;
