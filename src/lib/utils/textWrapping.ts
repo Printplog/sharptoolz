@@ -85,7 +85,7 @@ export function wrapSvgText(text: string, options: WrapOptions): string[] {
  * @param fontFamily Font family name (e.g., 'Arial', 'Times New Roman')
  * @returns Object with ascent and descent in pixels
  */
-function getFontMetrics(fontSize: number, fontFamily: string = 'Arial'): { ascent: number; descent: number } {
+export function getFontMetrics(fontSize: number, fontFamily: string = 'Arial'): { ascent: number; descent: number } {
   // Try to use canvas for accurate measurement
   if (typeof document !== 'undefined') {
     try {
@@ -112,10 +112,10 @@ function getFontMetrics(fontSize: number, fontFamily: string = 'Arial'): { ascen
   }
   
   // Fallback: Use typical font metrics ratios
-  // Most fonts have ~80% ascent and ~20% descent of the font size
+  // Increased slightly to prevent overlap in non-browser environments
   return {
-    ascent: fontSize * 0.8,
-    descent: fontSize * 0.2,
+    ascent: fontSize * 0.9,
+    descent: fontSize * 0.3,
   };
 }
 
@@ -147,13 +147,21 @@ export function applyWrappedText(
   // Get original coordinates
   const x = el.getAttribute("x") || "0";
   
-  // Calculate font-aware line height based on actual font metrics
-  const metrics = getFontMetrics(fontSize, fontFamily);
+  // Check for saved line height ratio (calculated by Admin browser)
+  // This ensures consistent spacing on server-side where canvas metrics might fail
+  const savedRatio = parseFloat(el.getAttribute('data-lh-ratio') || '0');
   
-  // Line height = ascent + descent + padding
-  // Padding provides breathing room between lines (default 0.2em = 20% of font size)
-  const padding = fontSize * 0.2;
-  const lineHeight = metrics.ascent + metrics.descent + padding;
+  let lineHeight: number;
+  
+  if (savedRatio > 0) {
+      lineHeight = fontSize * savedRatio;
+  } else {
+      // Calculate font-aware line height based on actual font metrics
+      const metrics = getFontMetrics(fontSize, fontFamily);
+      // Line height = ascent + descent + padding
+      const padding = fontSize * 0.2;
+      lineHeight = metrics.ascent + metrics.descent + padding;
+  }
 
   lines.forEach((line, i) => {
     const tspan = doc.createElementNS("http://www.w3.org/2000/svg", "tspan");

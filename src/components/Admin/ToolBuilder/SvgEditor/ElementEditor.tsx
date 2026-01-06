@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
+import { getFontMetrics } from "@/lib/utils/textWrapping";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -149,6 +150,11 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     const [isDirty, setIsDirty] = useState(false);
     const [showGenBuilder, setShowGenBuilder] = useState(false);
     
+    // Performance: Throttling & Blob Storage
+    const lastUpdate = useMemo(() => ({ current: 0 }), []); // useRef that survives renders but we use useMemo to avoid import changes if needed, actually useRef is imported above
+    const updateTimeout = useMemo<{ current: ReturnType<typeof setTimeout> | null }>(() => ({ current: null }), []);
+    const imageMap = useMemo(() => ({ current: {} as Record<string, string> }), []); // Stores blobUrl -> base64 mapping
+    
     // Sync local state when the target element changes (e.g. user selects a different element)
     useEffect(() => {
       setLocalElement(element);
@@ -157,6 +163,69 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       // but parent handles draft state reset usually
     }, [element.id, element.innerText, index]);
 
+    // Calculate & Save Font Metrics Ratio (for Server-Side Consistency)
+    useEffect(() => {
+        if (!isTextElement(localElement)) return;
+
+        const style = localElement.attributes.style || "";
+        let fontSize = parseFloat(localElement.attributes['font-size'] || "0");
+        let fontFamily = localElement.attributes['font-family'] || "";
+
+        if (!fontSize) {
+            const match = style.match(/font-size:\s*([\d.]+)/);
+            if (match) fontSize = parseFloat(match[1]);
+        }
+        if (!fontFamily) {
+             const match = style.match(/font-family:\s*([^;]+)/);
+             if (match) fontFamily = match[1].trim().replace(/['"]/g, "");
+        }
+
+        if (fontSize > 0) {
+            // Calculate ratio using Browser Canvas (User Side Node might fail, so we save this)
+            const metrics = getFontMetrics(fontSize, fontFamily || 'Arial');
+            // padding used in applyWrappedText is 0.2 * fontSize
+            const totalHeight = metrics.ascent + metrics.descent + (fontSize * 0.2);
+            const ratio = totalHeight / fontSize;
+            
+            const ratioStr = ratio.toFixed(3);
+            
+            // Only update if different to avoid loop
+            if (localElement.attributes['data-lh-ratio'] !== ratioStr) {
+                setLocalElement(prev => {
+                    const updated = {
+                        ...prev,
+                        attributes: { ...prev.attributes, 'data-lh-ratio': ratioStr }
+                    };
+                    // We don't need to emit live update for this metadata, but we should save it.
+                    // Actually, we DO need to emit it so it saves.
+                    // But if we emit, we trigger parent update.
+                    // Let's use handleLocalUpdate to ensure consistency.
+                    // BUT handleLocalUpdate sets localElement, triggering this effect?
+                    // No, invalidation check `!== ratioStr` prevents loop.
+                    
+                    // We call the debounced live update logic? No, directly.
+                    // We'll mimic handleLocalUpdate but we are inside useEffect so we can't call it easily without dep cycle?
+                    // Actually handleLocalUpdate is stable.
+                    // We can just call it?
+                    // Let's call the setter provided by handleLocalUpdate logic.
+                    // Better: Call onLiveUpdate?
+                    
+                    // Safest: Just modify local element and let the dirty state handle save?
+                    // Or call onLiveUpdate directly?
+                    onLiveUpdate?.(updated);
+                   return updated;
+                });
+                setIsDirty(true);
+            }
+        }
+    }, [
+        // Dependencies: Re-run when font props change
+        localElement.attributes['style'], 
+        localElement.attributes['font-family'], 
+        localElement.attributes['font-size'],
+        isTextElement
+    ]);
+
     const handleLocalUpdate = (updates: Partial<SvgElement>) => {
       setLocalElement(prev => {
         const updated = {
@@ -164,15 +233,51 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           ...updates,
           attributes: { ...prev.attributes, ...(updates.attributes || {}) }
         };
-        // Emit live update
-        onLiveUpdate?.(updated);
         return updated;
       });
       setIsDirty(true);
     };
 
+    // Throttled Live Update to prevent excessive parent re-renders (lag)
+    useEffect(() => {
+        const now = Date.now();
+        const limit = 32; // ~30fps cap
+        
+        if (localElement !== element) {
+            // Check if we should fire immediately or schedule
+            if (now - lastUpdate.current >= limit) {
+                onLiveUpdate?.(localElement);
+                lastUpdate.current = now;
+            } else {
+                if (updateTimeout.current) clearTimeout(updateTimeout.current);
+                updateTimeout.current = setTimeout(() => {
+                    onLiveUpdate?.(localElement);
+                    lastUpdate.current = Date.now();
+                }, limit - (now - lastUpdate.current));
+            }
+        }
+        return () => {
+            if (updateTimeout.current) clearTimeout(updateTimeout.current);
+        };
+    }, [localElement, onLiveUpdate]); // Dependency on localElement triggers this effect
+
     const handleApply = () => {
-      onUpdate(index, localElement);
+      // If the image is a blob URL, we must swap it back to Base64 for the save
+      const finalElement = { ...localElement };
+      const href = finalElement.attributes.href;
+      
+      if (href && typeof href === 'string' && href.startsWith('blob:')) {
+         const originalBase64 = imageMap.current[href];
+         if (originalBase64) {
+             finalElement.attributes = {
+                 ...finalElement.attributes,
+                 href: originalBase64,
+                 'xlink:href': originalBase64
+             };
+         }
+      }
+
+      onUpdate(index, finalElement);
       setIsDirty(false);
       toast.success("Changes applied to SVG");
     };
@@ -245,11 +350,17 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         const base64 = e.target?.result as string;
         
         // 1. Update the image locally
+        // 1. Update the image locally using Blob URL (Instant Preview)
+        const blobUrl = URL.createObjectURL(file);
+        
+        // Store base64 mapping for later save
+        imageMap.current[blobUrl] = base64;
+
         handleLocalUpdate({ 
           attributes: { 
             ...localElement.attributes, 
-            href: base64,
-            'xlink:href': base64 
+            href: blobUrl,
+            'xlink:href': blobUrl 
           }
         });
         
@@ -482,6 +593,41 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               />
             </div>
             
+            <div className="space-y-2">
+               <div className="flex justify-between">
+                 <Label className="text-xs text-white/60 uppercase font-bold tracking-wider">Auto-Wrap Width</Label>
+                 <span className="text-xs text-white/40">{localElement.attributes['data-max-width'] ? `${localElement.attributes['data-max-width']}px` : 'Off'}</span>
+               </div>
+               <div className="flex gap-2">
+                 <DebouncedInput
+                    type="number"
+                    min={0}
+                    placeholder="Set max width in px (e.g. 300)"
+                    value={localElement.attributes['data-max-width'] || ""}
+                    debounce={150}
+                    onChange={(val) => handleLocalUpdate({
+                        attributes: { ...localElement.attributes, 'data-max-width': String(val) }
+                    })}
+                    className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-gray-500 outline-0 text-xs h-8 font-mono"
+                 />
+                 {localElement.attributes['data-max-width'] && (
+                     <Button 
+                        variant="glass" 
+                        size="icon" 
+                        className="h-8 w-8 text-white/40 hover:text-red-400"
+                        onClick={() => handleLocalUpdate({
+                            attributes: { ...localElement.attributes, 'data-max-width': "" }
+                        })}
+                        title="Clear wrapping limit"
+                     >
+                        <Trash2 className="w-3.5 h-3.5" />
+                     </Button>
+                 )}
+               </div>
+               <p className="text-[10px] text-white/30 leading-tight">
+                 If set, text will automatically wrap to new lines when it exceeds this width.
+               </p>
+            </div>
 
           </div>
         )}
@@ -563,7 +709,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                   <DebouncedInput
                       type="number"
                       value={currentTransform.translateX}
-                      debounce={50}
+                      debounce={150}
                       onChange={(val) => updateTransform('translateX', parseFloat(String(val)) || 0)}
                       className="h-9 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
                   />
@@ -601,7 +747,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                   <DebouncedInput
                       type="number"
                       value={currentTransform.translateY}
-                      debounce={50}
+                      debounce={150}
                       onChange={(val) => updateTransform('translateY', parseFloat(String(val)) || 0)}
                       className="h-9 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
                   />
@@ -634,7 +780,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                         step="0.1"
                         min="0.1"
                         value={currentTransform.scale}
-                        debounce={50}
+                        debounce={150}
                         onChange={(val) => updateTransform('scale', parseFloat(String(val)) || 1)}
                         className="h-8 w-20 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
                     />
@@ -681,7 +827,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                       <DebouncedInput
                         type="number"
                         value={Math.round(currentTransform.rotate)}
-                        debounce={50}
+                        debounce={150}
                         onChange={(val) => updateTransform('rotate', parseFloat(String(val)) || 0)}
                         className="h-8 w-20 bg-white/5 border-white/10 text-xs text-center px-1 font-mono focus:border-primary/50 transition-all rounded-lg"
                     />
