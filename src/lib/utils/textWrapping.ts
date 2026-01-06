@@ -174,3 +174,77 @@ export function applyWrappedText(
     el.appendChild(tspan);
   });
 }
+
+/**
+ * Retrieves the computed font size and family for an SVG element.
+ * It checks in order:
+ * 1. Element attributes (font-size, font-family)
+ * 2. Inline style attribute
+ * 3. Class definitions in <style> tags within the document
+ * 
+ * @param el The SVG element to inspect
+ * @param doc The document containing the element and style definitions
+ * @returns Object with resolved fontSize and fontFamily
+ */
+export function getSvgElementStyle(el: Element, doc: Document) {
+  let fontSize = parseFloat(el.getAttribute('font-size') || '0');
+  let fontFamily = el.getAttribute('font-family') || '';
+
+  // If attributes are missing, look in inline styles
+  if (!fontSize || !fontFamily) {
+    const style = el.getAttribute('style') || '';
+    
+    if (!fontSize) {
+      const inlineSizeMatch = style.match(/font-size:\s*([\d.]+)/);
+      if (inlineSizeMatch) fontSize = parseFloat(inlineSizeMatch[1]);
+    }
+    
+    if (!fontFamily) {
+      const inlineFamilyMatch = style.match(/font-family:\s*([^;]+)/);
+      if (inlineFamilyMatch) fontFamily = inlineFamilyMatch[1].trim().replace(/['"]/g, '');
+    }
+  }
+
+  // If still missing, check class definitions in <style> tags
+  // This is crucial for SVGs that use classes for styling instead of attributes
+  if ((!fontSize || !fontFamily) && el.hasAttribute('class')) {
+    const className = el.getAttribute('class')!;
+    const styleElements = doc.querySelectorAll('style');
+    
+    // Regex to find class definition block: .className { ... }
+    // Handles multiple matches to find properties across different blocks
+    // Note: Escaping for regex is important. Simple whitespace split for multi-class support.
+    // This looks for ANY of the classes. Ideally we should respect hierarchy but this is an improvement.
+    // For simplicity, we just check exact class match in selector or partial match.
+    // Improvement: support compound selectors if needed, but simple class selector is 99% case.
+    const classNames = className.split(/\s+/);
+    
+    styleElements.forEach(styleEl => {
+      const content = styleEl.textContent || '';
+      
+      classNames.forEach(cls => {
+          if (!cls) return;
+          // Regex finds .cls { ... } or .cls, .other { ... }
+          // Matches .cls followed by optional chars until {
+          const regex = new RegExp(`\\.${cls}[^{]*{([^}]+)}`, 'g');
+          let match;
+          while ((match = regex.exec(content)) !== null) {
+            const block = match[1];
+            if (!fontSize) {
+              const sizeMatch = block.match(/font-size:\s*([\d.]+)/);
+              if (sizeMatch) fontSize = parseFloat(sizeMatch[1]);
+            }
+            if (!fontFamily) {
+              const familyMatch = block.match(/font-family:\s*([^;]+)/);
+              if (familyMatch) fontFamily = familyMatch[1].trim().replace(/['"]/g, '');
+            }
+          }
+      });
+    });
+  }
+  
+  return { 
+    fontSize: fontSize || 16, // Fallback default
+    fontFamily: fontFamily || 'Arial' // Fallback default
+  };
+}

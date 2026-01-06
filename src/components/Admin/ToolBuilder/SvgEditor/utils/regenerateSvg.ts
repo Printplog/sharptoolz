@@ -3,7 +3,7 @@
  * Matches elements by ID/identity instead of index to preserve content during reordering
  */
 
-import { applyWrappedText } from "@/lib/utils/textWrapping";
+import { applyWrappedText, getSvgElementStyle } from "@/lib/utils/textWrapping";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 
 /**
@@ -170,28 +170,8 @@ export function regenerateSvg(
         if (typeof editedEl.innerText === 'string') {
           // Check for manual newlines in text elements
           if (matchingOriginalEl.tagName.toLowerCase() === 'text' && editedEl.innerText.includes('\n')) {
-             // Improved font-size detection
-             let fontSize = parseFloat(editedEl.attributes['font-size'] || '0');
-             if (!fontSize) {
-               // Try to parse from style
-               const style = editedEl.attributes.style || '';
-               const match = style.match(/font-size:\s*([\d.]+)/); // Capture number, ignore unit for now (assume px/pt are close enough or handle conversion)
-               if (match) {
-                 fontSize = parseFloat(match[1]);
-                 // Simple heuristic: if pt, convert to px (roughly * 1.33)
-                 if (style.match(/font-size:\s*[\d.]+pt/)) fontSize *= 1.33;
-               } else {
-                 fontSize = 16;
-               }
-             }
-             
-             // Extract font family for accurate spacing
-             const fontFamily = editedEl.attributes['font-family'] || 
-                               (() => {
-                                 const style = editedEl.attributes.style || '';
-                                 const match = style.match(/font-family:\s*([^;]+)/);
-                                 return match ? match[1].trim() : 'Arial';
-                               })();
+             // Improved font-size detection using robust helper that checks classes
+             const { fontSize, fontFamily } = getSvgElementStyle(matchingOriginalEl, doc);
              
              // Use shared logic for wrapping with font-aware spacing (renders tspans)
              // MUST pass 'fontFamily' and 'doc' because we are working with a detached DOMParser document, not window.document

@@ -1,5 +1,5 @@
 import { extractFromDependency } from "./fieldExtractor";
-import { applyWrappedText } from "./textWrapping";
+import { applyWrappedText, getSvgElementStyle } from "./textWrapping";
 import type { FormField } from "@/types";
 
 export default function updateSvgFromFormData(svgRaw: string, fields: FormField[]): string {
@@ -135,35 +135,14 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
           const maxWidth = parseFloat(field.attributes?.['data-max-width'] || '0');
           
-          // Improved font-size detection: Check SVG element attributes directly, then field attributes, then style string
-          let fontSize = parseFloat(el.getAttribute('font-size') || field.attributes?.['font-size'] || '0');
-          
-          if (!fontSize) {
-             const styleStr = el.getAttribute('style') || '';
-             const match = styleStr.match(/font-size:\s*([\d.]+)/);
-             if (match) {
-                fontSize = parseFloat(match[1]);
-                 // Simple heuristic: if pt, convert to px (roughly * 1.33)
-                 if (styleStr.match(/font-size:\s*[\d.]+pt/)) fontSize *= 1.33;
-             } else {
-                fontSize = 16;
-             }
-          }
+          // Use improved font style detection that checks attributes, inline styles, and class definitions
+          const { fontSize, fontFamily } = getSvgElementStyle(el, doc);
 
           // Check if we need special handling: manual newlines OR max width wrapping
           if (el.tagName.toLowerCase() === 'text' && (stringValue.includes('\n') || maxWidth > 0)) {
             // Split by line breaks to respect user's intentional newlines (from SeamlessEditor)
             const userLines = stringValue.split('\n');
             let finalLines: string[] = [];
-
-            // Extract font family for accurate spacing
-            const fontFamily = el.getAttribute('font-family') || 
-                              field.attributes?.['font-family'] || 
-                              (() => {
-                                const styleStr = el.getAttribute('style') || '';
-                                const match = styleStr.match(/font-family:\s*([^;]+)/);
-                                return match ? match[1].trim() : 'Arial';
-                              })();
 
             // Helper for measuring text width (canvas or heuristic)
             const getWidth = (str: string) => {
