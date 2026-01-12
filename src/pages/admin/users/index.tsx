@@ -13,8 +13,8 @@ export default function Users() {
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6">
-          <p className="text-red-400 text-center">Error: {error}</p>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-12 backdrop-blur-md flex flex-col items-center justify-center gap-4">
+          <p className="text-red-400 text-center font-medium italic">Error: {error}</p>
         </div>
       </div>
     );
