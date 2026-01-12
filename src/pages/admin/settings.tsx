@@ -6,18 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
 import { ShieldCheck, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import type { SiteSettings } from "@/types";
-import IsLoading from "@/components/IsLoading";
+import SettingsSkeleton from "@/components/Admin/Layouts/SettingsSkeleton";
 
 export default function AdminSettings() {
   const queryClient = useQueryClient();
@@ -26,11 +26,11 @@ export default function AdminSettings() {
     whatsapp_number: "",
     manual_purchase_text: "",
   });
-  
+
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [answers, setAnswers] = useState({ otp: "" });
   const [isSendingCode, setIsSendingCode] = useState(false);
-  
+
   const { data: settings, isLoading } = useQuery<SiteSettings>({
     queryKey: ["siteSettings"],
     queryFn: getSiteSettings,
@@ -47,7 +47,7 @@ export default function AdminSettings() {
   }, [settings]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: Partial<SiteSettings> & { otp: string }) => 
+    mutationFn: (data: Partial<SiteSettings> & { otp: string }) =>
       updateSiteSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["siteSettings"] });
@@ -89,7 +89,7 @@ export default function AdminSettings() {
     });
   };
 
-  if (isLoading) return <IsLoading />;
+  if (isLoading) return <SettingsSkeleton />;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -108,7 +108,7 @@ export default function AdminSettings() {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="crypto">Crypto Wallet Address (USDT/BEP20)</Label>
-            <Input 
+            <Input
               id="crypto"
               value={formData.crypto_address}
               onChange={(e) => setFormData({ ...formData, crypto_address: e.target.value })}
@@ -119,7 +119,7 @@ export default function AdminSettings() {
 
           <div className="space-y-2">
             <Label htmlFor="whatsapp">WhatsApp Number for Manual Payment</Label>
-            <Input 
+            <Input
               id="whatsapp"
               value={formData.whatsapp_number}
               onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
@@ -130,7 +130,7 @@ export default function AdminSettings() {
 
           <div className="space-y-2">
             <Label htmlFor="manual">Manual Purchase Instructions</Label>
-            <Textarea 
+            <Textarea
               id="manual"
               value={formData.manual_purchase_text}
               onChange={(e) => setFormData({ ...formData, manual_purchase_text: e.target.value })}
@@ -139,7 +139,7 @@ export default function AdminSettings() {
             />
           </div>
 
-          <Button 
+          <Button
             onClick={handleSaveClick}
             className="w-full sm:w-auto gap-2"
           >
@@ -161,15 +161,15 @@ export default function AdminSettings() {
               Please verify your email to authorize changes.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="pt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="otp">Verification Code</Label>
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="p-0 h-auto text-primary" 
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="p-0 h-auto text-primary"
                   onClick={handleRequestCode}
                   disabled={isSendingCode}
                 >
@@ -188,14 +188,14 @@ export default function AdminSettings() {
           </div>
 
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsChallengeOpen(false)}
               className="border-white/10"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleConfirmUpdate}
               disabled={updateMutation.isPending}
               className="gap-2"

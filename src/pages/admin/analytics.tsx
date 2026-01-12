@@ -7,6 +7,7 @@ import DeviceStatsChart from "@/components/Admin/Dashboard/DeviceStatsChart";
 import UserGrowthChart from "@/components/Admin/Dashboard/UserGrowthChart";
 import DistributionChart from "@/components/Admin/Dashboard/DistributionChart";
 import type { AdminOverview } from "@/types";
+import AnalyticsSkeleton from "@/components/Admin/Layouts/AnalyticsSkeleton";
 
 export default function Analytics() {
   const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery({
@@ -23,6 +24,8 @@ export default function Analytics() {
   const chartData = analyticsData?.chart_data;
   const visitorLog = analyticsData?.recent_visitors;
   const deviceStats = analyticsData?.device_stats;
+
+  if (isAnalyticsLoading || isOverviewLoading) return <AnalyticsSkeleton />;
 
   return (
     <div className="space-y-6 w-full p-6">

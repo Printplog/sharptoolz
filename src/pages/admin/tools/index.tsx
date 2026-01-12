@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Plus, Edit, Trash2, Loader, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DataTable } from "@/components/ui/data-table";
+import TableSkeleton from "@/components/Admin/Layouts/TableSkeleton";
 
 export default function AdminTools() {
   const queryClient = useQueryClient();
@@ -101,18 +102,7 @@ export default function AdminTools() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto ">
-        <div className="flex items-center justify-center h-64">
-          <div className="flex items-center gap-2 text-white/60">
-            <Loader className="w-5 h-5 animate-spin" />
-            Loading tools...
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <TableSkeleton />;
 
   const columns: ColumnDef<Tool>[] = [
     {
@@ -205,7 +195,7 @@ export default function AdminTools() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2">
-           Tools
+            Tools
           </h1>
           <p className="text-white/60 mt-1">
             Manage tools to organize your templates
@@ -229,9 +219,8 @@ export default function AdminTools() {
           return (
             <ConfirmAction
               title="Delete selected tools"
-              description={`This will permanently delete ${ids.length} tool${
-                ids.length === 1 ? "" : "s"
-              }. Continue?`}
+              description={`This will permanently delete ${ids.length} tool${ids.length === 1 ? "" : "s"
+                }. Continue?`}
               onConfirm={async () => {
                 for (const id of ids) {
                   await deleteMutation.mutateAsync(id);
