@@ -1,4 +1,4 @@
-import { Loader, Pencil, Trash2 } from "lucide-react";
+import { Download, Loader, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PurchasedTemplate } from "@/types";
 import { Link } from "react-router-dom";
@@ -6,6 +6,8 @@ import { ConfirmAction } from "@/components/ConfirmAction";
 import { deletePurchasedTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { DownloadDocDialog } from "./DownloadDoc";
+import { useDialogStore } from "@/store/dialogStore";
 
 type Props = {
   doc: PurchasedTemplate;
@@ -13,6 +15,7 @@ type Props = {
 
 export default function DocumentCard({ doc }: Props) {
   const queryClient = useQueryClient();
+  const { openDialog } = useDialogStore();
 
   const { mutate, isPending } = useMutation({
     mutationFn: (id: string) => deletePurchasedTemplate(id),
@@ -20,7 +23,7 @@ export default function DocumentCard({ doc }: Props) {
       toast.success("Document deleted successfully");
       // Invalidate all purchased-templates queries (including paginated ones)
       // exact: false matches all queries that start with ["purchased-templates"]
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: ["purchased-templates"],
         exact: false, // This will match ["purchased-templates", currentPage, pageSize]
       });
@@ -70,21 +73,35 @@ export default function DocumentCard({ doc }: Props) {
       {/* Bottom Overlay Content */}
       <div className="absolute bottom-0 left-0 w-full z-10 bg-transparent p-4 flex flex-col gap-2">
         <div className="flex justify-between items-start">
-          <div className="space-y-2">
+          <div className="space-y-1">
             <h3 className="text-white font-semibold truncate">{doc.name}</h3>
-            {doc.test && (
-              <span className="text-xs text-white/80 bg-red-500 px-2 py-1 rounded-full capitalize">
-                Test document
+            <div className="flex items-center gap-2">
+              {/* Red Circle for Text Mode / Test */}
+              {(doc.status?.toLowerCase().includes('text') || doc.test) && (
+                <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+              )}
+              {/* Green Circle for Purchased / Paid */}
+              {(!doc.test || doc.status?.toLowerCase().includes('purchased')) && (
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+              )}
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
+                {doc.status || (doc.test ? "Test Mode" : "Purchased")}
               </span>
-            )}
+            </div>
           </div>
-          <span className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded-full capitalize">
-            {doc.status || "Unknown"}
-          </span>
         </div>
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-2 mt-2">
+          {/* Download Button */}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 w-8 p-0 bg-white/5 border-white/10 hover:bg-white/10 text-white/70"
+            onClick={() => openDialog(`download-doc-${doc.id}`)}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
           <Link to={!isPending ? `/documents/${doc.id}` : "#"} className="">
             <Button
               disabled={isPending}
@@ -114,6 +131,13 @@ export default function DocumentCard({ doc }: Props) {
           />
         </div>
       </div>
+
+      <DownloadDocDialog
+        purchasedTemplateId={doc.id}
+        templateName={doc.name}
+        keywords={doc.keywords}
+        dialogName={`download-doc-${doc.id}`}
+      />
     </div>
   );
 }

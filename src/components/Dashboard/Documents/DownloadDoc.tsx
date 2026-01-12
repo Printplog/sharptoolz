@@ -22,6 +22,7 @@ interface DownloadDocDialogProps {
   purchasedTemplateId?: string;
   templateName?: string;
   keywords?: string[]; // Template keywords to check for split download
+  dialogName?: string;
 }
 
 export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
@@ -29,16 +30,17 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
   purchasedTemplateId,
   templateName,
   keywords = [],
+  dialogName = "download-doc",
 }) => {
   const [type, setType] = React.useState<"pdf" | "png">("pdf");
   const [side, setSide] = React.useState<"front" | "back">("front");
-  
+
   // Check if split download is enabled
   const hasSplitDownload = React.useMemo(() => {
     const normalizedKeywords = keywords.map(k => String(k).toLowerCase().trim());
-    return normalizedKeywords.includes("vertical-split-download") || 
-           normalizedKeywords.includes("horizontal-split-download") ||
-           normalizedKeywords.includes("split-download");
+    return normalizedKeywords.includes("vertical-split-download") ||
+      normalizedKeywords.includes("horizontal-split-download") ||
+      normalizedKeywords.includes("split-download");
   }, [keywords]);
 
   const [showProgress, setShowProgress] = React.useState(false);
@@ -51,8 +53,8 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       const sideSuffix = hasSplitDownload ? `_${side}` : "";
-      link.download = templateName 
-        ? `${templateName}${sideSuffix}.${type}` 
+      link.download = templateName
+        ? `${templateName}${sideSuffix}.${type}`
         : `document${sideSuffix}.${type}`;
       link.href = url;
       link.click();
@@ -76,8 +78,8 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
     setShowProgress(true);
     // Optimize: Don't send SVG in request - backend will fetch it from purchased_template_id
     // This significantly reduces request payload size
-    mutate({ 
-      type, 
+    mutate({
+      type,
       purchased_template_id: purchasedTemplateId as string, // Type assertion since we checked above
       template_name: templateName,
       side: hasSplitDownload ? side : undefined
@@ -85,7 +87,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
   };
 
   return (
-    <CustomDialog dialogName="download-doc">
+    <CustomDialog dialogName={dialogName}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Download Document</DialogTitle>
@@ -106,18 +108,16 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
               >
                 <label
                   htmlFor="pdf"
-                  className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
-                    type === "pdf" ? "border-primary bg-primary/10" : ""
-                  }`}
+                  className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${type === "pdf" ? "border-primary bg-primary/10" : ""
+                    }`}
                 >
                   <RadioGroupItem value="pdf" id="pdf" />
                   <Label htmlFor="pdf" className="cursor-pointer flex-1">PDF (High quality vector)</Label>
                 </label>
                 <label
                   htmlFor="png"
-                  className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
-                    type === "png" ? "border-primary bg-primary/10" : ""
-                  }`}
+                  className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${type === "png" ? "border-primary bg-primary/10" : ""
+                    }`}
                 >
                   <RadioGroupItem value="png" id="png" />
                   <Label htmlFor="png" className="cursor-pointer flex-1">PNG (Image export)</Label>
@@ -136,18 +136,16 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
                 >
                   <label
                     htmlFor="front"
-                    className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
-                      side === "front" ? "border-primary bg-primary/10" : ""
-                    }`}
+                    className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${side === "front" ? "border-primary bg-primary/10" : ""
+                      }`}
                   >
                     <RadioGroupItem value="front" id="front" />
                     <Label htmlFor="front" className="cursor-pointer flex-1">Front (First Half)</Label>
                   </label>
                   <label
                     htmlFor="back"
-                    className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${
-                      side === "back" ? "border-primary bg-primary/10" : ""
-                    }`}
+                    className={`flex items-center space-x-3 border border-white/10 rounded-lg p-4 bg-white/5 cursor-pointer transition-colors hover:bg-white/10 ${side === "back" ? "border-primary bg-primary/10" : ""
+                      }`}
                   >
                     <RadioGroupItem value="back" id="back" />
                     <Label htmlFor="back" className="cursor-pointer flex-1">Back (Second Half)</Label>
@@ -171,13 +169,13 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
         )}
 
         <DialogFooter>
-          <Button 
+          <Button
             onClick={handleDownload}
             disabled={isPending}
           >
-            {isPending 
-              ? "Downloading..." 
-              : hasSplitDownload 
+            {isPending
+              ? "Downloading..."
+              : hasSplitDownload
                 ? `Download ${side} as ${type.toUpperCase()}`
                 : `Download as ${type.toUpperCase()}`
             }

@@ -124,9 +124,13 @@ export default function ToolsList({ hot }: Props) {
             <h3 className="text-white font-semibold truncate">
               {template.name}
             </h3>
-            <span className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded-full capitalize">
-              {template?.hot ? "Hot Tool 🔥" : "Template"}
-            </span>
+            {template?.hot ? (
+              <span className="text-lg" title="Hot Tool">🔥</span>
+            ) : (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30 bg-white/5 border border-white/10 px-2 py-1 rounded-md">
+                Template
+              </span>
+            )}
           </div>
 
           <Link to={destination} className="w-full mt-2">
