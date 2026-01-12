@@ -14,7 +14,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import AdminLoading from "@/components/Admin/AdminLoading";
+import UserDetailSkeleton from "@/components/Admin/Users/UserDetailSkeleton";
 import PurchaseHistory from "@/components/Admin/Users/UserDetails/PurchaseHistory";
 import TransactionHistory from "@/components/Admin/Users/UserDetails/TransactionHistory";
 
@@ -46,7 +46,7 @@ export default function UserDetails() {
     fetchUserDetails();
   }, [id]);
 
-  if (isLoading) return <AdminLoading />;
+  if (isLoading) return <UserDetailSkeleton />;
 
   if (error || !data) {
     return (

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getTemplates } from "@/api/apiEndpoints";
-import IsLoading from "@/components/IsLoading";
+import ToolGridSkeleton from "../../ToolGridSkeleton";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight } from "lucide-react";
@@ -87,8 +87,8 @@ export default function ToolsListHorizontal() {
         </div>
       ))}
 
-      {isLoading && <IsLoading />}
-      
+      {isLoading && <ToolGridSkeleton />}
+
       {/* All Tools Button */}
       <div className="col-span-full flex justify-center mt-8">
         <Link to="/all-tools">

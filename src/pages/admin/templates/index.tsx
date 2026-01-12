@@ -1,6 +1,6 @@
 import { getTemplatesForAdmin } from "@/api/apiEndpoints";
 import ToolCard from "@/components/Admin/Tools/ToolCard";
-import IsLoading from "@/components/IsLoading";
+import ToolGridSkeleton from "@/components/ToolGridSkeleton";
 import type { Template } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
@@ -29,7 +29,7 @@ export default function Templates() {
           <ToolCard key={template.id} tool={template} />
         ))}
       </div>
-      {isLoading  && <IsLoading /> }
+      {isLoading && <ToolGridSkeleton />}
     </div>
   );
 }

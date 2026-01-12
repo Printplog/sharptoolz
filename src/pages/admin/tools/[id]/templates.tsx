@@ -1,6 +1,6 @@
 import { getTemplatesForAdmin, getTool } from "@/api/apiEndpoints";
 import ToolCard from "@/components/Admin/Tools/ToolCard";
-import IsLoading from "@/components/IsLoading";
+import ToolGridSkeleton from "@/components/ToolGridSkeleton";
 import type { Template, Tool } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
@@ -28,7 +28,7 @@ export default function ToolTemplates() {
   const isLoading = toolLoading || templatesLoading;
 
   if (isLoading) {
-    return <IsLoading />;
+    return <ToolGridSkeleton />;
   }
 
   if (!tool) {

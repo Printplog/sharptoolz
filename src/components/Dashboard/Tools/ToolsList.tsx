@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getTemplates, getTools } from "@/api/apiEndpoints";
 import { Link, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import IsLoading from "@/components/IsLoading";
+import ToolGridSkeleton from "../../ToolGridSkeleton";
 import type { Template, Tool } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
@@ -44,13 +44,13 @@ export default function ToolsList({ hot }: Props) {
   const { data: templates, isLoading: templatesLoading } = useQuery({
     queryKey: ["tools", `${hot && "hot"}`],
     queryFn: () => getTemplates(hot),
-    staleTime: 5 * 60 * 1000, // 5 minutes - templates list doesn't change often
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: toolCategories, isLoading: toolsLoading } = useQuery({
     queryKey: ["tool-categories"],
     queryFn: () => getTools(),
-    staleTime: 10 * 60 * 1000, // 10 minutes - tool categories rarely change
+    staleTime: 10 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -63,7 +63,6 @@ export default function ToolsList({ hot }: Props) {
     return matchesQuery && matchesTool;
   });
 
-  // Group templates by their tool category (only for non-hot tools)
   const groupedTools: GroupedTools = {};
 
   if (!hot && toolCategories && filteredTools.length > 0) {
@@ -91,26 +90,21 @@ export default function ToolsList({ hot }: Props) {
     setPreviewImage(banner);
   };
 
-  // Helper function to render template card
   const renderTemplateCard = (template: Template) => {
-    const destination = `/${pathname.includes("all-tools") ? "all-tools" : "tools"
-      }/${template.id}`;
+    const destination = `/${pathname.includes("all-tools") ? "all-tools" : "tools"}/${template.id}`;
 
     return (
       <div
         key={template.id}
         className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5"
       >
-        {/* Banner Preview */}
         <button
           type="button"
           className="absolute inset-0 p-2 z-0 text-left"
           onClick={() => handlePreview(template.banner)}
           style={{
-            WebkitMaskImage:
-              "linear-gradient(to bottom, black 60%, transparent 100%)",
-            maskImage:
-              "linear-gradient(to bottom, black 60%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
           }}
         >
           {template.banner ? (
@@ -126,7 +120,6 @@ export default function ToolsList({ hot }: Props) {
           )}
         </button>
 
-        {/* Bottom Overlay */}
         <div className="absolute bottom-0 left-0 w-full z-10 bg-transparent p-4 flex flex-col gap-2">
           <div className="flex justify-between items-center">
             <h3 className="text-white font-semibold truncate">
@@ -161,16 +154,16 @@ export default function ToolsList({ hot }: Props) {
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full px-5 py-3 h-fit border border-white/30 rounded-full bg-white/10 text-white placeholder:text-white/50"
               />
-              <Button className="flex items-center gap-2 rounded-full absolute right-0 top-0 bottom-0 bg-white/10 hover:bg-white/20 text-white m-1 mr-2 px-4">
+              <Button className="flex items-center gap-2 rounded-full absolute right-0 top-0 bottom-0 bg-white/10 hover:bg-white/20 text-white m-1 mr-2 px-4 border-0">
                 <Search className="w-4 h-4" />
                 <span className="hidden sm:inline">Search</span>
               </Button>
             </div>
             <Select value={selectedTool} onValueChange={setSelectedTool}>
-              <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px] rounded-full bg-white/10 border-white/30 text-white h-[48px]">
                 <SelectValue placeholder="Filter by tool" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-zinc-950 border-white/10 text-white">
                 <SelectItem value="all">All Tools</SelectItem>
                 {toolCategories?.map((tool) => (
                   <SelectItem key={tool.id} value={tool.id}>
@@ -183,44 +176,46 @@ export default function ToolsList({ hot }: Props) {
         </div>
       )}
 
-      {/* Hot Tools - Simple Grid (No Grouping) */}
-      {hot && filteredTools.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredTools.map((template) => renderTemplateCard(template))}
-        </div>
-      )}
-
-      {/* Regular Tools - Grouped by Category */}
-      {!hot && Object.keys(groupedTools).length > 0 && (
-        <div className="space-y-16">
-          {Object.entries(groupedTools).map(([toolId, { tool, templates }]) => (
-            <div key={toolId} className="space-y-8">
-              {/* Tool Category Header */}
-              <div className="relative pb-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-1 bg-gradient-to-b from-primary via-primary/80 to-primary/60 rounded-full"></div>
-                  <h2 className="text-3xl font-bold text-white tracking-tight">{tool.name}</h2>
-                </div>
-                <div className="mt-3 h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-              </div>
-
-              {/* Templates Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {templates.map((template) => renderTemplateCard(template))}
-              </div>
+      {/* Loading State */}
+      {isLoading ? (
+        <ToolGridSkeleton />
+      ) : (
+        <>
+          {/* Hot Tools */}
+          {hot && filteredTools.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredTools.map((template) => renderTemplateCard(template))}
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {/* No Match */}
-      {filteredTools.length === 0 && !isLoading && (
-        <p className="text-center text-gray-500">
-          No tools found.
-        </p>
-      )}
+          {/* Regular Tools */}
+          {!hot && Object.keys(groupedTools).length > 0 && (
+            <div className="space-y-16">
+              {Object.entries(groupedTools).map(([toolId, { tool, templates }]) => (
+                <div key={toolId} className="space-y-8">
+                  <div className="relative pb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-1 bg-gradient-to-b from-primary via-primary/80 to-primary/60 rounded-full"></div>
+                      <h2 className="text-3xl font-bold text-white tracking-tight">{tool.name}</h2>
+                    </div>
+                    <div className="mt-3 h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {templates.map((template) => renderTemplateCard(template))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-      {isLoading && <IsLoading />}
+          {/* No Match */}
+          {filteredTools.length === 0 && (
+            <div className="text-center py-20 border border-white/5 rounded-xl bg-white/2">
+              <p className="text-white/40 italic">No tools found matching your criteria.</p>
+            </div>
+          )}
+        </>
+      )}
 
       <Dialog
         open={!!previewImage}
