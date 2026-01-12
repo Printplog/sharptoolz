@@ -21,7 +21,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import BlurImage from "@/components/ui/BlurImage";
-import { cn } from "@/lib/utils";
 
 interface Props {
   hot?: boolean;

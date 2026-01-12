@@ -21,12 +21,21 @@ export default function ToolsListHorizontal() {
   });
 
   const hotTools = tools?.filter((tool) => tool.hot); // just in case
-  const placeholders = Array.from({ length: 4 - hotTools.slice(0, 4).length })
+  const placeholdersCount = hotTools ? Math.max(0, 4 - hotTools.slice(0, 4).length) : 4;
+  const placeholders = Array.from({ length: placeholdersCount });
 
   const handlePreview = (banner?: string) => {
     if (!banner) return;
     setPreviewImage(banner);
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full">
+        <ToolGridSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -86,8 +95,6 @@ export default function ToolsListHorizontal() {
           <Skeleton className="w-full h-full bg-white/5" />
         </div>
       ))}
-
-      {isLoading && <ToolGridSkeleton />}
 
       {/* All Tools Button */}
       <div className="col-span-full flex justify-center mt-8">
