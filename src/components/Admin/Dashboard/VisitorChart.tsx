@@ -16,6 +16,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
+import { Skeleton } from "@/components/ui/skeleton"
+
 const chartConfig = {
   visits: {
     label: "Total Visits",
@@ -33,9 +35,24 @@ interface VisitorChartProps {
     total_visits: number
     unique_visitors: number
   }> | undefined
+  isLoading?: boolean
 }
 
-export default function VisitorChart({ data }: VisitorChartProps) {
+export default function VisitorChart({ data, isLoading }: VisitorChartProps) {
+  if (isLoading) {
+    return (
+      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+        <CardHeader>
+          <Skeleton className="h-6 w-38 bg-white/10 mb-2" />
+          <Skeleton className="h-4 w-56 bg-white/10" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[200px] w-full bg-white/5" />
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (!data || data.length === 0) return null
 
   // Format data
@@ -108,7 +125,7 @@ export default function VisitorChart({ data }: VisitorChartProps) {
               fill="url(#fillUnique)"
               fillOpacity={0.4}
               stroke="var(--color-unique)"
-              stackId="b" 
+              stackId="b"
             />
             {/* Note: stackId 'b' so it doesn't stack on top of 'a', but overlays or separate. 
                 If we want them not stacked, remove stackId or use different ones. 

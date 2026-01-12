@@ -4,7 +4,7 @@ import UsersOverview from "@/components/Admin/Users/Overview";
 import UsersTable from "@/components/Admin/Users/UsersTable";
 
 export default function Users() {
-  const { data, error, fetchUsers } = useUsersStore();
+  const { data, isLoading, error, fetchUsers } = useUsersStore();
 
   useEffect(() => {
     fetchUsers();
@@ -23,7 +23,7 @@ export default function Users() {
   return (
     <div className="space-y-6">
       {/* Users Overview */}
-      <UsersOverview data={data} />
+      <UsersOverview data={data} isLoading={isLoading} />
 
       {/* Users Table */}
       <UsersTable />

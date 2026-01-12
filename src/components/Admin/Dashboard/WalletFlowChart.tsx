@@ -16,6 +16,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
+import { Skeleton } from "@/components/ui/skeleton"
+
 const chartConfig = {
   revenue: {
     label: "Inflow",
@@ -28,9 +30,24 @@ interface WalletFlowChartProps {
     date: string
     total_revenue: number
   }> | undefined
+  isLoading?: boolean
 }
 
-export default function WalletFlowChart({ data }: WalletFlowChartProps) {
+export default function WalletFlowChart({ data, isLoading }: WalletFlowChartProps) {
+  if (isLoading) {
+    return (
+      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+        <CardHeader>
+          <Skeleton className="h-6 w-32 bg-white/10 mb-2" />
+          <Skeleton className="h-4 w-48 bg-white/10" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[200px] w-full bg-white/5" />
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (!data || data.length === 0) return null
 
   // Format data

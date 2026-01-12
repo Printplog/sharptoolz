@@ -4,13 +4,35 @@ import { Users, UserPlus, DollarSign } from "lucide-react";
 import type { AdminUsers } from "@/types";
 import { useState } from "react";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface UsersOverviewProps {
   data: AdminUsers | null | undefined;
+  isLoading?: boolean;
 }
 
-export default function UsersOverview({ data }: UsersOverviewProps) {
+export default function UsersOverview({ data, isLoading }: UsersOverviewProps) {
   const [newUsersRange, setNewUsersRange] = useState("today");
   const [purchasesRange, setPurchasesRange] = useState("today");
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} className="bg-white/5 border-white/10 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <Skeleton className="h-4 w-24 bg-white/10" />
+              <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16 bg-white/10 mb-2" />
+              <Skeleton className="h-4 w-32 bg-white/5" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   // Helper function to get new users count based on selected range
   const getNewUsersCount = () => {
@@ -85,9 +107,9 @@ export default function UsersOverview({ data }: UsersOverviewProps) {
             </Select>
           </div>
           <p className="text-xs text-purple-200/70 mt-1">
-            {newUsersRange === "today" ? "Today" : 
-             newUsersRange === "7d" ? "Past 7 days" : 
-             newUsersRange === "14d" ? "Past 14 days" : "Past 30 days"}
+            {newUsersRange === "today" ? "Today" :
+              newUsersRange === "7d" ? "Past 7 days" :
+                newUsersRange === "14d" ? "Past 14 days" : "Past 30 days"}
           </p>
         </CardContent>
       </Card>
@@ -118,9 +140,9 @@ export default function UsersOverview({ data }: UsersOverviewProps) {
             </Select>
           </div>
           <p className="text-xs text-green-200/70 mt-1">
-            {purchasesRange === "today" ? "Today" : 
-             purchasesRange === "7d" ? "Past 7 days" : 
-             purchasesRange === "14d" ? "Past 14 days" : "Past 30 days"} documents purchased
+            {purchasesRange === "today" ? "Today" :
+              purchasesRange === "7d" ? "Past 7 days" :
+                purchasesRange === "14d" ? "Past 14 days" : "Past 30 days"} documents purchased
           </p>
         </CardContent>
       </Card>

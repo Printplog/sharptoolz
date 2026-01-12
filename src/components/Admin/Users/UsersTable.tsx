@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, ChevronLeft, ChevronRight, Mail, User as UserIcon, Download, HandCoins } from "lucide-react";
-import AdminLoading from "@/components/Admin/AdminLoading";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 
 export default function UsersTable() {
@@ -48,8 +48,6 @@ export default function UsersTable() {
     );
   }
 
-  console.log(data)
-
   return (
     <Card className="bg-white/5 border border-white/10 backdrop-blur-sm">
       <CardHeader>
@@ -73,9 +71,36 @@ export default function UsersTable() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-                 {isLoading ? (
-           <AdminLoading />
-         ) : (
+        {isLoading ? (
+          <div className="space-y-4">
+            <div className="rounded-md border border-white/10 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-white/10">
+                    <TableHead><Skeleton className="h-4 w-20 bg-white/10" /></TableHead>
+                    <TableHead><Skeleton className="h-4 w-20 bg-white/10" /></TableHead>
+                    <TableHead><Skeleton className="h-4 w-20 bg-white/10" /></TableHead>
+                    <TableHead><Skeleton className="h-4 w-20 bg-white/10" /></TableHead>
+                    <TableHead><Skeleton className="h-4 w-20 bg-white/10" /></TableHead>
+                    <TableHead><Skeleton className="h-4 w-20 bg-white/10" /></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i} className="border-white/10">
+                      <TableCell><Skeleton className="h-10 w-full bg-white/5" /></TableCell>
+                      <TableCell><Skeleton className="h-10 w-full bg-white/5" /></TableCell>
+                      <TableCell><Skeleton className="h-10 w-full bg-white/5" /></TableCell>
+                      <TableCell><Skeleton className="h-10 w-full bg-white/5" /></TableCell>
+                      <TableCell><Skeleton className="h-10 w-full bg-white/5" /></TableCell>
+                      <TableCell><Skeleton className="h-8 w-24 bg-white/5" /></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        ) : (
           <>
             {/* Table */}
             <div className="rounded-md border border-white/10 overflow-hidden custom-scrollbar">

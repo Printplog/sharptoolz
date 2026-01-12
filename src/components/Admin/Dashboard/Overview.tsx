@@ -1,12 +1,32 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Wallet, Users, Download } from "lucide-react";
 import type { AdminOverview } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface OverviewProps {
   data: AdminOverview | undefined;
+  isLoading?: boolean;
 }
 
-export default function Overview({ data }: OverviewProps) {
+export default function Overview({ data, isLoading }: OverviewProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="bg-white/5 border-white/10 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <Skeleton className="h-4 w-24 bg-white/10" />
+              <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16 bg-white/10" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Total Documents */}
@@ -20,7 +40,7 @@ export default function Overview({ data }: OverviewProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold">{data?.total_purchased_docs}</p>
+          <p className="text-2xl font-bold">{data?.total_purchased_docs || 0}</p>
         </CardContent>
       </Card>
 
@@ -35,7 +55,7 @@ export default function Overview({ data }: OverviewProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold">${data?.total_wallet_balance}</p>
+          <p className="text-2xl font-bold">${data?.total_wallet_balance || '0.00'}</p>
         </CardContent>
       </Card>
 
@@ -48,7 +68,7 @@ export default function Overview({ data }: OverviewProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold">{data?.total_users}</p>
+          <p className="text-2xl font-bold">{data?.total_users || 0}</p>
         </CardContent>
       </Card>
 
@@ -61,7 +81,7 @@ export default function Overview({ data }: OverviewProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold">{data?.total_downloads}</p>
+          <p className="text-2xl font-bold">{data?.total_downloads || 0}</p>
         </CardContent>
       </Card>
     </div>

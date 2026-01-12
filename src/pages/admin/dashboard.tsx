@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { adminOverview, getAdminAnalytics } from "@/api/apiEndpoints";
 import type { AdminOverview } from "@/types";
-import IsLoading from "@/components/IsLoading";
 import Overview from "@/components/Admin/Dashboard/Overview";
 import WalletFlowChart from "@/components/Admin/Dashboard/WalletFlowChart";
 import VisitorChart from "@/components/Admin/Dashboard/VisitorChart";
@@ -19,28 +18,26 @@ export default function Dashboard() {
     queryKey: ["adminAnalytics"],
   });
 
-  if (isOverviewLoading || isAnalyticsLoading) return <IsLoading />;
-  
   return (
     <div className="space-y-6">
       {/* Analytics Cards */}
-      <Overview data={overviewData} />
+      <Overview data={overviewData} isLoading={isOverviewLoading} />
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Wallet / Money Inflow */}
-        <WalletFlowChart data={analyticsData?.chart_data} />
-        
+        <WalletFlowChart data={analyticsData?.chart_data} isLoading={isAnalyticsLoading} />
+
         {/* Visitor Traffic */}
-        <VisitorChart data={analyticsData?.chart_data} />
+        <VisitorChart data={analyticsData?.chart_data} isLoading={isAnalyticsLoading} />
       </div>
 
       <div className="flex justify-end">
-          <Link to="/admin/analytics">
-             <Button variant="outline" className="text-white border-white/20 hover:bg-white/10">
-                View All Analytics
-             </Button>
-          </Link>
+        <Link to="/admin/analytics">
+          <Button variant="outline" className="text-white border-white/20 hover:bg-white/10">
+            View All Analytics
+          </Button>
+        </Link>
       </div>
     </div>
   );
