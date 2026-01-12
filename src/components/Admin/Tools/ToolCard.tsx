@@ -40,6 +40,20 @@ export default function ToolCard({ tool }: Props) {
 
   return (
     <div className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5">
+      {/* Top Badges */}
+      <div className="absolute top-4 left-4 z-20 flex gap-2">
+        {tool.hot && (
+          <div className="bg-orange-500 text-white p-2 rounded-lg shadow-lg shadow-orange-500/20 animate-pulse">
+            🔥
+          </div>
+        )}
+        {!tool.is_active && (
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 text-white/60 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md">
+            Draft
+          </div>
+        )}
+      </div>
+
       {/* Banner Preview */}
       <div
         className="absolute inset-0 p-2 pointer-events-none z-0"

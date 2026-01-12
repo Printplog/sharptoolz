@@ -41,13 +41,13 @@ export default function SvgTemplateEditor() {
       fetch(svgData.url)
         .then(res => res.text())
         .then(text => {
-            setSvgContent(text);
-            setIsFetchingSvg(false);
+          setSvgContent(text);
+          setIsFetchingSvg(false);
         })
         .catch(err => {
-            console.error("Failed to load SVG file", err);
-            toast.error("Failed to load SVG content");
-            setIsFetchingSvg(false);
+          console.error("Failed to load SVG file", err);
+          toast.error("Failed to load SVG content");
+          setIsFetchingSvg(false);
         });
     } else if (svgData?.svg) {
       setSvgContent(svgData.svg);
@@ -64,6 +64,7 @@ export default function SvgTemplateEditor() {
           formData.append('name', templateData.name);
           formData.append('svg', templateData.svg);
           formData.append('hot', templateData.hot ? 'true' : 'false');
+          formData.append('is_active', templateData.is_active ? 'true' : 'false');
           if (templateData.tool) {
             formData.append('tool', templateData.tool);
           }
@@ -88,6 +89,7 @@ export default function SvgTemplateEditor() {
             name: templateData.name,
             svg: templateData.svg,
             hot: templateData.hot || false,
+            is_active: templateData.is_active !== undefined ? templateData.is_active : true,
             tool: templateData.tool || undefined,
             tutorial_url: templateData.tutorialUrl || undefined,
             tutorial_title: templateData.tutorialTitle || undefined,
@@ -103,7 +105,7 @@ export default function SvgTemplateEditor() {
     },
     onSuccess: async () => {
       toast.success('Template saved successfully!');
-      
+
       // Invalidate and refetch related queries to ensure fresh data
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["templates"] }),
@@ -112,7 +114,7 @@ export default function SvgTemplateEditor() {
         queryClient.invalidateQueries({ queryKey: ["tools"] }),
         queryClient.invalidateQueries({ queryKey: ["tool-categories"] }),
       ]);
-      
+
       // Refetch the template data immediately to get updated form_fields
       await queryClient.refetchQueries({ queryKey: ["template", id] });
       await queryClient.refetchQueries({ queryKey: ["template-svg", id] });
@@ -128,8 +130,13 @@ export default function SvgTemplateEditor() {
       toast.error('Template name is required');
       return;
     }
-    
-    saveMutation.mutate(templateData);
+
+    const payload = { ...templateData };
+    if (templateData.isActive !== undefined) {
+      payload.is_active = templateData.isActive;
+    }
+
+    saveMutation.mutate(payload);
   };
 
   if (isLoading) {
@@ -139,7 +146,7 @@ export default function SvgTemplateEditor() {
         <div className="flex items-center justify-between pb-5 border-b border-white/10">
           <Skeleton className="h-7 w-48 bg-white/5" />
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* SVG Upload skeleton */}
@@ -147,13 +154,13 @@ export default function SvgTemplateEditor() {
               <Skeleton className="h-5 w-32 bg-white/5" />
               <div className="border-2 border-dashed border-white/20 rounded-lg h-32 bg-white/5 animate-pulse" />
             </div>
-            
+
             {/* Template Name skeleton */}
             <div className="space-y-2">
               <Skeleton className="h-5 w-28 bg-white/5" />
               <Skeleton className="h-10 w-full bg-white/5" />
             </div>
-            
+
             {/* Fonts skeleton */}
             <div className="space-y-2">
               <Skeleton className="h-5 w-24 bg-white/5" />
@@ -163,7 +170,7 @@ export default function SvgTemplateEditor() {
                 ))}
               </div>
             </div>
-            
+
             {/* Element Navigation skeleton */}
             <div className="space-y-2">
               <Skeleton className="h-5 w-40 bg-white/5" />
@@ -174,7 +181,7 @@ export default function SvgTemplateEditor() {
               </div>
             </div>
           </div>
-          
+
           <div className="lg:col-span-1">
             <Skeleton className="h-[400px] w-full bg-white/5 border border-white/10 rounded-lg" />
           </div>
@@ -229,26 +236,26 @@ export default function SvgTemplateEditor() {
         </div>
 
         <div className="w-full">
-            <SvgEditor 
-              ref={svgEditorRef}
-              fonts={data?.fonts || []}
-              svgRaw={svgContent} 
-              templateName={data.name}
-              templateId={id}
-              onSave={handleSave}
-              banner={data.banner}
-              hot={data.hot}
-              isActive={data.hot}
-              tool={data.tool}
-              tutorial={data.tutorial}
-              keywords={data.keywords}
-              isLoading={saveMutation.isPending}
-              isSvgLoading={svgLoading || isFetchingSvg || !svgContent} // Pass SVG loading state
-              formFields={data.form_fields || []} // Pass backend form fields
-              onElementSelect={() => {
-                // Simplified - no automatic section selection
-              }}
-            />
+          <SvgEditor
+            ref={svgEditorRef}
+            fonts={data?.fonts || []}
+            svgRaw={svgContent}
+            templateName={data.name}
+            templateId={id}
+            onSave={handleSave}
+            banner={data.banner}
+            hot={data.hot}
+            isActive={data.is_active}
+            tool={data.tool}
+            tutorial={data.tutorial}
+            keywords={data.keywords}
+            isLoading={saveMutation.isPending}
+            isSvgLoading={svgLoading || isFetchingSvg || !svgContent} // Pass SVG loading state
+            formFields={data.form_fields || []} // Pass backend form fields
+            onElementSelect={() => {
+              // Simplified - no automatic section selection
+            }}
+          />
         </div>
       </div>
     </>

@@ -40,13 +40,14 @@ import type { Tool, Font } from "@/types";
 // ------------------------
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  svgFile: z.instanceof(File, { message: "SVG file is required" }),
+  svgFile: z.instanceof(File, { message: "SVG file is required" }).optional(),
   bannerFile: z.instanceof(File, { message: "Banner image is required" }).optional(),
   tool: z.string().optional(),
   tutorialUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   tutorialTitle: z.string().optional(),
   keywords: z.array(z.string()).optional(),
   fontIds: z.array(z.string()).optional(),
+  is_active: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -55,16 +56,17 @@ export default function BuilderDialog() {
   const { closeDialog, dialogs } = useDialogStore();
   const queryClient = useQueryClient();
   const location = useLocation();
-  
+
   // Extract tool ID from current URL path (e.g., /admin/tools/7286b789-bca0-4327-9844-3df7e65b68dc/templates)
   const toolId = location.pathname.match(/\/admin\/tools\/([^/]+)\/templates/)?.[1] || null;
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       tool: toolId || undefined,
       keywords: [],
+      is_active: true,
     },
   });
 
@@ -102,8 +104,9 @@ export default function BuilderDialog() {
         tutorialUrl: "",
         tutorialTitle: "",
         keywords: [],
+        is_active: true,
       });
-      
+
       // Also explicitly set the tool value to ensure it's selected
       if (toolId) {
         form.setValue("tool", toolId);
@@ -175,13 +178,13 @@ export default function BuilderDialog() {
     mutationFn: (data: FormData) => addTemplate(data),
     onSuccess() {
       toast.success("Template created successfully");
-      
+
       // Invalidate queries first, then navigate
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       if (toolId) {
         queryClient.invalidateQueries({ queryKey: ["templates", "tool", toolId] });
       }
-      
+
       closeDialog("toolBuilder");
     },
     onError(error: Error) {
@@ -195,14 +198,18 @@ export default function BuilderDialog() {
     console.log('Current toolId from URL:', toolId);
     console.log('Form values received:', values);
     console.log('Tools available:', tools);
-    
+
     try {
+      if (!values.svgFile) {
+        console.error("SVG file is missing");
+        return;
+      }
       // Read SVG file
       const svgText = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target?.result as string);
         reader.onerror = reject;
-        reader.readAsText(values.svgFile);
+        reader.readAsText(values.svgFile as File);
       });
 
       // Create FormData for file upload
@@ -223,7 +230,7 @@ export default function BuilderDialog() {
       if (values.keywords && values.keywords.length > 0) {
         formData.append('keywords', JSON.stringify(values.keywords));
       }
-      
+
       // Add tutorial data if provided
       if (values.tutorialUrl?.trim()) {
         formData.append('tutorial_url', values.tutorialUrl);
@@ -240,6 +247,8 @@ export default function BuilderDialog() {
           formData.append('font_ids', fontId);
         });
       }
+
+      formData.append('is_active', values.is_active ? 'true' : 'false');
 
       console.log('Form values:', values);
       console.log('FormData entries:');
@@ -308,13 +317,37 @@ export default function BuilderDialog() {
                 )}
               />
 
+              {/* Status Toggles */}
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="is_active"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Published Status</FormLabel>
+                        <p className="text-sm text-white/40">Visible to users in listings</p>
+                      </div>
+                      <FormControl>
+                        <div
+                          className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ${field.value ? 'bg-emerald-600' : 'bg-white/10'}`}
+                          onClick={() => field.onChange(!field.value)}
+                        >
+                          <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-200 ${field.value ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               {/* Tutorial Section */}
               <div className="relative">
-                <div 
+                <div
                   className={`
                     p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
-                    ${form.watch("tutorialUrl")?.trim() 
-                      ? 'border-white/10 bg-white/5' 
+                    ${form.watch("tutorialUrl")?.trim()
+                      ? 'border-white/10 bg-white/5'
                       : 'border-white/20 bg-white/5 hover:border-white/20 hover:bg-white/8'
                     }
                   `}
@@ -325,7 +358,7 @@ export default function BuilderDialog() {
                       ${form.watch("tutorialUrl")?.trim() ? 'bg-white text-black' : 'bg-white/20 text-white/60'}
                     `}>
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
+                        <path d="M8 5v14l11-7z" />
                       </svg>
                     </div>
                     <div>
@@ -333,7 +366,7 @@ export default function BuilderDialog() {
                       <p className="text-sm text-white/60">Add a tutorial video to help users</p>
                     </div>
                   </div>
-                  
+
                   <div className="mt-4 space-y-4">
                     {/* Tutorial URL */}
                     <FormField
@@ -388,10 +421,9 @@ export default function BuilderDialog() {
                       <div
                         {...getSvgRootProps()}
                         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                          ${
-                            isSvgDragActive
-                              ? "border-primary bg-primary/5"
-                              : "border-white/20 hover:border-white/40"
+                          ${isSvgDragActive
+                            ? "border-primary bg-primary/5"
+                            : "border-white/20 hover:border-white/40"
                           }
                         `}
                       >
@@ -447,10 +479,9 @@ export default function BuilderDialog() {
                       <div
                         {...getBannerRootProps()}
                         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                          ${
-                            isBannerDragActive
-                              ? "border-primary bg-primary/5"
-                              : "border-white/20 hover:border-white/40"
+                          ${isBannerDragActive
+                            ? "border-primary bg-primary/5"
+                            : "border-white/20 hover:border-white/40"
                           }
                         `}
                       >

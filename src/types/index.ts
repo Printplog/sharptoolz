@@ -139,6 +139,7 @@ export type Template = {
   font_ids?: string[];
   created_at: string;
   updated_at: string;
+  is_active: boolean;
   banner: string;
 };
 
@@ -151,6 +152,7 @@ export type TemplateUpdatePayload = {
   tutorialUrl?: string;
   tutorialTitle?: string;
   keywords?: string[];
+  is_active?: boolean;
   fontIds?: string[];
 };
 
@@ -172,7 +174,7 @@ export type PurchasedTemplate = {
 
   tracking_id: string | null;
   status: string;
-  link: string;   
+  link: string;
   keywords: string[];
   fonts?: Font[];
   font_ids?: string[];
