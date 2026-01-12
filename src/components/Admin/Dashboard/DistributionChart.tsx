@@ -18,6 +18,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
+import { Skeleton } from "@/components/ui/skeleton"
+
 const chartConfig = {
   count: {
     label: "Documents",
@@ -39,16 +41,39 @@ interface DistributionChartProps {
     paid: number
     test: number
   }> | undefined
+  isLoading?: boolean
 }
 
-export default function DistributionChart({ data }: DistributionChartProps) {
+export default function DistributionChart({ data, isLoading }: DistributionChartProps) {
+  if (isLoading) {
+    return (
+      <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
+        <CardHeader className="items-center pb-0">
+          <Skeleton className="h-6 w-32 bg-white/10 mb-2" />
+          <Skeleton className="h-4 w-48 bg-white/10" />
+        </CardHeader>
+        <CardContent className="flex-1 pb-0 flex items-center justify-center">
+          <div className="relative h-[200px] w-[200px]">
+            <Skeleton className="absolute inset-0 rounded-full border-[20px] border-white/5 bg-transparent" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+              <Skeleton className="h-8 w-16 bg-white/10" />
+              <Skeleton className="h-3 w-12 bg-white/5" />
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-center pb-6">
+          <Skeleton className="h-4 w-48 bg-white/5" />
+        </CardFooter>
+      </Card>
+    )
+  }
   const chartData = React.useMemo(() => {
     if (!data) return []
-    
+
     // Aggregate data
     const totalPaid = data.reduce((acc, item) => acc + item.paid, 0)
     const totalTest = data.reduce((acc, item) => acc + item.test, 0)
-    
+
     return [
       { type: "paid", count: totalPaid, fill: "var(--color-paid)" },
       { type: "test", count: totalTest, fill: "var(--color-test)" },
@@ -78,9 +103,9 @@ export default function DistributionChart({ data }: DistributionChartProps) {
             <ChartTooltip
               cursor={false}
               content={
-                <ChartTooltipContent 
-                    hideLabel
-                    className="bg-zinc-950 border border-zinc-800 text-white shadow-xl"
+                <ChartTooltipContent
+                  hideLabel
+                  className="bg-zinc-950 border border-zinc-800 text-white shadow-xl"
                 />
               }
             />

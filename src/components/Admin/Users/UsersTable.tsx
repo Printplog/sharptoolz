@@ -1,5 +1,4 @@
 import { useUsersStore } from "@/store/usersStore";
-import type { User } from "@/types";
 import {
   Table,
   TableBody,
@@ -14,8 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, ChevronLeft, ChevronRight, Mail, User as UserIcon, Download, HandCoins } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { adminUserDetails } from "@/api/apiEndpoints";
 
 export default function UsersTable() {
+  const queryClient = useQueryClient();
   const {
     data,
     isLoading,
@@ -28,6 +32,24 @@ export default function UsersTable() {
     setSearchInput,
     handleSearch,
   } = useUsersStore();
+
+  const handlePrefetchUser = (userId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: ["adminUserDetails", userId],
+      queryFn: () => adminUserDetails(userId),
+    });
+  };
+
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const users = data?.users?.results || [];
+
+  const rowVirtualizer = useVirtualizer({
+    count: users.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 73, // Estimated height of a table row
+    overscan: 5,
+  });
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -103,10 +125,13 @@ export default function UsersTable() {
         ) : (
           <>
             {/* Table */}
-            <div className="rounded-md border border-white/10 overflow-hidden custom-scrollbar">
+            <div
+              ref={parentRef}
+              className="rounded-md border border-white/10 overflow-auto custom-scrollbar max-h-[600px] relative"
+            >
               <Table>
-                <TableHeader>
-                  <TableRow className="border-white/10">
+                <TableHeader className="sticky top-0 bg-zinc-950 z-10">
+                  <TableRow className="border-white/10 bg-zinc-950 hover:bg-zinc-950">
                     <TableHead className="text-white">User</TableHead>
                     <TableHead className="text-white">Email</TableHead>
                     <TableHead className="text-white">Purchases</TableHead>
@@ -115,51 +140,69 @@ export default function UsersTable() {
                     <TableHead className="text-white">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {data?.users?.results?.map((user: User) => (
-                    <TableRow key={user.pk} className="border-white/10 hover:bg-white/5">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                            <UserIcon className="h-4 w-4 text-primary" />
+                <TableBody
+                  className="relative"
+                  style={{
+                    height: `${rowVirtualizer.getTotalSize()}px`,
+                  }}
+                >
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const user = users[virtualRow.index];
+                    return (
+                      <TableRow
+                        key={user.pk}
+                        className="border-white/10 hover:bg-white/5 absolute left-0 w-full"
+                        style={{
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                              <UserIcon className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-white uppercase">{user.username}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-white uppercase">{user.username}</p>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-white">{user.email}</span>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-white">{user.email}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <HandCoins className="h-4 w-4 text-green-400" />
-                          <span className="text-white">{user.total_purchases}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Download className="h-4 w-4 text-blue-400" />
-                          <span className="text-white">{user.downloads}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-green-400 font-medium">
-                          ${user.wallet_balance}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Link to={`/admin/users/${user.pk}`}>
-                          <Button variant="outline" size="sm">
-                            View Details
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <HandCoins className="h-4 w-4 text-green-400" />
+                            <span className="text-white">{user.total_purchases}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Download className="h-4 w-4 text-blue-400" />
+                            <span className="text-white">{user.downloads}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-green-400 font-medium">
+                            ${user.wallet_balance}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            to={`/admin/users/${user.pk}`}
+                            onMouseEnter={() => handlePrefetchUser(String(user.pk))}
+                          >
+                            <Button variant="outline" size="sm">
+                              View Details
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

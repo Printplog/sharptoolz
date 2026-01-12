@@ -42,7 +42,23 @@ export default function WalletFlowChart({ data, isLoading }: WalletFlowChartProp
           <Skeleton className="h-4 w-48 bg-white/10" />
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-[200px] w-full bg-white/5" />
+          <div className="h-[200px] w-full flex items-end gap-2 pt-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                className="flex-1 bg-white/5 rounded-t-sm animate-pulse"
+                style={{
+                  height: `${Math.random() * 60 + 20}%`,
+                  animationDelay: `${i * 0.05}s`
+                }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between mt-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-3 w-8 bg-white/10" />
+            ))}
+          </div>
         </CardContent>
       </Card>
     )

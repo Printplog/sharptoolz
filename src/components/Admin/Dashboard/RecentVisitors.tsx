@@ -12,6 +12,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface Visitor {
   ip_address: string;
   path: string;
@@ -22,29 +24,53 @@ interface Visitor {
 
 interface RecentVisitorsProps {
   data: Visitor[] | undefined;
+  isLoading?: boolean;
 }
 
-export default function RecentVisitors({ data }: RecentVisitorsProps) {
+export default function RecentVisitors({ data, isLoading }: RecentVisitorsProps) {
   const [locations, setLocations] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!data) return;
 
     data.forEach(async (visitor) => {
-        if (!locations[visitor.ip_address] && visitor.ip_address !== '127.0.0.1') {
-             try {
-                 const res = await fetch(`https://ipapi.co/${visitor.ip_address}/json/`);
-                 const geo = await res.json();
-                 if (geo.city && geo.country_name) {
-                     setLocations(prev => ({...prev, [visitor.ip_address]: `${geo.city}, ${geo.country_name}`}));
-                 }
-             } catch (e) {
-                 // Silent fail
-                 console.log("Geo fetch failed", e);
-             }
+      if (!locations[visitor.ip_address] && visitor.ip_address !== '127.0.0.1') {
+        try {
+          const res = await fetch(`https://ipapi.co/${visitor.ip_address}/json/`);
+          const geo = await res.json();
+          if (geo.city && geo.country_name) {
+            setLocations(prev => ({ ...prev, [visitor.ip_address]: `${geo.city}, ${geo.country_name}` }));
+          }
+        } catch (e) {
+          // Silent fail
+          console.log("Geo fetch failed", e);
         }
+      }
     });
   }, [data]);
+
+  if (isLoading) {
+    return (
+      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+        <CardHeader>
+          <Skeleton className="h-6 w-48 bg-white/10" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex gap-4 items-center border-b border-white/5 pb-4">
+                <Skeleton className="h-4 w-20 bg-white/10" />
+                <Skeleton className="h-4 w-32 bg-white/10" />
+                <Skeleton className="h-4 w-40 bg-white/5" />
+                <Skeleton className="h-4 w-full bg-white/5" />
+                <Skeleton className="h-6 w-12 rounded-full bg-white/10" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!data || data.length === 0) {
     return (
@@ -94,19 +120,19 @@ export default function RecentVisitors({ data }: RecentVisitorsProps) {
                   </TableCell>
                   <TableCell className="text-white/80 text-sm">
                     {visitor.user__username ? (
-                        <span className="text-emerald-400 font-medium">{visitor.user__username}</span>
+                      <span className="text-emerald-400 font-medium">{visitor.user__username}</span>
                     ) : (
-                        <span className="text-white/40 italic">Guest</span>
+                      <span className="text-white/40 italic">Guest</span>
                     )}
                   </TableCell>
-                   <TableCell className="text-white/80 text-sm">
+                  <TableCell className="text-white/80 text-sm">
                     <Badge variant="outline" className={`
                         ${visitor.method === 'GET' ? 'border-blue-500/50 text-blue-400' : ''}
                         ${visitor.method === 'POST' ? 'border-green-500/50 text-green-400' : ''}
                         ${['PUT', 'PATCH'].includes(visitor.method) ? 'border-amber-500/50 text-amber-400' : ''}
                         ${visitor.method === 'DELETE' ? 'border-red-500/50 text-red-400' : ''}
                     `}>
-                        {visitor.method}
+                      {visitor.method}
                     </Badge>
                   </TableCell>
                 </TableRow>

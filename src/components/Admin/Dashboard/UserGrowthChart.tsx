@@ -16,6 +16,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
+import { Skeleton } from "@/components/ui/skeleton"
+
 const chartConfig = {
   users: {
     label: "Total Users",
@@ -28,21 +30,51 @@ interface UserGrowthChartProps {
     date: string
     users: number
   }> | undefined
+  isLoading?: boolean
 }
 
-export default function UserGrowthChart({ data }: UserGrowthChartProps) {
+export default function UserGrowthChart({ data, isLoading }: UserGrowthChartProps) {
+  if (isLoading) {
+    return (
+      <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
+        <CardHeader>
+          <Skeleton className="h-6 w-32 bg-white/10 mb-2" />
+          <Skeleton className="h-4 w-48 bg-white/10" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-[250px] w-full flex items-end gap-1 pt-4">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                className="flex-1 bg-white/5 rounded-t-sm"
+                style={{
+                  height: `${20 + (i * 3.5)}%`,
+                  opacity: 0.1 + (i * 0.02)
+                }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between mt-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-3 w-12 bg-white/10" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
   if (!data || data.length === 0) {
-      return (
-        <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
-            <CardHeader>
-                <CardTitle className="text-white">User Growth</CardTitle>
-                <CardDescription className="text-white/60">Total Registered Users</CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-[300px] text-white/40">
-                No data available
-            </CardContent>
-        </Card>
-      )
+    return (
+      <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
+        <CardHeader>
+          <CardTitle className="text-white">User Growth</CardTitle>
+          <CardDescription className="text-white/60">Total Registered Users</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[300px] text-white/40">
+          No data available
+        </CardContent>
+      </Card>
+    )
   }
 
   // Format data

@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { getAdminAnalytics, adminOverview } from "@/api/apiEndpoints";
-import IsLoading from "@/components/IsLoading";
 import WalletFlowChart from "@/components/Admin/Dashboard/WalletFlowChart";
 import VisitorChart from "@/components/Admin/Dashboard/VisitorChart";
 import RecentVisitors from "@/components/Admin/Dashboard/RecentVisitors";
@@ -10,17 +9,15 @@ import DistributionChart from "@/components/Admin/Dashboard/DistributionChart";
 import type { AdminOverview } from "@/types";
 
 export default function Analytics() {
-  const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery({ 
+  const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery({
     queryFn: () => getAdminAnalytics(),
     queryKey: ["adminAnalytics"],
   });
 
   const { data: overviewData, isLoading: isOverviewLoading } = useQuery<AdminOverview>({
-      queryFn: () => adminOverview(),
-      queryKey: ["adminOverview"],
+    queryFn: () => adminOverview(),
+    queryKey: ["adminOverview"],
   });
-
-  if (isAnalyticsLoading || isOverviewLoading) return <IsLoading />;
 
   // Transform data for charts
   const chartData = analyticsData?.chart_data;
@@ -34,30 +31,30 @@ export default function Analytics() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Row 1 */}
         <div className="h-[400px]">
-             <VisitorChart data={chartData} />
+          <VisitorChart data={chartData} isLoading={isAnalyticsLoading} />
         </div>
 
         <div className="h-[400px]">
-            <WalletFlowChart data={chartData} />
+          <WalletFlowChart data={chartData} isLoading={isAnalyticsLoading} />
         </div>
 
         <div className="h-[400px]">
-            <DeviceStatsChart data={deviceStats} />
+          <DeviceStatsChart data={deviceStats} isLoading={isAnalyticsLoading} />
         </div>
 
         <div className="h-[400px]">
-            <UserGrowthChart data={overviewData?.revenue_chart} />
+          <UserGrowthChart data={overviewData?.revenue_chart} isLoading={isOverviewLoading} />
         </div>
 
         <div className="h-[400px]">
-            <DistributionChart data={overviewData?.documents_chart} />
+          <DistributionChart data={overviewData?.documents_chart} isLoading={isOverviewLoading} />
         </div>
-        
+
       </div>
-      
+
       {/* Detailed Stats Table */}
       <div className="mt-8">
-        <RecentVisitors data={visitorLog} />
+        <RecentVisitors data={visitorLog} isLoading={isAnalyticsLoading} />
       </div>
     </div>
   );

@@ -11,9 +11,29 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
+import { useQueryClient } from "@tanstack/react-query";
+import { adminOverview, getAdminAnalytics, adminUsers } from "@/api/apiEndpoints";
 
 export default function Sidebar() {
   const { pathname } = useLocation();
+  const queryClient = useQueryClient();
+
+  const handlePrefetch = (to: string) => {
+    switch (to) {
+      case "/admin/dashboard":
+        queryClient.prefetchQuery({ queryKey: ["adminOverview"], queryFn: adminOverview });
+        break;
+      case "/admin/analytics":
+        queryClient.prefetchQuery({ queryKey: ["adminAnalytics"], queryFn: getAdminAnalytics });
+        break;
+      case "/admin/users":
+        queryClient.prefetchQuery({
+          queryKey: ["adminUsers", { page: 1, page_size: 10, search: "" }],
+          queryFn: () => adminUsers({ page: 1, page_size: 10, search: "" })
+        });
+        break;
+    }
+  };
 
   const navigationItems = [
     {
@@ -76,14 +96,17 @@ export default function Sidebar() {
           let isActive = false;
           if (item.to === "/dashboard") {
             isActive = pathname === "/dashboard" || (pathname.startsWith("/dashboard/") && !pathname.startsWith("/admin/"));
-          } else { 
+          } else {
             // For admin routes, check if pathname includes the route (normal behavior)
             isActive = pathname.includes(item.to);
           }
 
           return (
             <div key={item.to}>
-              <Link to={item.to}>
+              <Link
+                to={item.to}
+                onMouseEnter={() => handlePrefetch(item.to)}
+              >
                 <button
                   className={cn(
                     "w-full justify-start transition-colors py-3 px-6 flex items-center",

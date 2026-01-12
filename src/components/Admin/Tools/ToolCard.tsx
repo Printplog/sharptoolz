@@ -6,6 +6,7 @@ import { ConfirmAction } from "@/components/ConfirmAction";
 import { deleteTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import BlurImage from "@/components/ui/BlurImage";
 
 type Props = {
   tool: Template;
@@ -19,12 +20,12 @@ export default function ToolCard({ tool }: Props) {
     mutationFn: (id: string) => deleteTemplate(id),
     onSuccess: () => {
       toast.success("Template deleted successfully");
-      
+
       // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
       queryClient.invalidateQueries({ queryKey: ["templates"] });
-      
+
       // If we're on a tool's templates page, also invalidate that specific tool's templates
       const toolId = location.pathname.match(/\/admin\/tools\/([^\/]+)\/templates/)?.[1];
       if (toolId) {
@@ -49,13 +50,11 @@ export default function ToolCard({ tool }: Props) {
         }}
       >
         {tool.banner ? (
-          <div className="w-full h-full rounded-lg overflow-hidden mask-b-to-[80%]">
-            <img
-              src={tool.banner}
-              alt={`${tool.name} banner`}
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
+          <BlurImage
+            src={tool.banner}
+            alt={`${tool.name} banner`}
+            className="w-full h-full rounded-lg"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-black/10">
             No Preview

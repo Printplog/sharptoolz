@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Wallet, Users, Download } from "lucide-react";
 import type { AdminOverview } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 interface OverviewProps {
   data: AdminOverview | undefined;
@@ -12,11 +13,16 @@ export default function Overview({ data, isLoading }: OverviewProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="bg-white/5 border-white/10 backdrop-blur-sm">
+        {[
+          "bg-primary/5",
+          "bg-green-500/5",
+          "bg-blue-500/5",
+          "bg-purple-500/5",
+        ].map((bg, i) => (
+          <Card key={i} className={cn("border-white/10 backdrop-blur-sm", bg)}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <Skeleton className="h-4 w-24 bg-white/10" />
-              <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+              <Skeleton className="h-9 w-9 rounded-full bg-white/10" />
             </CardHeader>
             <CardContent>
               <Skeleton className="h-8 w-16 bg-white/10" />

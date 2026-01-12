@@ -14,21 +14,21 @@ interface AdminSvgFormTranslatorProps {
   svgContent: string;
   formFields: FormField[];
   templateName: string;
-} 
+}
 
-export default function AdminSvgFormTranslator({ 
-  svgContent, 
-  formFields, 
-  templateName 
+export default function AdminSvgFormTranslator({
+  svgContent,
+  formFields,
+  templateName
 }: AdminSvgFormTranslatorProps) {
   const [svgText, setSvgText] = useState<string>("");
   const [livePreview, setLivePreview] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("editor");
 
-  const { 
-    setFields, 
-    setSvgRaw, 
-    setName, 
+  const {
+    setFields,
+    setSvgRaw,
+    setName,
     fields,
     svgRaw,
     name,
@@ -37,30 +37,35 @@ export default function AdminSvgFormTranslator({
   // Initialize with provided data instead of making API calls
   useEffect(() => {
     if (!svgContent || !formFields) return;
-    
+
     // Initialize fields with default values
     const initializedFields = formFields.map((field: FormField) => ({
       ...field,
       currentValue: field.defaultValue ?? "",
     }));
-    
+
     // Process SVG with initialized fields
     const newSvgText = updateSvgFromFormData(svgContent, initializedFields);
-    
+
     // Update all state
     setSvgText(newSvgText);
     setSvgRaw(newSvgText);
     setName(templateName);
     setFields(formFields, false);
-    
+
   }, [svgContent, formFields, templateName, setSvgRaw, setName, setFields]);
 
-  // Update live preview when fields change
+  // Update live preview when fields change with debouncing
   useEffect(() => {
-    if (fields && svgRaw) {
+    if (!fields || !svgRaw) return;
+
+    // Use a short delay for debouncing to prevent UI lag during typing
+    const timer = setTimeout(() => {
       const updatedSvg = updateSvgFromFormData(svgRaw, fields);
       setLivePreview(updatedSvg);
-    }
+    }, 150); // 150ms is a sweet spot for "perceived instant" vs "main thread freedom"
+
+    return () => clearTimeout(timer);
   }, [fields, svgRaw]);
 
   // Render action buttons component - matches FormPanel buttons for non-purchased templates
@@ -93,8 +98,8 @@ export default function AdminSvgFormTranslator({
           <Download className="w-4 h-4 ml-1" />
         </>
       </Button>
-      <DownloadDocDialog 
-        svg={livePreview || svgRaw || svgText} 
+      <DownloadDocDialog
+        svg={livePreview || svgRaw || svgText}
         templateName={name || templateName}
       />
     </div>
@@ -125,10 +130,10 @@ export default function AdminSvgFormTranslator({
           <TabsTrigger value="editor">Editor</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="editor" className="space-y-4">
           <div data-form-panel>
-            <FormPanel 
+            <FormPanel
               test={false}
               tutorial={undefined}
               templateId={undefined}
@@ -137,7 +142,7 @@ export default function AdminSvgFormTranslator({
           </div>
           <ActionButtons />
         </TabsContent>
-        
+
         <TabsContent value="preview" className="space-y-4">
           <div className="w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl">
             <div className="min-w-[300px] inline-block max-w-full">

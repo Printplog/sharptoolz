@@ -20,6 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import BlurImage from "@/components/ui/BlurImage";
+import { cn } from "@/lib/utils";
 
 interface Props {
   hot?: boolean;
@@ -63,7 +65,7 @@ export default function ToolsList({ hot }: Props) {
 
   // Group templates by their tool category (only for non-hot tools)
   const groupedTools: GroupedTools = {};
-  
+
   if (!hot && toolCategories && filteredTools.length > 0) {
     filteredTools.forEach((template) => {
       const toolId = template.tool;
@@ -91,16 +93,15 @@ export default function ToolsList({ hot }: Props) {
 
   // Helper function to render template card
   const renderTemplateCard = (template: Template) => {
-    const destination = `/${
-      pathname.includes("all-tools") ? "all-tools" : "tools"
-    }/${template.id}`;
+    const destination = `/${pathname.includes("all-tools") ? "all-tools" : "tools"
+      }/${template.id}`;
 
     return (
       <div
         key={template.id}
         className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5"
       >
-      {/* Banner Preview */}
+        {/* Banner Preview */}
         <button
           type="button"
           className="absolute inset-0 p-2 z-0 text-left"
@@ -113,13 +114,11 @@ export default function ToolsList({ hot }: Props) {
           }}
         >
           {template.banner ? (
-            <div className="mask-b-to-[80%] h-full bg-white rounded-lg overflow-hidden">
-              <img
-                src={template.banner}
-                alt={`${template.name} banner`}
-                className="w-full h-full object-cover rounded-lg"
-              />
-            </div>
+            <BlurImage
+              src={template.banner}
+              alt={`${template.name} banner`}
+              className="h-full w-full rounded-lg"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-black/10">
               No Preview
@@ -127,23 +126,23 @@ export default function ToolsList({ hot }: Props) {
           )}
         </button>
 
-      {/* Bottom Overlay */}
-      <div className="absolute bottom-0 left-0 w-full z-10 bg-transparent p-4 flex flex-col gap-2">
-        <div className="flex justify-between items-center">
-          <h3 className="text-white font-semibold truncate">
-            {template.name}
-          </h3>
-          <span className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded-full capitalize">
-            {template?.hot ? "Hot Tool 🔥" : "Template"}
-          </span>
-        </div>
+        {/* Bottom Overlay */}
+        <div className="absolute bottom-0 left-0 w-full z-10 bg-transparent p-4 flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <h3 className="text-white font-semibold truncate">
+              {template.name}
+            </h3>
+            <span className="text-xs text-white/80 bg-white/10 px-2 py-1 rounded-full capitalize">
+              {template?.hot ? "Hot Tool 🔥" : "Template"}
+            </span>
+          </div>
 
-        <Link to={destination} className="w-full mt-2">
-          <button className="w-full px-4 py-2 rounded-md bg-primary text-background font-medium hover:bg-primary/90 transition">
-            Use Template
-          </button>
-        </Link>
-      </div>
+          <Link to={destination} className="w-full mt-2">
+            <button className="w-full px-4 py-2 rounded-md bg-primary text-background font-medium hover:bg-primary/90 transition">
+              Use Template
+            </button>
+          </Link>
+        </div>
       </div>
     );
   };
@@ -220,7 +219,7 @@ export default function ToolsList({ hot }: Props) {
           No tools found.
         </p>
       )}
-      
+
       {isLoading && <IsLoading />}
 
       <Dialog
@@ -237,7 +236,7 @@ export default function ToolsList({ hot }: Props) {
           </DialogHeader>
           {previewImage && (
             <div className="w-full overflow-auto flex-1 min-h-0 custom-scrollbar">
-              <img
+              <BlurImage
                 src={previewImage}
                 alt="Template preview"
                 className="h-full w-auto object-contain rounded-lg border border-white/10"

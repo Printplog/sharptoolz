@@ -47,7 +47,24 @@ export default function VisitorChart({ data, isLoading }: VisitorChartProps) {
           <Skeleton className="h-4 w-56 bg-white/10" />
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-[200px] w-full bg-white/5" />
+          <div className="h-[200px] w-full flex items-end gap-1 pt-4">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                className="flex-1 bg-white/5 rounded-t-sm"
+                style={{
+                  height: `${Math.random() * 70 + 10}%`,
+                  opacity: i % 2 === 0 ? 0.3 : 0.1,
+                  animationDelay: `${i * 0.03}s`
+                }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between mt-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-3 w-8 bg-white/10" />
+            ))}
+          </div>
         </CardContent>
       </Card>
     )
