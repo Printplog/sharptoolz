@@ -6,7 +6,6 @@ import { ConfirmAction } from "@/components/ConfirmAction";
 import { deleteTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import BlurImage from "@/components/ui/BlurImage";
 import { motion } from "framer-motion";
 
 type Props = {
@@ -79,9 +78,10 @@ export default function ToolCard({ tool }: Props) {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           {tool.banner ? (
-            <BlurImage
+            <img
               src={tool.banner}
               alt={`${tool.name} banner`}
+              loading="lazy"
               className="w-full h-full object-cover"
             />
           ) : (
@@ -94,7 +94,7 @@ export default function ToolCard({ tool }: Props) {
 
       {/* Bottom Content Area */}
       <div className="absolute bottom-0 left-0 w-full z-20 p-8 space-y-4">
-        <div className="space-y-1.5 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+        <div className="space-y-1.5 transition-transform duration-500">
           <div className="flex items-center gap-2 text-white/40 text-[9px] uppercase font-black tracking-[0.2em]">
             <Calendar className="w-3 h-3" />
             <span>{formattedDate}</span>
@@ -104,8 +104,8 @@ export default function ToolCard({ tool }: Props) {
           </h3>
         </div>
 
-        {/* Action Buttons with Reveal Effect */}
-        <div className="flex items-center justify-between gap-4 pt-4 border-t border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100 translate-y-4 group-hover:translate-y-0">
+        {/* Action Buttons - Always Visible */}
+        <div className="flex items-center justify-between gap-4 pt-4 border-t border-white/10 transition-all duration-500">
           <Link to={`/admin/templates/${tool.id}`} className="flex-1">
             <Button className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
               <Pencil className="h-3.5 w-3.5 mr-2" />
