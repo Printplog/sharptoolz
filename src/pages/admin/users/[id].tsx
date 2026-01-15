@@ -188,20 +188,6 @@ export default function UserDetails() {
                 </div>
                 <div className="flex bg-black/20 p-1 rounded-xl border border-white/5">
                   <Button
-                    onClick={() => handleUpdateRole("ZK7T-93XY")}
-                    disabled={isUpdating || user.role === "ZK7T-93XY"}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "rounded-lg px-4 h-9 text-[11px] font-black uppercase tracking-wider transition-all",
-                      user.role === "ZK7T-93XY"
-                        ? "bg-primary text-background shadow-[0_0_15px_rgba(var(--primary),0.3)]"
-                        : "text-white/30 hover:text-primary"
-                    )}
-                  >
-                    Admin Access
-                  </Button>
-                  <Button
                     onClick={() => handleUpdateRole("S9K3-41TV")}
                     disabled={isUpdating || user.role === "S9K3-41TV"}
                     variant="ghost"
