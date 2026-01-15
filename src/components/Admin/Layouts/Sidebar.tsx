@@ -13,10 +13,13 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { useQueryClient } from "@tanstack/react-query";
 import { adminOverview, getAdminAnalytics, adminUsers } from "@/api/apiEndpoints";
+import { useAuthStore } from "@/store/authStore";
 
 export default function Sidebar() {
   const { pathname } = useLocation();
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "ZK7T-93XY";
 
   const handlePrefetch = (to: string) => {
     switch (to) {
@@ -91,7 +94,12 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-2 mt-[40px]">
-        {navigationItems.map((item) => {
+        {navigationItems.filter(item => {
+          if (!isAdmin) {
+            return !["Users", "Analytics", "Settings"].includes(item.label);
+          }
+          return true;
+        }).map((item) => {
           // Special handling for "Switch to User" link - only active if pathname is exactly /dashboard or starts with /dashboard/ (but not /admin/dashboard)
           let isActive = false;
           if (item.to === "/dashboard") {

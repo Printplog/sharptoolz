@@ -188,20 +188,6 @@ export default function UserDetails() {
                 </div>
                 <div className="flex bg-black/20 p-1 rounded-xl border border-white/5">
                   <Button
-                    onClick={() => handleUpdateRole("LQ5D-21VM")}
-                    disabled={isUpdating || user.role === "LQ5D-21VM"}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "rounded-lg px-4 h-9 text-[11px] font-black uppercase tracking-wider transition-all",
-                      user.role === "LQ5D-21VM"
-                        ? "bg-white/10 text-white shadow-lg"
-                        : "text-white/30 hover:text-white"
-                    )}
-                  >
-                    Standard
-                  </Button>
-                  <Button
                     onClick={() => handleUpdateRole("ZK7T-93XY")}
                     disabled={isUpdating || user.role === "ZK7T-93XY"}
                     variant="ghost"
@@ -214,6 +200,34 @@ export default function UserDetails() {
                     )}
                   >
                     Admin Access
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateRole("S9K3-41TV")}
+                    disabled={isUpdating || user.role === "S9K3-41TV"}
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "rounded-lg px-4 h-9 text-[11px] font-black uppercase tracking-wider transition-all",
+                      user.role === "S9K3-41TV"
+                        ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                        : "text-white/30 hover:text-blue-400"
+                    )}
+                  >
+                    Staff
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateRole("LQ5D-21VM")}
+                    disabled={isUpdating || user.role === "LQ5D-21VM"}
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "rounded-lg px-4 h-9 text-[11px] font-black uppercase tracking-wider transition-all",
+                      user.role === "LQ5D-21VM"
+                        ? "bg-white/10 text-white shadow-lg"
+                        : "text-white/30 hover:text-white"
+                    )}
+                  >
+                    Standard
                   </Button>
                 </div>
               </div>
