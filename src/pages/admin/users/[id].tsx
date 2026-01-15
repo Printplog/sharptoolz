@@ -12,7 +12,12 @@ import {
   Download,
   Calendar,
   TrendingUp,
+  Shield,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
+import { updateAdminUser } from "@/api/apiEndpoints";
+import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import UserDetailSkeleton from "@/components/Admin/Users/UserDetailSkeleton";
 import PurchaseHistory from "@/components/Admin/Users/UserDetails/PurchaseHistory";
@@ -45,6 +50,56 @@ export default function UserDetails() {
 
     fetchUserDetails();
   }, [id]);
+
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleUpdateRole = async (newRole: string) => {
+    if (!id || !data) return;
+
+    setIsUpdating(true);
+    try {
+      await updateAdminUser(id, { role: newRole });
+
+      // Update local state
+      setData({
+        ...data,
+        user: {
+          ...data.user,
+          role: newRole
+        }
+      });
+
+      toast.success("User role updated successfully");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update role");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!id || !data) return;
+
+    const newStatus = !data.user.is_active;
+    setIsUpdating(true);
+    try {
+      await updateAdminUser(id, { is_active: newStatus });
+
+      setData({
+        ...data,
+        user: {
+          ...data.user,
+          is_active: newStatus
+        }
+      });
+
+      toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update status");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   if (isLoading) return <UserDetailSkeleton />;
 
@@ -88,31 +143,105 @@ export default function UserDetails() {
         </div>
       </div>
 
-      {/* User Profile Card */}
-      <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-100">
-            <User className="h-5 w-5 text-blue-400" />
-            User Profile
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500/30 to-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30">
-              <User className="h-8 w-8 text-blue-300" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-white mb-1">
-                {user.username}
-              </h3>
-              <div className="flex items-center gap-2 text-blue-200">
-                <Mail className="h-4 w-4" />
-                <span>{user.email}</span>
+      {/* User Profile & Role Management Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* User Profile Card */}
+        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 backdrop-blur-sm h-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-100">
+              <User className="h-5 w-5 text-blue-400" />
+              User Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500/30 to-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30">
+                <User className="h-8 w-8 text-blue-300" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-white mb-1">
+                  {user.username}
+                </h3>
+                <div className="flex items-center gap-2 text-blue-200">
+                  <Mail className="h-4 w-4" />
+                  <span>{user.email}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Role & Access Management Card */}
+        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20 backdrop-blur-sm h-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-100">
+              <Shield className="h-5 w-5 text-amber-400" />
+              Access Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold text-white/70">Account Role</span>
+                  <span className="text-xs text-white/40 italic">Determines permission level</span>
+                </div>
+                <div className="flex bg-black/20 p-1 rounded-xl border border-white/5">
+                  <Button
+                    onClick={() => handleUpdateRole("LQ5D-21VM")}
+                    disabled={isUpdating || user.role === "LQ5D-21VM"}
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "rounded-lg px-4 h-9 text-[11px] font-black uppercase tracking-wider transition-all",
+                      user.role === "LQ5D-21VM"
+                        ? "bg-white/10 text-white shadow-lg"
+                        : "text-white/30 hover:text-white"
+                    )}
+                  >
+                    Standard
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateRole("ZK7T-93XY")}
+                    disabled={isUpdating || user.role === "ZK7T-93XY"}
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "rounded-lg px-4 h-9 text-[11px] font-black uppercase tracking-wider transition-all",
+                      user.role === "ZK7T-93XY"
+                        ? "bg-primary text-background shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                        : "text-white/30 hover:text-primary"
+                    )}
+                  >
+                    Admin Access
+                  </Button>
+                </div>
+              </div>
+
+              <div className="h-[1px] bg-white/5 w-full" />
+
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold text-white/70">Account Status</span>
+                  <span className="text-xs text-white/40 italic">Active or restricted access</span>
+                </div>
+                <Button
+                  onClick={handleToggleStatus}
+                  disabled={isUpdating}
+                  className={cn(
+                    "h-9 px-6 rounded-xl font-black text-[11px] uppercase tracking-wider transition-all active:scale-95",
+                    user.is_active
+                      ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white hover:border-red-500"
+                      : "bg-emerald-500 text-white border border-emerald-500 hover:bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                  )}
+                >
+                  {isUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : (user.is_active ? "DEACTIVATE" : "ACTIVATE")}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Wallet & Activity Card */}
       <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 backdrop-blur-sm">

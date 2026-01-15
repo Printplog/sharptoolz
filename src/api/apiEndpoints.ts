@@ -58,10 +58,10 @@ export const addTemplate = async (data: FormData): Promise<unknown> => {
 }
 
 export const updateTemplate = async (id: string, data: Partial<Template> | FormData): Promise<unknown> => {
-  const headers = data instanceof FormData 
+  const headers = data instanceof FormData
     ? { 'Content-Type': 'multipart/form-data' }
     : { 'Content-Type': 'application/json' };
-    
+
   const res = await apiClient.patch(`/templates/${id}/`, data, { headers });
   return res.data;
 }
@@ -75,7 +75,7 @@ export const getTemplates = async (hot?: boolean, tool?: string): Promise<Templa
   const params = new URLSearchParams();
   if (hot) params.append('hot', 'true');
   if (tool) params.append('tool', tool);
-  
+
   const queryString = params.toString();
   const res = await apiClient.get(`/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
@@ -85,7 +85,7 @@ export const getTemplatesForAdmin = async (hot?: boolean, tool?: string): Promis
   const params = new URLSearchParams();
   if (hot) params.append('hot', 'true');
   if (tool) params.append('tool', tool);
-  
+
   const queryString = params.toString();
   const res = await apiClient.get(`/admin/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
@@ -111,7 +111,7 @@ export const getTemplateSvgForAdmin = async (id: string): Promise<{ svg: string 
   return res.data;
 }
 
-export const purchaseTemplate = async (data: Partial<PurchasedTemplate>): Promise<{id: string}> => {
+export const purchaseTemplate = async (data: Partial<PurchasedTemplate>): Promise<{ id: string }> => {
   const res = await apiClient.post('/purchased-templates/', data);
   return res.data;
 }
@@ -148,12 +148,12 @@ export const createCryptoPayment = async (ticker: string): Promise<CryptoPayment
 };
 
 export const cancelCryptoPayment = async (id: string): Promise<CryptoPaymentData> => {
-  const res = await apiClient.post('/cancel-payment/',  {id});
+  const res = await apiClient.post('/cancel-payment/', { id });
   return res.data;
 };
 
 export const downloadDoc = async (data: DownloadData) => {
-  const res = await apiClient.post('/download-doc/',  data, {
+  const res = await apiClient.post('/download-doc/', data, {
     responseType: "blob",
   });
   return res.data;
@@ -170,7 +170,7 @@ export const getAdminAnalytics = async () => {
 };
 
 export const logVisit = async (path: string): Promise<void> => {
-    await apiClient.post('/analytics/log-visit/', { path });
+  await apiClient.post('/analytics/log-visit/', { path });
 };
 
 export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string }) => {
@@ -178,13 +178,18 @@ export const adminUsers = async (params?: { page?: number; page_size?: number; s
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
   if (params?.search) searchParams.append('search', params.search);
-  
+
   const res = await apiClient.get(`/admin/users/?${searchParams.toString()}`);
   return res.data;
 };
 
 export const adminUserDetails = async (userId: string) => {
   const res = await apiClient.get(`/admin/users/${userId}/`);
+  return res.data;
+};
+
+export const updateAdminUser = async (userId: string, data: { role?: string; is_active?: boolean }) => {
+  const res = await apiClient.patch(`/admin/users/${userId}/`, data);
   return res.data;
 };
 
@@ -217,7 +222,7 @@ export const deleteTool = async (id: string): Promise<unknown> => {
 export const removeBackground = async (imageFile: File): Promise<{ success: boolean; image: string; message: string }> => {
   const formData = new FormData();
   formData.append('image', imageFile);
-  
+
   const res = await apiClient.post('/remove-background/', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
@@ -249,7 +254,7 @@ export const deleteFont = async (id: string): Promise<unknown> => {
 export const getTutorials = async (toolId?: string): Promise<Tutorial[]> => {
   const params = new URLSearchParams();
   if (toolId) params.append('tool', toolId);
-  
+
   const queryString = params.toString();
   const res = await apiClient.get(`/tutorials/${queryString ? `?${queryString}` : ''}`);
   return res.data;
