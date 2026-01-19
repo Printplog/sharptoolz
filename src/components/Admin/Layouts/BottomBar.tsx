@@ -1,6 +1,7 @@
 import { LayoutDashboard, Hammer, Users, LayoutTemplate, Type, ArrowLeft, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 
 const navigationItems = [
   {
@@ -42,10 +43,26 @@ const navigationItems = [
 
 export default function BottomBar() {
   const { pathname } = useLocation();
+  const { user } = useAuthStore();
 
   return (
     <nav className="fixed bottom-0 z-50 w-full bg-background border-t border-white/10 flex justify-around items-center py-4 lg:hidden">
-      {navigationItems.map((item) => {
+      {navigationItems.filter(item => {
+        // Explicitly check for role codes to avoid ambiguity
+        const isStaff = user?.role === "S9K3-41TV";
+        const isAdmin = user?.role === "ZK7T-93XY";
+
+        if (isStaff) {
+          return !["Users", "Settings", "Admin"].includes(item.label);
+        }
+
+        // Only show admin items to full admins
+        if (["Users", "Settings", "Admin"].includes(item.label)) {
+          return isAdmin;
+        }
+
+        return true;
+      }).map((item) => {
         // Special handling for "Switch to User" link - only active if pathname is exactly /dashboard or starts with /dashboard/ (but not /admin/dashboard)
         let isActive = false;
         if (item.to === "/dashboard") {
