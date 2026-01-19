@@ -80,7 +80,7 @@ export default function Sidebar() {
               <Link to={item.to}>
                 <button
                   className={cn(
-                    "w-full justify-start transition-colors py-1.5 px-6 flex items-center text-sm",
+                    "w-full justify-start transition-colors py-2 px-6 flex items-center text-sm",
                     isActive
                       ? "bg-primary/10 text-primary hover:bg-primary/10 border-r-2 border-primary"
                       : "text-foreground hover:bg-primary/5 hover:text-primary/90"
