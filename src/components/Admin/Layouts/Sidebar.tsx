@@ -40,47 +40,47 @@ export default function Sidebar() {
 
   const navigationItems = [
     {
-      icon: <LayoutDashboard className="h-5 w-5" />,
+      icon: <LayoutDashboard className="h-4 w-4" />,
       label: "Dashboard",
       to: "/admin/dashboard",
     },
     {
-      icon: <LineChart className="h-5 w-5" />,
+      icon: <LineChart className="h-4 w-4" />,
       label: "Analytics",
       to: "/admin/analytics",
     },
     {
-      icon: <ShieldAlert className="h-5 w-5" />,
+      icon: <ShieldAlert className="h-4 w-4" />,
       label: "Logs",
       to: "/admin/audit-logs",
     },
     {
-      icon: <Hammer className="h-5 w-5" />,
+      icon: <Hammer className="h-4 w-4" />,
       label: "Tools",
       to: "/admin/tools",
     },
     {
-      icon: <LayoutTemplate className="h-5 w-5" />,
+      icon: <LayoutTemplate className="h-4 w-4" />,
       label: "Templates",
       to: "/admin/templates",
     },
     {
-      icon: <Type className="h-5 w-5" />,
+      icon: <Type className="h-4 w-4" />,
       label: "Fonts",
       to: "/admin/fonts",
     },
     {
-      icon: <Users className="h-5 w-5" />,
+      icon: <Users className="h-4 w-4" />,
       label: "Users",
       to: "/admin/users",
     },
     {
-      icon: <Settings className="h-5 w-5" />,
+      icon: <Settings className="h-4 w-4" />,
       label: "Settings",
       to: "/admin/settings",
     },
     {
-      icon: <ArrowLeft className="h-5 w-5" />,
+      icon: <ArrowLeft className="h-4 w-4" />,
       label: "Switch to User",
       to: "/dashboard",
     },

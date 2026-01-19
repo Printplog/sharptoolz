@@ -20,33 +20,33 @@ export default function Sidebar() {
 
   const navigationItems = [
     {
-      icon: <LayoutDashboard className="h-5 w-5" />,
+      icon: <LayoutDashboard className="h-4 w-4" />,
       label: "Dashboard",
       to: "/dashboard",
     },
     {
-      icon: <Hammer className="h-5 w-5" />,
+      icon: <Hammer className="h-4 w-4" />,
       label: "All Tools",
       to: "/tools",
     },
     {
-      icon: <FileText className="h-5 w-5" />,
+      icon: <FileText className="h-4 w-4" />,
       label: "Documents",
       to: "/documents",
     },
     {
-      icon: <Wallet className="h-5 w-5" />,
+      icon: <Wallet className="h-4 w-4" />,
       label: "Wallet",
       to: "/wallet",
     },
     {
-      icon: <Settings className="h-5 w-5" />,
+      icon: <Settings className="h-4 w-4" />,
       label: "Settings",
       to: "/settings",
     },
     // Add Admin link if user is admin
     ...(canAccessAdmin ? [{
-      icon: <ArrowRight className="h-5 w-5" />,
+      icon: <ArrowRight className="h-4 w-4" />,
       label: "Switch to Admin",
       to: "/admin/dashboard",
     }] : []),
@@ -64,7 +64,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-2 mt-[40px]">
+      <nav className="flex-1 space-y-1 mt-[40px]">
         {navigationItems.map((item) => {
           // Special handling for "Switch to Admin" link - only active if pathname starts with /admin/
           let isActive = false;
@@ -80,7 +80,7 @@ export default function Sidebar() {
               <Link to={item.to}>
                 <button
                   className={cn(
-                    "w-full justify-start transition-colors py-3 px-6 flex items-center",
+                    "w-full justify-start transition-colors py-2 px-6 flex items-center text-sm",
                     isActive
                       ? "bg-primary/10 text-primary hover:bg-primary/10 border-r-2 border-primary"
                       : "text-foreground hover:bg-primary/5 hover:text-primary/90"
