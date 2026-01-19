@@ -1,4 +1,4 @@
-import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings } from "@/types";
+import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog } from "@/types";
 import { apiClient } from "./apiClient";
 
 export const fetchCurrentUser = async (): Promise<User> => {
@@ -166,6 +166,11 @@ export const adminOverview = async () => {
 
 export const getAdminAnalytics = async () => {
   const res = await apiClient.get('/analytics/dashboard/');
+  return res.data;
+};
+
+export const getAuditLogs = async (): Promise<AuditLog[]> => {
+  const res = await apiClient.get('/analytics/audit-logs/');
   return res.data;
 };
 

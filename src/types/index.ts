@@ -143,6 +143,17 @@ export type Template = {
   banner: string;
 };
 
+export interface AuditLog {
+  id: number;
+  actor: number | null;
+  actor_name: string;
+  action: string;
+  target: string;
+  ip_address: string | null;
+  timestamp: string;
+  details: Record<string, any>;
+}
+
 export type TemplateUpdatePayload = {
   name: string;
   svg: string;

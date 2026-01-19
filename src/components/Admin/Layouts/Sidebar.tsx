@@ -8,6 +8,7 @@ import {
   Settings,
   ArrowLeft,
   LineChart,
+  ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -47,6 +48,11 @@ export default function Sidebar() {
       icon: <LineChart className="h-5 w-5" />,
       label: "Analytics",
       to: "/admin/analytics",
+    },
+    {
+      icon: <ShieldAlert className="h-5 w-5" />,
+      label: "Logs",
+      to: "/admin/audit-logs",
     },
     {
       icon: <Hammer className="h-5 w-5" />,
