@@ -5,7 +5,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, LayoutDashboard } from "lucide-react";
+import { LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { logout } from "@/api/apiEndpoints";
 import { useAuthStore } from "@/store/authStore";
@@ -27,7 +27,7 @@ export default function Navbar() {
     <header className="flex items-center justify-between py-5 border-b border-white/10 bg-white/5 px-5 sticky top-0 backdrop-blur-2xl z-[9]">
       {/* Left Side - Title */}
       <div className="flex items-center gap-5">
-        <h2 className="text-lg font-semibold">Admin</h2>
+        <h2 className="text-lg font-semibold">Welcome, {user?.username || 'User'}</h2>
 
       </div>
       {/* Right Side - User Menu */}
@@ -46,8 +46,11 @@ export default function Navbar() {
         {/* Dropdown Menu for User Actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="cursor-pointer">
-            <div className="bg-primary text-lg font-semibold text-background size-[40px] flex justify-center items-center rounded-full">
-              <h2 className="">{user?.username[0].toUpperCase()}</h2>
+            <div className="flex items-center gap-2 group">
+              <div className="bg-primary text-lg font-semibold text-background size-[40px] flex justify-center items-center rounded-full group-hover:scale-105 transition-transform">
+                <h2 className="">{user?.username[0].toUpperCase()}</h2>
+              </div>
+              <ChevronDown className="h-4 w-4 text-white/50 group-hover:text-white transition-colors" />
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-background border-white/20 text-white">
