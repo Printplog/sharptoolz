@@ -38,7 +38,7 @@ export default function Overview({ data, isLoading }: OverviewProps) {
   }
 
   return (
-    <div className={cn("grid gap-4", isAdmin ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1")}>
+    <div className={cn("grid gap-4", isAdmin ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
       {/* Total Documents - Visible to Everyone */}
       <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -53,6 +53,36 @@ export default function Overview({ data, isLoading }: OverviewProps) {
           <p className="text-2xl font-bold">{data?.total_purchased_docs || 0}</p>
         </CardContent>
       </Card>
+
+      {/* Active Users - Visible to Admin & Staff */}
+      {(isAdmin || user?.role === "S9K3-41TV") && (
+        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+            <div className="p-2 rounded-full bg-blue-500/20 text-blue-500">
+              <Users className="h-5 w-5" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{data?.total_users || 0}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Downloads - Visible to Admin & Staff */}
+      {(isAdmin || user?.role === "S9K3-41TV") && (
+        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Downloads</CardTitle>
+            <div className="p-2 rounded-full bg-purple-500/20 text-purple-500">
+              <Download className="h-5 w-5" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{data?.total_downloads || 0}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Restricted Cards - Admin Only */}
       {isAdmin && (
@@ -69,32 +99,6 @@ export default function Overview({ data, isLoading }: OverviewProps) {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">${data?.total_wallet_balance || '0.00'}</p>
-            </CardContent>
-          </Card>
-
-          {/* Active Users */}
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-              <div className="p-2 rounded-full bg-blue-500/20 text-blue-500">
-                <Users className="h-5 w-5" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{data?.total_users || 0}</p>
-            </CardContent>
-          </Card>
-
-          {/* Downloads */}
-          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Downloads</CardTitle>
-              <div className="p-2 rounded-full bg-purple-500/20 text-purple-500">
-                <Download className="h-5 w-5" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{data?.total_downloads || 0}</p>
             </CardContent>
           </Card>
         </>
