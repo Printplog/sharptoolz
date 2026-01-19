@@ -98,7 +98,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-2 mt-[40px]">
+      <nav className="flex-1 space-y-0.5 mt-[20px] overflow-y-auto custom-scrollbar pr-2">
         {navigationItems.filter(item => {
           // Strict Role check
           const role = user?.role;
@@ -118,7 +118,7 @@ export default function Sidebar() {
 
           // 3. Others (Standard): Hide Admin links
           // Standard users shouldn't be here, but just in case
-          const restrictedForUser = ["Users", "Analytics", "Settings", "Tools", "Templates", "Fonts"];
+          const restrictedForUser = ["Users", "Analytics", "Settings", "Tools", "Templates", "Fonts", "Logs"];
           return !restrictedForUser.includes(item.label);
 
         }).map((item) => {
@@ -139,10 +139,10 @@ export default function Sidebar() {
               >
                 <button
                   className={cn(
-                    "w-full justify-start transition-colors py-3 px-6 flex items-center",
+                    "w-full justify-start transition-colors py-1.5 px-6 flex items-center text-sm",
                     isActive
                       ? "bg-primary/10 text-primary hover:bg-primary/10 border-r-2 border-primary"
-                      : "text-foreground hover:bg-primary/5 hover:text-primary/90"
+                      : "text-white/60 hover:bg-white/5 hover:text-white"
                   )}
                 >
                   {item.icon}

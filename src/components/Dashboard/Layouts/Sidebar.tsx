@@ -64,7 +64,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 mt-[40px]">
+      <nav className="flex-1 space-y-0.5 mt-[20px] overflow-y-auto custom-scrollbar pr-2">
         {navigationItems.map((item) => {
           // Special handling for "Switch to Admin" link - only active if pathname starts with /admin/
           let isActive = false;
@@ -80,7 +80,7 @@ export default function Sidebar() {
               <Link to={item.to}>
                 <button
                   className={cn(
-                    "w-full justify-start transition-colors py-2 px-6 flex items-center text-sm",
+                    "w-full justify-start transition-colors py-1.5 px-6 flex items-center text-sm",
                     isActive
                       ? "bg-primary/10 text-primary hover:bg-primary/10 border-r-2 border-primary"
                       : "text-foreground hover:bg-primary/5 hover:text-primary/90"
