@@ -11,6 +11,7 @@ import PageLoader from "@/components/PageLoader";
 const ROLE_MAP = {
   "ZK7T-93XY": "admin",
   "LQ5D-21VM": "user",
+  "S9K3-41TV": "staff",
 } as const;
 
 type RoleCode = keyof typeof ROLE_MAP;
@@ -53,7 +54,7 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
       }
 
       // 🚫 Restrict user from admin route if needed
-      if (isAdmin && role !== "admin") {
+      if (isAdmin && role !== "admin" && role !== "staff") {
         toast.error("You are not authorized to access this page");
         navigate("/dashboard"); // or navigate("/") or show 403 page
         return;

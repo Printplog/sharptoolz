@@ -51,14 +51,14 @@ export default function Login({ dialog = false }: AuthDialogProps) {
     onSuccess: (user) => {
       toast.success("Login Success");
       setUser(user);
-      
+
       if (dialog) {
         closeDialog("register");
         return;
       }
 
-      // Check if user has admin role and redirect accordingly
-      if (user.role === "ZK7T-93XY") {
+      // Check if user has admin role (Admin or Staff) and redirect accordingly
+      if (user.role === "ZK7T-93XY" || user.role === "S9K3-41TV") {
         navigate("/admin/dashboard");
       } else {
         navigate(next);
