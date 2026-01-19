@@ -1,7 +1,7 @@
 import { Routes } from '@generouted/react-router'
 import { useEffect } from 'react'
 import { initSecurity } from '@/lib/utils/security'
-import AuditLogsPage from "@/pages/admin/audit-logs";
+
 
 export default function App() {
   useEffect(() => {
