@@ -147,14 +147,7 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      {/* Footer / User Info */}
-      <div className="mt-auto px-6 mb-6">
-        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-bold text-white truncate">{user?.username}</span>
-          </div>
-        </div>
-      </div>
+
     </aside>
   );
 }

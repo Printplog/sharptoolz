@@ -6,9 +6,9 @@ import { useAuthStore } from "@/store/authStore";
 export default function BottomBar() {
   const { pathname } = useLocation();
   const { user } = useAuthStore();
-  
-  // Check if user is admin
-  const isAdmin = user?.role === "ZK7T-93XY" || user?.is_staff === true;
+
+  // Check if user is admin or staff
+  const canAccessAdmin = user?.role === "ZK7T-93XY" || user?.role === "S9K3-41TV";
 
   const baseNavigationItems = [
     {
@@ -44,7 +44,7 @@ export default function BottomBar() {
     to: "/admin/dashboard",
   };
 
-  const navigationItems = isAdmin 
+  const navigationItems = canAccessAdmin
     ? [...baseNavigationItems, adminNavigationItem]
     : baseNavigationItems;
 

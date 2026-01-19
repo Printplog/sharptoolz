@@ -50,15 +50,13 @@ export default function BottomBar() {
       {navigationItems.filter(item => {
         // Explicitly check for role codes to avoid ambiguity
         const isStaff = user?.role === "S9K3-41TV";
-        const isAdmin = user?.role === "ZK7T-93XY";
 
+        // Staff can see Tools, Templates, Fonts
         if (isStaff) {
+          // Staff CANNOT see Users, Settings, Admin (Overview)
+          // But they CAN see Tools, Templates, Fonts
+          // And they NEED to see "User" (ArrowLeft) to go back.
           return !["Users", "Settings", "Admin"].includes(item.label);
-        }
-
-        // Only show admin items to full admins
-        if (["Users", "Settings", "Admin"].includes(item.label)) {
-          return isAdmin;
         }
 
         return true;

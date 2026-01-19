@@ -14,9 +14,9 @@ import { useAuthStore } from "@/store/authStore";
 export default function Sidebar() {
   const { pathname } = useLocation();
   const { user } = useAuthStore();
-  
-  // Check if user is admin
-  const isAdmin = user?.role === "ZK7T-93XY" || user?.is_staff === true;
+
+  // Check if user is admin or staff
+  const canAccessAdmin = user?.role === "ZK7T-93XY" || user?.role === "S9K3-41TV";
 
   const navigationItems = [
     {
@@ -45,7 +45,7 @@ export default function Sidebar() {
       to: "/settings",
     },
     // Add Admin link if user is admin
-    ...(isAdmin ? [{
+    ...(canAccessAdmin ? [{
       icon: <ArrowRight className="h-5 w-5" />,
       label: "Switch to Admin",
       to: "/admin/dashboard",
