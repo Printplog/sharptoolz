@@ -94,20 +94,27 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-2 mt-[40px]">
         {navigationItems.filter(item => {
-          // Explicitly check for role codes to avoid ambiguity
-          const isStaff = user?.role === "S9K3-41TV";
-          const isAdmin = user?.role === "ZK7T-93XY";
+          // Strict Role check
+          const role = user?.role;
+          const isStaff = role === "S9K3-41TV";
+          const isAdmin = role === "ZK7T-93XY";
 
+          // 1. Staff: ALLOW-LIST only
           if (isStaff) {
-            return !["Users", "Analytics", "Settings"].includes(item.label);
+            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Switch to User"];
+            return allowedForStaff.includes(item.label);
           }
 
-          // Only show admin items to full admins
-          if (["Users", "Analytics", "Settings"].includes(item.label)) {
-            return isAdmin;
+          // 2. Admin: SHOW ALL
+          if (isAdmin) {
+            return true;
           }
 
-          return true;
+          // 3. Others (Standard): Hide Admin links
+          // Standard users shouldn't be here, but just in case
+          const restrictedForUser = ["Users", "Analytics", "Settings", "Tools", "Templates", "Fonts"];
+          return !restrictedForUser.includes(item.label);
+
         }).map((item) => {
           // Special handling for "Switch to User" link - only active if pathname is exactly /dashboard or starts with /dashboard/ (but not /admin/dashboard)
           let isActive = false;
@@ -140,6 +147,24 @@ export default function Sidebar() {
           );
         })}
       </nav>
+      {/* Footer / User Info */}
+      <div className="mt-auto px-6 mb-6">
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-bold text-white truncate">{user?.username}</span>
+            <span className={cn(
+              "text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full w-fit",
+              user?.role === "ZK7T-93XY" ? "bg-primary/20 text-primary" :
+                user?.role === "S9K3-41TV" ? "bg-amber-500/20 text-amber-500" :
+                  "bg-white/10 text-white/50"
+            )}>
+              {user?.role === "ZK7T-93XY" ? "Admin Access" :
+                user?.role === "S9K3-41TV" ? "Staff Member" :
+                  "Standard User"}
+            </span>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }
