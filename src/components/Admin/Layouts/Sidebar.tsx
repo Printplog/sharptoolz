@@ -152,16 +152,6 @@ export default function Sidebar() {
         <div className="p-4 rounded-xl bg-white/5 border border-white/10">
           <div className="flex flex-col gap-1">
             <span className="text-sm font-bold text-white truncate">{user?.username}</span>
-            <span className={cn(
-              "text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full w-fit",
-              user?.role === "ZK7T-93XY" ? "bg-primary/20 text-primary" :
-                user?.role === "S9K3-41TV" ? "bg-amber-500/20 text-amber-500" :
-                  "bg-white/10 text-white/50"
-            )}>
-              {user?.role === "ZK7T-93XY" ? "Admin Access" :
-                user?.role === "S9K3-41TV" ? "Staff Member" :
-                  "Standard User"}
-            </span>
           </div>
         </div>
       </div>

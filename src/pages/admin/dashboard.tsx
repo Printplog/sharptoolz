@@ -20,6 +20,7 @@ export default function Dashboard() {
   const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery({
     queryFn: () => getAdminAnalytics(),
     queryKey: ["adminAnalytics"],
+    enabled: !!isAdmin, // Only fetch if admin
   });
 
   return (
