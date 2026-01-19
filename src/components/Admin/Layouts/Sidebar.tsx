@@ -19,7 +19,6 @@ export default function Sidebar() {
   const { pathname } = useLocation();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const isAdmin = user?.role === "ZK7T-93XY";
 
   const handlePrefetch = (to: string) => {
     switch (to) {
@@ -95,9 +94,19 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-2 mt-[40px]">
         {navigationItems.filter(item => {
-          if (!isAdmin) {
+          // Explicitly check for role codes to avoid ambiguity
+          const isStaff = user?.role === "S9K3-41TV";
+          const isAdmin = user?.role === "ZK7T-93XY";
+
+          if (isStaff) {
             return !["Users", "Analytics", "Settings"].includes(item.label);
           }
+
+          // Only show admin items to full admins
+          if (["Users", "Analytics", "Settings"].includes(item.label)) {
+            return isAdmin;
+          }
+
           return true;
         }).map((item) => {
           // Special handling for "Switch to User" link - only active if pathname is exactly /dashboard or starts with /dashboard/ (but not /admin/dashboard)
