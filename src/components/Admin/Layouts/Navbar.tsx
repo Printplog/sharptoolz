@@ -13,14 +13,14 @@ import { useAuthStore } from "@/store/authStore";
 export default function Navbar() {
   const { user, logout: logoutStore } = useAuthStore()
 
-    const navigate = useNavigate()
-    const { mutate } = useMutation({
-      mutationFn: logout,
-      onSuccess: () => {
-        logoutStore();
-        navigate("/auth/login")
-      }
-    })
+  const navigate = useNavigate()
+  const { mutate } = useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      logoutStore();
+      navigate("/auth/login")
+    }
+  })
 
 
   return (
@@ -32,15 +32,26 @@ export default function Navbar() {
       </div>
       {/* Right Side - User Menu */}
       <div className="flex items-center gap-4">
+        {/* Role Badge */}
+        {user?.role && (
+          <div className={
+            user.role === "ZK7T-93XY" ? "bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" :
+              user.role === "S9K3-41TV" ? "bg-amber-500/20 text-amber-500 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" :
+                "bg-white/10 text-white/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+          }>
+            {user.role === "ZK7T-93XY" ? "Admin" : user.role === "S9K3-41TV" ? "Staff" : "User"}
+          </div>
+        )}
+
         {/* Dropdown Menu for User Actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="cursor-pointer">
             <div className="bg-primary text-lg font-semibold text-background size-[40px] flex justify-center items-center rounded-full">
-                <h2 className="">{user?.username[0].toUpperCase()}</h2>
+              <h2 className="">{user?.username[0].toUpperCase()}</h2>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-background border-white/20 text-white">
-            <DropdownMenuItem asChild  className="cursor-pointer focus:bg-white/10 focus:text-white/80">
+            <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/10 focus:text-white/80">
               <Link to="/" className="flex items-center">
                 <LayoutDashboard className="mr-2 h-4 w-4 text-primary" />
                 <span>View Main Site</span>

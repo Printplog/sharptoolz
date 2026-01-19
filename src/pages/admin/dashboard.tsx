@@ -4,6 +4,7 @@ import type { AdminOverview } from "@/types";
 import Overview from "@/components/Admin/Dashboard/Overview";
 import WalletFlowChart from "@/components/Admin/Dashboard/WalletFlowChart";
 import VisitorChart from "@/components/Admin/Dashboard/VisitorChart";
+import QuickActions from "@/components/Admin/Dashboard/QuickActions";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -27,6 +28,9 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Analytics Cards */}
       <Overview data={overviewData} isLoading={isOverviewLoading} />
+
+      {/* Quick Actions - Visible for everyone */}
+      <QuickActions />
 
       {/* Charts Section */}
       {(isAdmin || user?.role === "S9K3-41TV") && (
