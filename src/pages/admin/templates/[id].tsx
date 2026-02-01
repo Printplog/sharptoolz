@@ -56,7 +56,7 @@ export default function SvgTemplateEditor() {
 
   // Save template mutation
   const saveMutation = useMutation({
-    mutationFn: async (templateData: TemplateUpdatePayload) => {
+    mutationFn: async (templateData: TemplateUpdatePayload): Promise<Template> => {
       try {
         // If there's a banner file, use FormData
         if (templateData.banner) {
@@ -103,21 +103,28 @@ export default function SvgTemplateEditor() {
         throw error;
       }
     },
-    onSuccess: async () => {
+    onSuccess: async (updatedTemplate: Template) => {
       toast.success('Template saved successfully!');
 
-      // Invalidate and refetch related queries to ensure fresh data
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["templates"] }),
-        queryClient.invalidateQueries({ queryKey: ["template", id] }),
-        queryClient.invalidateQueries({ queryKey: ["template-svg", id] }),
-        queryClient.invalidateQueries({ queryKey: ["tools"] }),
-        queryClient.invalidateQueries({ queryKey: ["tool-categories"] }),
-      ]);
+      // Optimistic update: Immediately update the cache with the saved data
+      queryClient.setQueryData(["template", id], (old: Template | undefined) => {
+        if (!old) return updatedTemplate;
+        // Merge the updated data with existing data
+        return {
+          ...old,
+          ...updatedTemplate,
+          // Preserve relationships that might not be in the response
+          fonts: updatedTemplate.fonts || old.fonts,
+          tutorial: updatedTemplate.tutorial || old.tutorial,
+        };
+      });
 
-      // Refetch the template data immediately to get updated form_fields
-      await queryClient.refetchQueries({ queryKey: ["template", id] });
-      await queryClient.refetchQueries({ queryKey: ["template-svg", id] });
+      // Only invalidate templates list to refresh the sidebar/listing
+      // This is necessary because template metadata (name, hot, active) might have changed
+      await queryClient.invalidateQueries({ queryKey: ["templates"] });
+
+      // Skip invalidating template-svg, tools, and tool-categories
+      // These rarely change and don't need to be refetched after every save
     },
     onError: (error: Error) => {
       console.error('Save template error:', error);
