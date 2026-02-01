@@ -11,8 +11,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".text Extension",
     content: "Creates a text input field from an SVG element.",
     codeExamples: [
-      { 
-        title: "Text Field", 
+      {
+        title: "Text Field",
         code: "Company_Name.text",
         description: "Creates a text input field with the label 'Company Name'"
       }
@@ -23,8 +23,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".textarea Extension",
     content: "Creates a multi-line text area from an SVG element.",
     codeExamples: [
-      { 
-        title: "Textarea Field", 
+      {
+        title: "Textarea Field",
         code: "Description.textarea",
         description: "Creates a multi-line text area with the label 'Description'"
       }
@@ -35,8 +35,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".number Extension",
     content: "Creates a number input field from an SVG element.",
     codeExamples: [
-      { 
-        title: "Number Field", 
+      {
+        title: "Number Field",
         code: "Quantity.number",
         description: "Creates a number input field"
       }
@@ -47,8 +47,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".email Extension",
     content: "Creates an email input field with validation from an SVG element.",
     codeExamples: [
-      { 
-        title: "Email Field", 
+      {
+        title: "Email Field",
         code: "Contact_Email.email",
         description: "Creates an email input field with validation"
       }
@@ -59,8 +59,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".tel Extension",
     content: "Creates a telephone number input field from an SVG element.",
     codeExamples: [
-      { 
-        title: "Phone Field", 
+      {
+        title: "Phone Field",
         code: "Phone_Number.tel",
         description: "Creates a telephone number input field"
       },
@@ -76,8 +76,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".password Extension",
     content: "Creates a password input field with hidden text from an SVG element.",
     codeExamples: [
-      { 
-        title: "Password Field", 
+      {
+        title: "Password Field",
         code: "User_Password.password",
         description: "Creates a password input field (text is hidden when typing)"
       }
@@ -88,8 +88,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".checkbox Extension",
     content: "Creates a checkbox input field from an SVG element. Checkboxes return true when checked, false when unchecked.",
     codeExamples: [
-      { 
-        title: "Checkbox Field", 
+      {
+        title: "Checkbox Field",
         code: "Terms_Accepted.checkbox",
         description: "Creates a checkbox field"
       },
@@ -105,8 +105,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".range Extension",
     content: "Creates a range slider input field from an SVG element.",
     codeExamples: [
-      { 
-        title: "Range Slider", 
+      {
+        title: "Range Slider",
         code: "Volume.range",
         description: "Creates a range slider input field"
       },
@@ -122,8 +122,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".color Extension",
     content: "Creates a color picker input field from an SVG element.",
     codeExamples: [
-      { 
-        title: "Color Picker", 
+      {
+        title: "Color Picker",
         code: "Theme_Color.color",
         description: "Creates a color picker input field"
       }
@@ -134,8 +134,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".file Extension",
     content: "Creates a file upload input field from an SVG element. Alternative to .upload extension.",
     codeExamples: [
-      { 
-        title: "File Upload", 
+      {
+        title: "File Upload",
         code: "Document.file",
         description: "Creates a file upload input field"
       },
@@ -151,8 +151,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".upload Extension",
     content: "Creates a file upload input field from an SVG element. Alternative to .file extension.",
     codeExamples: [
-      { 
-        title: "File Upload", 
+      {
+        title: "File Upload",
         code: "Company_Logo.upload",
         description: "Creates a file upload input field"
       },
@@ -185,8 +185,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".sign Extension",
     content: "Creates a signature field from an SVG element. Allows users to draw or upload their signature.",
     codeExamples: [
-      { 
-        title: "Signature Field", 
+      {
+        title: "Signature Field",
         code: "Author_Signature.sign",
         description: "Creates a signature input field"
       },
@@ -202,8 +202,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".status Extension",
     content: "Creates a status input field from an SVG element.",
     codeExamples: [
-      { 
-        title: "Status Field", 
+      {
+        title: "Status Field",
         code: "Order_Status.status",
         description: "Creates a status input field"
       }
@@ -214,8 +214,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".date Extension",
     content: "Creates a date picker field. Use .date for basic picker or .date_FORMAT for custom formatting. Provides dropdown selectors for all components (year, month, day, hour, minute, second, AM/PM). Important: Use underscores (_) to represent spaces in your format string.",
     codeExamples: [
-      { 
-        title: "Basic Date Field", 
+      {
+        title: "Basic Date Field",
         code: "Birth_Date.date",
         description: "Creates a date picker (stores as YYYY-MM-DD)"
       },
@@ -335,18 +335,18 @@ export const svgEditorDocs: DocSection[] = [
     title: ".select_ Extension",
     content: "Create dropdown fields by using the .select_ pattern for multiple related elements. The text content of each element becomes the option text. To make a select field trackable, add .track_[role] to ONE of the select options.",
     codeExamples: [
-      { 
-        title: "Basic Dropdown Options", 
+      {
+        title: "Basic Dropdown Options",
         code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered",
         description: "Creates a dropdown with three options"
       },
-      { 
-        title: "Trackable Select Field", 
+      {
+        title: "Trackable Select Field",
         code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.track_status",
         description: "Creates a dropdown that can be tracked with role 'status'. Only ONE option needs the .track_ extension (track_ must be last)."
       },
-      { 
-        title: "Airline Selection with Tracking", 
+      {
+        title: "Airline Selection with Tracking",
         code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline",
         description: "Airline selection dropdown that can be tracked with role 'airline' (track_ must be last)"
       }
@@ -357,18 +357,18 @@ export const svgEditorDocs: DocSection[] = [
     title: ".hide Extension",
     content: "Create toggleable visibility for elements with the .hide extension. When checked, the element is visible; when unchecked, it's hidden.",
     codeExamples: [
-      { 
-        title: "Basic Hide", 
+      {
+        title: "Basic Hide",
         code: "Watermark.hide",
         description: "Creates a checkbox that toggles visibility (hidden by default)"
       },
-      { 
-        title: "Hidden by Default", 
+      {
+        title: "Hidden by Default",
         code: "Premium_Feature.hide_unchecked",
         description: "Creates a checkbox that toggles visibility (hidden by default)"
       },
-      { 
-        title: "Visible by Default", 
+      {
+        title: "Visible by Default",
         code: "Basic_Feature.hide_checked",
         description: "Creates a checkbox that toggles visibility (visible by default)"
       }
@@ -379,8 +379,8 @@ export const svgEditorDocs: DocSection[] = [
     title: "Helper Text (data-helper attribute)",
     content: "Add contextual help text to any field by using the data-helper attribute on the SVG element. This helper text will appear below the field to provide additional guidance to users.",
     codeExamples: [
-      { 
-        title: "With Helper Text", 
+      {
+        title: "With Helper Text",
         code: '<text id="Email.email" data-helper="Enter your email address">user@example.com</text>',
         description: "Email field with helper text that appears below the input"
       },
@@ -401,57 +401,57 @@ export const svgEditorDocs: DocSection[] = [
       }
     ]
   },
+  {
+    id: "tracking-id",
+    title: ".tracking_id Extension",
+    content: "Mark a field as the tracking ID for the template. This field will be used for lookup in tracking sites. Often combined with .link_ to provide direct links to tracking websites.",
+    codeExamples: [
       {
-        id: "tracking-id",
-        title: ".tracking_id Extension",
-        content: "Mark a field as the tracking ID for the template. This field will be used for lookup in tracking sites. Often combined with .link_ to provide direct links to tracking websites.",
-        codeExamples: [
-          {
-            title: "Basic Tracking ID",
-            code: "Order_Number.gen.max_10.tracking_id",
-            description: "Designates this field as the tracking ID for lookup"
-          },
-          {
-            title: "Tracking ID with Link",
-            code: "Order_Number.gen.max_10.tracking_id.link_https://parcelfinda.com",
-            description: "Tracking ID with a direct link to the tracking website"
-          }
-        ]
+        title: "Basic Tracking ID",
+        code: "Order_Number.gen.max_10.tracking_id",
+        description: "Designates this field as the tracking ID for lookup"
       },
       {
-        id: "track-extensions",
-        title: ".track_ Extensions",
-        content: "Assign specific roles to fields for tracking website display. These extensions must be the LAST extension in the ID chain, after all other extensions like .gen, .max_, .tracking_id, .link_, etc.",
-        codeExamples: [
-          {
-            title: "Customer Name",
-            code: "Customer_Name.gen.max_20.track_name",
-            description: "Maps this field to display as customer name in tracking sites"
-          },
-          {
-            title: "Tracking ID with Role",
-            code: "Order_Number.gen.max_10.tracking_id.track_id",
-            description: "Tracking ID field with explicit tracking role (track_ must be last)"
-          },
-          {
-            title: "Package with Link and Role",
-            code: "Package_Info.text.link_https://example.com.track_package",
-            description: "Package field with link and tracking role (track_ must be last)"
-          }
-        ]
+        title: "Tracking ID with Link",
+        code: "Order_Number.gen.max_10.tracking_id.link_https://parcelfinda.com",
+        description: "Tracking ID with a direct link to the tracking website"
+      }
+    ]
+  },
+  {
+    id: "track-extensions",
+    title: ".track_ Extensions",
+    content: "Assign specific roles to fields for tracking website display. These extensions must be the LAST extension in the ID chain, after all other extensions like .gen, .max_, .tracking_id, .link_, etc.",
+    codeExamples: [
+      {
+        title: "Customer Name",
+        code: "Customer_Name.gen.max_20.track_name",
+        description: "Maps this field to display as customer name in tracking sites"
       },
+      {
+        title: "Tracking ID with Role",
+        code: "Order_Number.gen.max_10.tracking_id.track_id",
+        description: "Tracking ID field with explicit tracking role (track_ must be last)"
+      },
+      {
+        title: "Package with Link and Role",
+        code: "Package_Info.text.link_https://example.com.track_package",
+        description: "Package field with link and tracking role (track_ must be last)"
+      }
+    ]
+  },
   {
     id: "max-values",
     title: ".max_ Extension",
     content: "Set maximum length for text fields or maximum value for number fields.",
     codeExamples: [
-      { 
-        title: "Max Text Length", 
+      {
+        title: "Max Text Length",
         code: "Description.text.max_100",
         description: "Text field with maximum length of 100 characters"
       },
-      { 
-        title: "Max Number Value", 
+      {
+        title: "Max Number Value",
         code: "Quantity.number.max_999",
         description: "Number field with maximum value of 999"
       }
@@ -462,8 +462,8 @@ export const svgEditorDocs: DocSection[] = [
     title: ".depends_ Extension",
     content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. For text fields, use FieldName.depends_SourceField directly. For image/signature fields, include the type: FieldName.upload.depends_Source or FieldName.sign.depends_Source.",
     codeExamples: [
-      { 
-        title: "Simple Copy (Text)", 
+      {
+        title: "Simple Copy (Text)",
         code: "Email.text\nConfirm_Email.depends_Email",
         description: "Copies entire value from Email field. No field type needed for text dependencies."
       },
@@ -508,14 +508,14 @@ export const svgEditorDocs: DocSection[] = [
         description: "Signature_Copy automatically copies the signature. For signature dependencies, you MUST use .sign.depends_SourceField format."
       }
     ]
-  }, 
+  },
   {
     id: "generated-values",
     title: ".gen Extension",
     content: "Generate values using advanced patterns: random numbers, random letters (with case options), prefixes, field dependencies, character repetition, and fill patterns. Use the interactive builder in the admin editor to construct complex generation rules.",
     codeExamples: [
-      { 
-        title: "Simple Random (Old Style)", 
+      {
+        title: "Simple Random (Old Style)",
         code: "Reference.gen.max_8",
         description: "Generates random alphanumeric code (8 characters)"
       },
@@ -649,18 +649,18 @@ export const svgEditorDocs: DocSection[] = [
     title: ".link_ Extension",
     content: "Add external links to fields. Most commonly used with .tracking_id to provide links to tracking websites where users can check their order or flight status.",
     codeExamples: [
-      { 
-        title: "Tracking ID with Link", 
+      {
+        title: "Tracking ID with Link",
         code: "Order_Number.gen.max_10.tracking_id.link_https://parcelfinda.com",
         description: "Creates a tracking ID field with a link to the ParcelFinda tracking website"
       },
-      { 
-        title: "Flight Tracking with Link", 
+      {
+        title: "Flight Tracking with Link",
         code: "Booking_Ref.gen.max_8.tracking_id.link_https://myflightlookup.com",
         description: "Creates a flight booking reference with a link to the MyFlightLookup tracking website"
       },
-      { 
-        title: "Simple Link Field", 
+      {
+        title: "Simple Link Field",
         code: "Website_Link.link_https://company.com",
         description: "Creates a field that displays as a clickable link (less common use case)"
       }
@@ -671,63 +671,63 @@ export const svgEditorDocs: DocSection[] = [
     title: ".editable Extension",
     content: "Marks fields as editable even after document purchase. By default, all fields become non-editable after purchase, but the .editable extension allows specific fields to remain editable. This is useful for fields that users might need to update after purchase, such as status fields, dynamic content, or user-specific information.",
     codeExamples: [
-      { 
-        title: "Editable Text Field", 
+      {
+        title: "Editable Text Field",
         code: "Status.text.editable",
         description: "Creates a text field that remains editable even after document purchase"
       },
-      { 
-        title: "Editable Email Field", 
+      {
+        title: "Editable Email Field",
         code: "Contact_Email.email.editable",
         description: "Creates an email field that remains editable after purchase"
       },
-      { 
-        title: "Editable Number Field", 
+      {
+        title: "Editable Number Field",
         code: "Quantity.number.editable",
         description: "Creates a number field that remains editable after purchase"
       },
-      { 
-        title: "Editable Textarea", 
+      {
+        title: "Editable Textarea",
         code: "Notes.textarea.editable",
         description: "Creates a textarea field that remains editable after purchase"
       },
-      { 
-        title: "Editable Select Field", 
+      {
+        title: "Editable Select Field",
         code: "Priority.select_High\nPriority.select_Medium\nPriority.select_Low.editable",
         description: "Creates a select field with options that remains editable after purchase"
       },
-      { 
-        title: "Editable Date Field", 
+      {
+        title: "Editable Date Field",
         code: "Due_Date.date.editable",
         description: "Creates a date field that remains editable after purchase"
       },
-      { 
-        title: "Editable Checkbox", 
+      {
+        title: "Editable Checkbox",
         code: "Terms_Accepted.checkbox.editable",
         description: "Creates a checkbox that remains editable after purchase"
       },
-      { 
-        title: "Editable Generated Field", 
+      {
+        title: "Editable Generated Field",
         code: "Reference_Number.gen.max_12.editable",
         description: "Creates a generated field that remains editable after purchase (users can regenerate)"
       },
-      { 
-        title: "Editable File Upload", 
+      {
+        title: "Editable File Upload",
         code: "Updated_Logo.upload.editable",
         description: "Creates a file upload field that remains editable after purchase"
       },
-      { 
-        title: "Editable Signature Field", 
+      {
+        title: "Editable Signature Field",
         code: "Manager_Signature.sign.editable",
         description: "Creates a signature field that remains editable after purchase"
       },
-      { 
-        title: "Editable with Tracking", 
+      {
+        title: "Editable with Tracking",
         code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered.editable.track_status",
         description: "Creates a select field with tracking role that remains editable after purchase (.editable before .track_status, track_ must be last)"
       },
-      { 
-        title: "Editable with Multiple Extensions", 
+      {
+        title: "Editable with Multiple Extensions",
         code: "Tracking_Number.gen.max_15.tracking_id.editable",
         description: "Creates a generated tracking ID field that remains editable after purchase"
       }
@@ -773,7 +773,12 @@ export const svgEditorDocs: DocSection[] = [
           { title: "Second Flight - Destination", code: "Arrival2.text.track_destination2", description: "Second flight arrival location for multi-leg journeys (.track_destination2 must be last)" },
           { title: "Third Flight - Origin", code: "Departure3.text.track_origin3", description: "Third flight departure location for multi-leg journeys (.track_origin3 must be last)" },
           { title: "Third Flight - Destination", code: "Arrival3.text.track_destination3", description: "Third flight arrival location for multi-leg journeys (.track_destination3 must be last)" },
-          { title: "Airline Selection", code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline", description: "Airline selection dropdown (.track_airline must be on ONE option only)" }
+          { title: "Airline Selection", code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline", description: "Airline selection dropdown (.track_airline must be on ONE option only)" },
+          { title: "Departure Time", code: "DepartureTime.text.track_departure_time", description: "Flight departure time (.track_departure_time must be last)" },
+          { title: "Arrival Time", code: "ArrivalTime.text.track_arrival_time", description: "Flight arrival time (.track_arrival_time must be last)" },
+          { title: "Gate Number", code: "Gate.text.track_gate", description: "Departure gate number (.track_gate must be last)" },
+          { title: "Flight Class", code: "Class.text.track_class", description: "Cabin class (e.g., Economy, Business) (.track_class must be last)" },
+          { title: "Seat Number", code: "Seat.text.track_seat", description: "Passenger seat number (.track_seat must be last)" }
         ]
       }
     ]
