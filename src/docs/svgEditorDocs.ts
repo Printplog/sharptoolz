@@ -506,6 +506,16 @@ export const svgEditorDocs: DocSection[] = [
         title: "Signature Dependency (requires .sign)",
         code: "Signature.sign\nSignature_Copy.sign.depends_Signature",
         description: "Signature_Copy automatically copies the signature. For signature dependencies, you MUST use .sign.depends_SourceField format."
+      },
+      {
+        title: "Date Reformatting",
+        code: "Start_Date.date\nFormat_Date.depends_Start_Date[date:MMM do, yyyy]",
+        description: "Reformats a date value. Use [date:FORMAT] syntax where FORMAT is a valid date-fns format string. Supports natural language inputs like '9th January, 2026' or '23rd Feb'."
+      },
+      {
+        title: "Advanced Date Parsing",
+        code: "Input.text\nOutput.depends_Input[date:yyyy-MM-dd]",
+        description: "Converts '9th January, 2026' -> '2026-01-09'. Automatically removes ordinals (st, nd, rd, th) before parsing."
       }
     ]
   },

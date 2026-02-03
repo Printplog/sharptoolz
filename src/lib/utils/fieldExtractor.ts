@@ -12,52 +12,58 @@
  * For image and signature fields, extraction patterns are ignored and the full value is returned
  */
 
+import { format } from "date-fns";
+
 export function extractFromDependency(
-  dependsOn: string, 
+  dependsOn: string,
   allFields: Record<string, string | number | boolean | any>
 ): string {
   // Check if pattern contains extraction syntax
-  const extractMatch = dependsOn.match(/^(.+)\[(w|ch)(.+)\]$/);
-  
+  // Updated regex to support date extraction: [date:FORMAT] or [w1] or [ch1]
+  const extractMatch = dependsOn.match(/^(.+)\[(w|ch|date)(.+)?\]$/);
+
   if (extractMatch) {
     const fieldName = extractMatch[1];
-    const extractType = extractMatch[2]; // 'w' or 'ch'
-    const extractPattern = extractMatch[3]; // '1', '1,2,5', '1-4'
-    
+    const extractType = extractMatch[2]; // 'w', 'ch', or 'date'
+    const extractPattern = extractMatch[3]?.replace(/^:/, '') || ''; // Remove leading colon if present
+
     const fieldValue = allFields[fieldName];
-    
+
     // For image and signature fields, ignore extraction patterns and return the full value
     if (fieldValue && (typeof fieldValue === 'string' && (fieldValue.startsWith('data:image/') || fieldValue.startsWith('blob:')))) {
       return fieldValue;
     }
-    
+
     const stringValue = String(fieldValue || '');
-    
+
     if (extractType === 'w') {
       // Word extraction
       return extractWord(stringValue, extractPattern);
     } else if (extractType === 'ch') {
       // Character extraction
       return extractChars(stringValue, extractPattern);
+    } else if (extractType === 'date') {
+      // Date reformatting
+      return extractDate(stringValue, extractPattern);
     }
   }
-  
+
   // Simple field reference (no extraction)
   const baseFieldName = dependsOn.split('[')[0];
   const fieldValue = allFields[baseFieldName];
-  
+
   // For image and signature fields, return the full value
   if (fieldValue && (typeof fieldValue === 'string' && (fieldValue.startsWith('data:image/') || fieldValue.startsWith('blob:')))) {
     return fieldValue;
   }
-  
+
   return String(fieldValue || '');
 }
 
 function extractWord(text: string, pattern: string): string {
   const words = text.trim().split(/\s+/);
   const wordIndex = parseInt(pattern) - 1; // Convert to 0-based index
-  
+
   return words[wordIndex] || '';
 }
 
@@ -67,15 +73,34 @@ function extractChars(text: string, pattern: string): string {
     const indices = pattern.split(',').map(i => parseInt(i.trim()) - 1);
     return indices.map(i => text[i] || '').join('');
   }
-  
+
   // Handle range: ch1-4
   if (pattern.includes('-')) {
     const [start, end] = pattern.split('-').map(i => parseInt(i.trim()));
     return text.slice(start - 1, end);
   }
-  
+
   // Handle single character: ch1
   const index = parseInt(pattern) - 1;
   return text[index] || '';
+}
+
+function extractDate(text: string, formatString: string): string {
+  if (!text) return '';
+  try {
+    // clean text to handle "9th January, 2026" -> "9 January, 2026"
+    // Remove ordinal suffixes (st, nd, rd, th) from numbers
+    const cleanedText = text.replace(/(\d+)(st|nd|rd|th)/gi, '$1');
+
+    // Try parsing
+    const date = new Date(cleanedText);
+
+    // Check if valid
+    if (isNaN(date.getTime())) return text; // Return original if invalid date
+
+    return format(date, formatString || 'MM/dd/yyyy');
+  } catch (e) {
+    return text;
+  }
 }
 
