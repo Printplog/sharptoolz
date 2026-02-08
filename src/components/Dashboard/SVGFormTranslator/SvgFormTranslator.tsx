@@ -407,6 +407,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
                 tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
                 templateId={isPurchased ? purchasedData?.template : undefined}
                 isPurchased={Boolean(isPurchased)}
+                toolPrice={(data as any)?.tool_price}
               />
             </div>
             {/* Action Buttons - cloned from FormPanel to show in both tabs */}

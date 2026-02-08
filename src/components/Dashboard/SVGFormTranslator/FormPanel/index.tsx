@@ -81,7 +81,7 @@ function useNavigationBlocker(when: boolean): NavigationBlocker {
   return { state, proceed, reset };
 }
 
-const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, isPurchased: isPurchasedProp }: { test: boolean; tutorial?: Tutorial; templateId?: string; isPurchased?: boolean }) {
+const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, isPurchased: isPurchasedProp, toolPrice }: { test: boolean; tutorial?: Tutorial; templateId?: string; isPurchased?: boolean; toolPrice?: number }) {
   // Use selectors to subscribe only to what we need - prevents re-renders when unrelated fields change
   const fields = useToolStore((state) => state.fields);
   const resetForm = useToolStore((state) => state.resetForm);
@@ -515,7 +515,7 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
               className="py-6 px-10 hover:bg-black/50 hover:text-white"
             >
               <>
-                {updatePending ? "Removing Watermark" : `Remove Watermark ($${(data as any)?.tool_price || 5})`}
+                {updatePending ? "Removing Watermark" : `Remove Watermark ($${toolPrice || 5})`}
                 {updatePending ? (
                   <PenLine className="animate-spin" />
                 ) : (
@@ -625,7 +625,7 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
               // Don't close dialog here - it will close after successful creation
             }}
             isSubmitting={createPending || updatePending || isCreatingDocument}
-            price={(data as any)?.tool_price}
+            price={toolPrice}
           />
         </div>
       </div>
