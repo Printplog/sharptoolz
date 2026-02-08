@@ -209,7 +209,7 @@ export const getTool = async (id: string): Promise<Tool> => {
   return res.data;
 };
 
-export const createTool = async (data: { name: string; description?: string }): Promise<Tool> => {
+export const createTool = async (data: { name: string; description?: string; price: number }): Promise<Tool> => {
   const res = await apiClient.post('/tools/', data);
   return res.data;
 };

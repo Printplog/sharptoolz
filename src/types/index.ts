@@ -99,6 +99,7 @@ export type Tool = {
   id: string;
   name: string;
   description?: string;
+  price: number;
   created_at: string;
 };
 
@@ -141,6 +142,7 @@ export type Template = {
   updated_at: string;
   is_active: boolean;
   banner: string;
+  tool_price?: number;
 };
 
 export interface AuditLog {
@@ -177,6 +179,7 @@ export type PurchasedTemplate = {
   buyer: number;
   template: string;
   name: string;
+  tool_price?: number;
 
   svg: string;
   form_fields: FormField[]; // adjust type if fields are structured

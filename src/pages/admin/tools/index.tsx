@@ -87,7 +87,7 @@ export default function AdminTools() {
     setDialogOpen(true);
   };
 
-  const handleSaveTool = (data: { name: string; description?: string }) => {
+  const handleSaveTool = (data: { name: string; description?: string; price: number }) => {
     if (editingTool) {
       updateMutation.mutate({ id: editingTool.id, data });
     } else {
@@ -119,6 +119,15 @@ export default function AdminTools() {
           (row.original.description ?? "").toLowerCase().includes(needle)
         );
       },
+    },
+    {
+      accessorKey: "price",
+      header: "Price",
+      cell: ({ row }) => (
+        <div className="font-mono text-green-400">
+          ${parseFloat(row.original.price.toString()).toFixed(2)}
+        </div>
+      ),
     },
     {
       id: "description",

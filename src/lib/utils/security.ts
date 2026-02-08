@@ -13,8 +13,8 @@ export function disableRightClick() {
     const target = e.target as HTMLElement;
     // Allow right-click in form fields and contentEditable elements for better UX
     if (
-      target.tagName === 'INPUT' || 
-      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
       target.isContentEditable ||
       target.closest('input, textarea, [contenteditable]')
     ) {
@@ -32,8 +32,8 @@ export function disableTextSelection() {
     const target = e.target as HTMLElement;
     // Allow text selection in form fields and contentEditable elements
     if (
-      target.tagName === 'INPUT' || 
-      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
       target.isContentEditable ||
       target.closest('input, textarea, [contenteditable]')
     ) {
@@ -62,7 +62,7 @@ export function disableTextSelection() {
     `;
     document.head.appendChild(style);
   });
-} 
+}
 
 // Disable common DevTools keyboard shortcuts completely (just block, no redirect)
 export function disableDevToolsShortcuts() {
@@ -71,19 +71,19 @@ export function disableDevToolsShortcuts() {
     const target = e.target as HTMLElement;
     // Allow all keyboard input in form fields and contentEditable elements
     if (
-      target.tagName === 'INPUT' || 
-      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
       target.isContentEditable ||
       target.closest('input, textarea, [contenteditable]')
     ) {
       // Only block DevTools shortcuts even in form fields
       // Allow normal typing and other shortcuts
-      const isDevToolsShortcut = 
+      const isDevToolsShortcut =
         e.key === 'F12' ||
         ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) ||
         ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) ||
         ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c'));
-      
+
       if (!isDevToolsShortcut) {
         return; // Allow normal typing in form fields
       }
@@ -166,7 +166,7 @@ export function disableDevToolsShortcuts() {
   document.addEventListener('keyup', blockShortcut, { capture: true, passive: false });
   // Block on keypress as well
   document.addEventListener('keypress', blockShortcut, { capture: true, passive: false });
-  
+
   // Also block at window level for extra security
   window.addEventListener('keydown', blockShortcut, { capture: true, passive: false });
   window.addEventListener('keyup', blockShortcut, { capture: true, passive: false });
@@ -175,7 +175,7 @@ export function disableDevToolsShortcuts() {
 // Detect DevTools opening using console detection (reliable method)
 export function detectDevTools() {
   let devtoolsDetected = false;
-  
+
   setInterval(() => {
     // Skip detection on admin routes
     if (isAdminRoute()) {
@@ -190,9 +190,9 @@ export function detectDevTools() {
 
     const element = new Image();
     let detected = false;
-    
+
     Object.defineProperty(element, 'id', {
-      get: function() {
+      get: function () {
         // This getter only executes if DevTools console is open and inspecting
         detected = true;
         return '';
@@ -202,7 +202,7 @@ export function detectDevTools() {
 
     // Add toString to catch more inspection cases
     Object.defineProperty(element, 'toString', {
-      value: function() {
+      value: function () {
         detected = true;
         return '[object Image]';
       },
@@ -212,7 +212,7 @@ export function detectDevTools() {
     try {
       console.log(element);
       console.clear();
-      
+
       if (detected) {
         devtoolsDetected = true;
         console.clear();
@@ -231,9 +231,9 @@ export function detectDevTools() {
 export function disableConsole() {
   // Override console methods
   const methods = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd'];
-  
+
   methods.forEach(method => {
-    (window.console as any)[method] = function(..._args: any[]) {
+    (window.console as any)[method] = function (..._args: any[]) {
       // Don't actually log anything in production
       // Detection is handled by other methods (console detection and debugger)
     };
@@ -255,7 +255,7 @@ export function detectDevToolsByDimensions() {
 // Clear console periodically and detect DevTools (console method only)
 export function clearConsolePeriodically() {
   let devtoolsDetected = false;
-  
+
   setInterval(() => {
     // Skip detection on admin routes
     if (isAdminRoute()) {
@@ -271,9 +271,9 @@ export function clearConsolePeriodically() {
     // Console detection - most reliable method
     const element = new Image();
     let detected = false;
-    
+
     Object.defineProperty(element, 'id', {
-      get: function() {
+      get: function () {
         // This only executes if DevTools console is actually open
         detected = true;
         return '';
@@ -283,17 +283,17 @@ export function clearConsolePeriodically() {
 
     // Add toString to catch more inspection cases
     Object.defineProperty(element, 'toString', {
-      value: function() {
+      value: function () {
         detected = true;
         return '[object Image]';
       },
       configurable: false
     });
-    
+
     try {
       console.log(element);
       console.clear();
-      
+
       if (detected) {
         devtoolsDetected = true;
         console.clear();
@@ -342,8 +342,8 @@ export function disableCopyPaste() {
     const target = e.target as HTMLElement;
     // Allow copy in form fields and contenteditable elements
     if (
-      target.tagName === 'INPUT' || 
-      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
       target.isContentEditable ||
       target.closest('input, textarea, [contenteditable]')
     ) {
@@ -358,8 +358,8 @@ export function disableCopyPaste() {
     const target = e.target as HTMLElement;
     // Allow cut in form fields and contenteditable elements
     if (
-      target.tagName === 'INPUT' || 
-      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
       target.isContentEditable ||
       target.closest('input, textarea, [contenteditable]')
     ) {
@@ -374,8 +374,8 @@ export function disableCopyPaste() {
     const target = e.target as HTMLElement;
     // Allow paste in form fields and contenteditable elements
     if (
-      target.tagName === 'INPUT' || 
-      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
       target.isContentEditable ||
       target.closest('input, textarea, [contenteditable]')
     ) {
@@ -389,7 +389,7 @@ export function disableCopyPaste() {
 // Detect if page is being inspected via debugger
 export function detectDebugger() {
   let devtoolsDetected = false;
-  
+
   setInterval(() => {
     // Skip detection on admin routes
     if (isAdminRoute()) {
@@ -402,7 +402,7 @@ export function detectDebugger() {
       return;
     }
 
-    (function() {
+    (function () {
       const start = performance.now();
       try {
         debugger; // This will pause if DevTools is open
@@ -419,7 +419,7 @@ export function detectDebugger() {
         window.location.replace('about:blank');
       }
     })();
-  }, 150); // Check every 150ms for faster detection
+  }, 250); // Check every 250ms
 }
 
 // Disable print screen (partial - can't fully prevent but can detect)
@@ -448,7 +448,7 @@ const isAdminRoute = () => {
 export function aggressiveDevToolsDetection() {
   let devtoolsDetected = false;
   let checkCount = 0;
-  
+
   const redirect = () => {
     // Skip redirect on admin routes
     if (isAdminRoute()) {
@@ -477,10 +477,10 @@ export function aggressiveDevToolsDetection() {
 
     const element = new Image();
     let detected = false;
-    
+
     // Create multiple getters to catch all inspection methods
     Object.defineProperty(element, 'id', {
-      get: function() {
+      get: function () {
         detected = true;
         return '';
       },
@@ -488,7 +488,7 @@ export function aggressiveDevToolsDetection() {
     });
 
     Object.defineProperty(element, 'src', {
-      get: function() {
+      get: function () {
         detected = true;
         return '';
       },
@@ -496,7 +496,7 @@ export function aggressiveDevToolsDetection() {
     });
 
     Object.defineProperty(element, 'width', {
-      get: function() {
+      get: function () {
         detected = true;
         return 0;
       },
@@ -504,7 +504,7 @@ export function aggressiveDevToolsDetection() {
     });
 
     Object.defineProperty(element, 'height', {
-      get: function() {
+      get: function () {
         detected = true;
         return 0;
       },
@@ -513,7 +513,7 @@ export function aggressiveDevToolsDetection() {
 
     // Also add toString to catch more inspection cases
     Object.defineProperty(element, 'toString', {
-      value: function() {
+      value: function () {
         detected = true;
         return '[object Image]';
       },
@@ -521,7 +521,7 @@ export function aggressiveDevToolsDetection() {
     });
 
     Object.defineProperty(element, 'valueOf', {
-      value: function() {
+      value: function () {
         detected = true;
         return '[object Image]';
       },
@@ -534,7 +534,7 @@ export function aggressiveDevToolsDetection() {
       console.info(element);
       console.warn(element);
       console.clear();
-      
+
       if (detected) {
         redirect();
       }
@@ -550,7 +550,7 @@ export function aggressiveDevToolsDetection() {
       return;
     }
 
-    (function() {
+    (function () {
       const start = performance.now();
       try {
         // This will pause if DevTools is open (even without breakpoints in some cases)
@@ -575,9 +575,9 @@ export function aggressiveDevToolsDetection() {
 
     const testObj: any = {};
     let detected = false;
-    
+
     Object.defineProperty(testObj, 'test', {
-      get: function() {
+      get: function () {
         detected = true;
         return 'test';
       },
@@ -587,7 +587,7 @@ export function aggressiveDevToolsDetection() {
     try {
       console.dir(testObj);
       console.clear();
-      
+
       if (detected) {
         redirect();
       }
@@ -631,7 +631,7 @@ export function aggressiveDevToolsDetection() {
         const testElement = new Image();
         let detected = false;
         Object.defineProperty(testElement, 'id', {
-          get: function() {
+          get: function () {
             detected = true;
             return '';
           }
@@ -664,24 +664,24 @@ export function aggressiveDevToolsDetection() {
     }
 
     checkCount++;
-    
+
     // Run console check every iteration (most reliable) - catches manual menu trigger
     checkConsole();
-    
+
     // Run debugger check every iteration for faster detection
     checkDebugger();
-    
+
     // Run console.dir check every iteration for manual menu detection
     checkConsoleDir();
-    
+
     // Check focus every iteration
     checkFocus();
-    
+
     // Reset counter periodically
     if (checkCount > 100) {
       checkCount = 0;
     }
-  }, 30); // Check every 30ms for very fast detection - almost immediate
+  }, 200); // Check every 200ms for fast detection with lower CPU impact
 }
 
 // Initialize all security measures

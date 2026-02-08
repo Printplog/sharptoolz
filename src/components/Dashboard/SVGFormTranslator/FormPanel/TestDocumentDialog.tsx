@@ -9,6 +9,7 @@ type TestDocumentDialogProps = {
   onCreateTest: () => void;
   onCreatePaid: () => void;
   isSubmitting: boolean;
+  price?: number;
 };
 
 export function TestDocumentDialog({
@@ -17,6 +18,7 @@ export function TestDocumentDialog({
   onCreateTest,
   onCreatePaid,
   isSubmitting,
+  price = 5,
 }: TestDocumentDialogProps) {
   const [progress, setProgress] = useState(0);
 
@@ -40,8 +42,8 @@ export function TestDocumentDialog({
   }, [isSubmitting, progress]);
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onOpenChange={(open) => {
         // Prevent closing while submitting
         if (!isSubmitting) {
@@ -49,7 +51,7 @@ export function TestDocumentDialog({
         }
       }}
     >
-      <DialogContent 
+      <DialogContent
         className="max-w-sm text-center space-y-4"
         showCloseButton={!isSubmitting}
         onInteractOutside={(e) => {
@@ -93,7 +95,7 @@ export function TestDocumentDialog({
             <p>
               Do you want to create a{" "}
               <strong className="text-primary">test document</strong> (with watermark) or pay{" "}
-              <strong className="text-primary">$5</strong> for the final version?
+              <strong className="text-primary">${price}</strong> for the final version?
             </p>
             <div className="flex justify-center gap-4 mt-4">
               <Button

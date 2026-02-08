@@ -8,11 +8,11 @@ import { injectFontsIntoSVG } from "@/lib/utils/fontInjector";
 import { generateAutoFields } from "@/lib/utils/fieldGenerator";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { 
-  getPurchasedTemplate, 
-  getTemplate, 
+import {
+  getPurchasedTemplate,
+  getTemplate,
   getPurchasedTemplateSvg,
-  getTemplateSvg 
+  getTemplateSvg
 } from "@/api/apiEndpoints";
 import type { FormField, PurchasedTemplate, Template } from "@/types";
 import SvgFormTranslatorSkeleton from "./SvgFormTranslatorSkeleton";
@@ -22,28 +22,28 @@ import parseSvgElements from "@/lib/utils/parseSvgElements";
 // Component to render action buttons by cloning and connecting to FormPanel buttons
 function ActionButtonsRenderer() {
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     const cloneButtons = () => {
       const formPanel = document.querySelector('[data-form-panel-user]');
       const targetContainer = containerRef.current;
-      
+
       if (!formPanel || !targetContainer) return;
-      
+
       // Find the buttons container in FormPanel
       const buttonsContainer = formPanel.querySelector('div.pt-4.border-t.border-white\\/20.flex:last-child') as HTMLElement;
       if (!buttonsContainer) return;
-      
+
       // Get all buttons from FormPanel
       const originalButtons = buttonsContainer.querySelectorAll('button, a');
-      
+
       // Clear existing content
       targetContainer.innerHTML = '';
-      
+
       // Clone each button and connect click handlers
       originalButtons.forEach((originalBtn) => {
         const cloned = originalBtn.cloneNode(true) as HTMLElement;
-        
+
         // Preserve all attributes and styles
         if (originalBtn instanceof HTMLElement) {
           cloned.className = originalBtn.className;
@@ -51,12 +51,12 @@ function ActionButtonsRenderer() {
           if (originalStyle) {
             cloned.setAttribute('style', originalStyle);
           }
-          
+
           // Copy disabled state
           if (originalBtn.hasAttribute('disabled')) {
             cloned.setAttribute('disabled', '');
           }
-          
+
           // Connect click handler to trigger original button
           cloned.addEventListener('click', (e) => {
             e.preventDefault();
@@ -64,7 +64,7 @@ function ActionButtonsRenderer() {
             // Trigger click on original button
             (originalBtn as HTMLElement).click();
           });
-          
+
           targetContainer.appendChild(cloned);
         }
       });
@@ -72,11 +72,11 @@ function ActionButtonsRenderer() {
 
     // Wait for FormPanel to render, then clone buttons
     const timeout = setTimeout(cloneButtons, 200);
-    
+
     // Use MutationObserver to watch for changes in FormPanel buttons
     const formPanel = document.querySelector('[data-form-panel-user]');
     const buttonsContainer = formPanel?.querySelector('div.pt-4.border-t.border-white\\/20.flex:last-child');
-    
+
     let observer: MutationObserver | null = null;
     if (buttonsContainer) {
       observer = new MutationObserver(() => {
@@ -89,7 +89,7 @@ function ActionButtonsRenderer() {
         attributeFilter: ['disabled', 'class', 'style']
       });
     }
-    
+
     return () => {
       clearTimeout(timeout);
       if (observer) {
@@ -99,7 +99,7 @@ function ActionButtonsRenderer() {
   }, []); // Empty dependency array - only run once on mount
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="pt-4 border-t border-white/20 flex flex-col lg:flex-row justify-end gap-5"
     />
@@ -129,7 +129,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   const setSvgRaw = useToolStore((state) => state.setSvgRaw);
   const setName = useToolStore((state) => state.setName);
   const fields = useToolStore((state) => state.fields);
-  
+
   const { id } = useParams<{ id: string }>();
 
   // Fetch template data (without SVG for faster loading)
@@ -164,115 +164,115 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   // Handle fetching SVG content from URL or direct data
   useEffect(() => {
     if (!svgData) return;
-    
+
     if (svgData.url) {
-        setIsSvgFetching(true);
-        fetch(svgData.url)
-            .then(r => r.text())
-            .then(t => {
-                setSvgContent(t);
-                setIsSvgFetching(false);
-            })
-            .catch(e => {
-                console.error("Failed to fetch SVG", e);
-                setIsSvgFetching(false);
-            });
+      setIsSvgFetching(true);
+      fetch(svgData.url)
+        .then(r => r.text())
+        .then(t => {
+          setSvgContent(t);
+          setIsSvgFetching(false);
+        })
+        .catch(e => {
+          console.error("Failed to fetch SVG", e);
+          setIsSvgFetching(false);
+        });
     } else if (svgData.svg) {
-        setSvgContent(svgData.svg);
+      setSvgContent(svgData.svg);
     }
   }, [svgData]);
 
   // Initialize fields immediately when template data loads (before SVG)
   useEffect(() => {
     if (isLoading || !data) return;
-    
+
     // Initialize fields - use currentValue if available (for purchased templates), otherwise use defaultValue
     const initializedFields = data.form_fields?.map((field: FormField) => ({
       ...field,
       currentValue: field.currentValue ?? field.defaultValue ?? "",
     })) || [];
-    
+
     setName(data.name as string);
     setFields(initializedFields, isPurchased);
-    
+
     // Store fields in ref to apply changes once SVG loads
     pendingFieldsRef.current = initializedFields;
-    
+
   }, [data, isLoading, setName, setFields, isPurchased]);
 
   // Process SVG once it loads - DO NOT depend on fields to avoid re-processing on every input
   useEffect(() => {
     if (svgLoading || isSvgFetching || !svgContent || !data) return;
-    
+
     // Use pending fields if available (user may have made changes before SVG loaded)
     const fieldsToUse = fields.length > 0 ? fields : (pendingFieldsRef.current || []);
-    
+
     // Generate AUTO fields before processing SVG (skip for purchased docs)
     const fieldsWithAutoGenerated = generateAutoFields(fieldsToUse, isPurchased);
-    
+
     // Parse SVG to extract text content for fields that have no value
     // This ensures "Default Text" in the SVG appears in the Input fields
     const parsedElements = parseSvgElements(svgContent);
     const validTypes = ['text', 'textarea', 'email', 'tel', 'url', 'number'];
-    
+
     let hasUpdates = false;
     const populatedFields = fieldsWithAutoGenerated.map(field => {
-       // Only populate if field is empty (no user input, no configured default)
-       // and it's a text-like field
-       if (validTypes.includes(field.type) && 
-           (field.currentValue === "" || field.currentValue === null || field.currentValue === undefined) && 
-           (field.defaultValue === "" || field.defaultValue === null || field.defaultValue === undefined)) {
-           
-           // Find matching element by ID (or svgElementId if separate)
-           // Most fields use ID to match SVG element ID directly
-           const targetId = (field.svgElementId || field.id).trim();
-           
-           // Match exact ID OR ID with extension (e.g. "myField.textarea")
-           const element = parsedElements.find(el => {
-               const elId = el.id || "";
-               const origId = el.originalId || "";
-               const targetWithType = targetId + ".";
-               
-               return elId === targetId || 
-                      origId === targetId || 
-                      elId.startsWith(targetWithType) || 
-                      origId.startsWith(targetWithType);
-           });
-           
-           if (element && element.innerText && element.innerText.trim() !== "") {
-               hasUpdates = true;
-               return { ...field, currentValue: element.innerText };
-           }
-       }
-       return field;
+      // Only populate if field is empty (no user input, no configured default)
+      // and it's a text-like field
+      if (validTypes.includes(field.type) &&
+        (field.currentValue === "" || field.currentValue === null || field.currentValue === undefined) &&
+        (field.defaultValue === "" || field.defaultValue === null || field.defaultValue === undefined)) {
+
+        // Find matching element by ID (or svgElementId if separate)
+        // Most fields use ID to match SVG element ID directly
+        const targetId = (field.svgElementId || field.id).trim();
+
+        // Match exact ID OR ID with extension (e.g. "myField.textarea")
+        const element = parsedElements.find(el => {
+          const elId = el.id || "";
+          const origId = el.originalId || "";
+          const targetWithType = targetId + ".";
+
+          return elId === targetId ||
+            origId === targetId ||
+            elId.startsWith(targetWithType) ||
+            origId.startsWith(targetWithType);
+        });
+
+        if (element && element.innerText && element.innerText.trim() !== "") {
+          hasUpdates = true;
+          return { ...field, currentValue: element.innerText };
+        }
+      }
+      return field;
     });
 
     // Update store if we found defaults so inputs reflect the SVG text
     if (hasUpdates) {
-        // Use a timeout to ensure this runs after current render cycle
-        setTimeout(() => {
-           useToolStore.getState().setFields(populatedFields, isPurchased);
-        }, 0);
+      // Use a timeout to ensure this runs after current render cycle
+      setTimeout(() => {
+        useToolStore.getState().setFields(populatedFields, isPurchased);
+      }, 0);
     }
 
     // Process SVG with current field values (including AUTO generated and Extracted defaults)
     let newSvgText = updateSvgFromFormData(svgContent, populatedFields);
-    
+
     // Inject fonts if available
     if (data.fonts && data.fonts.length > 0) {
       newSvgText = injectFontsIntoSVG(newSvgText, data.fonts);
     }
-    
+
     // Update SVG state
     setSvgText(newSvgText);
     setSvgRaw(newSvgText);
-    
+
     // Set initial preview immediately (no debounce on first load)
     setLivePreview(newSvgText);
-    
+
     // Clear pending fields ref
     pendingFieldsRef.current = null;
-    
+
     // Only run when SVG data loads, NOT when fields change
   }, [svgContent, svgLoading, isSvgFetching, data, setSvgRaw]); // Removed 'fields' dependency
 
@@ -281,11 +281,11 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   // Separate effect for status fields to avoid conflicts
   useEffect(() => {
     if (isLoading || !data) return;
-    
+
     if (isPurchased) {
       // Status and error message are now handled by the SVG template fields
     }
-    
+
   }, [data, isLoading, isPurchased, purchasedData?.status, purchasedData?.error_message]);
 
   // Memoize font injection to avoid recalculating - fonts don't change, so we only inject once
@@ -307,13 +307,13 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   useEffect(() => {
     if (activeTab !== "preview") return;
     if (!baseSvgRef.current || !fields || fields.length === 0) return;
-    
+
     // Get fresh fields from store to ensure we have latest values
     const freshFields = useToolStore.getState().fields;
-    
+
     // Generate AUTO fields before updating preview (skip for purchased docs)
     const fieldsWithAutoGenerated = generateAutoFields(freshFields, isPurchased);
-    
+
     // Always do full update with all current field values
     const updatedSvg = updateSvgFromFormData(baseSvgRef.current, fieldsWithAutoGenerated);
     setLivePreview(updatedSvg);
@@ -324,7 +324,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   useEffect(() => {
     // Only hide buttons if not loading and no error (FormPanel is rendered)
     if (isLoading || error) return;
-    
+
     const hideFormPanelButtons = () => {
       const formPanel = document.querySelector('[data-form-panel-user]');
       if (formPanel) {
@@ -367,7 +367,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
       {/* Admin Edit Link */}
       {user?.is_staff && (
         <div className="flex justify-end mb-4">
-          <Link 
+          <Link
             to={`/admin/templates/${isPurchased && data ? (data as any).template : id}`}
             className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/50 px-4 py-2 rounded-xl transition-colors text-sm font-medium backdrop-blur-sm"
           >
@@ -377,8 +377,8 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
         </div>
       )}
 
-      <Tabs 
-        defaultValue="editor" 
+      <Tabs
+        defaultValue="editor"
         className="w-full px-0"
         value={activeTab}
         onValueChange={(value) => {
@@ -402,35 +402,38 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
         <div style={{ display: activeTab === "editor" ? "block" : "none" }}>
           <TabsContent value="editor" forceMount className="space-y-4">
             <div data-form-panel-user>
-          <FormPanel 
-            test={purchasedData?.test} 
-            tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
-            templateId={isPurchased ? purchasedData?.template : undefined}
-            isPurchased={Boolean(isPurchased)}
-          />
+              <FormPanel
+                test={purchasedData?.test}
+                tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
+                templateId={isPurchased ? purchasedData?.template : undefined}
+                isPurchased={Boolean(isPurchased)}
+              />
             </div>
             {/* Action Buttons - cloned from FormPanel to show in both tabs */}
             <ActionButtonsRenderer />
-        </TabsContent>
+          </TabsContent>
         </div>
-        <TabsContent value="preview" className="space-y-4">
-          {svgLoading || isSvgFetching || !svgText ? (
-            <PreviewSkeleton />
-          ) : (
-            <div className="w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl">
-              <div className="min-w-[300px] inline-block max-w-full">
-                <div
-                  data-svg-preview
-                  className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full"
-                  style={{ willChange: 'contents' }}
-                  dangerouslySetInnerHTML={{ __html: livePreview || svgText }}
-                />
+        <div style={{ display: activeTab === "preview" ? "block" : "none" }}>
+          <TabsContent value="preview" forceMount className="space-y-4">
+            {/* Only show skeleton if we don't have SVG text at all */}
+            {!svgText && (svgLoading || isSvgFetching) ? (
+              <PreviewSkeleton />
+            ) : (
+              <div className="w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl">
+                <div className="min-w-[300px] inline-block max-w-full">
+                  <div
+                    data-svg-preview
+                    className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full"
+                    style={{ willChange: 'contents' }}
+                    dangerouslySetInnerHTML={{ __html: livePreview || svgText }}
+                  />
+                </div>
               </div>
-            </div>
-          )}
-          {/* Action Buttons - always rendered in preview tab to maintain consistent hook count */}
-          <ActionButtonsRenderer />
-        </TabsContent>
+            )}
+            {/* Action Buttons - always rendered in preview tab to maintain consistent hook count */}
+            <ActionButtonsRenderer />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
