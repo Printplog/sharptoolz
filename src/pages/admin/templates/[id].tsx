@@ -1,4 +1,4 @@
-import { getTemplateForAdmin, getTemplateSvgForAdmin, updateTemplate } from '@/api/apiEndpoints';
+import { getTemplateForAdmin, updateTemplate } from '@/api/apiEndpoints';
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import errorMessage from '@/lib/utils/errorMessage';
 import type { Template, TemplateUpdatePayload } from '@/types';
@@ -23,36 +23,27 @@ export default function SvgTemplateEditor() {
     refetchOnMount: false, // Don't refetch on mount to prevent flickering
   });
 
-  // Fetch SVG separately after template data loads
-  // Fetch SVG separately after template data loads
-  const { data: svgData, isLoading: svgLoading } = useQuery<{ svg: string | null; url?: string }>({
-    queryKey: ["template-svg", id],
-    queryFn: () => getTemplateSvgForAdmin(id as string),
-    enabled: !!id && !!data && !isLoading, // Only fetch SVG after template data loads
-    refetchOnMount: false,
-  });
+  // No longer fetching SVG separately - it's included as svg_url in the main data
 
   const [svgContent, setSvgContent] = useState<string>("");
   const [isFetchingSvg, setIsFetchingSvg] = useState(false);
 
   useEffect(() => {
-    if (svgData?.url) {
-      setIsFetchingSvg(true);
-      fetch(svgData.url)
-        .then(res => res.text())
-        .then(text => {
-          setSvgContent(text);
-          setIsFetchingSvg(false);
-        })
-        .catch(err => {
-          console.error("Failed to load SVG file", err);
-          toast.error("Failed to load SVG content");
-          setIsFetchingSvg(false);
-        });
-    } else if (svgData?.svg) {
-      setSvgContent(svgData.svg);
-    }
-  }, [svgData]);
+    if (isLoading || !data || !data.svg_url) return;
+
+    setIsFetchingSvg(true);
+    fetch(data.svg_url)
+      .then(res => res.text())
+      .then(text => {
+        setSvgContent(text);
+        setIsFetchingSvg(false);
+      })
+      .catch(err => {
+        console.error("Failed to load SVG file", err);
+        toast.error("Failed to load SVG content");
+        setIsFetchingSvg(false);
+      });
+  }, [data, isLoading]);
 
   // Save template mutation
   const saveMutation = useMutation({
@@ -220,7 +211,7 @@ export default function SvgTemplateEditor() {
                 svgEditorRef.current.handleSave();
               }
             }}
-            disabled={saveMutation.isPending || svgLoading || isFetchingSvg || !svgContent}
+            disabled={saveMutation.isPending || isFetchingSvg || !svgContent}
             className="bg-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Save className="h-5 w-5 group-hover:rotate-12 transition-all duration-500" />
@@ -234,7 +225,7 @@ export default function SvgTemplateEditor() {
                 svgEditorRef.current.openPreview();
               }
             }}
-            disabled={svgLoading || isFetchingSvg || !svgContent}
+            disabled={isFetchingSvg || !svgContent}
             className="bg-lime-600 border-3 border-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Eye className="h-5 w-5 group-hover:translate-x-[2px] transition-all duration-500" />
@@ -257,7 +248,7 @@ export default function SvgTemplateEditor() {
             tutorial={data.tutorial}
             keywords={data.keywords}
             isLoading={saveMutation.isPending}
-            isSvgLoading={svgLoading || isFetchingSvg || !svgContent} // Pass SVG loading state
+            isSvgLoading={isFetchingSvg || !svgContent} // Pass SVG loading state
             formFields={data.form_fields || []} // Pass backend form fields
             onElementSelect={() => {
               // Simplified - no automatic section selection

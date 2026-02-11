@@ -10,9 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import {
   getPurchasedTemplate,
-  getTemplate,
-  getPurchasedTemplateSvg,
-  getTemplateSvg
+  getTemplate
 } from "@/api/apiEndpoints";
 import type { FormField, PurchasedTemplate, Template } from "@/types";
 import SvgFormTranslatorSkeleton from "./SvgFormTranslatorSkeleton";
@@ -145,42 +143,27 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   });
 
 
-  // Fetch SVG separately after template data loads
-  // Fetch SVG separately after template data loads
-  const { data: svgData, isLoading: svgLoading } = useQuery<{ svg: string | null; url?: string }>({
-    queryKey: [isPurchased ? "purchased-template-svg" : "template-svg", id],
-    queryFn: () =>
-      isPurchased
-        ? getPurchasedTemplateSvg(id as string)
-        : getTemplateSvg(id as string),
-    enabled: !!id && !!data && !isLoading, // Only fetch SVG after template data loads
-    refetchOnWindowFocus: false,
-    staleTime: 10 * 60 * 1000, // 10 minutes - SVG content rarely changes
-  });
+  // No longer fetching SVG separately - it's included as svg_url in the main data
 
   const [svgContent, setSvgContent] = useState<string>("");
   const [isSvgFetching, setIsSvgFetching] = useState<boolean>(false);
 
-  // Handle fetching SVG content from URL or direct data
+  // Handle fetching SVG content from the new svg_url in template data
   useEffect(() => {
-    if (!svgData) return;
+    if (isLoading || !data || !data.svg_url) return;
 
-    if (svgData.url) {
-      setIsSvgFetching(true);
-      fetch(svgData.url)
-        .then(r => r.text())
-        .then(t => {
-          setSvgContent(t);
-          setIsSvgFetching(false);
-        })
-        .catch(e => {
-          console.error("Failed to fetch SVG", e);
-          setIsSvgFetching(false);
-        });
-    } else if (svgData.svg) {
-      setSvgContent(svgData.svg);
-    }
-  }, [svgData]);
+    setIsSvgFetching(true);
+    fetch(data.svg_url)
+      .then(r => r.text())
+      .then(t => {
+        setSvgContent(t);
+        setIsSvgFetching(false);
+      })
+      .catch(e => {
+        console.error("Failed to fetch SVG", e);
+        setIsSvgFetching(false);
+      });
+  }, [data, isLoading]);
 
   // Initialize fields immediately when template data loads (before SVG)
   useEffect(() => {
@@ -202,7 +185,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
 
   // Process SVG once it loads - DO NOT depend on fields to avoid re-processing on every input
   useEffect(() => {
-    if (svgLoading || isSvgFetching || !svgContent || !data) return;
+    if (isSvgFetching || !svgContent || !data) return;
 
     // Use pending fields if available (user may have made changes before SVG loaded)
     const fieldsToUse = fields.length > 0 ? fields : (pendingFieldsRef.current || []);
@@ -274,7 +257,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     pendingFieldsRef.current = null;
 
     // Only run when SVG data loads, NOT when fields change
-  }, [svgContent, svgLoading, isSvgFetching, data, setSvgRaw]); // Removed 'fields' dependency
+  }, [svgContent, isSvgFetching, data, setSvgRaw]); // Removed 'fields' dependency
 
   const purchasedData = data as PurchasedTemplate;
 
@@ -417,7 +400,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
         <div style={{ display: activeTab === "preview" ? "block" : "none" }}>
           <TabsContent value="preview" forceMount className="space-y-4">
             {/* Only show skeleton if we don't have SVG text at all */}
-            {!svgText && (svgLoading || isSvgFetching) ? (
+            {!svgText && isSvgFetching ? (
               <PreviewSkeleton />
             ) : (
               <div className="w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl">

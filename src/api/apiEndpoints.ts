@@ -80,7 +80,6 @@ export const getTemplates = async (hot?: boolean, tool?: string): Promise<Templa
   const res = await apiClient.get(`/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
 }
-
 export const getTemplatesForAdmin = async (hot?: boolean, tool?: string): Promise<Template[]> => {
   const params = new URLSearchParams();
   if (hot) params.append('hot', 'true');
@@ -91,25 +90,19 @@ export const getTemplatesForAdmin = async (hot?: boolean, tool?: string): Promis
   return res.data;
 }
 
+
 export const getTemplate = async (id: string): Promise<Template> => {
   const res = await apiClient.get(`/templates/${id}/`);
   return res.data;
 }
 
-export const getTemplateSvg = async (id: string): Promise<{ svg: string | null; url?: string }> => {
-  const res = await apiClient.get(`/templates/${id}/svg/`);
-  return res.data;
-}
+// Redundant SVG fetching functions removed. SVG URLs are now included directly in Template/PurchasedTemplate objects.
 
 export const getTemplateForAdmin = async (id: string): Promise<Template> => {
   const res = await apiClient.get(`/admin/templates/${id}/`);
   return res.data;
 }
 
-export const getTemplateSvgForAdmin = async (id: string): Promise<{ svg: string | null; url?: string }> => {
-  const res = await apiClient.get(`/admin/templates/${id}/svg/`);
-  return res.data;
-}
 
 export const purchaseTemplate = async (data: Partial<PurchasedTemplate>): Promise<{ id: string }> => {
   const res = await apiClient.post('/purchased-templates/', data);
@@ -137,10 +130,6 @@ export const getPurchasedTemplate = async (id: string): Promise<PurchasedTemplat
   return res.data;
 }
 
-export const getPurchasedTemplateSvg = async (id: string): Promise<{ svg: string | null; url?: string }> => {
-  const res = await apiClient.get(`/purchased-templates/${id}/svg/`);
-  return res.data;
-}
 
 export const createCryptoPayment = async (ticker: string): Promise<CryptoPaymentData> => {
   const res = await apiClient.post('/create-payment/', ticker);

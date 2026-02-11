@@ -143,6 +143,7 @@ export type Template = {
   is_active: boolean;
   banner: string;
   tool_price?: number;
+  svg_url?: string;
 };
 
 export interface AuditLog {
@@ -195,8 +196,8 @@ export type PurchasedTemplate = {
   banner?: string;
   field_updates?: FieldUpdate[];
 
-  created_at: string; // ISO datetime string
   updated_at: string;
+  svg_url?: string;
 };
 
 export type CryptoPaymentData = {
