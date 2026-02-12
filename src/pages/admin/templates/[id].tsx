@@ -135,30 +135,46 @@ export default function SvgTemplateEditor() {
     },
     onSuccess: async (updatedTemplate: Template) => {
       toast.success('Template saved successfully!');
+
+      const hadPatches = patches.length > 0;
       clearPatch(); // Clear patches after successful save
 
-      // Optimistic update: Immediately update the cache with the saved data
+      // If we applied patches, the stored file changed
+      // We must re-fetch the SVG content from the URL to bypass any stale cache
+      if (hadPatches && updatedTemplate.svg_url) {
+        setIsFetchingSvg(true);
+        // Force bypass cache with timestamp
+        const cacheBuster = `?t=${new Date().getTime()}`;
+        const urlToFetch = updatedTemplate.svg_url + cacheBuster;
+
+        try {
+          console.log(`[SaveMutation] Re-fetching modified SVG from: ${urlToFetch}`);
+          const res = await fetch(urlToFetch);
+          if (!res.ok) throw new Error('Failed to fetch updated SVG');
+          const text = await res.text();
+          setSvgContent(text);
+          console.log('[SaveMutation] SVG content refreshed');
+        } catch (err) {
+          console.error("Failed to refresh SVG content after save", err);
+          toast.warning("Saved successfully, but failed to reload preview. Please refresh page.");
+        } finally {
+          setIsFetchingSvg(false);
+        }
+      }
+
+      // Update the cache with the new metadata
       queryClient.setQueryData(["template", id], (old: Template | undefined) => {
         if (!old) return updatedTemplate;
-        // Merge the updated data with existing data
         return {
           ...old,
           ...updatedTemplate,
-          // Preserve relationships that might not be in the response
           fonts: updatedTemplate.fonts || old.fonts,
           tutorial: updatedTemplate.tutorial || old.tutorial,
         };
       });
 
-      // Only invalidate templates list to refresh the sidebar/listing
-      // This is necessary because template metadata (name, hot, active) might have changed
+      // Refresh listings
       await queryClient.invalidateQueries({ queryKey: ["templates"] });
-
-      // If the svg was updated (we can infer this if a patch was sent), we should refetch the svg content
-      // A simple way is to invalidate the query, forcing a refetch.
-      if (patches.length > 0) {
-        await queryClient.invalidateQueries({ queryKey: ["template", id] });
-      }
     },
     onError: (error: Error) => {
       console.error('Save template error:', error);
