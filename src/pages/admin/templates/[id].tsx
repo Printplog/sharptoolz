@@ -8,12 +8,14 @@ import { toast } from 'sonner';
 import { useRef, useState, useEffect } from 'react';
 import { Save, Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSvgPatch, type SvgPatch } from '@/hooks/useSvgPatch';
 
 
 export default function SvgTemplateEditor() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const svgEditorRef = useRef<SvgEditorRef>(null);
+  const { patches, addPatch, clearPatch } = useSvgPatch();
 
   // Fetch template data (without SVG for faster loading)
   const { data, isLoading } = useQuery<Template>({
@@ -54,13 +56,21 @@ export default function SvgTemplateEditor() {
 
   // Save template mutation
   const saveMutation = useMutation({
-    mutationFn: async (templateData: TemplateUpdatePayload): Promise<Template> => {
+    mutationFn: async (templateData: TemplateUpdatePayload & { svg_patch?: SvgPatch[] }): Promise<Template> => {
       try {
         // If there's a banner file, use FormData
         if (templateData.banner) {
           const formData = new FormData();
           formData.append('name', templateData.name);
-          formData.append('svg', templateData.svg);
+          // With patch updates, we might not have the full svg string here.
+          // The backend should handle applying the patch.
+          // If svg_patch exists, we send it. Otherwise, we might send the full SVG if it was changed in a way that doesn't generate patches.
+          if (templateData.svg_patch && templateData.svg_patch.length > 0) {
+            formData.append('svg_patch', JSON.stringify(templateData.svg_patch));
+          } else if (templateData.svg) {
+            formData.append('svg', templateData.svg);
+          }
+          
           formData.append('hot', templateData.hot ? 'true' : 'false');
           formData.append('is_active', templateData.is_active ? 'true' : 'false');
           if (templateData.tool) {
@@ -83,9 +93,8 @@ export default function SvgTemplateEditor() {
           return result;
         } else {
           // Otherwise, send as JSON
-          const result = await updateTemplate(id as string, {
+          const payload: TemplateUpdatePayload & { svg_patch?: SvgPatch[] } = {
             name: templateData.name,
-            svg: templateData.svg,
             hot: templateData.hot || false,
             is_active: templateData.is_active !== undefined ? templateData.is_active : true,
             tool: templateData.tool || undefined,
@@ -93,7 +102,19 @@ export default function SvgTemplateEditor() {
             tutorial_title: templateData.tutorialTitle || undefined,
             keywords: templateData.keywords ?? [],
             font_ids: templateData.fontIds || []
-          });
+          };
+
+          if (patches.length > 0) {
+            payload.svg_patch = patches;
+          } else {
+            // Only send SVG if there's no patch and the content has changed.
+            // For now, we'll rely on the caller to not include svg if not needed.
+            if(templateData.svg) {
+                payload.svg = templateData.svg
+            }
+          }
+
+          const result = await updateTemplate(id as string, payload);
           return result;
         }
       } catch (error) {
@@ -103,6 +124,7 @@ export default function SvgTemplateEditor() {
     },
     onSuccess: async (updatedTemplate: Template) => {
       toast.success('Template saved successfully!');
+      clearPatch(); // Clear patches after successful save
 
       // Optimistic update: Immediately update the cache with the saved data
       queryClient.setQueryData(["template", id], (old: Template | undefined) => {
@@ -121,8 +143,11 @@ export default function SvgTemplateEditor() {
       // This is necessary because template metadata (name, hot, active) might have changed
       await queryClient.invalidateQueries({ queryKey: ["templates"] });
 
-      // Skip invalidating template-svg, tools, and tool-categories
-      // These rarely change and don't need to be refetched after every save
+      // If the svg was updated (we can infer this if a patch was sent), we should refetch the svg content
+      // A simple way is to invalidate the query, forcing a refetch.
+      if (patches.length > 0) {
+          await queryClient.invalidateQueries({queryKey: ["template", id]});
+      }
     },
     onError: (error: Error) => {
       console.error('Save template error:', error);
@@ -136,10 +161,17 @@ export default function SvgTemplateEditor() {
       return;
     }
 
-    const payload = { ...templateData };
+    const payload: any = { ...templateData };
     if (templateData.isActive !== undefined) {
       payload.is_active = templateData.isActive;
     }
+
+    // If there are patches, we don't need to send the full SVG.
+    if (patches.length > 0) {
+        payload.svg_patch = patches;
+        delete payload.svg; // Ensure full SVG is not sent
+    }
+
 
     saveMutation.mutate(payload);
   };
@@ -248,6 +280,7 @@ export default function SvgTemplateEditor() {
             templateName={data.name}
             templateId={id}
             onSave={handleSave}
+            onPatchUpdate={addPatch}
             banner={data.banner}
             hot={data.hot}
             isActive={data.is_active}

@@ -11,6 +11,7 @@ import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
 import { getFontMetrics } from "@/lib/utils/textWrapping";
+import type { SvgPatch } from "@/hooks/useSvgPatch";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -142,10 +143,11 @@ interface ElementEditorProps {
   isImageElement: (el: SvgElement) => boolean;
   allElements?: SvgElement[]; // All elements to extract base IDs for depends suggestions
   onLiveUpdate?: (element: SvgElement) => void;
+  onPatchUpdate?: (patch: SvgPatch) => void;
 }
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
-  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onLiveUpdate }, ref) => {
+  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onLiveUpdate, onPatchUpdate }, ref) => {
     const [localElement, setLocalElement] = useState<SvgElement>(element);
     const [isDirty, setIsDirty] = useState(false);
     const [showGenBuilder, setShowGenBuilder] = useState(false);
@@ -227,6 +229,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     ]);
 
     const handleLocalUpdate = (updates: Partial<SvgElement>) => {
+      // This part updates the local UI state
       setLocalElement(prev => {
         const updated = {
           ...prev,
@@ -236,6 +239,27 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         return updated;
       });
       setIsDirty(true);
+
+      // This is the new part: create and dispatch the patch
+      if (onPatchUpdate) {
+        const elementId = element.id; // Use the stable ID from the original prop
+        if (!elementId) return; // Don't send patches for elements without IDs
+
+        if (updates.innerText !== undefined) {
+          onPatchUpdate({ id: elementId, attribute: 'innerText', value: updates.innerText });
+        }
+        if (updates.id !== undefined) {
+          // This is tricky. If the ID is changed, subsequent patches will fail.
+          // The backend needs to handle ID changes as a special case.
+          // For now, we send a patch to change the ID.
+          onPatchUpdate({ id: elementId, attribute: 'id', value: updates.id });
+        }
+        if (updates.attributes) {
+          for (const [key, value] of Object.entries(updates.attributes)) {
+            onPatchUpdate({ id: elementId, attribute: key, value: value });
+          }
+        }
+      }
     };
 
     // Throttled Live Update to prevent excessive parent re-renders (lag)

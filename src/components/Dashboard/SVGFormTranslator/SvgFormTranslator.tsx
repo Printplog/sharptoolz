@@ -150,19 +150,26 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
 
   // Handle fetching SVG content from the new svg_url in template data
   useEffect(() => {
-    if (isLoading || !data || !data.svg_url) return;
+    if (isLoading || !data) return;
 
-    setIsSvgFetching(true);
-    fetch(data.svg_url)
-      .then(r => r.text())
-      .then(t => {
-        setSvgContent(t);
-        setIsSvgFetching(false);
-      })
-      .catch(e => {
-        console.error("Failed to fetch SVG", e);
-        setIsSvgFetching(false);
-      });
+    if (data.svg) {
+      setSvgContent(data.svg);
+      return;
+    }
+
+    if (data.svg_url) {
+      setIsSvgFetching(true);
+      fetch(data.svg_url)
+        .then(r => r.text())
+        .then(t => {
+          setSvgContent(t);
+          setIsSvgFetching(false);
+        })
+        .catch(e => {
+          console.error("Failed to fetch SVG", e);
+          setIsSvgFetching(false);
+        });
+    }
   }, [data, isLoading]);
 
   // Initialize fields immediately when template data loads (before SVG)
