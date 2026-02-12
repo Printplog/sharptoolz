@@ -43,16 +43,16 @@ export default function ImageCropUpload({
   const [isRemovingBackground, setIsRemovingBackground] = useState(false);
   const [annotationResult, setAnnotationResult] = useState<AnnotationResult | null>(null);
   const [rotation, setRotation] = useState(0);
-  
+
   // Cache for background-removed image to avoid re-processing
   const [cachedBgRemovedImage, setCachedBgRemovedImage] = useState<string | null>(null);
   const [cachedFreeBgRemoved, setCachedFreeBgRemoved] = useState<string | null>(null);
-  
+
   // Background removal state
   const [bgRemovedImage, setBgRemovedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'crop' | 'remove-bg'>('crop');
   const [showOriginal, setShowOriginal] = useState(false);
-  
+
   const imgRef = useRef<HTMLImageElement>(null);
 
   const applyGrayscaleToImage = useCallback(
@@ -118,7 +118,7 @@ export default function ImageCropUpload({
     },
     [requiresGrayscale, grayscaleIntensity]
   );
-  
+
   // Get SVG text from store
   const { svgRaw } = useToolStore();
 
@@ -147,10 +147,10 @@ export default function ImageCropUpload({
   useEffect(() => {
     const analyzeDefaultImage = async () => {
       if (!svgElementId) return;
-      
+
       try {
         const result = await annotationDetector.findAndAnalyzeDefaultImage(svgElementId, svgRaw);
-        
+
         if (result) {
           setAnnotationResult(result);
         }
@@ -161,18 +161,18 @@ export default function ImageCropUpload({
 
     analyzeDefaultImage();
   }, [svgElementId, svgRaw]);
-  
+
 
 
   const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget;
-    
+
     // Set a default crop area (center, 80% of image) based on displayed dimensions
     const cropWidth = width * 0.8;
     const cropHeight = height * 0.8;
     const cropX = (width - cropWidth) / 2;
     const cropY = (height - cropHeight) / 2;
-    
+
     setCrop({
       unit: "px",
       x: cropX,
@@ -186,7 +186,7 @@ export default function ImageCropUpload({
     async (imageSrc: string, pixelCrop: PixelCrop): Promise<string> => {
       const image = new Image();
       image.crossOrigin = "anonymous";
-      
+
       return new Promise((resolve, reject) => {
         image.onload = () => {
           const canvas = document.createElement("canvas");
@@ -207,7 +207,7 @@ export default function ImageCropUpload({
           // Calculate scale factors
           const scaleX = image.width / displayedImage.width;
           const scaleY = image.height / displayedImage.height;
-          
+
           // Scale crop coordinates to original image dimensions
           const scaledCrop = {
             x: pixelCrop.x * scaleX,
@@ -215,12 +215,12 @@ export default function ImageCropUpload({
             width: pixelCrop.width * scaleX,
             height: pixelCrop.height * scaleY
           };
-          
+
           // If we have annotation result, stretch to those dimensions
           if (annotationResult) {
             canvas.width = annotationResult.content.width;
             canvas.height = annotationResult.content.height;
-            
+
             ctx.drawImage(
               image,
               scaledCrop.x,
@@ -278,23 +278,23 @@ export default function ImageCropUpload({
     setIsRemovingBackground(true);
     try {
       console.log('Starting paid background removal via Remove.bg API...');
-      
+
       // Call backend API for background removal
       const result = await removeBackground(originalFile);
-      
+
       if (!result.success || !result.image) {
         throw new Error('Invalid response from server');
       }
-      
+
       console.log('Background removed successfully');
-      
+
       // Cache and set the image
       setCachedBgRemovedImage(result.image);
       setBgRemovedImage(result.image);
       console.log('Paid BG Removal - Original:', originalImage?.substring(0, 50));
       console.log('Paid BG Removal - Processed:', result.image.substring(0, 50));
       toast.success("Background removed successfully! $0.20 charged ✨");
-      
+
     } catch (error) {
       console.error('Background removal failed:', error);
       toast.error(errorMessage(error as Error));
@@ -318,29 +318,29 @@ export default function ImageCropUpload({
     setIsRemovingBackground(true);
     try {
       console.log('Starting free background removal via Hugging Face...');
-      
+
       const imageBlob = new Blob([originalFile], { type: originalFile.type });
       const client = await Client.connect("not-lain/background-removal");
-      
-      const result = await client.predict("/image", { 
-        image: imageBlob, 
+
+      const result = await client.predict("/image", {
+        image: imageBlob,
       });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultData = result.data as any;
-      
+
       if (resultData && resultData[0] && resultData[0][1]) {
         const processedImageUrl = resultData[0][1].url;
         const response = await fetch(processedImageUrl);
         const blob = await response.blob();
-        
+
         const base64data = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
           reader.onerror = reject;
           reader.readAsDataURL(blob);
         });
-        
+
         // Cache and set the image
         setCachedFreeBgRemoved(base64data);
         setBgRemovedImage(base64data);
@@ -350,7 +350,7 @@ export default function ImageCropUpload({
       } else {
         throw new Error('Invalid response from service');
       }
-      
+
     } catch (error) {
       console.error('Background removal failed:', error);
       toast.error(errorMessage(error as Error));
@@ -365,7 +365,7 @@ export default function ImageCropUpload({
     try {
       const croppedImageDataUrl = await getCroppedImg(image, completedCrop);
       const processedImageDataUrl = await applyGrayscaleToImage(croppedImageDataUrl);
-      
+
       // Debug: Log the rotation being passed
       console.log('[ImageCropUpload] Confirming crop with rotation:', {
         fieldId,
@@ -373,12 +373,12 @@ export default function ImageCropUpload({
         rotation: annotationResult?.rotation,
         center: annotationResult?.center
       });
-      
+
       // Close the dialog immediately
       setIsDialogOpen(false);
-      
+
       onImageSelect(fieldId, processedImageDataUrl, annotationResult?.rotation);
-      
+
       setOriginalImage(null);
       setOriginalFile(null);
       setCrop(undefined);
@@ -459,17 +459,16 @@ export default function ImageCropUpload({
       <label htmlFor={fieldId} className="text-sm font-medium text-white">
         {fieldName}
       </label>
-      
+
       <div className="relative">
         <div
           {...getRootProps()}
-          className={`block w-full h-40 border-2 border-dashed rounded-lg cursor-pointer transition-colors overflow-hidden ${
-            disabled 
-              ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50" 
-              : isDragActive 
-                ? "border-white/40 bg-white/10" 
+          className={`block w-full h-40 border-2 border-dashed rounded-lg cursor-pointer transition-colors overflow-hidden ${disabled
+              ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50"
+              : isDragActive
+                ? "border-white/40 bg-white/10"
                 : "border-white/20 hover:border-white/40"
-          }`}
+            }`}
         >
           <input {...getInputProps()} />
           {!currentValue ? (
@@ -489,10 +488,11 @@ export default function ImageCropUpload({
           ) : (
             <div className="relative w-full h-full group">
               <div className="w-full h-full overflow-auto custom-scrollbar">
-                <img 
-                  src={currentValue} 
-                  alt="Uploaded image" 
+                <img
+                  src={currentValue}
+                  alt="Uploaded image"
                   className="w-full max-w-none h-auto object-contain min-h-full"
+                  loading="lazy"
                 />
               </div>
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
@@ -543,7 +543,7 @@ export default function ImageCropUpload({
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="text-white text-lg">Edit Image</DialogTitle>
           </DialogHeader>
-          
+
           {image && (
             <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'crop' | 'remove-bg')} className="flex-1 flex flex-col min-h-0">
               <TabsList className="bg-white/10 w-full shrink-0">
@@ -557,7 +557,7 @@ export default function ImageCropUpload({
                 <div className="flex-shrink-0 flex items-center justify-between gap-3 p-3 bg-white/5 border border-white/10 rounded-lg">
                   <div className="text-xs text-white/50 hidden md:block">
                     Drag corners to resize • Drag center to move
-                </div>
+                  </div>
                   <div className="flex items-center gap-2 ml-auto">
                     <Button
                       type="button"
@@ -580,9 +580,9 @@ export default function ImageCropUpload({
                       <RotateCw className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-              </div>
+                </div>
 
-              {/* Cropper Container */}
+                {/* Cropper Container */}
                 <div className="bg-black/30 border border-white/10 rounded-lg p-4 flex items-center justify-center">
                   <ReactCrop
                     crop={crop}
@@ -604,6 +604,7 @@ export default function ImageCropUpload({
                         transform: `rotate(${rotation}deg)`,
                       }}
                       onLoad={onImageLoad}
+                      loading="lazy"
                     />
                   </ReactCrop>
                 </div>
@@ -717,19 +718,20 @@ export default function ImageCropUpload({
                         src={(showOriginal ? originalImage : bgRemovedImage) || ''}
                         alt={showOriginal ? "Original" : "Background Removed"}
                         className="w-auto h-[500px]"
+                        loading="lazy"
                       />
                       {/* Image Label */}
                       <div className="absolute top-6 left-6 flex items-center gap-2 bg-black/80 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm">
                         <Check className="h-3.5 w-3.5 text-green-400" />
                         {showOriginal ? "Original Image" : "Background Removed"}
-                </div>
-              </div>
-            </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </TabsContent>
             </Tabs>
           )}
-          
+
           <DialogFooter className="flex-shrink-0 mt-3 gap-2">
             <Button
               type="button"

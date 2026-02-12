@@ -30,6 +30,7 @@ export default function BlurImage({ src, blurSrc, className, alt, ...props }: Bl
                     "w-full h-full object-cover transition-all duration-700 ease-in-out",
                     isLoading ? "scale-110 blur-xl grayscale" : "scale-100 blur-0 grayscale-0"
                 )}
+                loading="lazy"
             />
             {isLoading && (
                 <div className="absolute inset-0 bg-white/5 animate-pulse flex items-center justify-center">

@@ -13,6 +13,7 @@ export default function Logo({ icon = false, noLink = false, size = 30 }: LogoPr
       alt="SharpToolz Logo"
       className="object-contain"
       style={{ width: size, height: size }}
+      loading="lazy"
     />
   );
 

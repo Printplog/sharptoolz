@@ -60,6 +60,7 @@ export default function ToolsListHorizontal() {
                   src={tool.banner}
                   alt={`${tool.name} banner`}
                   className="w-full h-full object-cover rounded-lg"
+                  loading="lazy"
                 />
               </div>
             ) : (
@@ -124,6 +125,7 @@ export default function ToolsListHorizontal() {
                 src={previewImage}
                 alt="Template preview"
                 className="h-full w-auto object-contain rounded-lg border border-white/10"
+                loading="lazy"
               />
             </div>
           )}

@@ -18,32 +18,39 @@ export default function SvgTemplateEditor() {
   // Fetch template data (without SVG for faster loading)
   const { data, isLoading } = useQuery<Template>({
     queryKey: ["template", id],
-    queryFn: () => getTemplateForAdmin(id as string),
+    queryFn: async () => {
+      const resp = await getTemplateForAdmin(id as string);
+      console.log("Admin Template Data:", resp);
+      return resp;
+    },
     enabled: !!id, // Only run query if id exists
     refetchOnMount: false, // Don't refetch on mount to prevent flickering
   });
-
-  // No longer fetching SVG separately - it's included as svg_url in the main data
 
   const [svgContent, setSvgContent] = useState<string>("");
   const [isFetchingSvg, setIsFetchingSvg] = useState(false);
 
   useEffect(() => {
-    if (isLoading || !data || !data.svg_url) return;
-
-    setIsFetchingSvg(true);
-    fetch(data.svg_url)
-      .then(res => res.text())
-      .then(text => {
-        setSvgContent(text);
-        setIsFetchingSvg(false);
-      })
-      .catch(err => {
-        console.error("Failed to load SVG file", err);
-        toast.error("Failed to load SVG content");
-        setIsFetchingSvg(false);
-      });
-  }, [data, isLoading]);
+    if (data?.svg) {
+      setSvgContent(data.svg);
+    } else if (data?.svg_url) {
+      setIsFetchingSvg(true);
+      fetch(data.svg_url)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          return res.text();
+        })
+        .then(text => {
+          setSvgContent(text);
+          setIsFetchingSvg(false);
+        })
+        .catch(err => {
+          console.error("Failed to load SVG file from URL", err);
+          toast.error("Failed to load SVG content from cloud storage");
+          setIsFetchingSvg(false);
+        });
+    }
+  }, [data]);
 
   // Save template mutation
   const saveMutation = useMutation({
