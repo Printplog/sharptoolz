@@ -96,7 +96,8 @@ export default function AdminFontsPage() {
   const injectPreviewStyles = useMemo(() => {
     if (!fonts.length) return "";
 
-    const getFontFormat = (url: string) => {
+    const getFontFormat = (url: string | undefined): string => {
+      if (!url) return 'truetype'; // Default if URL is missing or undefined
       if (url.endsWith('.woff2')) return 'woff2';
       if (url.endsWith('.woff')) return 'woff';
       if (url.endsWith('.otf')) return 'opentype';

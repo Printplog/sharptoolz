@@ -59,7 +59,7 @@ export default function SvgTemplateEditor() {
     mutationFn: async (templateData: TemplateUpdatePayload & { svg_patch?: SvgPatch[] }): Promise<Template> => {
       try {
         // If there's a banner file, use FormData
-        if (templateData.banner) {
+        if (templateData.banner instanceof File) { // Corrected check
           const formData = new FormData();
           formData.append('name', templateData.name);
           // With patch updates, we might not have the full svg string here.
@@ -93,16 +93,21 @@ export default function SvgTemplateEditor() {
           return result;
         } else {
           // Otherwise, send as JSON
-          const payload: TemplateUpdatePayload & { svg_patch?: SvgPatch[] } = {
+          const payload: Partial<Template> & { svg_patch?: SvgPatch[] } = { // Changed type to Partial<Template>
             name: templateData.name,
             hot: templateData.hot || false,
             is_active: templateData.is_active !== undefined ? templateData.is_active : true,
             tool: templateData.tool || undefined,
-            tutorial_url: templateData.tutorialUrl || undefined,
-            tutorial_title: templateData.tutorialTitle || undefined,
+            tutorialUrl: templateData.tutorialUrl || undefined, // Corrected tutorial_url to tutorialUrl
+            tutorialTitle: templateData.tutorialTitle || undefined, // Corrected tutorial_title to tutorialTitle
             keywords: templateData.keywords ?? [],
             font_ids: templateData.fontIds || []
           };
+
+          // Conditionally add banner if it's a string (meaning it's a URL for an existing banner)
+          if (typeof templateData.banner === 'string') {
+              payload.banner = templateData.banner;
+          }
 
           if (patches.length > 0) {
             payload.svg_patch = patches;
