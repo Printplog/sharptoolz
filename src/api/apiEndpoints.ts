@@ -66,6 +66,15 @@ export const updateTemplate = async (id: string, data: Partial<Template> | FormD
   return res.data;
 }
 
+export const updateTemplateForAdmin = async (id: string, data: Partial<Template> | FormData): Promise<Template> => {
+  const headers = data instanceof FormData
+    ? { 'Content-Type': 'multipart/form-data' }
+    : { 'Content-Type': 'application/json' };
+
+  const res = await apiClient.patch(`/admin/templates/${id}/`, data, { headers });
+  return res.data;
+}
+
 export const deleteTemplate = async (id: string): Promise<unknown> => {
   const res = await apiClient.delete(`/templates/${id}/`);
   return res.data;
@@ -102,6 +111,9 @@ export const getTemplateForAdmin = async (id: string): Promise<Template> => {
   const res = await apiClient.get(`/admin/templates/${id}/`);
   return res.data;
 }
+
+// Alias to fix potential import issues on frontend
+export const getTemplateSvgForAdmin = getTemplateForAdmin;
 
 
 export const purchaseTemplate = async (data: Partial<PurchasedTemplate>): Promise<{ id: string }> => {

@@ -48,7 +48,8 @@ export interface SvgEditorRef {
   openPreview: () => void;
 }
 
-const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, isSvgLoading = false, onElementSelect, formFields = [], templateId }, ref) => {
+
+const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, isSvgLoading = false, onElementSelect, formFields = [], templateId, onPatchUpdate }, ref) => {
   const [currentSvg, setCurrentSvg] = useState<string>(svgRaw);
   const [elements, setElements] = useState<SvgElement[]>([]);
   const [selectedElementIndex, setSelectedElementIndex] = useState<number | null>(null);
@@ -161,11 +162,31 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
 
   function updateElement(index: number, updates: Partial<SvgElement>) {
     const updated = [...elements];
-    updated[index] = { ...updated[index], ...updates };
+    const element = updated[index];
+    const originalElement = elements[index];
+
+    updated[index] = { ...element, ...updates };
 
     // Ensure ID is properly updated in attributes
     if (updates.id !== undefined) {
       updated[index].attributes.id = updates.id;
+    }
+
+    // Track patches for changed attributes
+    if (onPatchUpdate && element.id) {
+      // Track text changes
+      if (updates.innerText !== undefined && updates.innerText !== originalElement.innerText) {
+        onPatchUpdate({ id: element.id, attribute: 'innerText', value: updates.innerText });
+      }
+
+      // Track attribute changes
+      if (updates.attributes) {
+        Object.entries(updates.attributes).forEach(([key, value]) => {
+          if (value !== originalElement.attributes[key]) {
+            onPatchUpdate({ id: element.id, attribute: key, value });
+          }
+        });
+      }
     }
 
     setElements(updated);
@@ -179,12 +200,11 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   const handleSave = useCallback(() => {
     if (!onSave) return;
 
-    // Regenerate SVG and get the updated version immediately
-    const updatedSvg = regenerateSvg(currentSvg, elements);
-
+    // PATCH-ONLY MODE: We don't send the full SVG anymore
+    // All changes are tracked via onPatchUpdate and sent as patches
     onSave({
       name: name.trim(),
-      svg: updatedSvg,
+      svg: "", // Empty string - patches handle all SVG updates
       banner: bannerFile,
       hot: isHot,
       isActive: isActiveState,
@@ -194,7 +214,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       keywords: keywordsTags,
       fontIds: selectedFontIds.length > 0 ? selectedFontIds : undefined
     });
-  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, elements, currentSvg]);
+  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds]);
 
   // Expose methods and state via ref
   useImperativeHandle(ref, () => ({
@@ -254,6 +274,50 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
 
   const handleElementReorder = useCallback((reorderedElements: SvgElement[]) => {
     const currentlySelectedElement = selectedElementIndex !== null ? elements[selectedElementIndex] : null;
+
+    // 1. Identify what was moved and where
+    // We find the first element that is different between old and new
+    let movedElement: SvgElement | null = null;
+    let newIndex = -1;
+
+    // Simple diff to find the moved item
+    // If we moved item A from index i to j
+    // We can detect it.
+
+    // For now, let's just find which element moved its position significantly
+    // Actually, dnd-kit gives us the moved item. But handleElementReorder gets the final list.
+
+    // Find the item that is at a new position but was shifted
+    for (let i = 0; i < reorderedElements.length; i++) {
+      if (reorderedElements[i].id !== elements[i]?.id) {
+        // Something changed here. 
+        // We look for the next neighbor as a reference
+        const el = reorderedElements[i];
+        if (el.id) {
+          movedElement = el;
+          newIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (movedElement && onPatchUpdate) {
+      console.log(`[SvgEditor] Element ${movedElement.id} reordered to index ${newIndex}`);
+      // Send a patch indicating the new order reference
+      // We send the ID of the element THAT IS NOW AFTER IT (if any)
+      const afterElement = reorderedElements[newIndex + 1];
+      const beforeElement = reorderedElements[newIndex - 1];
+
+      onPatchUpdate({
+        id: movedElement.id,
+        attribute: 'reorder',
+        value: {
+          index: newIndex,
+          afterId: afterElement?.id || null, // move before this ID
+          beforeId: beforeElement?.id || null // move after this ID
+        }
+      });
+    }
 
     setElements(reorderedElements);
 
@@ -434,6 +498,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                       setDraftElement(null); // Clear draft upon commit
                     }}
                     onLiveUpdate={setDraftElement} // Update draft state live
+                    onPatchUpdate={onPatchUpdate} // Pass patch callback
                     isTextElement={isTextElement}
                     isImageElement={isImageElement}
                     allElements={elements}

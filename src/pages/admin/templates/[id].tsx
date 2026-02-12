@@ -1,4 +1,4 @@
-import { getTemplateForAdmin, updateTemplate } from '@/api/apiEndpoints';
+import { getTemplateForAdmin, updateTemplateForAdmin } from '@/api/apiEndpoints';
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import errorMessage from '@/lib/utils/errorMessage';
 import type { Template, TemplateUpdatePayload } from '@/types';
@@ -58,13 +58,21 @@ export default function SvgTemplateEditor() {
   const saveMutation = useMutation({
     mutationFn: async (templateData: TemplateUpdatePayload & { svg_patch?: SvgPatch[] }): Promise<Template> => {
       try {
+        console.log('[SaveMutation] Starting save...');
+        console.log('[SaveMutation] Current patches:', patches);
+        console.log('[SaveMutation] Patches count:', patches.length);
+
         // If there's a banner file, use FormData
         if (templateData.banner instanceof File) { // Corrected check
+          console.log('[SaveMutation] Using FormData (banner upload)');
           const formData = new FormData();
           formData.append('name', templateData.name);
           // PATCH-ONLY MODE: Only send patches, never full SVG
           if (patches.length > 0) {
+            console.log('[SaveMutation] Adding patches to FormData:', patches);
             formData.append('svg_patch', JSON.stringify(patches));
+          } else {
+            console.log('[SaveMutation] No patches to send (metadata-only update)');
           }
           // If no patches, we're only updating metadata (name, banner, etc.)
 
@@ -86,9 +94,10 @@ export default function SvgTemplateEditor() {
               formData.append('font_ids', fontId);
             });
           }
-          const result = await updateTemplate(id as string, formData);
+          const result = await updateTemplateForAdmin(id as string, formData);
           return result;
         } else {
+          console.log('[SaveMutation] Using JSON payload');
           // Otherwise, send as JSON
           const payload: Partial<Template> & { svg_patch?: SvgPatch[] } = { // Changed type to Partial<Template>
             name: templateData.name,
@@ -108,15 +117,19 @@ export default function SvgTemplateEditor() {
 
           // PATCH-ONLY MODE: Only send patches, never full SVG
           if (patches.length > 0) {
+            console.log('[SaveMutation] Adding patches to JSON payload:', patches);
             payload.svg_patch = patches;
+          } else {
+            console.log('[SaveMutation] No patches to send (metadata-only update)');
           }
           // If no patches, we're only updating metadata
 
-          const result = await updateTemplate(id as string, payload);
+          console.log('[SaveMutation] Final payload:', payload);
+          const result = await updateTemplateForAdmin(id as string, payload);
           return result;
         }
       } catch (error) {
-        console.error('Update template error:', error);
+        console.error('[SaveMutation] Update template error:', error);
         throw error;
       }
     },
