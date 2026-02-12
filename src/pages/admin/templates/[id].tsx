@@ -62,14 +62,11 @@ export default function SvgTemplateEditor() {
         if (templateData.banner instanceof File) { // Corrected check
           const formData = new FormData();
           formData.append('name', templateData.name);
-          // With patch updates, we might not have the full svg string here.
-          // The backend should handle applying the patch.
-          // If svg_patch exists, we send it. Otherwise, we might send the full SVG if it was changed in a way that doesn't generate patches.
-          if (templateData.svg_patch && templateData.svg_patch.length > 0) {
-            formData.append('svg_patch', JSON.stringify(templateData.svg_patch));
-          } else if (templateData.svg) {
-            formData.append('svg', templateData.svg);
+          // PATCH-ONLY MODE: Only send patches, never full SVG
+          if (patches.length > 0) {
+            formData.append('svg_patch', JSON.stringify(patches));
           }
+          // If no patches, we're only updating metadata (name, banner, etc.)
 
           formData.append('hot', templateData.hot ? 'true' : 'false');
           formData.append('is_active', templateData.is_active ? 'true' : 'false');
@@ -109,15 +106,11 @@ export default function SvgTemplateEditor() {
             payload.banner = templateData.banner;
           }
 
+          // PATCH-ONLY MODE: Only send patches, never full SVG
           if (patches.length > 0) {
             payload.svg_patch = patches;
-          } else {
-            // Only send SVG if there's no patch and the content has changed.
-            // For now, we'll rely on the caller to not include svg if not needed.
-            if (templateData.svg) {
-              payload.svg = templateData.svg
-            }
           }
+          // If no patches, we're only updating metadata
 
           const result = await updateTemplate(id as string, payload);
           return result;
@@ -171,13 +164,7 @@ export default function SvgTemplateEditor() {
       payload.is_active = templateData.isActive;
     }
 
-    // If there are patches, we don't need to send the full SVG.
-    if (patches.length > 0) {
-      payload.svg_patch = patches;
-      delete payload.svg; // Ensure full SVG is not sent
-    }
-
-
+    // Patches are handled in the mutation function
     saveMutation.mutate(payload);
   };
 
