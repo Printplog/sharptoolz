@@ -306,24 +306,25 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       // CRITICAL: Generate patches when Apply is clicked
       if (onPatchUpdate && element.id) {
         console.log('[ElementEditor] Comparing changes for patches...');
+        const elementId = element.id;
 
         // Compare text content
         if (finalElement.innerText !== element.innerText) {
           console.log(`[ElementEditor] Text changed: "${element.innerText}" → "${finalElement.innerText}"`);
-          onPatchUpdate({ id: element.id, attribute: 'innerText', value: finalElement.innerText });
+          onPatchUpdate({ id: elementId, attribute: 'innerText', value: finalElement.innerText });
         }
 
         // Compare ID change
         if (finalElement.id !== element.id) {
           console.log(`[ElementEditor] ID changed: "${element.id}" → "${finalElement.id}"`);
-          onPatchUpdate({ id: element.id, attribute: 'id', value: finalElement.id });
+          onPatchUpdate({ id: elementId, attribute: 'id', value: finalElement.id });
         }
 
         // Compare all attributes (changed or new)
         Object.entries(finalElement.attributes).forEach(([key, value]) => {
           if (value !== element.attributes[key]) {
             console.log(`[ElementEditor] Attribute ${key} changed/added: "${element.attributes[key]}" → "${value}"`);
-            onPatchUpdate({ id: element.id, attribute: key, value: value ?? "" });
+            onPatchUpdate({ id: elementId, attribute: key, value: value ?? "" });
           }
         });
 
@@ -331,7 +332,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         Object.keys(element.attributes).forEach(key => {
           if (finalElement.attributes[key] === undefined) {
             console.log(`[ElementEditor] Attribute ${key} removed`);
-            onPatchUpdate({ id: element.id, attribute: key, value: "" });
+            onPatchUpdate({ id: elementId, attribute: key, value: "" });
           }
         });
 

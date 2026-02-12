@@ -174,16 +174,17 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
 
     // Track patches for changed attributes
     if (onPatchUpdate && element.id) {
+      const elementId = element.id;
       // Track text changes
       if (updates.innerText !== undefined && updates.innerText !== originalElement.innerText) {
-        onPatchUpdate({ id: element.id, attribute: 'innerText', value: updates.innerText });
+        onPatchUpdate({ id: elementId, attribute: 'innerText', value: updates.innerText });
       }
 
       // Track attribute changes
       if (updates.attributes) {
         Object.entries(updates.attributes).forEach(([key, value]) => {
           if (value !== originalElement.attributes[key]) {
-            onPatchUpdate({ id: element.id, attribute: key, value });
+            onPatchUpdate({ id: elementId, attribute: key, value });
           }
         });
       }
@@ -301,7 +302,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       }
     }
 
-    if (movedElement && onPatchUpdate) {
+    if (movedElement && movedElement.id && onPatchUpdate) {
       console.log(`[SvgEditor] Element ${movedElement.id} reordered to index ${newIndex}`);
       // Send a patch indicating the new order reference
       // We send the ID of the element THAT IS NOW AFTER IT (if any)
