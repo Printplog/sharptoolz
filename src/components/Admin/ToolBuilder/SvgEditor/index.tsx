@@ -39,6 +39,7 @@ interface SvgEditorProps {
   isSvgLoading?: boolean; // Loading state for SVG data
   onElementSelect?: (elementType: string, idPattern?: string) => void;
   formFields?: FormField[]; // Backend form fields from template
+  onPatchUpdate?: (patch: { id: string; attribute: string; value: any }) => void; // Callback for element changes
 }
 
 export interface SvgEditorRef {
@@ -109,7 +110,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     // Filter out non-editable elements completely - these should not appear in the editor
     const editableElements = filterEditableElements(parsed);
     setElements(editableElements);
-    
+
     // Reset refs array
     elementRefs.current = new Array(editableElements.length).fill(null);
   }, [currentSvg]);
@@ -161,12 +162,12 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   function updateElement(index: number, updates: Partial<SvgElement>) {
     const updated = [...elements];
     updated[index] = { ...updated[index], ...updates };
-    
+
     // Ensure ID is properly updated in attributes
     if (updates.id !== undefined) {
       updated[index].attributes.id = updates.id;
     }
-    
+
     setElements(updated);
   }
 
@@ -177,10 +178,10 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
 
   const handleSave = useCallback(() => {
     if (!onSave) return;
-    
+
     // Regenerate SVG and get the updated version immediately
     const updatedSvg = regenerateSvg(currentSvg, elements);
-    
+
     onSave({
       name: name.trim(),
       svg: updatedSvg,
@@ -204,7 +205,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
 
   const handleBannerUpload = (file: File) => {
     setBannerFile(file);
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = e.target?.result as string;
@@ -234,55 +235,55 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     if (index !== null) {
       setIsEditorOpen(true);
     }
-    
+
     // Notify parent component about selection for docs context
     if (onElementSelect && index >= 0 && index < elements.length) {
       const element = elements[index];
-      const elementType = isTextElement(element) ? 'text' : 
-                        isImageElement(element) ? 'image' : element.tag;
-      
+      const elementType = isTextElement(element) ? 'text' :
+        isImageElement(element) ? 'image' : element.tag;
+
       // Extract ID pattern for documentation context
       let idPattern;
       if (element.id) {
         idPattern = element.id;
       }
-      
+
       onElementSelect(elementType, idPattern);
     }
   }, [elements, onElementSelect]);
 
   const handleElementReorder = useCallback((reorderedElements: SvgElement[]) => {
     const currentlySelectedElement = selectedElementIndex !== null ? elements[selectedElementIndex] : null;
-    
+
     setElements(reorderedElements);
-    
+
     // If an element was selected, try to find its new index after reordering
     if (currentlySelectedElement) {
       // More robust matching - use multiple criteria to find the exact element
       const newIndex = reorderedElements.findIndex(el => {
         // Primary match: exact ID and tag
-        if (el.id && currentlySelectedElement.id && 
-            el.id === currentlySelectedElement.id && 
-            el.tag === currentlySelectedElement.tag) {
+        if (el.id && currentlySelectedElement.id &&
+          el.id === currentlySelectedElement.id &&
+          el.tag === currentlySelectedElement.tag) {
           return true;
         }
-        
+
         // Secondary match: for elements without IDs, match by tag and content
         if (!el.id && !currentlySelectedElement.id &&
-            el.tag === currentlySelectedElement.tag &&
-            el.innerText === currentlySelectedElement.innerText) {
+          el.tag === currentlySelectedElement.tag &&
+          el.innerText === currentlySelectedElement.innerText) {
           return true;
         }
-        
+
         // Tertiary match: for image elements, match by href attribute
         if (el.tag === 'image' && currentlySelectedElement.tag === 'image' &&
-            el.attributes.href === currentlySelectedElement.attributes.href) {
+          el.attributes.href === currentlySelectedElement.attributes.href) {
           return true;
         }
-        
+
         return false;
       });
-      
+
       setSelectedElementIndex(newIndex >= 0 ? newIndex : null);
     }
   }, [selectedElementIndex, elements]);
@@ -303,207 +304,207 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     }
   };
 
-  
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between pb-5 border-b border-white/10 gap-4">
         <h2 className="text-xl font-semibold">SVG Editor</h2>
         <div className="flex flex-wrap items-center gap-3">
-           <SettingsDialog 
-              name={name}
-              keywords={keywordsTags}
-              onNameChange={setName}
-              onKeywordsChange={setKeywordsTags}
-              fonts={fonts}
-              selectedFontIds={selectedFontIds}
-              onFontSelect={(id) => setSelectedFontIds([...selectedFontIds, id])}
-              onFontRemove={(id) => setSelectedFontIds(selectedFontIds.filter(fid => fid !== id))}
-              fontUploadMutation={fontUploadMutation}
-              tools={tools}
-              selectedTool={selectedTool}
-              onToolChange={setSelectedTool}
-              tutorialUrl={tutorialUrlState}
-              tutorialTitle={tutorialTitleState}
-              onUrlChange={setTutorialUrlState}
-              onTitleChange={setTutorialTitleState}
-              isHot={isHot}
-              isActive={isActiveState}
-              onHotChange={setIsHot}
-              onActiveChange={setIsActiveState}
-              bannerImage={bannerImage}
-              onBannerUpload={handleBannerUpload}
-           />
-           
-           {/* Public View Button */}
-           {templateId && (
-              <a 
-                href={`/tools/${templateId}`}
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 gap-2 border border-white/20 bg-white/5 text-white hover:bg-white/20 hover:text-white"
-              >
-                <Eye className="h-4 w-4" />
-                <span className="hidden sm:inline">Public View</span>
-              </a>
-           )}
+          <SettingsDialog
+            name={name}
+            keywords={keywordsTags}
+            onNameChange={setName}
+            onKeywordsChange={setKeywordsTags}
+            fonts={fonts}
+            selectedFontIds={selectedFontIds}
+            onFontSelect={(id) => setSelectedFontIds([...selectedFontIds, id])}
+            onFontRemove={(id) => setSelectedFontIds(selectedFontIds.filter(fid => fid !== id))}
+            fontUploadMutation={fontUploadMutation}
+            tools={tools}
+            selectedTool={selectedTool}
+            onToolChange={setSelectedTool}
+            tutorialUrl={tutorialUrlState}
+            tutorialTitle={tutorialTitleState}
+            onUrlChange={setTutorialUrlState}
+            onTitleChange={setTutorialTitleState}
+            isHot={isHot}
+            isActive={isActiveState}
+            onHotChange={setIsHot}
+            onActiveChange={setIsActiveState}
+            bannerImage={bannerImage}
+            onBannerUpload={handleBannerUpload}
+          />
 
-           <Button 
-             onClick={() => setShowPreviewDialog(true)}
-             variant="outline"
-             className="gap-2"
-           >
-             <Eye className="h-4 w-4" />
-             <span className="hidden sm:inline">Final Preview</span>
-           </Button>
+          {/* Public View Button */}
+          {templateId && (
+            <a
+              href={`/tools/${templateId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 gap-2 border border-white/20 bg-white/5 text-white hover:bg-white/20 hover:text-white"
+            >
+              <Eye className="h-4 w-4" />
+              <span className="hidden sm:inline">Public View</span>
+            </a>
+          )}
 
-           {onSave && (
-              <Button 
-                onClick={handleSave} 
-                disabled={!name.trim() || isLoading}
-                className="min-w-32"
-              >
-                {isLoading ? "Saving..." : "Save Template"}
-              </Button>
-           )}
+          <Button
+            onClick={() => setShowPreviewDialog(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">Final Preview</span>
+          </Button>
+
+          {onSave && (
+            <Button
+              onClick={handleSave}
+              disabled={!name.trim() || isLoading}
+              className="min-w-32"
+            >
+              {isLoading ? "Saving..." : "Save Template"}
+            </Button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start h-full">
         {/* Left Col: Navigation (List) & Editor */}
         <div className="flex flex-col gap-4">
-             {/* Show loading skeleton when SVG is loading */}
-            {isSvgLoading ? (
-                <div className="space-y-4">
-                <div className="h-5 w-40 bg-white/5 rounded animate-pulse"></div>
-                <div className="space-y-2">
-                    {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="h-16 w-full bg-white/5 rounded-lg animate-pulse"></div>
-                    ))}
-                </div>
-                </div>
-            ) : (
-                <>
-                  <CollapsiblePanel 
-                    id="elements" 
-                    title="Elements" 
-                    defaultOpen={true}
-                    className="max-h-[50vh] flex flex-col"
-                    forceMount={true}
-                    animate={elements.length < 100}
-                  >
-                     <div 
-                        className="overflow-y-auto custom-scrollbar max-h-[40vh] pr-2"
-                        style={{ 
-                          // CSS Optimization: Virtualize layout for off-screen items
-                          contentVisibility: 'auto', 
-                          containIntrinsicSize: '36px' // approx height of one item
-                        }}
-                     >
+          {/* Show loading skeleton when SVG is loading */}
+          {isSvgLoading ? (
+            <div className="space-y-4">
+              <div className="h-5 w-40 bg-white/5 rounded animate-pulse"></div>
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-16 w-full bg-white/5 rounded-lg animate-pulse"></div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <CollapsiblePanel
+                id="elements"
+                title="Elements"
+                defaultOpen={true}
+                className="max-h-[50vh] flex flex-col"
+                forceMount={true}
+                animate={elements.length < 100}
+              >
+                <div
+                  className="overflow-y-auto custom-scrollbar max-h-[40vh] pr-2"
+                  style={{
+                    // CSS Optimization: Virtualize layout for off-screen items
+                    contentVisibility: 'auto',
+                    containIntrinsicSize: '36px' // approx height of one item
+                  }}
+                >
 
-                        <ElementNavigation 
-                            elements={elements}
-                            onElementClick={(index) => {
-                              handleElementSelect(index);
-                            }}
-                            onElementReorder={handleElementReorder}
-                            selectedElementIndex={selectedElementIndex}
-                            isTextElement={isTextElement}
-                            isImageElement={isImageElement}
-                        />
-                         {!currentSvg && (
-                            <div className="p-8 border border-dashed border-white/20 rounded-xl text-center text-white/40 mt-4">
-                              <p>Upload an SVG to view elements</p>
-                            </div>
-                        )}
-                     </div>
-                  </CollapsiblePanel>
+                  <ElementNavigation
+                    elements={elements}
+                    onElementClick={(index) => {
+                      handleElementSelect(index);
+                    }}
+                    onElementReorder={handleElementReorder}
+                    selectedElementIndex={selectedElementIndex}
+                    isTextElement={isTextElement}
+                    isImageElement={isImageElement}
+                  />
+                  {!currentSvg && (
+                    <div className="p-8 border border-dashed border-white/20 rounded-xl text-center text-white/40 mt-4">
+                      <p>Upload an SVG to view elements</p>
+                    </div>
+                  )}
+                </div>
+              </CollapsiblePanel>
 
-                  <CollapsiblePanel 
-                    id="editor" 
-                    title="Element Editor" 
-                    isOpen={isEditorOpen}
-                    onOpenChange={setIsEditorOpen}
-                  >
-                     {selectedElementIndex !== null && elements[selectedElementIndex] ? (
-                        <ElementEditor
-                          element={elements[selectedElementIndex]}
-                          index={selectedElementIndex}
-                          onUpdate={(idx, updates) => {
-                            updateElement(idx, updates);
-                            setDraftElement(null); // Clear draft upon commit
-                          }}
-                          onLiveUpdate={setDraftElement} // Update draft state live
-                          isTextElement={isTextElement}
-                          isImageElement={isImageElement}
-                          allElements={elements}
-                          ref={(el: HTMLDivElement | null) => {
-                              elementRefs.current[selectedElementIndex] = el;
-                          }}
-                        />
-                     ) : (
-                       <div className="p-8 text-center text-white/40">
-                         <p>Select an element to edit</p>
-                       </div>
-                     )}
-                  </CollapsiblePanel>
-                </>
-            )}
+              <CollapsiblePanel
+                id="editor"
+                title="Element Editor"
+                isOpen={isEditorOpen}
+                onOpenChange={setIsEditorOpen}
+              >
+                {selectedElementIndex !== null && elements[selectedElementIndex] ? (
+                  <ElementEditor
+                    element={elements[selectedElementIndex]}
+                    index={selectedElementIndex}
+                    onUpdate={(idx, updates) => {
+                      updateElement(idx, updates);
+                      setDraftElement(null); // Clear draft upon commit
+                    }}
+                    onLiveUpdate={setDraftElement} // Update draft state live
+                    isTextElement={isTextElement}
+                    isImageElement={isImageElement}
+                    allElements={elements}
+                    ref={(el: HTMLDivElement | null) => {
+                      elementRefs.current[selectedElementIndex] = el;
+                    }}
+                  />
+                ) : (
+                  <div className="p-8 text-center text-white/40">
+                    <p>Select an element to edit</p>
+                  </div>
+                )}
+              </CollapsiblePanel>
+            </>
+          )}
         </div>
 
         {/* Right Col: Sortable Preview & Docs */}
         <div className="space-y-4">
-            <DndContext 
-              collisionDetection={closestCenter} 
-              onDragEnd={handleDragEnd}
+          <DndContext
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={rightPanelOrder}
+              strategy={verticalListSortingStrategy}
             >
-              <SortableContext 
-                items={rightPanelOrder} 
-                strategy={verticalListSortingStrategy}
-              >
-                  {rightPanelOrder.map(id => {
-                     if (id === 'preview') {
-                        return (
-                          <CollapsiblePanel 
-                            key="preview" 
-                            id="preview" 
-                            title="Preview" 
-                            dragHandle={true}
-                          >
-                             <SvgUpload 
-                                currentSvg={currentSvg} 
-                                onSvgUpload={handleSvgUpload} 
-                                onSelectElement={(id) => {
-                                    const index = elements.findIndex(el => el.id === id);
-                                    if (index >= 0) {
-                                        handleElementSelect(index);
-                                    }
-                                }}
-                                elements={elements}
-                                activeElementId={selectedElementIndex !== null ? elements[selectedElementIndex]?.id : null}
-                                draftElement={draftElement} // Pass draft element for live preview
-                            />
-                          </CollapsiblePanel>
-                        );
-                     }
-                     if (id === 'docs') {
-                        return (
-                          <CollapsiblePanel 
-                            key="docs" 
-                            id="docs" 
-                            title="Documentation" 
-                            dragHandle={true}
-                            defaultOpen={false} 
-                          >
-                             <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-                                <DocsPanel />
-                             </div>
-                          </CollapsiblePanel>
-                        );
-                     }
-                     return null;
-                  })}
-              </SortableContext>
-            </DndContext>
+              {rightPanelOrder.map(id => {
+                if (id === 'preview') {
+                  return (
+                    <CollapsiblePanel
+                      key="preview"
+                      id="preview"
+                      title="Preview"
+                      dragHandle={true}
+                    >
+                      <SvgUpload
+                        currentSvg={currentSvg}
+                        onSvgUpload={handleSvgUpload}
+                        onSelectElement={(id) => {
+                          const index = elements.findIndex(el => el.id === id);
+                          if (index >= 0) {
+                            handleElementSelect(index);
+                          }
+                        }}
+                        elements={elements}
+                        activeElementId={selectedElementIndex !== null ? elements[selectedElementIndex]?.id : null}
+                        draftElement={draftElement} // Pass draft element for live preview
+                      />
+                    </CollapsiblePanel>
+                  );
+                }
+                if (id === 'docs') {
+                  return (
+                    <CollapsiblePanel
+                      key="docs"
+                      id="docs"
+                      title="Documentation"
+                      dragHandle={true}
+                      defaultOpen={false}
+                    >
+                      <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                        <DocsPanel />
+                      </div>
+                    </CollapsiblePanel>
+                  );
+                }
+                return null;
+              })}
+            </SortableContext>
+          </DndContext>
         </div>
       </div>
 
@@ -515,7 +516,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
         open={showPreviewDialog}
         onOpenChange={setShowPreviewDialog}
         svgContent={regenerateSvg(currentSvg, elements)}
-        formFields={formFields} 
+        formFields={formFields}
         templateName={name}
         fonts={fonts.filter(f => selectedFontIds.includes(f.id))}
       />

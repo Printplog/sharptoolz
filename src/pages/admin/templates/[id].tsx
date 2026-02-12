@@ -70,7 +70,7 @@ export default function SvgTemplateEditor() {
           } else if (templateData.svg) {
             formData.append('svg', templateData.svg);
           }
-          
+
           formData.append('hot', templateData.hot ? 'true' : 'false');
           formData.append('is_active', templateData.is_active ? 'true' : 'false');
           if (templateData.tool) {
@@ -98,15 +98,15 @@ export default function SvgTemplateEditor() {
             hot: templateData.hot || false,
             is_active: templateData.is_active !== undefined ? templateData.is_active : true,
             tool: templateData.tool || undefined,
-            tutorialUrl: templateData.tutorialUrl || undefined, // Corrected tutorial_url to tutorialUrl
-            tutorialTitle: templateData.tutorialTitle || undefined, // Corrected tutorial_title to tutorialTitle
+            tutorial_url: templateData.tutorialUrl || undefined,
+            tutorial_title: templateData.tutorialTitle || undefined,
             keywords: templateData.keywords ?? [],
             font_ids: templateData.fontIds || []
           };
 
           // Conditionally add banner if it's a string (meaning it's a URL for an existing banner)
           if (typeof templateData.banner === 'string') {
-              payload.banner = templateData.banner;
+            payload.banner = templateData.banner;
           }
 
           if (patches.length > 0) {
@@ -114,8 +114,8 @@ export default function SvgTemplateEditor() {
           } else {
             // Only send SVG if there's no patch and the content has changed.
             // For now, we'll rely on the caller to not include svg if not needed.
-            if(templateData.svg) {
-                payload.svg = templateData.svg
+            if (templateData.svg) {
+              payload.svg = templateData.svg
             }
           }
 
@@ -151,7 +151,7 @@ export default function SvgTemplateEditor() {
       // If the svg was updated (we can infer this if a patch was sent), we should refetch the svg content
       // A simple way is to invalidate the query, forcing a refetch.
       if (patches.length > 0) {
-          await queryClient.invalidateQueries({queryKey: ["template", id]});
+        await queryClient.invalidateQueries({ queryKey: ["template", id] });
       }
     },
     onError: (error: Error) => {
@@ -173,8 +173,8 @@ export default function SvgTemplateEditor() {
 
     // If there are patches, we don't need to send the full SVG.
     if (patches.length > 0) {
-        payload.svg_patch = patches;
-        delete payload.svg; // Ensure full SVG is not sent
+      payload.svg_patch = patches;
+      delete payload.svg; // Ensure full SVG is not sent
     }
 
 

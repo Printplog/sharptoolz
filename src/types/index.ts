@@ -160,7 +160,7 @@ export interface AuditLog {
 export type TemplateUpdatePayload = {
   name: string;
   svg: string;
-  banner?: File | null;
+  banner?: File | null | string;
   hot?: boolean;
   tool?: string;
   tutorialUrl?: string;
