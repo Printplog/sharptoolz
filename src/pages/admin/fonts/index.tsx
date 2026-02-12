@@ -95,13 +95,21 @@ export default function AdminFontsPage() {
 
   const injectPreviewStyles = useMemo(() => {
     if (!fonts.length) return "";
+
+    const getFontFormat = (url: string) => {
+      if (url.endsWith('.woff2')) return 'woff2';
+      if (url.endsWith('.woff')) return 'woff';
+      if (url.endsWith('.otf')) return 'opentype';
+      return 'truetype'; // Default for .ttf
+    };
+
     return fonts
       .filter((font) => font.font_url)
       .map(
         (font) => `
         @font-face {
           font-family: "FontPreview-${font.id}";
-          src: url("${font.font_url}") format("truetype");
+          src: url("${font.font_url}") format("${getFontFormat(font.font_url)}");
           font-display: swap;
         }
       `

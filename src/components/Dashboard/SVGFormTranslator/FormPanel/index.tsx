@@ -344,24 +344,28 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
     progressInterval = setInterval(() => {
       setDocumentProgress((prev) => {
         if (prev >= 90) {
-          return 90; // Stop at 90% until request completes
+          if (progressInterval) clearInterval(progressInterval); // Stop at 90
+          return 90;
         }
-        // Slower, steadier progress increment
-        return prev + 5;
+        return prev + 10;
       });
-    }, 300);
+    }, 150);
+    
+    const mutationPromise = mutateFn(payload);
+    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 1500)); // UX: min 1.5s loading time
 
     try {
-      await mutateFn(payload);
+      await Promise.all([mutationPromise, minDelayPromise]);
+      
       // Complete progress
       if (progressInterval) clearInterval(progressInterval);
       setDocumentProgress(100);
+      
       // Wait a moment before hiding
       setTimeout(() => {
         setIsCreatingDocument(false);
         setDocumentProgress(0);
-        // Close dialog only after successful creation
-        setShowTestDialog(false);
+        setShowTestDialog(false); // Close dialog on success
       }, 500);
 
       if (isPurchased && fieldUpdates.length > 0) {
@@ -372,7 +376,7 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
       if (progressInterval) clearInterval(progressInterval);
       setIsCreatingDocument(false);
       setDocumentProgress(0);
-      // Don't close dialog on error - let user see the error and try again
+      // Don't close dialog on error, let user see it and retry
       throw error;
     }
   };
