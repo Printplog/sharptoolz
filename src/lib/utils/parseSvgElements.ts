@@ -19,6 +19,8 @@ export default function parseSvgElements(svgString: string): SvgElement[] {
     .map(el => {
       const tag = el.tagName.toLowerCase();
       const id = el.getAttribute("id") || undefined;
+      const internalId = el.getAttribute("data-internal-id") || undefined;
+
       const attributes = Object.fromEntries(
         Array.from(el.attributes).map(attr => [attr.name, attr.value])
       );
@@ -56,8 +58,9 @@ export default function parseSvgElements(svgString: string): SvgElement[] {
 
       return {
         tag,
-        id,
+        id: id || internalId,
         originalId: id,
+        internalId,
         attributes,
         innerText: innerText || undefined, // Keep original case!
       };

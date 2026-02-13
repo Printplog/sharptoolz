@@ -213,8 +213,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
       // Only populate if field is empty (no user input, no configured default)
       // and it's a text-like field
       if (validTypes.includes(field.type) &&
-        (field.currentValue === "" || field.currentValue === null || field.currentValue === undefined) &&
-        (field.defaultValue === "" || field.defaultValue === null || field.defaultValue === undefined)) {
+        (field.currentValue === "" || field.currentValue === null || field.currentValue === undefined)) {
 
         // Find matching element by ID (or svgElementId if separate)
         // Most fields use ID to match SVG element ID directly
@@ -224,10 +223,12 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
         const element = parsedElements.find(el => {
           const elId = el.id || "";
           const origId = el.originalId || "";
+          const intId = el.internalId || "";
           const targetWithType = targetId + ".";
 
           return elId === targetId ||
             origId === targetId ||
+            intId === targetId ||
             elId.startsWith(targetWithType) ||
             origId.startsWith(targetWithType);
         });

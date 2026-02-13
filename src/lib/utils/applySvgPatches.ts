@@ -28,6 +28,7 @@ export function applySvgPatches(svgContent: string, patches: SvgPatch[]): string
             // Try multiple selectors to find the element
             const element =
                 doc.getElementById(id) ||
+                doc.querySelector(`[data-internal-id="${id}"]`) ||
                 doc.querySelector(`[name="${id}"]`) ||
                 doc.querySelector(`[data-name="${id}"]`);
 
