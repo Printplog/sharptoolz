@@ -19,7 +19,7 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<{ x: number, y: number, startPanX: number, startPanY: number } | null>(null);
   const hasDraggedRef = useRef(false);
@@ -41,10 +41,10 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !dragStartRef.current) return;
-    
+
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
-    
+
     if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
       hasDraggedRef.current = true;
     }
@@ -72,11 +72,11 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
     if (hasDraggedRef.current) return;
 
     if (!onSelectElement) return;
-    
-    // Find the closest parent with an ID
-    const target = (e.target as HTMLElement).closest('[id]');
+
+    // Find the closest parent with an internal ID
+    const target = (e.target as HTMLElement).closest('[data-internal-id]');
     if (target) {
-      const id = target.getAttribute('id');
+      const id = target.getAttribute('data-internal-id');
       if (id) {
         onSelectElement(id);
       }
@@ -107,10 +107,10 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
                 onValueChange={(vals) => setZoom(vals[0])}
               />
               <ZoomIn className="w-3 h-3 text-white/40" />
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="w-6 h-6 hover:bg-white/10" 
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-6 h-6 hover:bg-white/10"
                 onClick={resetView}
                 title="Reset View"
               >
@@ -130,7 +130,7 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
           )}
         </div>
       </div>
-      
+
       <div className="relative">
         <input
           id="template-svg"
@@ -146,11 +146,10 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
             }
           }}
         />
-        
+
         <div
-          className={`block w-full min-h-[400px] max-h-[600px] border border-white/10 rounded-xl overflow-hidden relative group shadow-2xl transition-all select-none ${
-            !currentSvg ? "cursor-pointer hover:border-white/30" : ""
-          }`}
+          className={`block w-full min-h-[400px] max-h-[600px] border border-white/10 rounded-xl overflow-hidden relative group shadow-2xl transition-all select-none ${!currentSvg ? "cursor-pointer hover:border-white/30" : ""
+            }`}
           onClick={!currentSvg ? () => document.getElementById('template-svg')?.click() : undefined}
         >
           {/* Subtle Checkered Background for Transparency */}
@@ -158,10 +157,9 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3M3RxMAgsWvNfS4GCI0pDBCc4G9MMXm600MW4PyDjjUMTSEAn1Y81X7hm6IAAAAASUVORK5CYII=')] bg-repeat" />
 
           {currentSvg ? (
-            <div 
-              className={`relative w-full h-full min-h-[400px] flex items-center justify-center overflow-hidden ${
-                isDragging ? 'cursor-grabbing' : 'cursor-grab'
-              }`}
+            <div
+              className={`relative w-full h-full min-h-[400px] flex items-center justify-center overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'
+                }`}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -169,16 +167,16 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
               onClick={handlePreviewClick}
               title="Click to select, drag to pan"
             >
-              <div 
-                style={{ 
-                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, 
+              <div
+                style={{
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                   transition: isDragging ? 'none' : 'transform 0.1s ease-out',
                   transformOrigin: 'center center',
                   willChange: 'transform'
                 }}
                 className="[&_svg]:max-w-full [&_svg]:max-h-full [&_svg]:h-auto [&_svg]:w-auto pointer-events-none [&_svg]:pointer-events-auto"
-                dangerouslySetInnerHTML={{ __html: currentSvg }} 
-                ref={containerRef} 
+                dangerouslySetInnerHTML={{ __html: currentSvg }}
+                ref={containerRef}
               />
             </div>
           ) : (
@@ -196,7 +194,7 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
           )}
         </div>
       </div>
-      
+
       <div className="flex justify-between items-center text-[10px] text-white/40 px-2">
         <div className="flex gap-3">
           <span>🎯 Hint: Click to select, Drag to pan</span>

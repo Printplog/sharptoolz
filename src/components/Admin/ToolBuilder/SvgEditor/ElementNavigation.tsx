@@ -1,5 +1,5 @@
 // ElementNavigation component for selecting SVG elements
-import { useState, memo } from "react";
+import { useState, memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -26,12 +26,10 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
-
+import { useSvgStore } from "@/store/useSvgStore";
 
 interface ElementNavigationProps {
-  elements: SvgElement[];
-  onElementClick: (index: number) => void;
+  onElementClick: (index: number | null) => void;
   onElementReorder: (elements: SvgElement[]) => void;
   selectedElementIndex: number | null;
   isTextElement: (el: SvgElement) => boolean;
@@ -39,19 +37,18 @@ interface ElementNavigationProps {
 }
 
 interface SortableElementButtonProps {
-  element: SvgElement;
-  index: number;
+  elementId: string;
   originalIndex: number;
   isSelected: boolean;
   isTextElement: (el: SvgElement) => boolean;
   isImageElement: (el: SvgElement) => boolean;
   onElementClick: (index: number) => void;
   extraClasses?: string;
+  isOver?: boolean;
 }
 
 const SortableElementButton = memo(({
-  element,
-  index,
+  elementId,
   originalIndex,
   isSelected,
   isTextElement,
@@ -59,13 +56,10 @@ const SortableElementButton = memo(({
   onElementClick,
   extraClasses = '',
   isOver = false,
-}: SortableElementButtonProps & { isOver?: boolean }) => {
-  // Only use needed properties to prevent re-renders when other attributes change.
-  // Actually, wait - if we type in 'element', the 'element' object here changes ref every type keystroke in parent.
-  // We need to be smart.
-  // If the prompt is "use a store", the user suspects prop drilling.
-  // But let's stick to memo for now.
-  
+}: SortableElementButtonProps) => {
+  // Subscribe ATOMICALLY to this specific element
+  const element = useSvgStore(state => state.elements[elementId]);
+
   const {
     attributes,
     listeners,
@@ -73,7 +67,9 @@ const SortableElementButton = memo(({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: `element-${index}` });
+  } = useSortable({ id: elementId });
+
+  if (!element) return null;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -87,21 +83,18 @@ const SortableElementButton = memo(({
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative transition-all duration-200 ${
-        isDragging 
-          ? 'opacity-30 scale-95 z-50' 
-          : isOver 
-            ? 'scale-105 z-40' 
-            : 'opacity-100'
-      }`}
+      className={`relative transition-all duration-200 ${isDragging
+        ? 'opacity-30 scale-95 z-50'
+        : isOver
+          ? 'scale-105 z-40'
+          : 'opacity-100'
+        }`}
       {...attributes}
     >
-      {/* Drop indicator line */}
       {isOver && (
         <div className="absolute -top-1 left-0 right-0 h-0.5 bg-primary rounded-full animate-pulse" />
       )}
-      
-      {/* Order number badge */}
+
       <div className="absolute -left-2 -top-2 w-5 h-5 rounded-full bg-primary/80 text-white text-[10px] font-bold flex items-center justify-center shadow-lg border-2 border-white/20">
         {originalIndex + 1}
       </div>
@@ -110,18 +103,15 @@ const SortableElementButton = memo(({
         onClick={() => onElementClick(originalIndex)}
         variant={isSelected ? "default" : "outline"}
         size="sm"
-        className={`text-xs h-8 w-full px-1 flex items-center gap-1 justify-start transition-all ${
-          isOver ? 'border-primary border-2 shadow-lg shadow-primary/50' : ''
-        } ${extraClasses}`}
+        className={`text-xs h-8 w-full px-1 flex items-center gap-1 justify-start transition-all ${isOver ? 'border-primary border-2 shadow-lg shadow-primary/50' : ''
+          } ${extraClasses}`}
         title={`${element.tag} element${element.id ? ` (ID: ${element.id})` : ''} - Position ${originalIndex + 1}`}
       >
-        {/* Enhanced drag handle */}
-        <span 
-          className={`cursor-grab active:cursor-grabbing px-1.5 py-1 rounded transition-all ${
-            isDragging 
-              ? 'bg-primary/20' 
-              : 'hover:bg-white/20 hover:scale-110'
-          }`}
+        <span
+          className={`cursor-grab active:cursor-grabbing px-1.5 py-1 rounded transition-all ${isDragging
+            ? 'bg-primary/20'
+            : 'hover:bg-white/20 hover:scale-110'
+            }`}
           title="Drag to reorder"
           {...listeners}
         >
@@ -132,74 +122,46 @@ const SortableElementButton = memo(({
       </Button>
     </div>
   );
-}, (prev, next) => {
-  // Custom comparison function for performance
-  return (
-    prev.element.id === next.element.id && 
-    prev.element.tag === next.element.tag && 
-    prev.isSelected === next.isSelected && 
-    prev.isOver === next.isOver && 
-    prev.index === next.index &&
-    prev.element.attributes.style === next.element.attributes.style // Only re-render if visual style changes? Maybe too strict.
-    // Actually, simply checking if element ref changed is enough if parent creates new refs.
-    // But parent creates NEW objects every edit: { ...element, ...changes }
-    // So prev.element !== next.element always.
-    // If I type "Hello", only the active element changes.
-    // The others: prev.element === next.element.
-    // SO: This memo will successfuly block re-renders for NON-ACTIVE elements.
-  );
 });
 
-// Helper function to create flat display list with group awareness
 function createDisplayList(elements: SvgElement[], expandedGroups: Set<string>) {
-  const groups: Record<string, { elements: { element: SvgElement; originalIndex: number }[] }> = {};
+  const groups: Record<string, { elements: { elementId: string; originalIndex: number }[] }> = {};
   const processedIndices = new Set<number>();
   const result: {
     type: 'group' | 'element';
     id: string;
-    element?: SvgElement;
+    elementId?: string;
     originalIndex?: number;
     groupName?: string;
     isExpanded?: boolean;
     isFirst?: boolean;
     isLast?: boolean;
-    groupElements?: { element: SvgElement; originalIndex: number }[];
+    groupElements?: { elementId: string; originalIndex: number }[];
   }[] = [];
 
-  // First pass: identify all groups and their elements
   elements.forEach((element, index) => {
     const id = element.id || '';
-    
+    const internalId = (element as any).internalId || id;
     if (id.includes('.select_')) {
       const groupName = id.split('.select_')[0];
-      
       if (!groups[groupName]) {
         groups[groupName] = { elements: [] };
       }
-      
-      groups[groupName].elements.push({ element, originalIndex: index });
-      // Sort by original index to maintain order
+      groups[groupName].elements.push({ elementId: internalId, originalIndex: index });
       groups[groupName].elements.sort((a, b) => a.originalIndex - b.originalIndex);
     }
   });
 
-  // Second pass: create display list with groups and their children together
   elements.forEach((element, index) => {
-    // Skip if already processed as part of a group
-    if (processedIndices.has(index)) {
-      return;
-    }
+    if (processedIndices.has(index)) return;
 
     const id = element.id || '';
-    
+    const internalId = (element as any).internalId || id;
     if (id.includes('.select_')) {
       const groupName = id.split('.select_')[0];
-      
-      // Check if this group's main button is already added
       const groupExists = result.some(item => item.type === 'group' && item.groupName === groupName);
-      
+
       if (!groupExists) {
-        // Add main group button
         result.push({
           type: 'group',
           id: `group-${groupName}`,
@@ -207,15 +169,14 @@ function createDisplayList(elements: SvgElement[], expandedGroups: Set<string>) 
           isExpanded: expandedGroups.has(groupName),
           groupElements: groups[groupName].elements
         });
-        
-        // If group is expanded, immediately add all its children right after
+
         if (expandedGroups.has(groupName)) {
           const groupElements = groups[groupName].elements;
           groupElements.forEach((groupEl, groupIndex) => {
             result.push({
               type: 'element',
-              id: `element-${groupEl.originalIndex}`,
-              element: groupEl.element,
+              id: groupEl.elementId,
+              elementId: groupEl.elementId,
               originalIndex: groupEl.originalIndex,
               groupName,
               isFirst: groupIndex === 0,
@@ -224,18 +185,16 @@ function createDisplayList(elements: SvgElement[], expandedGroups: Set<string>) 
             processedIndices.add(groupEl.originalIndex);
           });
         } else {
-          // Even if not expanded, mark all children as processed so they don't show
           groups[groupName].elements.forEach(groupEl => {
             processedIndices.add(groupEl.originalIndex);
           });
         }
       }
     } else {
-      // Regular individual element
       result.push({
         type: 'element',
-        id: `element-${index}`,
-        element,
+        id: internalId,
+        elementId: internalId,
         originalIndex: index
       });
     }
@@ -244,19 +203,16 @@ function createDisplayList(elements: SvgElement[], expandedGroups: Set<string>) 
   return result;
 }
 
-// Component for group button (looks like regular button but represents a group)
-function GroupButton({ 
-  groupName, 
+function GroupButton({
+  groupName,
   isExpanded,
   elementCount,
-  onToggle,
-  onGroupClick 
-}: { 
+  onToggle
+}: {
   groupName: string;
   isExpanded: boolean;
   elementCount: number;
   onToggle: () => void;
-  onGroupClick?: () => void;
 }) {
   const {
     attributes,
@@ -272,11 +228,6 @@ function GroupButton({
     transition,
   };
 
-  const handleClick = () => {
-    onToggle();
-    if (onGroupClick) onGroupClick();
-  };
-
   return (
     <div
       ref={setNodeRef}
@@ -285,16 +236,13 @@ function GroupButton({
       {...attributes}
     >
       <Button
-        onClick={handleClick}
+        onClick={onToggle}
         variant={isExpanded ? "default" : "outline"}
         size="sm"
         className="text-xs h-8 w-full px-1 flex items-center gap-1 justify-start"
-        title={`${groupName} dropdown (${elementCount} options) - Click to ${isExpanded ? 'hide' : 'show'} options`}
       >
-        {/* Drag handle for the group */}
-        <span 
+        <span
           className="cursor-grab hover:bg-white/10 px-1 py-1 rounded text-xs leading-none"
-          title="Drag to reorder entire group"
           {...listeners}
         >
           ⋮⋮
@@ -307,215 +255,103 @@ function GroupButton({
   );
 }
 
-function ElementNavigationComponent({ 
-  elements, 
-  onElementClick, 
+function ElementNavigationComponent({
+  onElementClick,
   onElementReorder,
   selectedElementIndex,
-  isTextElement, 
-  isImageElement 
+  isTextElement,
+  isImageElement
 }: ElementNavigationProps) {
-  const [activeElement, setActiveElement] = useState<SvgElement | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const elementsMap = useSvgStore(state => state.elements);
+  const elementOrder = useSvgStore(state => state.elementOrder);
+  const elements = useMemo(() => elementOrder.map(id => elementsMap[id]), [elementOrder, elementsMap]);
+
+  const [activeElementId, setActiveElementId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Require 8px of movement before dragging starts
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  const allItems = useMemo(() => createDisplayList(elements, expandedGroups), [elements, expandedGroups]);
+
+  const displayList = useMemo(() => {
+    if (searchQuery.trim() === "") return allItems;
+    return allItems.filter(item => {
+      if (item.type === 'group') return item.groupName?.toLowerCase().includes(searchQuery.toLowerCase());
+      const el = elementsMap[item.elementId!];
+      const name = el?.id || `${el?.tag} ${item.originalIndex! + 1}`;
+      return name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [allItems, searchQuery, elementsMap]);
 
   if (elements.length === 0) return null;
 
   function toggleGroup(groupName: string) {
     setExpandedGroups(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(groupName)) {
-        newSet.delete(groupName);
-      } else {
-        newSet.add(groupName);
-      }
+      if (newSet.has(groupName)) newSet.delete(groupName);
+      else newSet.add(groupName);
       return newSet;
     });
   }
 
-  // Create display list based on current expanded state
-  const allItems = createDisplayList(elements, expandedGroups);
-  
-  // Filter list based on search query
-  const displayList = searchQuery.trim() === "" 
-    ? allItems 
-    : allItems.filter(item => {
-        if (item.type === 'group') {
-          return item.groupName?.toLowerCase().includes(searchQuery.toLowerCase());
-        }
-        const name = item.element?.id || `${item.element?.tag} ${item.originalIndex! + 1}`;
-        return name.toLowerCase().includes(searchQuery.toLowerCase());
-      });
-
-  const isSearching = searchQuery.trim() !== "";
 
   function handleDragStart(event: DragStartEvent) {
     const id = event.active.id as string;
-    setActiveId(id);
-    
-    if (id.startsWith('group-')) {
-      // Dragging a group, find the first element for preview
-      const groupName = id.replace('group-', '');
-      const firstGroupElement = elements.find(el => 
-        el.id && el.id.includes('.select_') && el.id.split('.select_')[0] === groupName
-      );
-      if (firstGroupElement) {
-        setActiveElement(firstGroupElement);
-      }
-    } else {
-      // Dragging an individual element
-      const elementIndex = parseInt(id.replace('element-', ''));
-      if (elementIndex >= 0 && elementIndex < elements.length) {
-        setActiveElement(elements[elementIndex]);
-      }
-    }
+    setActiveElementId(id);
   }
 
   function handleDragOver(event: DragOverEvent) {
-    const { over } = event;
-    setOverId(over?.id as string | null);
+    setOverId(event.over?.id as string | null);
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-
     if (active.id !== over?.id && over?.id) {
-      // Check if we're dragging a group or individual element
-      const activeIdStr = active.id as string;
-      const overIdStr = over.id as string;
-      
-      if (activeIdStr.startsWith('group-')) {
-        // Group-level drag and drop
-        handleGroupReorder(activeIdStr, overIdStr);
-      } else {
-        // Individual element drag and drop
-        const oldIndex = parseInt(activeIdStr.replace('element-', ''));
-        const newIndex = parseInt(overIdStr.replace('element-', ''));
-
-        if (oldIndex !== newIndex && oldIndex >= 0 && newIndex >= 0 && 
-            oldIndex < elements.length && newIndex < elements.length) {
-          const reorderedElements = arrayMove(elements, oldIndex, newIndex);
-          onElementReorder(reorderedElements);
-        }
+      const oldIdx = elementOrder.indexOf(active.id as string);
+      const newIdx = elementOrder.indexOf(over.id as string);
+      if (oldIdx !== -1 && newIdx !== -1) {
+        const newOrder = arrayMove(elementOrder, oldIdx, newIdx);
+        const newElements = newOrder.map(id => elementsMap[id]);
+        onElementReorder(newElements);
       }
     }
-    
-    setActiveElement(null);
-    setActiveId(null);
+    setActiveElementId(null);
     setOverId(null);
-  }
-
-  function handleDragCancel() {
-    setActiveElement(null);
-    setActiveId(null);
-    setOverId(null);
-  }
-
-  function handleGroupReorder(activeGroupId: string, overElementId: string) {
-    // Extract group name from ID
-    const groupName = activeGroupId.replace('group-', '');
-    
-    // Find all elements belonging to this group
-    const groupElements: { element: SvgElement; originalIndex: number }[] = [];
-    elements.forEach((element, index) => {
-      if (element.id && element.id.includes('.select_') && 
-          element.id.split('.select_')[0] === groupName) {
-        groupElements.push({ element, originalIndex: index });
-      }
-    });
-    
-    if (groupElements.length === 0) return;
-
-    // Find the target element index (could be another group or element)
-    let overIndex: number;
-    if (overElementId.startsWith('group-')) {
-      // Dropping on another group - find first element of that group
-      const overGroupName = overElementId.replace('group-', '');
-      const firstOverElement = elements.findIndex(el => 
-        el.id && el.id.includes('.select_') && el.id.split('.select_')[0] === overGroupName
-      );
-      overIndex = firstOverElement >= 0 ? firstOverElement : 0;
-    } else {
-      overIndex = parseInt(overElementId.replace('element-', ''));
-    }
-    
-    if (overIndex < 0 || overIndex >= elements.length) return;
-
-    // Get all indices of elements in the active group
-    const groupIndices = groupElements.map(e => e.originalIndex).sort((a, b) => a - b);
-    
-    // Remove group elements from original positions (in reverse order to maintain indices)
-    const newElements = [...elements];
-    groupIndices.reverse().forEach(index => {
-      newElements.splice(index, 1);
-    });
-    
-    // Adjust target index after removals
-    let adjustedTargetIndex = overIndex;
-    groupIndices.forEach(removedIndex => {
-      if (removedIndex < overIndex) {
-        adjustedTargetIndex--;
-      }
-    });
-    
-    // Insert group elements at new position
-    const elementsToInsert = groupIndices.reverse().map(index => elements[index]);
-    newElements.splice(adjustedTargetIndex, 0, ...elementsToInsert);
-    
-    onElementReorder(newElements);
   }
 
   return (
     <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-white/80">
-          Select Element to Edit
-        </h3>
-        <div className="text-xs text-white/60 flex items-center gap-2">
-          <span>{elements.length} element{elements.length !== 1 ? 's' : ''}</span>
+      <div className="flex items-center justify-between mb-3 shrink-0">
+        <h3 className="text-sm font-medium text-white/80">Select Element</h3>
+        <div className="text-xs text-white/60">
+          {elements.length} elements
         </div>
       </div>
 
-      <div className="relative mb-4">
+      <div className="relative mb-4 shrink-0">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/40" />
         <Input
-          placeholder="Search by ID or type..."
-          className="pl-9 bg-white/5 border-white/10 h-9 text-xs focus:ring-primary/50"
+          placeholder="Search..."
+          className="pl-9 bg-white/5 border-white/10 h-9 text-xs"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        {isSearching && (
-          <div className="absolute right-3 top-2.5 text-[10px] text-primary/80 font-medium">
-            Search active - Drag-and-drop disabled
-          </div>
-        )}
       </div>
-      
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
-        onDragCancel={handleDragCancel}
+        autoScroll={{ acceleration: 2 }}
       >
-        <SortableContext 
-          items={displayList.map(item => item.id)}
-          strategy={rectSortingStrategy}
-        >
+        <SortableContext items={displayList.map(item => item.id)} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 auto-rows-fr">
             {displayList.map((item) => {
               if (item.type === 'group') {
@@ -528,83 +364,35 @@ function ElementNavigationComponent({
                     onToggle={() => toggleGroup(item.groupName!)}
                   />
                 );
-              } else {
-                // Regular element or select option
-                const isSelected = selectedElementIndex === item.originalIndex;
-                const itemId = item.id;
-                const isOver = overId === itemId && activeId !== itemId;
-                
-                if (item.groupName) {
-                  // This is a select option - add visual group indicators
-                  return (
-                    <div key={itemId} className="relative w-full">
-                      {/* Left bracket for first element */}
-                      {item.isFirst && (
-                        <div className="absolute -left-2 top-1/2 -translate-y-1/2 z-10">
-                          <div className="text-primary font-bold text-lg leading-none">⌊</div>
-                        </div>
-                      )}
-                      
-                      <SortableElementButton
-                        element={item.element!}
-                        index={item.originalIndex!}
-                        originalIndex={item.originalIndex!}
-                        isSelected={isSelected}
-                        isTextElement={isTextElement}
-                        isImageElement={isImageElement}
-                        onElementClick={onElementClick}
-                        extraClasses="bg-primary/10 border-primary/40"
-                        isOver={isOver}
-                      />
-                      
-                      {/* Right bracket for last element */}
-                      {item.isLast && (
-                        <div className="absolute -right-2 top-1/2 -translate-y-1/2 z-10">
-                          <div className="text-primary font-bold text-lg leading-none">⌋</div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                } else {
-                  // Regular individual element
-                  return (
-                    <SortableElementButton
-                      key={itemId}
-                      element={item.element!}
-                      index={item.originalIndex!}
-                      originalIndex={item.originalIndex!}
-                      isSelected={isSelected}
-                      isTextElement={isTextElement}
-                      isImageElement={isImageElement}
-                      onElementClick={onElementClick}
-                      isOver={isOver}
-                    />
-                  );
-                }
               }
+              const isSelected = selectedElementIndex === item.originalIndex;
+              const isOver = overId === item.id && activeElementId !== item.id;
+              return (
+                <div key={item.id} className="relative w-full">
+                  {item.isFirst && <div className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 text-primary font-bold">⌊</div>}
+                  <SortableElementButton
+                    elementId={item.elementId!}
+                    originalIndex={item.originalIndex!}
+                    isSelected={isSelected}
+                    isTextElement={isTextElement}
+                    isImageElement={isImageElement}
+                    onElementClick={onElementClick}
+                    isOver={isOver}
+                    extraClasses={item.groupName ? "bg-primary/10 border-primary/40" : ""}
+                  />
+                  {item.isLast && <div className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 text-primary font-bold">⌋</div>}
+                </div>
+              );
             })}
           </div>
         </SortableContext>
-        
+
         <DragOverlay>
-          {activeElement ? (
-            <div className="transform rotate-3 scale-110 transition-transform">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8 px-1 flex items-center gap-1 shadow-2xl border-2 border-primary bg-black/90 backdrop-blur-sm"
-              >
-                <div className="absolute -left-2 -top-2 w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center shadow-lg border-2 border-white/20">
-                  {activeElement.id ? 
-                    (elements.findIndex(el => el.id === activeElement.id) + 1) :
-                    (elements.findIndex(el => el.tag === activeElement.tag && el.innerText === activeElement.innerText) + 1)
-                  }
-                </div>
-                <span className="text-xs leading-none">⋮⋮</span>
-                <span>{isTextElement(activeElement) ? '📝' : isImageElement(activeElement) ? '🖼️' : '🔧'}</span>
-                <span className="truncate max-w-20 font-semibold">
-                  {activeElement.id || `${activeElement.tag}`}
-                </span>
+          {activeElementId && elementsMap[activeElementId] ? (
+            <div className="transform rotate-3 scale-110 opacity-80">
+              <Button variant="default" size="sm" className="h-8 gap-2">
+                <span>⋮⋮</span>
+                <span>{elementsMap[activeElementId].id || elementsMap[activeElementId].tag}</span>
               </Button>
             </div>
           ) : null}

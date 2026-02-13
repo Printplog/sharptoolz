@@ -12,37 +12,36 @@ export function useSvgLiveUpdate(
   highlightId?: string | null,
   overrideElement?: SvgElement | null
 ) {
-  // Track previous highlight to clear it efficiently without scanning the whole tree
   const prevHighlightIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
-    
+
     // 1. Clear previous highlight
     if (prevHighlightIdRef.current && prevHighlightIdRef.current !== highlightId) {
       try {
-        const prevEl = containerRef.current.querySelector(`[id="${CSS.escape(prevHighlightIdRef.current)}"]`);
+        const prevEl = containerRef.current.querySelector(`[data-internal-id="${CSS.escape(prevHighlightIdRef.current)}"]`);
         if (prevEl) {
           (prevEl as HTMLElement).style.outline = '';
           (prevEl as HTMLElement).style.outlineOffset = '';
         }
-      } catch (e) { /* ignore invalid selector */ }
+      } catch (e) { /* ignore */ }
     }
 
     // 2. Update ONLY the active element
-    // Use overrideElement if provided and matches the highlighted ID, otherwise find in elements
-    const activeElement = (overrideElement && overrideElement.id === highlightId) 
-      ? overrideElement 
-      : (highlightId ? elements.find(e => e.id === highlightId) : null);
-    
-    if (activeElement) {
+    // highlightId is the internalId in the new store
+    const activeElement = (overrideElement && (overrideElement as any).internalId === highlightId)
+      ? overrideElement
+      : (highlightId ? elements.find(e => (e as any).internalId === highlightId) : null);
+
+    if (activeElement && highlightId) {
       try {
-        const domEl = containerRef.current.querySelector(`[id="${CSS.escape(activeElement.id!)}"]`);
+        const domEl = containerRef.current.querySelector(`[data-internal-id="${CSS.escape(highlightId)}"]`);
         if (domEl) {
           // Apply attributes
           Object.entries(activeElement.attributes).forEach(([key, value]) => {
             if (value === undefined || value === null) return;
-            
+
             if (key === 'xlink:href' || (key === 'href' && activeElement.tag === 'image')) {
               domEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', value);
             } else if (key.startsWith('xlink:')) {
@@ -53,18 +52,14 @@ export function useSvgLiveUpdate(
             }
           });
 
-          // Update text with wrapping support (Manual newlines)
+          // Update text with wrapping support
           if (activeElement.innerText !== undefined) {
-             if (activeElement.tag === 'text') {
-               // Calculate font size for pixel-based dy
-               const fontSize = parseFloat(activeElement.attributes['font-size'] || window.getComputedStyle(domEl).fontSize || '16');
-
-
-               // Use shared logic for wrapping (renders tspans)
-               applyWrappedText(domEl as SVGTextElement, activeElement.innerText, fontSize);
-             } else if (domEl.textContent !== activeElement.innerText) {
-               domEl.textContent = activeElement.innerText;
-             }
+            if (activeElement.tag === 'text') {
+              const fontSize = parseFloat(activeElement.attributes['font-size'] || window.getComputedStyle(domEl).fontSize || '16');
+              applyWrappedText(domEl as SVGTextElement, activeElement.innerText, fontSize);
+            } else if (domEl.textContent !== activeElement.innerText) {
+              domEl.textContent = activeElement.innerText;
+            }
           }
 
           // Update style
@@ -78,7 +73,7 @@ export function useSvgLiveUpdate(
     // 3. Apply New Highlight
     if (highlightId) {
       try {
-        const highlightEl = containerRef.current.querySelector(`[id="${CSS.escape(highlightId)}"]`);
+        const highlightEl = containerRef.current.querySelector(`[data-internal-id="${CSS.escape(highlightId)}"]`);
         if (highlightEl) {
           (highlightEl as HTMLElement).style.outline = '2px dashed #4ade80';
           (highlightEl as HTMLElement).style.outlineOffset = '2px';

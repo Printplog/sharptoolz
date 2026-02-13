@@ -16,6 +16,8 @@ import type { FormField, PurchasedTemplate, Template } from "@/types";
 import SvgFormTranslatorSkeleton from "./SvgFormTranslatorSkeleton";
 import PreviewSkeleton from "./PreviewSkeleton";
 import parseSvgElements from "@/lib/utils/parseSvgElements";
+import { applySvgPatches } from "@/lib/utils/applySvgPatches";
+import { toast } from "sonner";
 
 // Component to render action buttons by cloning and connecting to FormPanel buttons
 function ActionButtonsRenderer() {
@@ -148,29 +150,30 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   const [svgContent, setSvgContent] = useState<string>("");
   const [isSvgFetching, setIsSvgFetching] = useState<boolean>(false);
 
-  // Handle fetching SVG content from the new svg_url in template data
   useEffect(() => {
-    if (isLoading || !data) return;
-
-    if (data.svg) {
-      setSvgContent(data.svg);
-      return;
-    }
-
-    if (data.svg_url) {
+    // FIGMA-STYLE: Only fetch if we have a URL and haven't loaded the content yet.
+    // This prevents the loading skeleton from flickering when patches are saved.
+    if (data?.svg_url && !svgContent) {
       setIsSvgFetching(true);
       fetch(data.svg_url)
-        .then(r => r.text())
-        .then(t => {
-          setSvgContent(t);
+        .then(r => {
+          if (!r.ok) throw new Error("Failed to fetch SVG file");
+          return r.text();
+        })
+        .then(text => {
+          // FIGMA-STYLE: Merge original file with database patches
+          const patchedBase = applySvgPatches(text, data.svg_patches || []);
+          setSvgContent(patchedBase);
           setIsSvgFetching(false);
+          console.log('[SvgFormTranslator] Base SVG loaded and patched.');
         })
         .catch(e => {
           console.error("Failed to fetch SVG", e);
+          toast.error("Cloud storage sync failed. Retrying...");
           setIsSvgFetching(false);
         });
     }
-  }, [data, isLoading]);
+  }, [data?.svg_url, isLoading]);
 
   // Initialize fields immediately when template data loads (before SVG)
   useEffect(() => {

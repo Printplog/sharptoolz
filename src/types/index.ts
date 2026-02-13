@@ -57,6 +57,12 @@ export interface SelectOption {
   displayText?: string; // Original text content from SVG element (preserves case)
 }
 
+export interface SvgPatch {
+  id: string;
+  attribute: string;
+  value: any;
+}
+
 export interface FormField {
   id: string; // Base field ID (e.g., "Product_Name", "Gender")
   name: string; // Display name (e.g., "Product Name", "Gender")
@@ -124,26 +130,24 @@ export type Font = {
 };
 
 export type Template = {
-  id?: string;
+  id: string;
   name: string;
-  svg: string;
+  svg_file?: string;
+  svg_url?: string;
+  svg_patches: SvgPatch[];
   form_fields: FormField[];
-  type: "tool";
-  tool?: string;
+  type: "tool" | "design";
+  tool?: string | Tool;
   hot: boolean;
-  category?: string; // Category ID
+  category?: string;
   tutorial?: Tutorial;
-  tutorial_url?: string;
-  tutorial_title?: string;
   keywords: string[];
   fonts?: Font[];
-  font_ids?: string[];
   created_at: string;
   updated_at: string;
   is_active: boolean;
   banner: string;
   tool_price?: number;
-  svg_url?: string;
 };
 
 export interface AuditLog {
@@ -159,7 +163,6 @@ export interface AuditLog {
 
 export type TemplateUpdatePayload = {
   name: string;
-  svg: string;
   banner?: File | null | string;
   hot?: boolean;
   tool?: string;
@@ -168,6 +171,7 @@ export type TemplateUpdatePayload = {
   keywords?: string[];
   is_active?: boolean;
   fontIds?: string[];
+  svg_patch?: SvgPatch[];
 };
 
 export type CreateDocument = {
@@ -182,10 +186,12 @@ export type PurchasedTemplate = {
   name: string;
   tool_price?: number;
 
-  svg: string;
-  form_fields: FormField[]; // adjust type if fields are structured
+  svg_file?: string;
+  svg_url?: string;
+  svg_patches: SvgPatch[];
+  form_fields: FormField[];
   test: boolean;
-  error_message: string | null; // Error message if any, null if no error
+  error_message: string | null;
 
   tracking_id: string | null;
   status: string;
@@ -197,7 +203,6 @@ export type PurchasedTemplate = {
   field_updates?: FieldUpdate[];
 
   updated_at: string;
-  svg_url?: string;
 };
 
 export type CryptoPaymentData = {

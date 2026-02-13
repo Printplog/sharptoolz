@@ -66,7 +66,7 @@ export default function ToolsList({ hot }: Props) {
 
   if (!hot && toolCategories && filteredTools.length > 0) {
     filteredTools.forEach((template) => {
-      const toolId = template.tool;
+      const toolId = typeof template.tool === 'object' ? template.tool.id : template.tool;
       if (toolId) {
         const toolCategory = toolCategories.find(t => t.id === toolId);
         if (toolCategory) {

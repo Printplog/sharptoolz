@@ -57,12 +57,15 @@ export default function DocumentCard({ doc }: Props) {
               loading="lazy"
             />
           </div>
-        ) : doc.svg ? (
-          <div
-            className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full rounded-lg overflow-hidden mask-b-to-[80%]"
-            dangerouslySetInnerHTML={{ __html: doc.svg }}
-            aria-label="SVG Preview"
-          />
+        ) : doc.svg_url ? (
+          <div className="h-full rounded-lg overflow-hidden bg-black/30">
+            <img
+              src={doc.svg_url}
+              alt={`${doc.name} preview`}
+              className="w-full h-full object-contain rounded-lg"
+              loading="lazy"
+            />
+          </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-black/10">
             No Preview

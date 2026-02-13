@@ -1,16 +1,5 @@
 import { useState, useCallback } from 'react';
-
-/**
- * Interface for a single change in the SVG patch.
- * 'id' is the ID of the SVG element that was changed.
- * 'attribute' is the name of the attribute that was changed (e.g., 'text', 'x', 'fill').
- * 'value' is the new value for that attribute.
- */
-export interface SvgPatch {
-  id: string;
-  attribute: string;
-  value: any;
-}
+import type { SvgPatch } from '@/types';
 
 /**
  * Custom hook to manage a list of SVG patch updates.

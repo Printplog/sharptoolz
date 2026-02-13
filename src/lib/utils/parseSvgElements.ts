@@ -3,6 +3,7 @@
 export type SvgElement = {
   id?: string;
   originalId?: string;
+  internalId?: string;
   tag: string;
   attributes: Record<string, string>;
   innerText?: string;
@@ -21,12 +22,12 @@ export default function parseSvgElements(svgString: string): SvgElement[] {
       const attributes = Object.fromEntries(
         Array.from(el.attributes).map(attr => [attr.name, attr.value])
       );
-      
+
       // Smart text extraction: Handle tspans for multiline text
       // Smart text extraction: Handle mixed content (text nodes + tspans)
       let innerText = "";
       const hasTspans = el.querySelectorAll("tspan").length > 0;
-      
+
       if (hasTspans) {
         // Iterate child nodes to capture text in order, handling both direct text and tspans
         innerText = Array.from(el.childNodes)
@@ -45,7 +46,7 @@ export default function parseSvgElements(svgString: string): SvgElement[] {
         // Fallback to standard textContent for simple elements
         innerText = el.textContent?.trim() || "";
       }
-      
+
       innerText = innerText.length > 0 ? innerText : "";
 
       // Exclude element if its text content is exactly "test document" (case-insensitive)

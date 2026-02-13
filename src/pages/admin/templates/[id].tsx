@@ -5,10 +5,12 @@ import type { Template, TemplateUpdatePayload } from '@/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import { useRef, useState, useEffect } from 'react';
 import { Save, Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSvgPatch, type SvgPatch } from '@/hooks/useSvgPatch';
+import { useSvgPatch } from '@/hooks/useSvgPatch';
+import type { SvgPatch } from '@/types';
 
 
 export default function SvgTemplateEditor() {
@@ -33,9 +35,8 @@ export default function SvgTemplateEditor() {
   const [isFetchingSvg, setIsFetchingSvg] = useState(false);
 
   useEffect(() => {
-    if (data?.svg) {
-      setSvgContent(data.svg);
-    } else if (data?.svg_url) {
+    // Only fetch the base file if it exists and we haven't loaded it yet
+    if (data?.svg_url && !svgContent) {
       setIsFetchingSvg(true);
       fetch(data.svg_url)
         .then(res => {
@@ -43,8 +44,11 @@ export default function SvgTemplateEditor() {
           return res.text();
         })
         .then(text => {
-          setSvgContent(text);
+          // FIGMA-STYLE: Merge base file with DB patches on initial load
+          const patchedSvg = applySvgPatches(text, data.svg_patches || []);
+          setSvgContent(patchedSvg);
           setIsFetchingSvg(false);
+          console.log('[SvgTemplateEditor] Base SVG loaded and patched.');
         })
         .catch(err => {
           console.error("Failed to load SVG file from URL", err);
@@ -52,7 +56,7 @@ export default function SvgTemplateEditor() {
           setIsFetchingSvg(false);
         });
     }
-  }, [data]);
+  }, [data?.svg_url]); // Only re-run if the URL changes
 
   // Save template mutation
   const saveMutation = useMutation({
@@ -99,7 +103,7 @@ export default function SvgTemplateEditor() {
         } else {
           console.log('[SaveMutation] Using JSON payload');
           // Otherwise, send as JSON
-          const payload: Partial<Template> & { svg_patch?: SvgPatch[] } = { // Changed type to Partial<Template>
+          const payload: any = {
             name: templateData.name,
             hot: templateData.hot || false,
             is_active: templateData.is_active !== undefined ? templateData.is_active : true,
@@ -136,44 +140,28 @@ export default function SvgTemplateEditor() {
     onSuccess: async (updatedTemplate: Template) => {
       toast.success('Template saved successfully!');
 
-      const hadPatches = patches.length > 0;
-      clearPatch(); // Clear patches after successful save
-
-      // If we applied patches, the stored file changed
-      // We must re-fetch the SVG content from the URL to bypass any stale cache
-      if (hadPatches && updatedTemplate.svg_url) {
-        setIsFetchingSvg(true);
-        // Force bypass cache with timestamp
-        const cacheBuster = `?t=${new Date().getTime()}`;
-        const urlToFetch = updatedTemplate.svg_url + cacheBuster;
-
-        try {
-          console.log(`[SaveMutation] Re-fetching modified SVG from: ${urlToFetch}`);
-          const res = await fetch(urlToFetch);
-          if (!res.ok) throw new Error('Failed to fetch updated SVG');
-          const text = await res.text();
-          setSvgContent(text);
-          console.log('[SaveMutation] SVG content refreshed');
-        } catch (err) {
-          console.error("Failed to refresh SVG content after save", err);
-          toast.warning("Saved successfully, but failed to reload preview. Please refresh page.");
-        } finally {
-          setIsFetchingSvg(false);
-        }
+      // FIGMA-STYLE INSTANT UPDATE:
+      // Instead of re-fetching the whole SVG file, we apply the patches we JUST sent
+      // to the current locally loaded SVG content. 
+      if (patches.length > 0) {
+        setSvgContent((prev) => applySvgPatches(prev, patches));
+        console.log('[SaveMutation] Local SVG updated with applied patches.');
       }
 
-      // Update the cache with the new metadata
+      clearPatch(); // Clear local pending patches after successful save
+
+      // Update the React Query cache with the new template data (includes new svg_patches)
       queryClient.setQueryData(["template", id], (old: Template | undefined) => {
         if (!old) return updatedTemplate;
         return {
           ...old,
-          ...updatedTemplate,
+          ...updatedTemplate, // This will have the merged svg_patches from the backend
           fonts: updatedTemplate.fonts || old.fonts,
           tutorial: updatedTemplate.tutorial || old.tutorial,
         };
       });
 
-      // Refresh listings
+      // Refresh other templates lists
       await queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
     onError: (error: Error) => {
@@ -305,7 +293,7 @@ export default function SvgTemplateEditor() {
             banner={data.banner}
             hot={data.hot}
             isActive={data.is_active}
-            tool={data.tool}
+            tool={typeof data.tool === 'object' ? data.tool.id : data.tool}
             tutorial={data.tutorial}
             keywords={data.keywords}
             isLoading={saveMutation.isPending}
