@@ -56,14 +56,15 @@ export const useSvgStore = create<SvgStore>()(
             allElements.forEach((domEl) => {
                 const tag = domEl.tagName.toLowerCase();
                 const nonEditableTags = [
-                    'defs', 'style', 'linearGradient', 'radialGradient',
-                    'pattern', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feFlood', 'feComposite', 'feMerge', 'feMergeNode'
+                    'defs', 'style', 'lineargradient', 'radialgradient',
+                    'pattern', 'clippath', 'mask', 'filter', 'fegaussianblur', 'feoffset', 'feflood', 'fecomposite', 'femerge', 'femergenode'
                 ];
 
                 if (nonEditableTags.includes(tag)) return;
 
                 let id = domEl.getAttribute("id");
-                let baseId = id || `el-${tag}`;
+                let internalIdAttr = domEl.getAttribute("data-internal-id");
+                let baseId = id || internalIdAttr || `el-${tag}`;
                 idCount[baseId] = (idCount[baseId] || 0) + 1;
                 const internalId = idCount[baseId] > 1 ? `${baseId}_${idCount[baseId]}` : baseId;
 

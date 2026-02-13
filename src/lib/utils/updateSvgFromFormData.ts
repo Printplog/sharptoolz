@@ -8,9 +8,23 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgRaw, "image/svg+xml");
 
+  // Helper to find element by ID or internal ID
+  const findElement = (id: string) => {
+    if (!id) return null;
+    return (
+      doc.getElementById(id) ||
+      doc.querySelector(`[data-internal-id="${id}"]`) ||
+      doc.querySelector(`[name="${id}"]`) ||
+      doc.querySelector(`[data-name="${id}"]`)
+    );
+  };
+
   fields.forEach((field) => {
-    // For select fields, svgElementId is not used (it's just a group, not a real SVG element)
-    if ((!field.svgElementId || !doc.getElementById(field.svgElementId)) && !(field.options && field.options.length > 0)) {
+    const targetId = field.svgElementId || field.id;
+    const el = findElement(targetId);
+
+    // For select fields, we check options instead of a single element mapping
+    if (!el && !(field.options && field.options.length > 0)) {
       return;
     }
 
@@ -33,7 +47,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
           allFieldValues[f.id] = f.currentValue ?? "";
         }
       });
-      
+
       // Use extraction utility to handle dependencies with patterns
       value = extractFromDependency(field.dependsOn, allFieldValues);
     } else {
@@ -45,7 +59,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
       // Hide all options first
       field.options.forEach((opt: any) => {
         if (opt.svgElementId) {
-          const optEl = doc.getElementById(opt.svgElementId);
+          const optEl = findElement(opt.svgElementId);
           if (optEl) {
             // Use SVG attributes that will be preserved in serialization
             optEl.setAttribute("opacity", "0");
@@ -62,7 +76,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
         (opt: any) => String(opt.value) === String(field.currentValue)
       );
       if (selectedOption?.svgElementId) {
-        const selectedEl = doc.getElementById(selectedOption.svgElementId);
+        const selectedEl = findElement(selectedOption.svgElementId);
         if (selectedEl) {
           // Use SVG attributes that will be preserved in serialization
           selectedEl.setAttribute("opacity", "1");
@@ -73,7 +87,6 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
       }
     } else {
       // Handle other field types
-      const el = field.svgElementId ? doc.getElementById(field.svgElementId) : null;
       if (!el) return;
 
       switch (field.type) {
@@ -109,14 +122,14 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
           // This is reversed from normal hide behavior because these elements are overlays
           // Determine visibility based on the value
           let isVisible = false;
-          
+
           if (typeof value === 'boolean') {
             isVisible = value;
           } else if (typeof value === 'string') {
             const valueStr = value.toLowerCase();
             isVisible = valueStr === "true" || valueStr === "1";
           }
-          
+
           el.setAttribute("opacity", isVisible ? "1" : "0");
           el.setAttribute("visibility", isVisible ? "visible" : "hidden");
           if (isVisible) {
@@ -134,7 +147,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
           }
 
           const maxWidth = parseFloat(field.attributes?.['data-max-width'] || '0');
-          
+
           // Use improved font style detection that checks attributes, inline styles, and class definitions
           const { fontSize, fontFamily } = getSvgElementStyle(el, doc);
 
@@ -146,41 +159,41 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
             // Helper for measuring text width (canvas or heuristic)
             const getWidth = (str: string) => {
-               // Try to use canvas if available in this context
-               if (typeof document !== 'undefined') {
-                   const canvas = document.createElement('canvas');
-                   const ctx = canvas.getContext('2d');
-                   if (ctx) {
-                       ctx.font = `${fontSize}px ${fontFamily}`; // Use actual font family
-                       return ctx.measureText(str).width;
-                   }
-               }
-               // Fallback
-               return str.length * fontSize * 0.6;
+              // Try to use canvas if available in this context
+              if (typeof document !== 'undefined') {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  ctx.font = `${fontSize}px ${fontFamily}`; // Use actual font family
+                  return ctx.measureText(str).width;
+                }
+              }
+              // Fallback
+              return str.length * fontSize * 0.6;
             };
 
             for (const line of userLines) {
               // If max width is set, wrap this line further
               if (maxWidth > 0 && line.trim() !== "") {
-                  const words = line.split(/\s+/);
-                  let currentLine = "";
-                  
-                  for (const word of words) {
-                    const testLine = currentLine ? `${currentLine} ${word}` : word;
-                    if (getWidth(testLine) > maxWidth && currentLine !== "") {
-                      finalLines.push(currentLine);
-                      currentLine = word;
-                    } else {
-                      currentLine = testLine;
-                    }
+                const words = line.split(/\s+/);
+                let currentLine = "";
+
+                for (const word of words) {
+                  const testLine = currentLine ? `${currentLine} ${word}` : word;
+                  if (getWidth(testLine) > maxWidth && currentLine !== "") {
+                    finalLines.push(currentLine);
+                    currentLine = word;
+                  } else {
+                    currentLine = testLine;
                   }
-                  if (currentLine) finalLines.push(currentLine);
+                }
+                if (currentLine) finalLines.push(currentLine);
               } else {
-                  // No wrapping, just keep the line (even if empty, to preserve spacing)
-                  finalLines.push(line);
+                // No wrapping, just keep the line (even if empty, to preserve spacing)
+                finalLines.push(line);
               }
             }
-            
+
             // If the resulting lines are empty (e.g. empty input), ensure at least one empty line to clear
             if (finalLines.length === 0) finalLines = [""];
 

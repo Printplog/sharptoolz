@@ -166,21 +166,6 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     if (!internalId) return;
 
     updateElementInStore(internalId, updates);
-
-    // Track patches for backend sync
-    if (onPatchUpdate && element.id) {
-      const elementId = element.id;
-      if (updates.innerText !== undefined && updates.innerText !== element.innerText) {
-        onPatchUpdate({ id: elementId, attribute: 'innerText', value: updates.innerText });
-      }
-      if (updates.attributes) {
-        Object.entries(updates.attributes).forEach(([key, value]) => {
-          if (value !== element.attributes[key]) {
-            onPatchUpdate({ id: elementId, attribute: key, value });
-          }
-        });
-      }
-    }
   }
 
   const handleSave = useCallback(() => {

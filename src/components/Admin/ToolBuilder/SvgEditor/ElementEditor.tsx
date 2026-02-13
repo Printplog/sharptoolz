@@ -144,7 +144,7 @@ interface ElementEditorProps {
 }
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
-  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onLiveUpdate }, ref) => {
+  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onLiveUpdate, onPatchUpdate }, ref) => {
     const [localElement, setLocalElement] = useState<SvgElement>(element);
     const [isDirty, setIsDirty] = useState(false);
     const [showGenBuilder, setShowGenBuilder] = useState(false);
@@ -193,6 +193,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     }, [localElement, onLiveUpdate, element]);
 
     const handleApply = () => {
+      console.log('[ElementEditor] Apply button clicked - generating patches');
       const finalElement = { ...localElement };
       const href = finalElement.attributes.href;
 
@@ -205,6 +206,35 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
             'xlink:href': originalBase64
           };
         }
+      }
+
+      // CRITICAL: Generate patches when Apply is clicked
+      // Use internalId because it exists for all elements (native id or generated)
+      if (onPatchUpdate && element.internalId) {
+        const patchId = element.internalId;
+        console.log(`[ElementEditor] Comparing changes for patches (ID: ${patchId})...`);
+
+        // Compare text content
+        if (finalElement.innerText !== element.innerText) {
+          console.log(`[ElementEditor] Text changed: "${element.innerText}" → "${finalElement.innerText}"`);
+          onPatchUpdate({ id: patchId, attribute: 'innerText', value: finalElement.innerText });
+        }
+
+        // Compare ID change (this is a special case, rarely happens for generated IDs)
+        if (finalElement.id !== element.id) {
+          console.log(`[ElementEditor] ID changed: "${element.id}" → "${finalElement.id}"`);
+          onPatchUpdate({ id: patchId, attribute: 'id', value: finalElement.id });
+        }
+
+        // Compare all attributes
+        Object.entries(finalElement.attributes).forEach(([key, value]) => {
+          if (value !== element.attributes[key]) {
+            console.log(`[ElementEditor] Attribute ${key} changed: "${element.attributes[key]}" → "${value}"`);
+            onPatchUpdate({ id: patchId, attribute: key, value });
+          }
+        });
+
+        console.log('[ElementEditor] Patches generated successfully');
       }
 
       onUpdate(index, finalElement);
