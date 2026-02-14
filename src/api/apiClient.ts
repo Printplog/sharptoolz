@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:8003";
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, 
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -15,13 +15,13 @@ export const apiClient = axios.create({
 
 const refreshToken = async () => {
   const response = await axios.post(
-    `${BASE_URL}accounts/refresh-token/`,
+    `${BASE_URL}/accounts/refresh-token/`,
     {},
     {
-      withCredentials: true, 
+      withCredentials: true,
     }
   );
-  return response.data; 
+  return response.data;
 };
 
 

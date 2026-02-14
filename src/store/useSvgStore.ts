@@ -31,6 +31,9 @@ interface SvgStore {
     undo: () => void;
     redo: () => void;
 
+    // Reset
+    reset: () => void;
+
     // Getters
     getOrderedElements: () => SvgElement[];
 }
@@ -225,6 +228,15 @@ export const useSvgStore = create<SvgStore>()(
             });
             set({ elements: newElements, elementOrder: newOrder, historyIndex: nextIndex });
         },
+
+        reset: () => set({
+            originalSvg: '',
+            elements: {},
+            elementOrder: [],
+            selectedElementId: null,
+            history: [],
+            historyIndex: -1
+        }),
 
         getOrderedElements: () => {
             const { elements, elementOrder } = get();

@@ -112,8 +112,13 @@ export const getTemplateForAdmin = async (id: string): Promise<Template> => {
   return res.data;
 }
 
-// Alias to fix potential import issues on frontend
-export const getTemplateSvgForAdmin = getTemplateForAdmin;
+// Proxy function to fetch SVG content directly via backend to avoid CORS issues
+export const getTemplateSvgForAdmin = async (id: string): Promise<string> => {
+  const res = await apiClient.get(`/admin/templates/${id}/svg/`, {
+    responseType: 'text'
+  });
+  return res.data;
+}
 
 
 export const purchaseTemplate = async (data: Partial<PurchasedTemplate>): Promise<{ id: string }> => {

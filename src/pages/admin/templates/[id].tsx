@@ -1,4 +1,4 @@
-import { getTemplateForAdmin, updateTemplateForAdmin } from '@/api/apiEndpoints';
+import { getTemplateForAdmin, updateTemplateForAdmin, getTemplateSvgForAdmin } from '@/api/apiEndpoints';
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import errorMessage from '@/lib/utils/errorMessage';
 import type { Template, TemplateUpdatePayload } from '@/types';
@@ -11,6 +11,7 @@ import { Save, Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSvgPatch } from '@/hooks/useSvgPatch';
 import type { SvgPatch } from '@/types';
+import { useSvgStore } from '@/store/useSvgStore';
 
 
 export default function SvgTemplateEditor() {
@@ -18,6 +19,11 @@ export default function SvgTemplateEditor() {
   const queryClient = useQueryClient();
   const svgEditorRef = useRef<SvgEditorRef>(null);
   const { patches, addPatch, clearPatch } = useSvgPatch();
+  const resetStore = useSvgStore(state => state.reset);
+
+  useEffect(() => {
+    resetStore();
+  }, [resetStore]);
 
   // Fetch template data (without SVG for faster loading)
   const { data, isLoading } = useQuery<Template>({
@@ -38,25 +44,41 @@ export default function SvgTemplateEditor() {
     // Only fetch the base file if it exists and we haven't loaded it yet
     if (data?.svg_url && !svgContent) {
       setIsFetchingSvg(true);
-      fetch(data.svg_url)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-          return res.text();
-        })
-        .then(text => {
+
+      const loadSvg = async () => {
+        try {
+          // Try direct URL first as it's now absolute and signed
+          if (!data?.svg_url) throw new Error("No SVG URL found");
+
+          console.log('[SvgTemplateEditor] Fetching SVG via direct URL...');
+          const res = await fetch(data.svg_url);
+          if (!res.ok) throw new Error(`HTTP status: ${res.status}`);
+          const text = await res.text();
+
           // FIGMA-STYLE: Merge base file with DB patches on initial load
           const patchedSvg = applySvgPatches(text, data.svg_patches || []);
           setSvgContent(patchedSvg);
+          console.log('[SvgTemplateEditor] Base SVG loaded via direct URL and patched.');
+        } catch (err) {
+          console.warn("Failed to load SVG via direct URL, trying backend proxy...", err);
+          try {
+            // Fallback to proxy if direct fetch fails (e.g. CORS or localhost issues)
+            const text = await getTemplateSvgForAdmin(id as string);
+            const patchedSvg = applySvgPatches(text, data.svg_patches || []);
+            setSvgContent(patchedSvg);
+            console.log('[SvgTemplateEditor] Base SVG loaded via proxy and patched.');
+          } catch (proxyErr) {
+            console.error("Failed to load SVG content from all sources", proxyErr);
+            toast.error("Cloud storage sync failed. Please check CORS settings.");
+          }
+        } finally {
           setIsFetchingSvg(false);
-          console.log('[SvgTemplateEditor] Base SVG loaded and patched.');
-        })
-        .catch(err => {
-          console.error("Failed to load SVG file from URL", err);
-          toast.error("Failed to load SVG content from cloud storage");
-          setIsFetchingSvg(false);
-        });
+        }
+      };
+
+      loadSvg();
     }
-  }, [data?.svg_url]); // Only re-run if the URL changes
+  }, [data?.svg_url, id]); // Only re-run if the URL changes
 
   // Save template mutation
   const saveMutation = useMutation({
