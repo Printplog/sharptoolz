@@ -4,10 +4,12 @@ import ToolGridSkeleton from "@/components/ToolGridSkeleton";
 import type { Template, Tool } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Search } from "lucide-react";
+import { useState, useMemo } from "react";
 
 export default function ToolTemplates() {
   const { id } = useParams<{ id: string }>();
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch tool data
   const { data: tool, isLoading: toolLoading } = useQuery<Tool>({
@@ -26,6 +28,17 @@ export default function ToolTemplates() {
   );
 
   const isLoading = toolLoading || templatesLoading;
+
+  // Filter templates based on search query
+  const filteredTemplates = useMemo(() => {
+    if (!templates) return [];
+    if (!searchQuery.trim()) return templates;
+
+    const query = searchQuery.toLowerCase();
+    return templates.filter((template) =>
+      template.name.toLowerCase().includes(query)
+    );
+  }, [templates, searchQuery]);
 
   if (isLoading) {
     return <ToolGridSkeleton />;
@@ -70,12 +83,40 @@ export default function ToolTemplates() {
         </Link>
       </div>
 
+      {/* Search Bar */}
+      {templates && templates.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+          <input
+            type="text"
+            placeholder="Search templates..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Templates Grid */}
-      {templates && templates.length > 0 ? (
+      {filteredTemplates.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templates.map((template) => (
+          {filteredTemplates.map((template) => (
             <ToolCard key={template.id} tool={template} />
           ))}
+        </div>
+      ) : searchQuery ? (
+        <div className="text-center py-12">
+          <p className="text-white/60">
+            No templates found matching "{searchQuery}"
+          </p>
         </div>
       ) : (
         <div className="text-center py-12 flex flex-col items-center gap-4">
