@@ -281,32 +281,6 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       <div className="flex flex-wrap items-center justify-between pb-5 border-b border-white/10 gap-4">
         <h2 className="text-xl font-semibold">SVG Editor</h2>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1 gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-white/40 hover:text-white"
-              onClick={() => undo()}
-              title="Undo (Ctrl+Z)"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11" /></svg>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-white/40 hover:text-white"
-              onClick={() => redo()}
-              title="Redo (Ctrl+Y)"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 14 5-5-5-5" /><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13" /></svg>
-            </Button>
-            <div className="w-[1px] h-4 bg-white/10 mx-1" />
-            <div className="flex items-center gap-2 px-2 py-1 text-[10px] text-white/20 whitespace-nowrap hidden sm:flex">
-              <span className="flex items-center gap-1"><kbd className="bg-white/5 px-1 rounded border border-white/5">Ctrl</kbd>Z</span>
-              <span className="flex items-center gap-1"><kbd className="bg-white/5 px-1 rounded border border-white/5">Ctrl</kbd>Y</span>
-            </div>
-          </div>
-
           <SettingsDialog
             name={name}
             keywords={keywordsTags}

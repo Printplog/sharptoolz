@@ -5,6 +5,7 @@ import EditableInput from "./EditableInput";
 import SuggestionsDropdown from "./SuggestionsDropdown";
 import ValueInputDialog from "./ValueInputDialog";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
+import { parseId } from "../idExtensions";
 
 interface IdEditorProps {
   value: string;
