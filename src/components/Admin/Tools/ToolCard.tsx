@@ -7,6 +7,7 @@ import { deleteTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { LazyImage } from "@/components/LazyImage";
 
 type Props = {
   tool: Template;
@@ -78,11 +79,10 @@ export default function ToolCard({ tool }: Props) {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           {tool.banner ? (
-            <img
+            <LazyImage
               src={tool.banner}
               alt={`${tool.name} banner`}
-              loading="lazy"
-              className="w-full h-full object-cover"
+              className="w-full h-full"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/10 flex items-center justify-center">
