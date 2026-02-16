@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DownloadDocDialog } from "./DownloadDoc";
 import { useDialogStore } from "@/store/dialogStore";
+import { LazyImage } from "@/components/LazyImage";
 
 type Props = {
   doc: PurchasedTemplate;
@@ -50,20 +51,18 @@ export default function DocumentCard({ doc }: Props) {
       >
         {doc.banner ? (
           <div className="h-full rounded-lg overflow-hidden bg-black/30">
-            <img
+            <LazyImage
               src={doc.banner}
               alt={`${doc.name} preview`}
-              className="w-full h-full object-cover rounded-lg"
-              loading="lazy"
+              className="w-full h-full"
             />
           </div>
         ) : doc.svg_url ? (
           <div className="h-full rounded-lg overflow-hidden bg-black/30">
-            <img
+            <LazyImage
               src={doc.svg_url}
               alt={`${doc.name} preview`}
-              className="w-full h-full object-contain rounded-lg"
-              loading="lazy"
+              className="w-full h-full object-contain"
             />
           </div>
         ) : (

@@ -1,3 +1,4 @@
+import { LazyImage } from "@/components/LazyImage";
 import { Link } from "react-router-dom";
 
 interface LogoProps {
@@ -8,12 +9,11 @@ interface LogoProps {
 
 export default function Logo({ icon = false, noLink = false, size = 30 }: LogoProps) {
   const logoImg = (
-    <img
+    <LazyImage
       src="/logo.png"
       alt="SharpToolz Logo"
       className="object-contain"
-      style={{ width: size, height: size }}
-      loading="lazy"
+      style={{ width: size, height: size, backgroundColor: 'transparent' }}
     />
   );
 

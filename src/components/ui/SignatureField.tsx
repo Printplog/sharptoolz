@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 import { Upload, Pen, Type, RotateCcw, Check, X, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import SignatureCanvas from 'react-signature-canvas';
+import { LazyImage } from '@/components/LazyImage';
 
 interface SignatureFieldProps {
   fieldId: string;
@@ -438,10 +439,11 @@ export default function SignatureField({
                     }`}
                     onClick={disabled ? undefined : () => handlePresetSignature(preset)}
                   >
-                    <img
+                    <LazyImage
                       src={preset.data}
                       alt={preset.name}
                       className="w-20 h-8 object-contain bg-white rounded border"
+                      placeholderColor="#ffffff"
                     />
                     <span className="text-white flex-1">{preset.name}</span>
                     <Button

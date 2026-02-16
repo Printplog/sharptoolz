@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { useEffect } from "react";
 import type { Tool, Font } from "@/types";
+import { LazyImage } from "@/components/LazyImage";
 
 // ------------------------
 // Validation Schema
@@ -459,7 +460,7 @@ export default function BuilderDialog() {
                     type="image/svg+xml"
                     className="w-full h-40 max-h-60 border border-white/10 rounded-md p-2 bg-white/5"
                   >
-                    <img
+                    <LazyImage
                       src="/fallback.png"
                       alt="SVG Preview"
                       className="w-full h-full object-contain"
@@ -512,7 +513,7 @@ export default function BuilderDialog() {
               {/* Banner Preview */}
               {bannerFile && (
                 <div className="mt-2">
-                  <img
+                  <LazyImage
                     src={URL.createObjectURL(bannerFile)}
                     alt="Banner Preview"
                     className="w-full h-40 max-h-60 border border-white/10 rounded-md p-2 bg-white/5 object-contain"

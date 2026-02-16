@@ -12,6 +12,7 @@ import { getTutorials, getTools } from "@/api/apiEndpoints";
 import type { Tutorial, Tool } from "@/types";
 import { getYouTubeThumbnailFromUrl } from "@/lib/utils/youtube";
 import { useState } from "react";
+import { LazyImage } from "@/components/LazyImage";
 
 export default function Tutorials() {
   const [selectedToolId, setSelectedToolId] = useState<string>("all");
@@ -37,7 +38,7 @@ export default function Tutorials() {
         <h1 className="text-xl font-semibold pb-4 border-b border-white/10">
           Tutorials for all tools
         </h1>
-        
+
         <Select
           value={selectedToolId}
           onValueChange={setSelectedToolId}
@@ -65,10 +66,11 @@ export default function Tutorials() {
           </div>
         ) : filteredTutorials.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <img 
-              src="/not-found.svg" 
-              alt="No tutorials found" 
-              className="w-64 h-64 -mb-3 opacity-80"
+            <LazyImage
+              src="/not-found.svg"
+              alt="No tutorials found"
+              className="w-64 h-64 -mb-3"
+              placeholderColor="transparent"
             />
             <h3 className="text-xl font-semibold mb-2 text-white/90">No tutorials found</h3>
             <p className="text-white/60">
@@ -88,10 +90,10 @@ export default function Tutorials() {
                 >
                   {thumbnailUrl ? (
                     <div className="h-60 w-full rounded-lg overflow-hidden relative">
-                      <img
+                      <LazyImage
                         src={thumbnailUrl}
                         alt={displayTitle}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full"
                         onError={(e) => {
                           // Fallback to placeholder if thumbnail fails to load
                           (e.target as HTMLImageElement).style.display = 'none';
@@ -102,7 +104,7 @@ export default function Tutorials() {
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                             <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M8 5v14l11-7z"/>
+                              <path d="M8 5v14l11-7z" />
                             </svg>
                           </div>
                         </div>

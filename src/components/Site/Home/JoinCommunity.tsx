@@ -1,3 +1,4 @@
+import { LazyImage } from "@/components/LazyImage";
 import { Button } from "@/components/ui/button";
 import SectionPadding from "@/layouts/SectionPadding";
 import { cn } from "@/lib/utils";
@@ -5,7 +6,12 @@ import { cn } from "@/lib/utils";
 export default function JoinCommunity() {
   return (
     <SectionPadding className="py-20 flex flex-col items-center justify-center text-center space-y-6">
-      <img src="/whatsapp.png" alt="Megaphone icon" className="w-[200px]" />
+      <LazyImage
+        src="/whatsapp.png"
+        alt="Megaphone icon"
+        className="w-[200px]"
+        style={{ backgroundColor: 'transparent' }}
+      />
 
       <h2 className="text-3xl font-bold text-foreground">
         Join Our WhatsApp Community

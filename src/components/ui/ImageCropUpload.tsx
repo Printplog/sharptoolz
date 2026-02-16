@@ -12,6 +12,7 @@ import { Client } from "@gradio/client";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import "react-image-crop/dist/ReactCrop.css";
+import { LazyImage } from "@/components/LazyImage";
 
 interface ImageCropUploadProps {
   fieldId: string;
@@ -488,11 +489,10 @@ export default function ImageCropUpload({
           ) : (
             <div className="relative w-full h-full group">
               <div className="w-full h-full overflow-auto custom-scrollbar">
-                <img
+                <LazyImage
                   src={currentValue}
                   alt="Uploaded image"
                   className="w-full max-w-none h-auto object-contain min-h-full"
-                  loading="lazy"
                 />
               </div>
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
@@ -714,11 +714,10 @@ export default function ImageCropUpload({
 
                     {/* Image Display with Label */}
                     <div className="bg-black/30 border border-white/10 rounded-lg p-4 flex items-center justify-center relative">
-                      <img
+                      <LazyImage
                         src={(showOriginal ? originalImage : bgRemovedImage) || ''}
                         alt={showOriginal ? "Original" : "Background Removed"}
                         className="w-auto h-[500px]"
-                        loading="lazy"
                       />
                       {/* Image Label */}
                       <div className="absolute top-6 left-6 flex items-center gap-2 bg-black/80 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm">

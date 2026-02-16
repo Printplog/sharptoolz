@@ -1,5 +1,6 @@
 // BannerUpload component for uploading banner images
 import { Label } from "@/components/ui/label";
+import { LazyImage } from "@/components/LazyImage";
 
 interface BannerUploadProps {
   bannerImage: string;
@@ -34,9 +35,9 @@ export default function BannerUpload({ bannerImage, onUpload }: BannerUploadProp
           {bannerImage ? (
             <div className="relative w-full h-full group">
               <div className="w-full h-full overflow-auto custom-scrollbar">
-                <img 
-                  src={bannerImage} 
-                  alt="Banner preview" 
+                <LazyImage
+                  src={bannerImage}
+                  alt="Banner preview"
                   className="w-full max-w-none h-auto object-contain min-h-full"
                 />
               </div>

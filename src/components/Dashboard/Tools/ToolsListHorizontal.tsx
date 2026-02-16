@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { LazyImage } from "@/components/LazyImage";
 
 export default function ToolsListHorizontal() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -56,11 +57,10 @@ export default function ToolsListHorizontal() {
           >
             {tool.banner ? (
               <div className="mask-b-to-[80%] h-full bg-white rounded-lg overflow-hidden">
-                <img
+                <LazyImage
                   src={tool.banner}
                   alt={`${tool.name} banner`}
-                  className="w-full h-full object-cover rounded-lg"
-                  loading="lazy"
+                  className="w-full h-full"
                 />
               </div>
             ) : (
@@ -121,11 +121,10 @@ export default function ToolsListHorizontal() {
           </DialogHeader>
           {previewImage && (
             <div className="w-full overflow-auto flex-1 min-h-0 custom-scrollbar">
-              <img
+              <LazyImage
                 src={previewImage}
                 alt="Template preview"
-                className="h-full w-auto object-contain rounded-lg border border-white/10"
-                loading="lazy"
+                className="h-full w-auto rounded-lg border border-white/10"
               />
             </div>
           )}
