@@ -79,47 +79,66 @@ const SortableElementButton = memo(({
   const displayName = element.id || `${element.tag} ${originalIndex + 1}`;
   const elementType = isTextElement(element) ? '📝' : isImageElement(element) ? '🖼️' : '🔧';
 
+  // Snippet preview for text elements
+  const snippet = element.innerText ? (element.innerText.length > 25 ? element.innerText.slice(0, 25) + "..." : element.innerText) : null;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative transition-all duration-200 ${isDragging
+      className={`relative transition-all duration-200 group ${isDragging
         ? 'opacity-30 scale-95 z-50'
         : isOver
-          ? 'scale-105 z-40'
+          ? 'translate-y-1 z-40'
           : 'opacity-100'
         }`}
-      {...attributes}
     >
       {isOver && (
-        <div className="absolute -top-1 left-0 right-0 h-0.5 bg-primary rounded-full animate-pulse" />
+        <div className="absolute -top-1 left-0 right-0 h-0.5 bg-primary rounded-full animate-pulse z-50" />
       )}
 
-      <div className="absolute -left-2 -top-2 w-5 h-5 rounded-full bg-primary/80 text-white text-[10px] font-bold flex items-center justify-center shadow-lg border-2 border-white/20">
-        {originalIndex + 1}
-      </div>
-
-      <Button
+      <div
         onClick={() => onElementClick(originalIndex)}
-        variant={isSelected ? "default" : "outline"}
-        size="sm"
-        className={`text-xs h-8 w-full px-1 flex items-center gap-1 justify-start transition-all ${isOver ? 'border-primary border-2 shadow-lg shadow-primary/50' : ''
+        className={`flex items-center gap-3 w-full p-2.5 rounded-xl border transition-all cursor-pointer group/card ${isSelected
+          ? "bg-primary/20 border-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)]"
+          : "bg-white/[0.03] border-white/5 hover:border-white/20 hover:bg-white/[0.06]"
           } ${extraClasses}`}
-        title={`${element.tag} element${element.id ? ` (ID: ${element.id})` : ''} - Position ${originalIndex + 1}`}
       >
-        <span
-          className={`cursor-grab active:cursor-grabbing px-1.5 py-1 rounded transition-all ${isDragging
-            ? 'bg-primary/20'
-            : 'hover:bg-white/20 hover:scale-110'
-            }`}
-          title="Drag to reorder"
+        {/* Drag Handle */}
+        <div
+          {...attributes}
           {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1.5 -ml-1 rounded-md hover:bg-white/10 text-white/20 hover:text-white/60 transition-colors"
         >
           <span className="text-xs leading-none inline-block">⋮⋮</span>
-        </span>
-        <span className="pointer-events-none">{elementType}</span>
-        <span className="truncate flex-1 text-left pointer-events-none">{displayName}</span>
-      </Button>
+        </div>
+
+        {/* Index Badge */}
+        <div className={`w-6 h-6 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-bold border transition-colors ${isSelected ? "bg-primary text-black border-primary" : "bg-white/5 text-white/40 border-white/10"
+          }`}>
+          {originalIndex + 1}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="text-[10px] opacity-60 grayscale group-hover/card:grayscale-0 transition-all">{elementType}</span>
+            <span className={`text-[11px] font-semibold truncate ${isSelected ? "text-primary" : "text-white/80"}`}>
+              {displayName}
+            </span>
+          </div>
+          {snippet && (
+            <div className={`text-[9px] truncate font-mono h-3 ${isSelected ? "text-white/60" : "text-white/30"}`}>
+              "{snippet}"
+            </div>
+          )}
+        </div>
+
+        {/* Selection Indicator */}
+        {isSelected && (
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+        )}
+      </div>
     </div>
   );
 });
@@ -324,83 +343,102 @@ function ElementNavigationComponent({
     setOverId(null);
   }
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll selected element into view
+  useEffect(() => {
+    if (selectedElementIndex !== null && scrollRef.current) {
+      const container = scrollRef.current;
+      const selectedEl = container.querySelector(`[data-index="${selectedElementIndex}"]`);
+      if (selectedEl) {
+        selectedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [selectedElementIndex]);
+
   return (
-    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3 shrink-0">
-        <h3 className="text-sm font-medium text-white/80">Select Element</h3>
-        <div className="text-xs text-white/60">
-          {elements.length} elements
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col h-full">
+      <div className="flex items-center justify-between mb-3 shrink-0 px-1">
+        <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest">Select Element</h3>
+        <div className="text-[10px] font-mono text-white/30 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+          {elements.length} TOTAL
         </div>
       </div>
 
       <div className="relative mb-4 shrink-0">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/40" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
         <Input
-          placeholder="Search..."
-          className="pl-9 bg-white/5 border-white/10 h-9 text-xs"
+          placeholder="Search by ID or content..."
+          className="pl-9 bg-white/5 border-white/10 h-10 text-xs rounded-xl focus:ring-primary/20 transition-all"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-        autoScroll={{ acceleration: 2 }}
-      >
-        <SortableContext items={displayList.map(item => item.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 auto-rows-fr">
-            {displayList.map((item) => {
-              if (item.type === 'group') {
+      <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar pr-1 -mr-1">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+          autoScroll={{ acceleration: 2 }}
+        >
+          <SortableContext items={displayList.map(item => item.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2 pb-4">
+              {displayList.length > 0 ? displayList.map((item) => {
+                if (item.type === 'group') {
+                  return (
+                    <GroupButton
+                      key={item.id}
+                      groupName={item.groupName!}
+                      isExpanded={item.isExpanded!}
+                      elementCount={item.groupElements?.length || 0}
+                      onToggle={() => toggleGroup(item.groupName!)}
+                    />
+                  );
+                }
+                const isSelected = selectedElementIndex === item.originalIndex;
+                const isOver = overId === item.id && activeElementId !== item.id;
                 return (
-                  <GroupButton
-                    key={item.id}
-                    groupName={item.groupName!}
-                    isExpanded={item.isExpanded!}
-                    elementCount={item.groupElements?.length || 0}
-                    onToggle={() => toggleGroup(item.groupName!)}
-                  />
+                  <div key={item.id} className="relative w-full" data-index={item.originalIndex}>
+                    {item.isFirst && (
+                      <div className="absolute -left-1 top-0 bottom-0 w-0.5 bg-primary/40 rounded-full z-10" />
+                    )}
+                    <SortableElementButton
+                      elementId={item.elementId!}
+                      originalIndex={item.originalIndex!}
+                      isSelected={isSelected}
+                      isTextElement={isTextElement}
+                      isImageElement={isImageElement}
+                      onElementClick={onElementClick}
+                      isOver={isOver}
+                      extraClasses={item.groupName ? "bg-primary/5 border-primary/20 ml-2" : ""}
+                    />
+                  </div>
                 );
-              }
-              const isSelected = selectedElementIndex === item.originalIndex;
-              const isOver = overId === item.id && activeElementId !== item.id;
-              return (
-                <div key={item.id} className="relative w-full">
-                  {item.isFirst && <div className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 text-primary font-bold">⌊</div>}
-                  <SortableElementButton
-                    elementId={item.elementId!}
-                    originalIndex={item.originalIndex!}
-                    isSelected={isSelected}
-                    isTextElement={isTextElement}
-                    isImageElement={isImageElement}
-                    onElementClick={onElementClick}
-                    isOver={isOver}
-                    extraClasses={item.groupName ? "bg-primary/10 border-primary/40" : ""}
-                  />
-                  {item.isLast && <div className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 text-primary font-bold">⌋</div>}
+              }) : (
+                <div className="py-12 text-center">
+                  <p className="text-xs text-white/20 italic">No matching elements found</p>
                 </div>
-              );
-            })}
-          </div>
-        </SortableContext>
-
-        <DragOverlay>
-          {activeElementId && elementsMap[activeElementId] ? (
-            <div className="transform rotate-3 scale-110 opacity-80">
-              <Button variant="default" size="sm" className="h-8 gap-2">
-                <span>⋮⋮</span>
-                <span>{elementsMap[activeElementId].id || elementsMap[activeElementId].tag}</span>
-              </Button>
+              )}
             </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-    </div>
-  );
+          </SortableContext>
+
+          <DragOverlay>
+            {activeElementId && elementsMap[activeElementId] ? (
+              <div className="transform rotate-3 scale-110 opacity-80">
+                <Button variant="default" size="sm" className="h-8 gap-2">
+                  <span>⋮⋮</span>
+                  <span>{elementsMap[activeElementId].id || elementsMap[activeElementId].tag}</span>
+                </Button>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
+      );
 }
 
-const ElementNavigation = memo(ElementNavigationComponent);
-export default ElementNavigation;
+      const ElementNavigation = memo(ElementNavigationComponent);
+      export default ElementNavigation;
