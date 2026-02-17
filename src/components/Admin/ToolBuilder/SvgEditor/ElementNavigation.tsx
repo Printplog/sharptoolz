@@ -72,7 +72,7 @@ const SortableElementButton = memo(({
   if (!element) return null;
 
   const style = {
-    transform: CSS.Translate.toString(transform),
+    transform: CSS.Transform.toString(transform),
     transition: isDragging ? transition : undefined,
   };
 
@@ -224,7 +224,7 @@ function GroupButton({
   } = useSortable({ id: `group-${groupName}` });
 
   const style = {
-    transform: CSS.Translate.toString(transform),
+    transform: CSS.Transform.toString(transform),
     transition,
   };
 
@@ -355,7 +355,7 @@ function ElementNavigationComponent({
         />
       </div>
 
-      <div ref={scrollRef} className="pr-1 -mr-1">
+      <div ref={scrollRef} className="max-h-[500px] overflow-y-auto custom-scrollbar pr-1 -mr-1">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -404,12 +404,12 @@ function ElementNavigationComponent({
             </div>
           </SortableContext>
 
-          <DragOverlay>
+          <DragOverlay AdjustTarget={true} dropAnimation={null}>
             {activeElementId && elementsMap[activeElementId] ? (
-              <div className="transform rotate-3 scale-110 opacity-80">
-                <Button variant="default" size="sm" className="h-8 gap-2">
-                  <span>⋮⋮</span>
-                  <span>{elementsMap[activeElementId].id || elementsMap[activeElementId].tag}</span>
+              <div className="opacity-90 cursor-grabbing">
+                <Button variant="default" size="sm" className="h-8 gap-2 shadow-2xl border-2 border-primary/50 ring-4 ring-primary/20">
+                  <span className="text-xs">⋮⋮</span>
+                  <span className="truncate max-w-[150px]">{elementsMap[activeElementId].id || elementsMap[activeElementId].tag}</span>
                 </Button>
               </div>
             ) : null}
