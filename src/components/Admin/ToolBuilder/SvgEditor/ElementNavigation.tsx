@@ -1,5 +1,5 @@
 // ElementNavigation component for selecting SVG elements
-import { useState, memo, useMemo } from "react";
+import { useState, memo, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
