@@ -21,7 +21,6 @@ export default function Templates() {
 
   const filteredData = data?.filter(t =>
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

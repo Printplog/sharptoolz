@@ -404,7 +404,7 @@ function ElementNavigationComponent({
             </div>
           </SortableContext>
 
-          <DragOverlay AdjustTarget={true} dropAnimation={null}>
+          <DragOverlay dropAnimation={null}>
             {activeElementId && elementsMap[activeElementId] ? (
               <div className="opacity-90 cursor-grabbing">
                 <Button variant="default" size="sm" className="h-8 gap-2 shadow-2xl border-2 border-primary/50 ring-4 ring-primary/20">
