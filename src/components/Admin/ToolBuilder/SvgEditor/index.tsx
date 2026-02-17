@@ -341,7 +341,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
           ) : (
             <>
               <CollapsiblePanel id="elements" title="Elements" defaultOpen={true} className="max-h-[50vh] flex flex-col" forceMount={true}>
-                <div className="overflow-y-auto custom-scrollbar max-h-[40vh] pr-2">
+                <div className="overflow-y-auto custom-scrollbar max-h-[40vh] pr-2 pt-4 pl-4">
                   <ElementNavigation
                     onElementClick={handleElementSelect}
                     onElementReorder={handleElementReorder}

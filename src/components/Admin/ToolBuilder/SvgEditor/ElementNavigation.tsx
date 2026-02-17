@@ -355,7 +355,7 @@ function ElementNavigationComponent({
         />
       </div>
 
-      <div ref={scrollRef} className="max-h-[500px] overflow-y-auto custom-scrollbar pr-1 -mr-1">
+      <div ref={scrollRef} className="max-h-[500px] overflow-y-auto custom-scrollbar pr-1 -mr-1 pt-4 pl-4">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
