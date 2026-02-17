@@ -288,8 +288,6 @@ function ElementNavigationComponent({
     });
   }, [allItems, searchQuery, elementsMap]);
 
-  if (elements.length === 0) return null;
-
   function toggleGroup(groupName: string) {
     setExpandedGroups(prev => {
       const newSet = new Set(prev);
@@ -298,7 +296,6 @@ function ElementNavigationComponent({
       return newSet;
     });
   }
-
 
   function handleDragStart(event: DragStartEvent) {
     const id = event.active.id as string;
@@ -336,6 +333,8 @@ function ElementNavigationComponent({
       }
     }
   }, [selectedElementIndex]);
+
+  if (elements.length === 0) return null;
 
   return (
     <div className="bg-white/5 border border-white/10 rounded-lg p-4">
