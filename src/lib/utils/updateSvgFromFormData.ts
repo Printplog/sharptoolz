@@ -113,15 +113,27 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
               const rotationStr = `rotate(${rotation}, ${cx}, ${cy})`;
 
-              // Preservation: If there's an existing transform (like translate), append rotation
+              // Preservation: Replace existing rotate(...) or append to existing transforms
               const existingTransform = el.getAttribute("transform") || "";
-              if (existingTransform && !existingTransform.includes("rotate(")) {
-                el.setAttribute("transform", `${existingTransform} ${rotationStr}`.trim());
+              let newTransform = "";
+
+              if (existingTransform.includes("rotate(")) {
+                newTransform = existingTransform.replace(/rotate\([^)]+\)/g, rotationStr);
               } else {
-                el.setAttribute("transform", rotationStr);
+                newTransform = `${existingTransform} ${rotationStr}`.trim();
               }
+              el.setAttribute("transform", newTransform);
             } else {
-              el.removeAttribute("transform");
+              // Only remove the rotate(...) part if it exists, preserve others (like translations)
+              const existing = el.getAttribute("transform") || "";
+              if (existing.includes("rotate(")) {
+                const cleaned = existing.replace(/rotate\([^)]+\)/g, "").trim();
+                if (cleaned) {
+                  el.setAttribute("transform", cleaned);
+                } else {
+                  el.removeAttribute("transform");
+                }
+              }
             }
 
             // Keep style-based properties for browser-side preview compatibility
