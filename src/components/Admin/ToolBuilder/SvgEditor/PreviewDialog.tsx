@@ -6,6 +6,7 @@ import useToolStore from "@/store/formStore";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import { injectFontsIntoSVG } from "@/lib/utils/fontInjector";
 import type { FormField, Font } from "@/types";
+import { BASE_URL } from "@/api/apiClient";
 
 interface PreviewDialogProps {
   open: boolean;
@@ -39,7 +40,7 @@ export default function PreviewDialog({
         const initSvg = async () => {
           let newSvgText = svgContent;
           if (fonts && fonts.length > 0) {
-            newSvgText = await injectFontsIntoSVG(newSvgText, fonts);
+            newSvgText = await injectFontsIntoSVG(newSvgText, fonts, BASE_URL);
           }
           setSvgText(newSvgText);
           setSvgRaw(newSvgText);
@@ -87,7 +88,7 @@ export default function PreviewDialog({
 
         // Inject fonts if available
         if (fonts && fonts.length > 0) {
-          newSvgText = await injectFontsIntoSVG(newSvgText, fonts);
+          newSvgText = await injectFontsIntoSVG(newSvgText, fonts, BASE_URL);
         }
 
         // Update all state in the correct order - same as user side

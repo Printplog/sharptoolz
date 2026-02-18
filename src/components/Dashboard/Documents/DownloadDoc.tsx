@@ -17,6 +17,7 @@ import { getPurchasedTemplate } from "@/api/apiEndpoints";
 import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import DownloadProgress from "./DownloadProgress";
+import { BASE_URL } from "@/api/apiClient";
 
 interface DownloadDocDialogProps {
   svg?: string; // Optional - kept for backward compatibility but not sent to backend
@@ -103,7 +104,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
 
             // Inject fonts (with base64 embedding for downloads)
             if (data.fonts && data.fonts.length > 0) {
-              workingSvg = await injectFontsIntoSVG(workingSvg, data.fonts, undefined, true);
+              workingSvg = await injectFontsIntoSVG(workingSvg, data.fonts, BASE_URL, true);
             }
 
             setCurrentSvg(workingSvg);
