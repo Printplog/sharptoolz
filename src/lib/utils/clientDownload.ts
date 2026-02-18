@@ -99,7 +99,15 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
     const processedSvg = serializer.serializeToString(doc);
 
     const v = await Canvg.from(ctx, processedSvg);
-    await v.render();
+
+    // Explicitly set scale to match our higher-resolution canvas
+    // This ensures coordinate accuracy and prevents the "shift" issue
+    v.render({
+        ignoreAnimation: true,
+        ignoreMouse: true,
+        scaleWidth: canvas.width,
+        scaleHeight: canvas.height
+    });
 
     return canvas;
 }
