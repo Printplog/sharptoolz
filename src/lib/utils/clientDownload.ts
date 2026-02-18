@@ -90,23 +90,19 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
         height = parseInt(svgEl.getAttribute('height') || '600');
     }
 
-    // Set canvas size (increase for better quality)
-    const scale = 2;
-    canvas.width = width * scale;
-    canvas.height = height * scale;
+    // Set canvas size (1:1 with SVG dimensions)
+    canvas.width = width;
+    canvas.height = height;
 
     const serializer = new XMLSerializer();
     const processedSvg = serializer.serializeToString(doc);
 
     const v = await Canvg.from(ctx, processedSvg);
 
-    // Use proper await and canvg's built-in scaling for high-res
-    // This is more reliable for coordinate mapping than manual ctx.scale
+    // Use proper await for rendering
     await v.render({
         ignoreAnimation: true,
-        ignoreMouse: true,
-        scaleWidth: canvas.width,
-        scaleHeight: canvas.height
+        ignoreMouse: true
     });
 
 

@@ -88,19 +88,20 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
             // Apply patches if it's not already patched
             workingSvg = applySvgPatches(workingSvg, data.svg_patches || []);
 
-            // Populate SVG with saved form data (CRITICAL FIX)
-            if (data.field_updates || data.form_fields) {
-              const updates = data.field_updates || data.form_fields || [];
-              // Convert to FormField[]-like structure for the utility
-              const fieldsForUpdate: any[] = updates.map((u: any) => ({
-                id: u.id,
-                currentValue: u.value,
-                type: 'text', // Default to text
-                options: u.options // Pass options if available (for select fields)
-              }));
+            // Populate SVG with saved form data (Preserving metadata like rotation/type)
+            const baseFields = data.form_fields || [];
+            const updates = data.field_updates || [];
 
-              workingSvg = updateSvgFromFormData(workingSvg, fieldsForUpdate);
-            }
+            const fieldsForUpdate = baseFields.map(field => {
+              const update = updates.find((u: any) => u.id === field.id);
+              return {
+                ...field,
+                currentValue: update ? update.value : field.currentValue,
+                touched: true // Ensure the value is applied during patch
+              };
+            });
+
+            workingSvg = updateSvgFromFormData(workingSvg, fieldsForUpdate);
 
             // Inject fonts (with base64 embedding for downloads)
             if (data.fonts && data.fonts.length > 0) {
