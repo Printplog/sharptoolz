@@ -5,6 +5,17 @@ import type { Font } from "@/types";
 
 type FontFaceTuple = { family: string; css: string };
 
+const buildFontFace = (family: string, url: string, format: string) => {
+  return `@font-face {
+  font-family: "${family}";
+  src: url("${url}") format("${format}");
+  font-weight: normal;
+  font-style: normal;
+}`;
+};
+
+
+
 const normalizeFontKey = (name?: string | null) =>
   (name || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
 

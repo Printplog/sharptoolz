@@ -1,7 +1,7 @@
 import { isAdminRoute } from './helpers';
 
 export function disableRightClick() {
-    document.addEventListener('contextmenu', (e) => {
+    document.addEventListener('contextmenu', (e: MouseEvent) => {
         if (isAdminRoute()) return;
 
         const target = e.target as HTMLElement;
@@ -15,12 +15,11 @@ export function disableRightClick() {
         }
 
         e.preventDefault();
-        return false;
     }, { capture: true });
 }
 
 export function disableTextSelection() {
-    document.addEventListener('selectstart', (e) => {
+    document.addEventListener('selectstart', (e: Event) => {
         const target = e.target as HTMLElement;
         if (
             target.tagName === 'INPUT' ||
@@ -31,7 +30,6 @@ export function disableTextSelection() {
             return;
         }
         e.preventDefault();
-        return false;
     }, { capture: true });
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -55,14 +53,12 @@ export function disableTextSelection() {
 }
 
 export function disableDragAndDrop() {
-    document.addEventListener('dragstart', (e) => {
+    document.addEventListener('dragstart', (e: DragEvent) => {
         e.preventDefault();
-        return false;
     }, { capture: true });
 
-    document.addEventListener('drop', (e) => {
+    document.addEventListener('drop', (e: DragEvent) => {
         e.preventDefault();
-        return false;
     }, { capture: true });
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -82,7 +78,7 @@ export function disableDragAndDrop() {
 }
 
 export function disableCopyPaste() {
-    document.addEventListener('copy', (e) => {
+    document.addEventListener('copy', (e: ClipboardEvent) => {
         const target = e.target as HTMLElement;
         if (
             target.tagName === 'INPUT' ||
@@ -94,11 +90,11 @@ export function disableCopyPaste() {
         }
         e.clipboardData?.setData('text/plain', '');
         e.preventDefault();
-        return false;
     }, { capture: true });
 
-    ['cut', 'paste'].forEach(event => {
-        document.addEventListener(event, (e) => {
+    const events: Array<keyof DocumentEventMap> = ['cut', 'paste'];
+    events.forEach(event => {
+        document.addEventListener(event, (e: Event) => {
             const target = e.target as HTMLElement;
             if (
                 target.tagName === 'INPUT' ||
@@ -109,7 +105,6 @@ export function disableCopyPaste() {
                 return;
             }
             e.preventDefault();
-            return false;
         }, { capture: true });
     });
 }

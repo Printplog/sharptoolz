@@ -16,9 +16,9 @@ interface PreviewDialogProps {
   fonts?: Font[];
 }
 
-export default function PreviewDialog({ 
-  open, 
-  onOpenChange, 
+export default function PreviewDialog({
+  open,
+  onOpenChange,
   svgContent,
   formFields,
   templateName,
@@ -36,14 +36,17 @@ export default function PreviewDialog({
         // No form fields available - template needs to be saved first
         console.warn('No form fields available. Please save the template first to preview.');
         // Still show the SVG but without form fields
-        let newSvgText = svgContent;
-        if (fonts && fonts.length > 0) {
-          newSvgText = injectFontsIntoSVG(newSvgText, fonts);
-        }
-        setSvgText(newSvgText);
-        setSvgRaw(newSvgText);
-        setName(templateName);
-        setFields([], false);
+        const initSvg = async () => {
+          let newSvgText = svgContent;
+          if (fonts && fonts.length > 0) {
+            newSvgText = await injectFontsIntoSVG(newSvgText, fonts);
+          }
+          setSvgText(newSvgText);
+          setSvgRaw(newSvgText);
+          setName(templateName);
+          setFields([], false);
+        };
+        initSvg();
         return;
       }
 
@@ -52,14 +55,14 @@ export default function PreviewDialog({
       const initializedFields = formFields.map((field: FormField) => {
         // Ensure type is "gen" if generationRule exists (backend should set this, but double-check)
         const fieldType = field.generationRule ? (field.type === "gen" ? "gen" : "gen") : field.type;
-        
+
         return {
           ...field, // Preserve ALL properties including generationRule, dependsOn, dateFormat, etc.
           type: fieldType, // Ensure type is "gen" if generationRule exists
           currentValue: field.currentValue ?? field.defaultValue ?? "",
         };
       });
-      
+
       // Debug: Log fields with generationRule to verify they're being passed correctly
       const genFields = initializedFields.filter(f => f.generationRule || f.type === "gen");
       if (genFields.length > 0) {
@@ -77,51 +80,57 @@ export default function PreviewDialog({
           fields: formFields.map(f => ({ id: f.id, type: f.type, hasGenerationRule: !!f.generationRule }))
         });
       }
-      
-      // Process SVG with current field values
-      let newSvgText = updateSvgFromFormData(svgContent, initializedFields);
-      
-      // Inject fonts if available
-      if (fonts && fonts.length > 0) {
-        newSvgText = injectFontsIntoSVG(newSvgText, fonts);
-      }
-      
-      // Update all state in the correct order - same as user side
-      setSvgText(newSvgText);
-      setSvgRaw(newSvgText);
-      setName(templateName);
-      setFields(initializedFields, false);
+
+      const updateSvg = async () => {
+        // Process SVG with current field values
+        let newSvgText = updateSvgFromFormData(svgContent, initializedFields);
+
+        // Inject fonts if available
+        if (fonts && fonts.length > 0) {
+          newSvgText = await injectFontsIntoSVG(newSvgText, fonts);
+        }
+
+        // Update all state in the correct order - same as user side
+        setSvgText(newSvgText);
+        setSvgRaw(newSvgText);
+        setName(templateName);
+        setFields(initializedFields, false);
+      };
+      updateSvg();
     }
   }, [open, formFields, svgContent, templateName, fonts, setFields, setSvgRaw, setName]);
 
   // Update live preview when fields change - exact same logic as user side
   useEffect(() => {
     if (!svgText || !fields || fields.length === 0) return;
-    
-    try {
-      // Get base SVG without fonts (fonts are already injected in svgText)
-      // We need to re-inject fonts after updating form data
-      let baseSvg = svgContent;
-      const updatedSvg = updateSvgFromFormData(baseSvg, fields);
-      
-      // Re-inject fonts after updating form data
-      let finalSvg = updatedSvg;
-      if (fonts && fonts.length > 0) {
-        finalSvg = injectFontsIntoSVG(updatedSvg, fonts);
+
+    const updatePreview = async () => {
+      try {
+        // Get base SVG without fonts (fonts are already injected in svgText)
+        // We need to re-inject fonts after updating form data
+        let baseSvg = svgContent;
+        const updatedSvg = updateSvgFromFormData(baseSvg, fields);
+
+        // Re-inject fonts after updating form data
+        let finalSvg = updatedSvg;
+        if (fonts && fonts.length > 0) {
+          finalSvg = await injectFontsIntoSVG(updatedSvg, fonts);
+        }
+
+        setLivePreview(finalSvg);
+      } catch (error) {
+        console.error('Error updating SVG preview:', error);
+        setLivePreview(svgText); // Fallback to original SVG
       }
-      
-      setLivePreview(finalSvg);
-    } catch (error) {
-      console.error('Error updating SVG preview:', error);
-      setLivePreview(svgText); // Fallback to original SVG
-    }
+    };
+    updatePreview();
   }, [fields, svgText, svgContent, fonts]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className="!w-[70%] !max-w-[70%] h-[80vh] p-0 bg-gray-900 z-[999999] overflow-hidden custom-scrollbar" 
-        style={{ 
+      <DialogContent
+        className="!w-[70%] !max-w-[70%] h-[80vh] p-0 bg-gray-900 z-[999999] overflow-hidden custom-scrollbar"
+        style={{
           zIndex: 999999
         }}
       >
@@ -155,7 +164,7 @@ export default function PreviewDialog({
                 <TabsTrigger value="preview">Preview</TabsTrigger>
               </TabsList>
               <TabsContent value="editor">
-                <FormPanel 
+                <FormPanel
                   test={false}
                   tutorial={undefined}
                   templateId={undefined}
