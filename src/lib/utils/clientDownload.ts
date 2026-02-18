@@ -17,109 +17,148 @@ interface GenerateOptions {
  * Detects if the browser is Opera Mini
  */
 export function isOperaMini(): boolean {
+    const userAgent = navigator.userAgent;
     return (
-        navigator.userAgent.includes('Opera Mini') ||
-        (window as any).operamini !== undefined
+        userAgent.includes('Opera Mini') ||
+        (window as any).operamini !== undefined ||
+        userAgent.includes('OPios') || // Opera on iOS
+        userAgent.includes('OPR/')   // Opera for Android
     );
 }
 
 /**
- * Modifies SVG viewBox to create a split (half) view
+ * Detects if the browser is Safari (including iOS Safari)
  */
-function splitSvg(svgDoc: Document, direction: 'horizontal' | 'vertical', side: 'front' | 'back'): { width: number, height: number } {
-    const svgEl = svgDoc.documentElement;
-    const originalWidth = parseInt(svgEl.getAttribute('width') || '800');
-    const originalHeight = parseInt(svgEl.getAttribute('height') || '600');
+export function isSafari(): boolean {
+    const userAgent = navigator.userAgent;
+    return (
+        userAgent.includes('Safari') &&
+        !userAgent.includes('Chrome') &&
+        !userAgent.includes('Chromium')
+    );
+}
 
-    // If no viewBox, set one based on original dimensions
-    let viewBoxStr = svgEl.getAttribute('viewBox');
-    if (!viewBoxStr) {
-        viewBoxStr = `0 0 ${originalWidth} ${originalHeight}`;
-        svgEl.setAttribute('viewBox', viewBoxStr);
-    }
+/**
+ * Extracted dimensions from SVG
+ */
+function getSvgDimensions(doc: Document): { width: number, height: number } {
+    const svgEl = doc.documentElement;
+    let width = parseInt(svgEl.getAttribute('width') || '');
+    let height = parseInt(svgEl.getAttribute('height') || '');
 
-    const [vx, vy, vw, vh] = viewBoxStr.split(' ').map(Number);
-    let newWidth = originalWidth;
-    let newHeight = originalHeight;
-
-    if (direction === 'horizontal') {
-        const halfVh = vh / 2;
-        newHeight = originalHeight / 2;
-        if (side === 'front') {
-            svgEl.setAttribute('viewBox', `${vx} ${vy} ${vw} ${halfVh}`);
-        } else {
-            svgEl.setAttribute('viewBox', `${vx} ${vy + halfVh} ${vw} ${halfVh}`);
-        }
-    } else {
-        const halfVw = vw / 2;
-        newWidth = originalWidth / 2;
-        if (side === 'front') {
-            svgEl.setAttribute('viewBox', `${vx} ${vy} ${halfVw} ${vh}`);
-        } else {
-            svgEl.setAttribute('viewBox', `${vx + halfVw} ${vy} ${halfVw} ${vh}`);
+    if (isNaN(width) || isNaN(height)) {
+        const viewBox = svgEl.getAttribute('viewBox');
+        if (viewBox) {
+            const parts = viewBox.split(/[,\s]+/).map(Number);
+            if (parts.length === 4) {
+                if (isNaN(width)) width = parts[2];
+                if (isNaN(height)) height = parts[3];
+            }
         }
     }
 
-    svgEl.setAttribute('width', newWidth.toString());
-    svgEl.setAttribute('height', newHeight.toString());
-
-    return { width: newWidth, height: newHeight };
+    return {
+        width: isNaN(width) ? 800 : width,
+        height: isNaN(height) ? 600 : height
+    };
 }
 
 /**
  * Converts an SVG string to a Canvas element using native browser rendering.
- * This ensures the output matches the browser preview exactly.
+ * Supports split cropping via options.
  */
 async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTMLCanvasElement> {
-    // Parse SVG to get dimensions
     const parser = new DOMParser();
     const doc = parser.parseFromString(svg, 'image/svg+xml');
 
-    let width: number, height: number;
-    if (options?.split) {
-        const dims = splitSvg(doc, options.split.direction, options.split.side);
-        width = dims.width;
-        height = dims.height;
-    } else {
-        const svgEl = doc.documentElement;
-        width = parseInt(svgEl.getAttribute('width') || '800');
-        height = parseInt(svgEl.getAttribute('height') || '600');
+    // SAFARI FIX: Ensure the SVG has the correct namespace
+    const svgEl = doc.documentElement;
+    if (!svgEl.getAttribute('xmlns')) {
+        svgEl.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     }
+
+    const { width: fullWidth, height: fullHeight } = getSvgDimensions(doc);
 
     // High quality scaling (2x)
     const scale = 2;
-    const canvas = document.createElement('canvas');
-    canvas.width = width * scale;
-    canvas.height = height * scale;
 
-    const ctx = canvas.getContext('2d');
+    // 1. Create temporary canvas for full render
+    const fullCanvas = document.createElement('canvas');
+    fullCanvas.width = fullWidth * scale;
+    fullCanvas.height = fullHeight * scale;
+
+    const ctx = fullCanvas.getContext('2d');
     if (!ctx) throw new Error('Could not get canvas context');
 
-    // Scale the context for high-quality rasterization
+    // SAFARI FIX: Set style dimensions explicitly
+    fullCanvas.style.width = `${fullWidth}px`;
+    fullCanvas.style.height = `${fullHeight}px`;
+
     ctx.scale(scale, scale);
 
     const serializer = new XMLSerializer();
     const processedSvg = serializer.serializeToString(doc);
-
-    // Use Blob URL to load SVG into an Image element
     const blob = new Blob([processedSvg], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-
     const img = new Image();
 
-    return new Promise((resolve, reject) => {
+    // SAFARI FIX: Cross-origin attribute
+    img.crossOrigin = 'anonymous';
+
+    await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('SVG rendering timeout')), 10000);
         img.onload = () => {
-            // Draw onto canvas using native rendering engine
-            ctx.drawImage(img, 0, 0, width, height);
+            clearTimeout(timeout);
+            ctx.drawImage(img, 0, 0, fullWidth, fullHeight);
             URL.revokeObjectURL(url);
-            resolve(canvas);
+            resolve(true);
         };
         img.onerror = () => {
+            clearTimeout(timeout);
             URL.revokeObjectURL(url);
-            reject(new Error('Failed to load SVG as image for rendering. Ensure all resources (fonts, images) are base64-embedded.'));
+            reject(new Error('Failed to load SVG for rendering'));
         };
         img.src = url;
     });
+
+    // 2. Handle splitting if requested
+    if (options?.split) {
+        const direction = options.split.direction;
+        const side = options.split.side;
+
+        const targetWidth = direction === 'vertical' ? fullWidth / 2 : fullWidth;
+        const targetHeight = direction === 'horizontal' ? fullHeight / 2 : fullHeight;
+
+        const targetCanvas = document.createElement('canvas');
+        targetCanvas.width = targetWidth * scale;
+        targetCanvas.height = targetHeight * scale;
+
+        // SAFARI FIX: Set style dimensions
+        targetCanvas.style.width = `${targetWidth}px`;
+        targetCanvas.style.height = `${targetHeight}px`;
+
+        const targetCtx = targetCanvas.getContext('2d');
+        if (!targetCtx) throw new Error('Could not get target canvas context');
+
+        // Calculate source rectangle
+        let sx = 0, sy = 0;
+        if (direction === 'vertical' && side === 'back') sx = (fullWidth / 2) * scale;
+        if (direction === 'horizontal' && side === 'back') sy = (fullHeight / 2) * scale;
+
+        const sWidth = targetWidth * scale;
+        const sHeight = targetHeight * scale;
+
+        // Draw cropped section
+        targetCtx.drawImage(
+            fullCanvas,
+            sx, sy, sWidth, sHeight, // source
+            0, 0, sWidth, sHeight    // destination
+        );
+
+        return targetCanvas;
+    }
+
+    return fullCanvas;
 }
 
 /**
@@ -142,22 +181,10 @@ export async function generatePdf(svg: string, options?: GenerateOptions): Promi
     const canvas = await svgToCanvas(svg, options);
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-    // Get dimensions for PDF aspect ratio
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svg, 'image/svg+xml');
+    // Create PDF with target dimensions
+    const width = canvas.width / 2; // back to original units (ignoring 2x scale)
+    const height = canvas.height / 2;
 
-    let width, height;
-    if (options?.split) {
-        const dims = splitSvg(doc, options.split.direction, options.split.side);
-        width = dims.width;
-        height = dims.height;
-    } else {
-        const svgEl = doc.documentElement;
-        width = parseInt(svgEl.getAttribute('width') || '800');
-        height = parseInt(svgEl.getAttribute('height') || '600');
-    }
-
-    // Create PDF (orientation based on dimensions)
     const orientation = width > height ? 'l' : 'p';
     const pdf = new jsPDF({
         orientation,
@@ -185,9 +212,9 @@ export function triggerDownload(blob: Blob, filename: string) {
     document.body.appendChild(link);
     link.click();
 
-    // Small delay before cleanup for Safari
+    // Small delay before cleanup for Safari/iOS
     setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-    }, 100);
+    }, 500); // Increased delay for slower mobile browsers
 }

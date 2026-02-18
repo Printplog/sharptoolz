@@ -1,12 +1,13 @@
-import { Eye, Loader, Trash2 } from "lucide-react";
+import { Eye, Loader, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PurchasedTemplate } from "@/types";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ConfirmAction } from "@/components/ConfirmAction";
 import { deletePurchasedTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LazyImage } from "@/components/LazyImage";
+import { DownloadDocDialog } from "./DownloadDoc";
 
 type Props = {
   doc: PurchasedTemplate;
@@ -14,6 +15,7 @@ type Props = {
 
 export default function DocumentCard({ doc }: Props) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { mutate, isPending } = useMutation({
     mutationFn: (id: string) => deletePurchasedTemplate(id),
@@ -106,6 +108,14 @@ export default function DocumentCard({ doc }: Props) {
               View Document
             </Button>
           </Link>
+          <Button
+            variant="outline"
+            disabled={isPending}
+            onClick={() => navigate(`?dialog=download-${doc.id}`)}
+            className="h-11 w-11 p-0 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl transition-colors"
+          >
+            <Download className="h-4 w-4" />
+          </Button>
           <ConfirmAction
             trigger={
               <Button
@@ -125,6 +135,12 @@ export default function DocumentCard({ doc }: Props) {
         </div>
       </div>
 
+      <DownloadDocDialog
+        purchasedTemplateId={doc.id}
+        templateName={doc.name}
+        keywords={doc.keywords || []}
+        dialogName={`download-${doc.id}`}
+      />
     </div>
   );
 }

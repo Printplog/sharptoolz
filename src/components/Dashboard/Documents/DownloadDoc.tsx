@@ -38,11 +38,26 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
 }) => {
   // Check if split download is enabled and get direction
   const splitInfo = React.useMemo(() => {
-    const normalizedKeywords = keywords.map(k => String(k).toLowerCase().trim());
-    if (normalizedKeywords.includes("vertical-split-download")) return { enabled: true, direction: "vertical" as const };
-    if (normalizedKeywords.includes("horizontal-split-download") || normalizedKeywords.includes("split-download")) {
+    if (!keywords || !Array.isArray(keywords)) return { enabled: false, direction: "horizontal" as const };
+
+    const normalizedKeywords = keywords.map(k => String(k).toLowerCase().trim().replace(/_/g, '-'));
+
+    if (normalizedKeywords.includes("vertical-split-download")) {
+      return { enabled: true, direction: "vertical" as const };
+    }
+    if (
+      normalizedKeywords.includes("horizontal-split-download") ||
+      normalizedKeywords.includes("split-download") ||
+      normalizedKeywords.some(k => k.includes('split') && (k.includes('download') || k.includes('horizontal')))
+    ) {
       return { enabled: true, direction: "horizontal" as const };
     }
+
+    // Secondary check for vertical split in custom keywords
+    if (normalizedKeywords.some(k => k.includes('split') && k.includes('vertical'))) {
+      return { enabled: true, direction: "vertical" as const };
+    }
+
     return { enabled: false, direction: "horizontal" as const };
   }, [keywords]);
 
@@ -143,9 +158,21 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
         };
       }
 
-      const blob = type === "pdf"
-        ? await generatePdf(workingSvg, options)
-        : await generatePng(workingSvg, options);
+      let blob: Blob;
+
+      if (isOperaMini()) {
+        const { downloadDoc } = await import("@/api/apiEndpoints");
+        blob = await downloadDoc({
+          purchased_template_id: purchasedTemplateId as string,
+          type: type,
+          side: hasSplitDownload ? side : undefined,
+          svg: workingSvg // Pass the working SVG with injected data
+        });
+      } else {
+        blob = type === "pdf"
+          ? await generatePdf(workingSvg, options)
+          : await generatePng(workingSvg, options);
+      }
 
       // 4. Trigger download
       const sideSuffix = hasSplitDownload ? `_${side}` : "";

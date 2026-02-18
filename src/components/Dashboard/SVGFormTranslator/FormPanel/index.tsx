@@ -81,7 +81,21 @@ function useNavigationBlocker(when: boolean): NavigationBlocker {
   return { state, proceed, reset };
 }
 
-const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, isPurchased: isPurchasedProp, toolPrice }: { test: boolean; tutorial?: Tutorial; templateId?: string; isPurchased?: boolean; toolPrice?: number }) {
+const FormPanel = React.memo(function FormPanel({
+  test,
+  tutorial,
+  templateId,
+  isPurchased: isPurchasedProp,
+  toolPrice,
+  keywords = []
+}: {
+  test: boolean;
+  tutorial?: Tutorial;
+  templateId?: string;
+  isPurchased?: boolean;
+  toolPrice?: number;
+  keywords?: string[];
+}) {
   // Use selectors to subscribe only to what we need - prevents re-renders when unrelated fields change
   const fields = useToolStore((state) => state.fields);
   const resetForm = useToolStore((state) => state.resetForm);
@@ -190,12 +204,6 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
     }
   }, [blocker.state]);
 
-  // Fetch purchased template data to get keywords for split download
-  const { data: purchasedTemplateData } = useQuery<PurchasedTemplate>({
-    queryKey: ["purchased-template", id],
-    queryFn: () => getPurchasedTemplate(id as string),
-    enabled: isPurchased && !!id,
-  });
 
   const { mutateAsync: createAsync, isPending: createPending } = useMutation({
     mutationFn: (data: Partial<PurchasedTemplate>) => purchaseTemplate(data),
@@ -350,17 +358,17 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
         return prev + 10;
       });
     }, 150);
-    
+
     const mutationPromise = mutateFn(payload);
     const minDelayPromise = new Promise(resolve => setTimeout(resolve, 1500)); // UX: min 1.5s loading time
 
     try {
       await Promise.all([mutationPromise, minDelayPromise]);
-      
+
       // Complete progress
       if (progressInterval) clearInterval(progressInterval);
       setDocumentProgress(100);
-      
+
       // Wait a moment before hiding
       setTimeout(() => {
         setIsCreatingDocument(false);
@@ -610,7 +618,7 @@ const FormPanel = React.memo(function FormPanel({ test, tutorial, templateId, is
             svg={svgRaw}
             purchasedTemplateId={isPurchased ? id : undefined}
             templateName={name}
-            keywords={purchasedTemplateData?.keywords || []}
+            keywords={keywords}
           />
           <TestDocumentDialog
             open={showTestDialog}
