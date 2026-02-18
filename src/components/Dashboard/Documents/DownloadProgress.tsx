@@ -157,7 +157,7 @@ export default function DownloadProgress({
       {/* Message text */}
       <div className="text-center">
         <p className="text-xl text-muted-foreground max-[70%] mx-auto">
-          {isComplete ? "Document ready!" : "Please wait while we create your document locally"}
+          {isComplete ? "Document ready!" : "Downloading... Please wait"}
         </p>
       </div>
 

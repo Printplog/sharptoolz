@@ -73,7 +73,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
 
       // 1. Fetch SVG if missing
       if (!workingSvg && purchasedTemplateId) {
-        toast.info("Preparing document...");
+        toast.info("Downloading...");
         try {
           // Use our existing API endpoint wrapper
           const data = await getPurchasedTemplate(purchasedTemplateId);
@@ -123,7 +123,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
       // In a real scenario, we might need a utility to split the SVG client-side
 
       // 3. Document generation
-      toast.info(`Generating ${type.toUpperCase()}...`);
+      toast.info(`Downloading ${type.toUpperCase()}...`);
 
       const options: any = {};
       if (hasSplitDownload) {
@@ -253,7 +253,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
             disabled={isGenerating}
           >
             {isGenerating
-              ? "Generating..."
+              ? "Downloading..."
               : hasSplitDownload
                 ? `Download ${side} as ${type.toUpperCase()}`
                 : `Download as ${type.toUpperCase()}`
