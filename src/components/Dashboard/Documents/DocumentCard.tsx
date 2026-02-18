@@ -111,7 +111,7 @@ export default function DocumentCard({ doc }: Props) {
               <Button
                 variant="outline"
                 disabled={isPending}
-                className="h-11 w-11 p-0 bg-red-500/5 border-red-500/20 text-red-500/70 hover:bg-red-500/20 hover:text-red-500 rounded-xl transition-colors"
+                className="h-11 w-11 p-0 bg-red-500/5 border-red-500 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-colors"
               >
                 {isPending ? (
                   <Loader className="h-4 w-4 animate-spin" />
