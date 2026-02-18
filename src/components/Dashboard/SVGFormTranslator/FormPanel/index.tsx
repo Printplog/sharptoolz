@@ -17,8 +17,8 @@ import {
 } from "react-router-dom";
 import { toast } from "sonner";
 import FormFieldComponent from "../FormField";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { purchaseTemplate, updatePurchasedTemplate, getPurchasedTemplate } from "@/api/apiEndpoints";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { purchaseTemplate, updatePurchasedTemplate } from "@/api/apiEndpoints";
 import type { PurchasedTemplate, FieldUpdate } from "@/types";
 import errorMessage from "@/lib/utils/errorMessage";
 import { DownloadDocDialog } from "../../Documents/DownloadDoc";
