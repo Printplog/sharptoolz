@@ -100,32 +100,12 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
           // Apply rotation if present
           if (field.rotation !== undefined && field.rotation !== null) {
-            const rotation = parseFloat(String(field.rotation));
-            if (!isNaN(rotation) && rotation !== 0) {
-              // Canvg doesn't support transform-origin: center well, so we calculate the center manually.
-              // Get dimensions, falling back to 0 if not present (attributes are usually strings or null)
-              const x = parseFloat(el.getAttribute("x") || "0");
-              const y = parseFloat(el.getAttribute("y") || "0");
-              const w = parseFloat(el.getAttribute("width") || "0");
-              const h = parseFloat(el.getAttribute("height") || "0");
-              const cx = x + w / 2;
-              const cy = y + h / 2;
+            // Reverting to simpler rotation logic as requested
+            el.setAttribute("transform", `rotate(${field.rotation})`);
 
-              // Append to existing transform to preserve translations/etc.
-              const existingTransform = el.getAttribute("transform") || "";
-              const rotationStr = `rotate(${rotation}, ${cx}, ${cy})`;
-
-              // If rotation already exists in the transform string, replace it, otherwise append
-              if (existingTransform.includes("rotate(")) {
-                el.setAttribute("transform", existingTransform.replace(/rotate\([^)]+\)/, rotationStr));
-              } else {
-                el.setAttribute("transform", `${existingTransform} ${rotationStr}`.trim());
-              }
-
-              // Also keep the style-based properties for browser-side preview compatibility
-              el.style.transformBox = "fill-box";
-              el.style.transformOrigin = "center";
-            }
+            // Keep style-based properties for browser-side preview compatibility
+            el.style.transformBox = "fill-box";
+            el.style.transformOrigin = "center";
           }
           break;
         }
