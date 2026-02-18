@@ -45,8 +45,8 @@ export default function DocumentCard({ doc }: Props) {
         className="absolute inset-0 p-3 pointer-events-none z-0"
         style={{
           WebkitMaskImage:
-            "linear-gradient(to bottom, black 65%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, black 65%, transparent 100%)",
+            "linear-gradient(to bottom, black 50%, transparent 95%)",
+          maskImage: "linear-gradient(to bottom, black 50%, transparent 95%)",
         }}
       >
         {doc.banner ? (
@@ -73,7 +73,7 @@ export default function DocumentCard({ doc }: Props) {
       </div>
 
       {/* Bottom Overlay Content */}
-      <div className="absolute bottom-0 left-0 w-full z-10 p-6 flex flex-col gap-4">
+      <div className="absolute bottom-0 left-0 w-full z-10 p-6 pt-24 flex flex-col gap-4 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/90 to-transparent">
         <div className="space-y-2">
           <h3 className="text-white text-xl font-black tracking-tighter truncate drop-shadow-md">
             {doc.name}
