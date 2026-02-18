@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { CustomDialog } from "@/components/ui/CustomDialog";
 import { generatePdf, generatePng, triggerDownload, isOperaMini } from "@/lib/utils/clientDownload";
 import { injectFontsIntoSVG } from "@/lib/utils/fontInjector";
+import { injectImagesIntoSVG } from "@/lib/utils/imageInjector";
 import { getPurchasedTemplate } from "@/api/apiEndpoints";
 import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
@@ -109,6 +110,9 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
               workingSvg = await injectFontsIntoSVG(workingSvg, data.fonts, BASE_URL, true);
             }
 
+            // Inject images (base64 embedding required for native canvas rendering)
+            workingSvg = await injectImagesIntoSVG(workingSvg, BASE_URL);
+
             setCurrentSvg(workingSvg);
           }
         } catch (fetchError) {
@@ -121,6 +125,9 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
 
 
       if (!workingSvg) throw new Error("Could not retrieve document content");
+
+      // Ensure all images are base64-embedded for native rendering compatibility
+      workingSvg = await injectImagesIntoSVG(workingSvg, BASE_URL);
 
       // 2. Generate side-specific SVG if needed (simulated for now as we don't have the server-side split logic here)
       // In a real scenario, we might need a utility to split the SVG client-side

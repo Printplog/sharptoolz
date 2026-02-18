@@ -1,5 +1,4 @@
 import { jsPDF } from 'jspdf';
-import { Canvg } from 'canvg';
 
 /**
  * Utility for client-side document generation
@@ -68,18 +67,15 @@ function splitSvg(svgDoc: Document, direction: 'horizontal' | 'vertical', side: 
 }
 
 /**
- * Converts an SVG string to a Canvas element
+ * Converts an SVG string to a Canvas element using native browser rendering.
+ * This ensures the output matches the browser preview exactly.
  */
 async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTMLCanvasElement> {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get canvas context');
-
     // Parse SVG to get dimensions
     const parser = new DOMParser();
     const doc = parser.parseFromString(svg, 'image/svg+xml');
 
-    let width, height;
+    let width: number, height: number;
     if (options?.split) {
         const dims = splitSvg(doc, options.split.direction, options.split.side);
         width = dims.width;
@@ -90,23 +86,40 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
         height = parseInt(svgEl.getAttribute('height') || '600');
     }
 
-    // Set canvas size (1:1 with SVG dimensions)
-    canvas.width = width;
-    canvas.height = height;
+    // High quality scaling (2x)
+    const scale = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get canvas context');
+
+    // Scale the context for high-quality rasterization
+    ctx.scale(scale, scale);
 
     const serializer = new XMLSerializer();
     const processedSvg = serializer.serializeToString(doc);
 
-    const v = await Canvg.from(ctx, processedSvg);
+    // Use Blob URL to load SVG into an Image element
+    const blob = new Blob([processedSvg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
 
-    // Use proper await for rendering
-    await v.render({
-        ignoreAnimation: true,
-        ignoreMouse: true
+    const img = new Image();
+
+    return new Promise((resolve, reject) => {
+        img.onload = () => {
+            // Draw onto canvas using native rendering engine
+            ctx.drawImage(img, 0, 0, width, height);
+            URL.revokeObjectURL(url);
+            resolve(canvas);
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Failed to load SVG as image for rendering. Ensure all resources (fonts, images) are base64-embedded.'));
+        };
+        img.src = url;
     });
-
-
-    return canvas;
 }
 
 /**
