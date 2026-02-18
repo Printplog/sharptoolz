@@ -100,13 +100,13 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
 
     const v = await Canvg.from(ctx, processedSvg);
 
-    // Scale context for high-res rendering
-    ctx.scale(scale, scale);
-
-    // Use proper await (critical fix for "blank/small file" issue)
+    // Use proper await and canvg's built-in scaling for high-res
+    // This is more reliable for coordinate mapping than manual ctx.scale
     await v.render({
         ignoreAnimation: true,
-        ignoreMouse: true
+        ignoreMouse: true,
+        scaleWidth: canvas.width,
+        scaleHeight: canvas.height
     });
 
 

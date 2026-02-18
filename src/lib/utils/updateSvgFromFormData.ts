@@ -100,8 +100,29 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
           // Apply rotation if present
           if (field.rotation !== undefined && field.rotation !== null) {
-            // Reverting to simpler rotation logic as requested
-            el.setAttribute("transform", `rotate(${field.rotation})`);
+            const rotation = parseFloat(String(field.rotation));
+            if (!isNaN(rotation) && rotation !== 0) {
+              // Canvg doesn't support transform-origin: center well, so we calculate the center manually.
+              // This is necessary because in the download engine (canvg), rotation defaults to (0,0).
+              const x = parseFloat(el.getAttribute("x") || "0");
+              const y = parseFloat(el.getAttribute("y") || "0");
+              const w = parseFloat(el.getAttribute("width") || "0");
+              const h = parseFloat(el.getAttribute("height") || "0");
+              const cx = x + w / 2;
+              const cy = y + h / 2;
+
+              const rotationStr = `rotate(${rotation}, ${cx}, ${cy})`;
+
+              // Preservation: If there's an existing transform (like translate), append rotation
+              const existingTransform = el.getAttribute("transform") || "";
+              if (existingTransform && !existingTransform.includes("rotate(")) {
+                el.setAttribute("transform", `${existingTransform} ${rotationStr}`.trim());
+              } else {
+                el.setAttribute("transform", rotationStr);
+              }
+            } else {
+              el.removeAttribute("transform");
+            }
 
             // Keep style-based properties for browser-side preview compatibility
             el.style.transformBox = "fill-box";
