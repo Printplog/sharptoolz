@@ -18,6 +18,7 @@ import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import DownloadProgress from "./DownloadProgress";
 import { BASE_URL } from "@/api/apiClient";
+import type { FormField } from "@/types";
 
 interface DownloadDocDialogProps {
   svg?: string; // Optional - kept for backward compatibility but not sent to backend
@@ -92,11 +93,11 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
             const baseFields = data.form_fields || [];
             const updates = data.field_updates || [];
 
-            const fieldsForUpdate = baseFields.map(field => {
+            const fieldsForUpdate: FormField[] = baseFields.map(field => {
               const update = updates.find((u: any) => u.id === field.id);
               return {
                 ...field,
-                currentValue: update ? update.value : field.currentValue,
+                currentValue: update ? (update.value as any) : field.currentValue,
                 touched: true // Ensure the value is applied during patch
               };
             });
