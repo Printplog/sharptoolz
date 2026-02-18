@@ -113,6 +113,10 @@ export default function SvgTemplateEditor() {
           if (templateData.tutorialTitle) {
             formData.append('tutorial_title', templateData.tutorialTitle);
           }
+          if (templateData.svg) {
+            console.log('[SaveMutation] Adding full SVG content to FormData');
+            formData.append('svg', templateData.svg);
+          }
           formData.append('keywords', JSON.stringify(templateData.keywords ?? []));
           formData.append('banner', templateData.banner);
           if (templateData.fontIds && templateData.fontIds.length > 0) {
@@ -141,14 +145,17 @@ export default function SvgTemplateEditor() {
             payload.banner = templateData.banner;
           }
 
-          // PATCH-ONLY MODE: Only send patches, never full SVG
-          if (patches.length > 0) {
+          // PATCH-ONLY MODE: Only send patches, never full SVG (unless replaced)
+          if (templateData.svg) {
+            console.log('[SaveMutation] Adding full SVG content to JSON payload');
+            payload.svg = templateData.svg;
+          } else if (patches.length > 0) {
             console.log('[SaveMutation] Adding patches to JSON payload:', patches);
             payload.svg_patch = patches;
           } else {
-            console.log('[SaveMutation] No patches to send (metadata-only update)');
+            console.log('[SaveMutation] No patches or SVG to send (metadata-only update)');
           }
-          // If no patches, we're only updating metadata
+          // If no patches or SVG, we're only updating metadata
 
           console.log('[SaveMutation] Final payload:', payload);
           const result = await updateTemplateForAdmin(id as string, payload);
@@ -312,6 +319,10 @@ export default function SvgTemplateEditor() {
             templateId={id}
             onSave={handleSave}
             onPatchUpdate={addPatch}
+            onSvgReplace={() => {
+              console.log('[TemplateEditor] SVG replaced, clearing patches...');
+              clearPatch();
+            }}
             banner={data.banner}
             hot={data.hot}
             isActive={data.is_active}

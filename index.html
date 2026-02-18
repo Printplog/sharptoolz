@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>SharpToolz</title>
 
     <!-- Primary Meta Tags -->
@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#ffffff">
     <meta name="application-name" content="SharpToolz">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SharpToolz">
     <meta name="msapplication-TileColor" content="#ffffff">
@@ -40,6 +40,12 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="padding: 20px; text-align: center; background: #0f1620; color: white; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif;">
+        <h1 style="color: #cee88c;">JavaScript Required</h1>
+        <p>SharpToolz requires JavaScript to function. Please enable it in your browser settings or switch to a non-proxy browser like Safari or Chrome if you are using Opera Mini.</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

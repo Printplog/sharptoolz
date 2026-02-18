@@ -157,9 +157,10 @@ export default function DownloadProgress({
       {/* Message text */}
       <div className="text-center">
         <p className="text-xl text-muted-foreground max-[70%] mx-auto">
-          Please wait while we create your document
+          {isComplete ? "Document ready!" : "Please wait while we create your document locally"}
         </p>
       </div>
+
 
       {/* Modern custom progress bar */}
       <div className="relative w-full py-3">

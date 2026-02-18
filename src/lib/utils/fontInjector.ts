@@ -54,14 +54,29 @@ const getFileNameStem = (path?: string | null) => {
   return stem || "";
 };
 
-function buildFontFace(fontFamily: string, fontUrl: string, fontFormat: string): string {
-  return `@font-face {
-  font-family: "${fontFamily}";
-  src: url("${fontUrl}") format("${fontFormat}");
-}`;
-}
+const fetchFontAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.error(`Failed to fetch font from ${url}:`, e);
+    return null;
+  }
+};
 
-export function injectFontsIntoSVG(svgContent: string, fonts: Font[], baseUrl?: string): string {
+export async function injectFontsIntoSVG(
+  svgContent: string,
+  fonts: Font[],
+  baseUrl?: string,
+  embedBase64: boolean = false
+): Promise<string> {
   if (!fonts || fonts.length === 0) {
     return svgContent;
   }
@@ -89,44 +104,52 @@ export function injectFontsIntoSVG(svgContent: string, fonts: Font[], baseUrl?: 
     }
   }
 
-  const fontFaces: FontFaceTuple[] = fonts
-    .map((font) => {
-      const rawUrl = font.font_url || font.font_file;
-      if (!rawUrl) return null;
-      const fontUrl = baseUrl && !/^https?:\/\//i.test(rawUrl) ? `${baseUrl}${rawUrl}` : rawUrl;
-      const ext = fontUrl.split(".").pop()?.toLowerCase();
-      const formatMap: Record<string, string> = {
-        ttf: "truetype",
-        otf: "opentype",
-        woff: "woff",
-        woff2: "woff2",
-      };
-      const fontFormat = formatMap[ext || ""] || "truetype";
+  const fontFaces: FontFaceTuple[] = [];
 
-      const candidates = [
-        font.name,
-        getFileNameStem(font.font_file || font.font_url),
-      ].filter(Boolean) as string[];
+  for (const font of fonts) {
+    const rawUrl = font.font_url || font.font_file;
+    if (!rawUrl) continue;
+    let fontUrl = baseUrl && !/^https?:\/\//i.test(rawUrl) ? `${baseUrl}${rawUrl}` : rawUrl;
 
-      let cssFamily = font.name;
-      for (const candidate of candidates) {
-        const key = normalizeFontKey(candidate);
-        if (key && aliasMap.has(key)) {
-          cssFamily = aliasMap.get(key)!;
-          break;
-        }
+    const ext = fontUrl.split(".").pop()?.toLowerCase();
+    const formatMap: Record<string, string> = {
+      ttf: "truetype",
+      otf: "opentype",
+      woff: "woff",
+      woff2: "woff2",
+    };
+    const fontFormat = formatMap[ext || ""] || "truetype";
+
+    if (embedBase64) {
+      const base64 = await fetchFontAsBase64(fontUrl);
+      if (base64) {
+        fontUrl = base64;
       }
+    }
 
-      if (!cssFamily) {
-        cssFamily = font.name || candidates[0] || "CustomFont";
+    const candidates = [
+      font.name,
+      getFileNameStem(font.font_file || font.font_url),
+    ].filter(Boolean) as string[];
+
+    let cssFamily = font.name;
+    for (const candidate of candidates) {
+      const key = normalizeFontKey(candidate);
+      if (key && aliasMap.has(key)) {
+        cssFamily = aliasMap.get(key)!;
+        break;
       }
+    }
 
-      return {
-        family: cssFamily,
-        css: buildFontFace(cssFamily, fontUrl, fontFormat),
-      };
-    })
-    .filter(Boolean) as FontFaceTuple[];
+    if (!cssFamily) {
+      cssFamily = font.name || candidates[0] || "CustomFont";
+    }
+
+    fontFaces.push({
+      family: cssFamily,
+      css: buildFontFace(cssFamily, fontUrl, fontFormat),
+    });
+  }
 
   if (fontFaces.length === 0) {
     return svgContent;
@@ -147,30 +170,34 @@ export function injectFontsIntoSVG(svgContent: string, fonts: Font[], baseUrl?: 
       return el;
     })();
 
-  const existingFamilies = new Set<string>();
-  if (styleEl.textContent) {
-    const matches = styleEl.textContent.match(/font-family:\s*"([^"]+)"/g) || [];
-    matches.forEach((match) => {
-      const familyMatch = match.match(/font-family:\s*"([^"]+)"/);
-      if (familyMatch?.[1]) {
-        existingFamilies.add(familyMatch[1]);
-      }
-    });
+  // If embedding base64, we might want to replace existing font-faces
+  if (embedBase64) {
+    styleEl.textContent = fontFaces.map(({ css }) => css).join("\n");
+  } else {
+    const existingFamilies = new Set<string>();
+    if (styleEl.textContent) {
+      const matches = styleEl.textContent.match(/font-family:\s*"([^"]+)"/g) || [];
+      matches.forEach((match) => {
+        const familyMatch = match.match(/font-family:\s*"([^"]+)"/);
+        if (familyMatch?.[1]) {
+          existingFamilies.add(familyMatch[1]);
+        }
+      });
+    }
+
+    const cssToInject = fontFaces
+      .filter(({ family }) => !existingFamilies.has(family))
+      .map(({ css }) => css);
+
+    if (cssToInject.length > 0) {
+      const newCss = `${styleEl.textContent?.trim() ? styleEl.textContent.trim() + "\n" : ""}${cssToInject.join(
+        "\n"
+      )}\n`;
+      styleEl.textContent = newCss;
+    }
   }
-
-  const cssToInject = fontFaces
-    .filter(({ family }) => !existingFamilies.has(family))
-    .map(({ css }) => css);
-
-  if (cssToInject.length === 0) {
-    return svgContent;
-  }
-
-  const newCss = `${styleEl.textContent?.trim() ? styleEl.textContent.trim() + "\n" : ""}${cssToInject.join(
-    "\n"
-  )}\n`;
-  styleEl.textContent = newCss;
 
   return new XMLSerializer().serializeToString(doc);
 }
+
 

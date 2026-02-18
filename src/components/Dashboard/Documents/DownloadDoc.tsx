@@ -11,10 +11,11 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { CustomDialog } from "@/components/ui/CustomDialog";
-import { useMutation } from "@tanstack/react-query";
-import type { DownloadData } from "@/types";
-import { downloadDoc } from "@/api/apiEndpoints";
-import errorMessage from "@/lib/utils/errorMessage";
+import { generatePdf, generatePng, triggerDownload, isOperaMini } from "@/lib/utils/clientDownload";
+import { injectFontsIntoSVG } from "@/lib/utils/fontInjector";
+import { getPurchasedTemplate } from "@/api/apiEndpoints";
+import { applySvgPatches } from "@/lib/utils/applySvgPatches";
+import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import DownloadProgress from "./DownloadProgress";
 
 interface DownloadDocDialogProps {
@@ -32,59 +33,128 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
   keywords = [],
   dialogName = "download-doc",
 }) => {
+  // Check if split download is enabled and get direction
+  const splitInfo = React.useMemo(() => {
+    const normalizedKeywords = keywords.map(k => String(k).toLowerCase().trim());
+    if (normalizedKeywords.includes("vertical-split-download")) return { enabled: true, direction: "vertical" as const };
+    if (normalizedKeywords.includes("horizontal-split-download") || normalizedKeywords.includes("split-download")) {
+      return { enabled: true, direction: "horizontal" as const };
+    }
+    return { enabled: false, direction: "horizontal" as const };
+  }, [keywords]);
+
+  const hasSplitDownload = splitInfo.enabled;
+
   const [type, setType] = React.useState<"pdf" | "png">("pdf");
   const [side, setSide] = React.useState<"front" | "back">("front");
 
-  // Check if split download is enabled
-  const hasSplitDownload = React.useMemo(() => {
-    const normalizedKeywords = keywords.map(k => String(k).toLowerCase().trim());
-    return normalizedKeywords.includes("vertical-split-download") ||
-      normalizedKeywords.includes("horizontal-split-download") ||
-      normalizedKeywords.includes("split-download");
-  }, [keywords]);
-
+  const [isGenerating, setIsGenerating] = React.useState(false);
   const [showProgress, setShowProgress] = React.useState(false);
+  const [currentSvg, setCurrentSvg] = React.useState<string>(svg || "");
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: (data: DownloadData) => downloadDoc(data),
+  // Update currentSvg when prop changes (e.g. from FormPanel)
+  React.useEffect(() => {
+    if (svg) {
+      setCurrentSvg(svg);
+    }
+  }, [svg]);
 
-    onSuccess: async (blob) => {
-      // Normal single file download (now handles split downloads as single files)
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      const sideSuffix = hasSplitDownload ? `_${side}` : "";
-      link.download = templateName
-        ? `${templateName}${sideSuffix}.${type}`
-        : `document${sideSuffix}.${type}`;
-      link.href = url;
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      setShowProgress(false);
-      toast.success("Download complete");
-    },
-
-    onError: (error: Error) => {
-      setShowProgress(false);
-      toast.error(errorMessage(error));
-    },
-  });
-
-  const handleDownload = () => {
-    if (!purchasedTemplateId) {
-      toast.error("Document ID is required for download");
+  const handleDownload = async () => {
+    if (!purchasedTemplateId && !svg) {
+      toast.error("Document data is missing");
       return;
     }
-    setShowProgress(true);
-    // Optimize: Don't send SVG in request - backend will fetch it from purchased_template_id
-    // This significantly reduces request payload size
-    mutate({
-      type,
-      purchased_template_id: purchasedTemplateId as string, // Type assertion since we checked above
-      template_name: templateName,
-      side: hasSplitDownload ? side : undefined
-    });
+
+    try {
+      setIsGenerating(true);
+      setShowProgress(true);
+
+      let workingSvg = currentSvg;
+
+      // 1. Fetch SVG if missing
+      if (!workingSvg && purchasedTemplateId) {
+        toast.info("Preparing document...");
+        try {
+          // Use our existing API endpoint wrapper
+          const data = await getPurchasedTemplate(purchasedTemplateId);
+
+          if (data.svg_url) {
+            // Attempt to fetch the SVG content
+            const svgResponse = await fetch(data.svg_url);
+            if (!svgResponse.ok) throw new Error("Could not fetch SVG content");
+            workingSvg = await svgResponse.text();
+
+            // Apply patches if it's not already patched
+            workingSvg = applySvgPatches(workingSvg, data.svg_patches || []);
+
+            // Populate SVG with saved form data (CRITICAL FIX)
+            if (data.field_updates || data.form_fields) {
+              const updates = data.field_updates || data.form_fields || [];
+              // Convert to FormField[]-like structure for the utility
+              const fieldsForUpdate: any[] = updates.map((u: any) => ({
+                id: u.id,
+                currentValue: u.value,
+                type: 'text', // Default to text
+                options: u.options // Pass options if available (for select fields)
+              }));
+
+              workingSvg = updateSvgFromFormData(workingSvg, fieldsForUpdate);
+            }
+
+            // Inject fonts (with base64 embedding for downloads)
+            if (data.fonts && data.fonts.length > 0) {
+              workingSvg = await injectFontsIntoSVG(workingSvg, data.fonts, undefined, true);
+            }
+
+            setCurrentSvg(workingSvg);
+          }
+        } catch (fetchError) {
+          console.error("SVG fetch error:", fetchError);
+          // If direct fetch fails (CORS?), we might need a fallback, 
+          // but for now let's expose the error so the user knows why it failed.
+          throw new Error("Failed to retrieve document content. Please try again.");
+        }
+      }
+
+
+      if (!workingSvg) throw new Error("Could not retrieve document content");
+
+      // 2. Generate side-specific SVG if needed (simulated for now as we don't have the server-side split logic here)
+      // In a real scenario, we might need a utility to split the SVG client-side
+
+      // 3. Document generation
+      toast.info(`Generating ${type.toUpperCase()}...`);
+
+      const options: any = {};
+      if (hasSplitDownload) {
+        options.split = {
+          direction: splitInfo.direction,
+          side: side
+        };
+      }
+
+      const blob = type === "pdf"
+        ? await generatePdf(workingSvg, options)
+        : await generatePng(workingSvg, options);
+
+      // 4. Trigger download
+      const sideSuffix = hasSplitDownload ? `_${side}` : "";
+      const filename = templateName
+        ? `${templateName}${sideSuffix}.${type}`
+        : `document${sideSuffix}.${type}`;
+
+      triggerDownload(blob, filename);
+
+      toast.success("Download complete");
+    } catch (error: any) {
+      console.error("Download failed:", error);
+      toast.error(error.message || "Failed to generate document");
+    } finally {
+      setIsGenerating(false);
+      setShowProgress(false);
+    }
   };
+
 
   return (
     <CustomDialog dialogName={dialogName}>
@@ -96,7 +166,16 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        {!isPending && (
+        {isOperaMini() && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-amber-500 text-xs flex items-start gap-2 mb-4">
+            <span className="mt-0.5">⚠️</span>
+            <p>
+              <strong>Opera Mini Detected:</strong> Client-side generation may not work in "Extreme" mode. Please use "High" mode or a different browser for the best experience.
+            </p>
+          </div>
+        )}
+
+        {!isGenerating && (
           <div className="space-y-6">
             {/* Format Selection */}
             <div className="space-y-3">
@@ -160,9 +239,9 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
         {showProgress && (
           <div className="pt-4">
             <DownloadProgress
-              svg={svg || ""} // Provide empty string fallback since svg is optional
+              svg={svg || currentSvg}
               outputType={type}
-              isDownloading={isPending}
+              isDownloading={isGenerating}
               onComplete={() => setShowProgress(false)}
             />
           </div>
@@ -171,16 +250,17 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
         <DialogFooter>
           <Button
             onClick={handleDownload}
-            disabled={isPending}
+            disabled={isGenerating}
           >
-            {isPending
-              ? "Downloading..."
+            {isGenerating
+              ? "Generating..."
               : hasSplitDownload
                 ? `Download ${side} as ${type.toUpperCase()}`
                 : `Download as ${type.toUpperCase()}`
             }
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </CustomDialog>
   );

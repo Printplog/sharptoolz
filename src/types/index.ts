@@ -172,6 +172,7 @@ export type TemplateUpdatePayload = {
   is_active?: boolean;
   fontIds?: string[];
   svg_patch?: SvgPatch[];
+  svg?: string;
 };
 
 export type CreateDocument = {

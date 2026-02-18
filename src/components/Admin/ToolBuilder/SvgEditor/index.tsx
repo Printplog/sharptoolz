@@ -41,6 +41,7 @@ interface SvgEditorProps {
   onElementSelect?: (elementType: string, idPattern?: string) => void;
   formFields?: FormField[];
   onPatchUpdate?: (patch: { id: string; attribute: string; value: any }) => void;
+  onSvgReplace?: (svg: string) => void;
 }
 
 export interface SvgEditorRef {
@@ -49,7 +50,7 @@ export interface SvgEditorRef {
   openPreview: () => void;
 }
 
-const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, isSvgLoading = false, onElementSelect, formFields = [], templateId, onPatchUpdate }, ref) => {
+const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, isSvgLoading = false, onElementSelect, formFields = [], templateId, onPatchUpdate, onSvgReplace }, ref) => {
   const {
     setInitialSvg,
     elements: elementsMap,
@@ -80,6 +81,8 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [draftElement, setDraftElement] = useState<SvgElement | null>(null);
+  const [isReplaced, setIsReplaced] = useState(false);
+  const [freshSvgContent, setFreshSvgContent] = useState<string | null>(null);
 
   // Layout State
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -172,7 +175,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     if (!onSave) return;
     onSave({
       name: name.trim(),
-      svg: "",
+      svg: isReplaced && freshSvgContent ? freshSvgContent : "",
       banner: bannerFile,
       hot: isHot,
       isActive: isActiveState,
@@ -182,7 +185,9 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       keywords: keywordsTags,
       fontIds: selectedFontIds.length > 0 ? selectedFontIds : undefined
     });
-  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds]);
+    // Reset replaced state after successful notification to parent
+    // (Actual reset should happen in parent's success handler, but this helps local UI)
+  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, isReplaced, freshSvgContent]);
 
   useImperativeHandle(ref, () => ({
     handleSave,
@@ -206,6 +211,9 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
         return;
       }
       setInitialSvg(content);
+      setIsReplaced(true);
+      setFreshSvgContent(content);
+      if (onSvgReplace) onSvgReplace(content);
       toast.success("SVG uploaded successfully");
     };
     reader.readAsText(file);

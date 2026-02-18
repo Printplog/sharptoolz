@@ -281,19 +281,23 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     let newSvgText = updateSvgFromFormData(svgContent, populatedFields);
 
     // Inject fonts if available
-    if (data.fonts && data.fonts.length > 0) {
-      newSvgText = injectFontsIntoSVG(newSvgText, data.fonts);
-    }
+    const finalizeSvg = async () => {
+      if (data.fonts && data.fonts.length > 0) {
+        newSvgText = await injectFontsIntoSVG(newSvgText, data.fonts);
+      }
 
-    // Update SVG state
-    setSvgText(newSvgText);
-    setSvgRaw(newSvgText);
+      // Update SVG state
+      setSvgText(newSvgText);
+      setSvgRaw(newSvgText);
 
-    // Set initial preview immediately (no debounce on first load)
-    setLivePreview(newSvgText);
+      // Set initial preview immediately (no debounce on first load)
+      setLivePreview(newSvgText);
 
-    // Clear pending fields ref
-    pendingFieldsRef.current = null;
+      // Clear pending fields ref
+      pendingFieldsRef.current = null;
+    };
+
+    finalizeSvg();
 
     // Only run when SVG data loads, NOT when fields change
   }, [svgContent, isSvgFetching, data, setSvgRaw]); // Removed 'fields' dependency
@@ -315,14 +319,18 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
 
   // Store base SVG (with fonts already injected) - fonts don't change during editing
   useEffect(() => {
-    if (svgText) {
-      if (fonts.length > 0) {
-        baseSvgRef.current = injectFontsIntoSVG(svgText, fonts);
-      } else {
-        baseSvgRef.current = svgText;
+    const updateBaseSvg = async () => {
+      if (svgText) {
+        if (fonts.length > 0) {
+          baseSvgRef.current = await injectFontsIntoSVG(svgText, fonts);
+        } else {
+          baseSvgRef.current = svgText;
+        }
       }
-    }
+    };
+    updateBaseSvg();
   }, [svgText, fonts]);
+
 
   // SIMPLIFIED: Update preview whenever fields change and we're on preview tab
   // No debouncing, no change tracking - just always use fresh values

@@ -1,4 +1,4 @@
-import { Download, Loader, Pencil, Trash2 } from "lucide-react";
+import { Eye, Loader, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PurchasedTemplate } from "@/types";
 import { Link } from "react-router-dom";
@@ -6,8 +6,6 @@ import { ConfirmAction } from "@/components/ConfirmAction";
 import { deletePurchasedTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DownloadDocDialog } from "./DownloadDoc";
-import { useDialogStore } from "@/store/dialogStore";
 import { LazyImage } from "@/components/LazyImage";
 
 type Props = {
@@ -16,7 +14,6 @@ type Props = {
 
 export default function DocumentCard({ doc }: Props) {
   const queryClient = useQueryClient();
-  const { openDialog } = useDialogStore();
 
   const { mutate, isPending } = useMutation({
     mutationFn: (id: string) => deletePurchasedTemplate(id),
@@ -95,23 +92,15 @@ export default function DocumentCard({ doc }: Props) {
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-2 mt-2">
-          {/* Download Button */}
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 w-8 p-0 bg-white/5 border-white/10 hover:bg-white/10 text-white/70"
-            onClick={() => openDialog(`download-doc-${doc.id}`)}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-          <Link to={!isPending ? `/documents/${doc.id}` : "#"} className="">
+          <Link to={!isPending ? `/documents/${doc.id}` : "#"} className="flex-1">
             <Button
               disabled={isPending}
               size="sm"
               variant="outline"
-              className="h-8 w-8 p-0"
+              className="w-full h-8 gap-2 bg-white/5 border-white/10 hover:bg-white/10 text-white/70"
             >
-              <Pencil className="h-4 w-4" />
+              <Eye className="h-4 w-4" />
+              <span>View</span>
             </Button>
           </Link>
           <ConfirmAction
@@ -134,12 +123,6 @@ export default function DocumentCard({ doc }: Props) {
         </div>
       </div>
 
-      <DownloadDocDialog
-        purchasedTemplateId={doc.id}
-        templateName={doc.name}
-        keywords={doc.keywords}
-        dialogName={`download-doc-${doc.id}`}
-      />
     </div>
   );
 }

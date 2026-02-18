@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { initSecurity } from '@/lib/utils/security'
 
 
+
 export default function App() {
   useEffect(() => {
     // Initialize security measures
