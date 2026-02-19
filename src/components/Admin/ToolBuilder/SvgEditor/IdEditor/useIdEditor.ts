@@ -1,5 +1,15 @@
-import { useState, useCallback, useRef } from "react";
-import { parseId, FIELD_TYPES, EXTENSIONS, type ExtensionDefinition } from "../idExtensions";
+import { useState, useCallback, useRef } from 'react';
+import {
+  type ExtensionDefinition,
+  FIELD_TYPES,
+  EXTENSIONS,
+  parseId
+} from '../idExtensions';
+
+export interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+}
 
 export function useIdEditor(
   value: string,
@@ -10,78 +20,90 @@ export function useIdEditor(
   const [activeIndex, setActiveIndex] = useState(0);
   const [showValueInput, setShowValueInput] = useState(false);
   const [pendingExtension, setPendingExtension] = useState<ExtensionDefinition | null>(null);
+  const [validation, setValidation] = useState<ValidationResult>({ isValid: true });
   const editorRef = useRef<HTMLDivElement>(null);
+
+  const validate = useCallback((val: string): ValidationResult => {
+    const { parts } = parseId(val);
+
+    // Check for duplicate field types
+    const presentFieldTypes = parts.filter(p => FIELD_TYPES.some(ft => ft.key === p || p.startsWith(ft.key + "_")));
+    if (presentFieldTypes.length > 1) {
+      return {
+        isValid: false,
+        error: `Only one field type allowed (found: ${presentFieldTypes.join(', ')})`
+      };
+    }
+
+    // Check for duplicate extensions
+    const presentExtensions = parts.map(p => p.split('_')[0]).filter(p => EXTENSIONS.some(ext => ext.key === p));
+    const duplicates = presentExtensions.filter((item, index) => presentExtensions.indexOf(item) !== index);
+    if (duplicates.length > 0) {
+      return {
+        isValid: false,
+        error: `Duplicate extensions: ${duplicates.join(', ')}`
+      };
+    }
+
+    return { isValid: true };
+  }, []);
 
   const applySuggestion = useCallback(
     (extension: ExtensionDefinition) => {
       if (!editorRef.current) return;
 
       const { baseId: currentBase, parts: currentParts } = parseId(internalValue);
-      
-      // Check if there's already a dot at the end of the current value
+
       const hasTrailingDot = internalValue.trim().endsWith(".");
-      
-      // Get the current partial text being typed (text after last dot)
       const lastDotIndex = internalValue.lastIndexOf(".");
-      const currentPartial = lastDotIndex >= 0 
+      const currentPartial = lastDotIndex >= 0
         ? internalValue.substring(lastDotIndex + 1).trim()
         : "";
-      
-      // Check if user was typing a partial match that should be replaced
-      const shouldReplacePartial = !hasTrailingDot && currentPartial && 
+
+      const shouldReplacePartial = !hasTrailingDot && currentPartial &&
         extension.key.toLowerCase().startsWith(currentPartial.toLowerCase());
-      
-      // If extension/field type requires a value, replace partial text first, then show input dialog
+
       if (extension.requiresValue) {
-        // If user was typing a partial match, replace it first
         if (shouldReplacePartial && currentParts.length > 0) {
           const newParts = [...currentParts];
-          // Replace the last part (which is the partial) with the extension key
           newParts[newParts.length - 1] = extension.key;
           const newValue = `${currentBase}.${newParts.join(".")}`;
           setInternalValue(newValue);
+          setValidation(validate(newValue));
           onChange(newValue);
         }
-        
+
         setPendingExtension(extension);
         setShowValueInput(true);
         return;
       }
 
-      // Apply extension/field type without value
       let newValue: string;
-      // Check if parts array only contains empty string (user typed "baseId.")
       const isEmptyParts = currentParts.length === 1 && currentParts[0] === "";
-      
+
       if (currentParts.length === 0 || isEmptyParts) {
-        // No parts yet or just a trailing dot, add field type
         if (hasTrailingDot || isEmptyParts) {
-          // Use existing dot
           newValue = `${currentBase}${extension.key}`;
         } else {
-          // Check if base ends with dot
           const baseEndsWithDot = currentBase.endsWith(".");
           newValue = baseEndsWithDot ? `${currentBase}${extension.key}` : `${currentBase}.${extension.key}`;
         }
       } else {
-        // Replace last part or add new extension/field type
         const newParts = [...currentParts];
         const lastPart = newParts[newParts.length - 1];
-        
-        // Check if last part is incomplete (user was typing) or is a partial match
-        if (shouldReplacePartial || (lastPart && !FIELD_TYPES.some(ft => ft.key === lastPart) && 
-            !EXTENSIONS.some(ext => ext.key === lastPart || lastPart.startsWith(ext.key + "_")))) {
-          // Replace incomplete part or partial match
+
+        if (shouldReplacePartial || (lastPart && !FIELD_TYPES.some(ft => ft.key === lastPart) &&
+          !EXTENSIONS.some(ext => ext.key === lastPart || lastPart.startsWith(ext.key + "_")))) {
           newParts[newParts.length - 1] = extension.key;
         } else {
-          // Add new extension/field type
           newParts.push(extension.key);
         }
-        
+
         newValue = `${currentBase}.${newParts.join(".")}`;
       }
 
       setInternalValue(newValue);
+      setValidation(validate(newValue));
       onChange(newValue);
       setActiveIndex(0);
 
@@ -95,7 +117,7 @@ export function useIdEditor(
         selection?.addRange(range);
       });
     },
-    [internalValue, onChange]
+    [internalValue, onChange, validate]
   );
 
   const handleValueInput = useCallback((value: string) => {
@@ -103,27 +125,26 @@ export function useIdEditor(
 
     const { baseId: currentBase, parts: currentParts } = parseId(internalValue);
     const sanitizedValue = value.trim().replace(/\s+/g, "_");
-    
+
     let newValue: string;
-    
+
     if (currentParts.length === 0) {
       newValue = `${currentBase}.${pendingExtension.key}_${sanitizedValue}`;
     } else {
       const newParts = [...currentParts];
       const lastPart = newParts[newParts.length - 1];
-      
+
       if (lastPart && lastPart.startsWith(pendingExtension.key)) {
-        // Replace incomplete extension
         newParts[newParts.length - 1] = `${pendingExtension.key}_${sanitizedValue}`;
       } else {
-        // Add new extension with value
         newParts.push(`${pendingExtension.key}_${sanitizedValue}`);
       }
-      
+
       newValue = `${currentBase}.${newParts.join(".")}`;
     }
 
     setInternalValue(newValue);
+    setValidation(validate(newValue));
     onChange(newValue);
     setShowValueInput(false);
     setPendingExtension(null);
@@ -138,14 +159,15 @@ export function useIdEditor(
       selection?.removeAllRanges();
       selection?.addRange(range);
     });
-  }, [pendingExtension, internalValue, onChange]);
+  }, [pendingExtension, internalValue, onChange, validate]);
 
   const handleInput = useCallback(() => {
     if (!editorRef.current) return;
     const raw = editorRef.current.innerText || "";
     setInternalValue(raw);
+    setValidation(validate(raw));
     onChange(raw);
-  }, [onChange]);
+  }, [onChange, validate]);
 
   return {
     internalValue,
@@ -158,6 +180,7 @@ export function useIdEditor(
     setShowValueInput,
     pendingExtension,
     setPendingExtension,
+    validation,
     editorRef,
     applySuggestion,
     handleValueInput,

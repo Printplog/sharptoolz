@@ -19,7 +19,7 @@ export function ensureSvgElementIds(svgContent: string): string {
             const existingInternalId = domEl.getAttribute("data-internal-id");
 
             // If it already has an ID, we prioritize it
-            let baseId = existingId || existingInternalId || `el-${tag}`;
+            const baseId = existingId || existingInternalId || `el-${tag}`;
 
             // Deduplicate across the document
             idCount[baseId] = (idCount[baseId] || 0) + 1;

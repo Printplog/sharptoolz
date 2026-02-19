@@ -60,7 +60,7 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
         return;
       }
     }
-  }, [data, setUser, isError, isAdmin, navigate, isAuthenticated, isLoading]);
+  }, [data, setUser, isError, isAdmin, navigate, isAuthenticated, isLoading, logout]);
 
   if (isLoading) {
     return (

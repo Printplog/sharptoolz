@@ -15,6 +15,7 @@ import TutorialSection from "./TutorialSection";
 import TemplateToggles from "./TemplateToggles";
 import BannerUpload from "../BannerUpload";
 import type { Font, Tool } from "@/types";
+import type { UseMutationResult } from "@tanstack/react-query";
 import { forceReparseTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 
@@ -28,7 +29,7 @@ interface SettingsDialogProps {
   selectedFontIds: string[];
   onFontSelect: (id: string) => void;
   onFontRemove: (id: string) => void;
-  fontUploadMutation: any;
+  fontUploadMutation: UseMutationResult<Font, Error, FormData, unknown>;
   tools: Tool[];
   selectedTool: string;
   onToolChange: (tool: string) => void;

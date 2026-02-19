@@ -25,14 +25,14 @@ export function useSvgLiveUpdate(
           (prevEl as HTMLElement).style.outline = '';
           (prevEl as HTMLElement).style.outlineOffset = '';
         }
-      } catch (e) { /* ignore */ }
+      } catch { /* ignore */ }
     }
 
     // 2. Update ONLY the active element
     // highlightId is the internalId in the new store
-    const activeElement = (overrideElement && (overrideElement as any).internalId === highlightId)
+    const activeElement = (overrideElement && overrideElement.internalId === highlightId)
       ? overrideElement
-      : (highlightId ? elements.find(e => (e as any).internalId === highlightId) : null);
+      : (highlightId ? elements.find(e => e.internalId === highlightId) : null);
 
     if (activeElement && highlightId) {
       try {
@@ -67,7 +67,7 @@ export function useSvgLiveUpdate(
             domEl.setAttribute('style', activeElement.attributes.style);
           }
         }
-      } catch (e) { /* ignore */ }
+      } catch { /* ignore */ }
     }
 
     // 3. Apply New Highlight
@@ -78,11 +78,11 @@ export function useSvgLiveUpdate(
           (highlightEl as HTMLElement).style.outline = '2px dashed #4ade80';
           (highlightEl as HTMLElement).style.outlineOffset = '2px';
         }
-      } catch (e) { /* ignore */ }
+      } catch { /* ignore */ }
       prevHighlightIdRef.current = highlightId;
     } else {
       prevHighlightIdRef.current = null;
     }
 
-  }, [elements, highlightId, containerRef]);
+  }, [elements, highlightId, containerRef, overrideElement]);
 }

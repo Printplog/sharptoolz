@@ -29,7 +29,7 @@ const SuccessPaymentDialog = () => {
         setNewPayment(false); // reset flag after showing
       }
     }
-  }, [lastTx?.id, lastTx?.status, newPayment, setNewPayment]);
+  }, [lastTx, lastTx?.id, lastTx?.status, newPayment, setNewPayment]);
 
   const closeDialog = () => setOpen(false);
 

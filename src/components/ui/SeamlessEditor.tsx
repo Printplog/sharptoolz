@@ -12,14 +12,15 @@ export function SeamlessEditor({ value, onChange, className, placeholder }: Seam
   // Initialize lines from value
   const [lines, setLines] = useState<string[]>(value ? value.split('\n') : ['']);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  
+
   // Sync internal state if external value changes drastically (e.g. from undo/redo or selection change)
   // We need to be careful not to override typing state, so we might check if they differ significantly
   useEffect(() => {
     const joined = lines.join('\n');
     if (value !== joined) {
-       setLines(value ? value.split('\n') : ['']);
+      setLines(value ? value.split('\n') : ['']);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   const updateParent = (newLines: string[]) => {
@@ -36,46 +37,46 @@ export function SeamlessEditor({ value, onChange, className, placeholder }: Seam
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      
+
       const currentLine = lines[index];
       const selectionStart = e.currentTarget.selectionStart || 0;
-      
+
       // Split the line at cursor
       const part1 = currentLine.substring(0, selectionStart);
       const part2 = currentLine.substring(selectionStart);
-      
+
       const newLines = [...lines];
       newLines[index] = part1;
       newLines.splice(index + 1, 0, part2);
-      
+
       setLines(newLines);
       updateParent(newLines);
-      
+
       // Format: Focus next line after render
       setTimeout(() => {
-         // Focus the start of the new line
-         if (inputRefs.current[index + 1]) {
-           inputRefs.current[index + 1]?.focus();
-           inputRefs.current[index + 1]?.setSelectionRange(0, 0);
-         }
+        // Focus the start of the new line
+        if (inputRefs.current[index + 1]) {
+          inputRefs.current[index + 1]?.focus();
+          inputRefs.current[index + 1]?.setSelectionRange(0, 0);
+        }
       }, 0);
     } else if (e.key === 'Backspace') {
       const selectionStart = e.currentTarget.selectionStart || 0;
-      
+
       // Merge with previous line if at start and not first line
       if (selectionStart === 0 && index > 0) {
         e.preventDefault();
-        
+
         const prevLine = lines[index - 1];
         const currentLine = lines[index];
-        
+
         const newLines = [...lines];
         newLines[index - 1] = prevLine + currentLine;
         newLines.splice(index, 1);
-        
+
         setLines(newLines);
         updateParent(newLines);
-        
+
         setTimeout(() => {
           if (inputRefs.current[index - 1]) {
             inputRefs.current[index - 1]?.focus();
@@ -91,8 +92,8 @@ export function SeamlessEditor({ value, onChange, className, placeholder }: Seam
       }
     } else if (e.key === 'ArrowDown') {
       if (index < lines.length - 1) {
-         e.preventDefault();
-         inputRefs.current[index + 1]?.focus();
+        e.preventDefault();
+        inputRefs.current[index + 1]?.focus();
       }
     }
   };

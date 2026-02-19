@@ -81,6 +81,7 @@ export default function Tutorials() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredTutorials.map((tutorial) => {
               const thumbnailUrl = getYouTubeThumbnailFromUrl(tutorial.url);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const displayTitle = tutorial.title || (tutorial as any).template_name || "Tutorial";
 
               return (

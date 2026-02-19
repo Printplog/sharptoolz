@@ -10,7 +10,7 @@ import type { SvgElement } from "@/lib/utils/parseSvgElements";
  */
 export function escapeCssSelector(id: string): string {
   // Escape special CSS selector characters
-  return id.replace(/([!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~])/g, '\\$1');
+  return id.replace(new RegExp("([!\"#$%&'()*+,./:;<=>?@[\\]^`{|}~])", "g"), '\\$1');
 }
 
 /**
@@ -50,9 +50,9 @@ export function isTextElement(el: SvgElement): boolean {
  */
 export function filterEditableElements(elements: SvgElement[]): SvgElement[] {
   const nonEditableTags = [
-    'defs', 'style', 'linearGradient', 'radialGradient', 
-    'pattern', 'clipPath', 'mask', 'filter', 
-    'feGaussianBlur', 'feOffset', 'feFlood', 
+    'defs', 'style', 'linearGradient', 'radialGradient',
+    'pattern', 'clipPath', 'mask', 'filter',
+    'feGaussianBlur', 'feOffset', 'feFlood',
     'feComposite', 'feMerge', 'feMergeNode'
   ];
   return elements.filter(el => !nonEditableTags.includes(el.tag));

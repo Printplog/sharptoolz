@@ -8,6 +8,7 @@ interface EditableInputProps {
   onBlur: () => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   disabled?: boolean;
+  hasError?: boolean;
   placeholder?: string;
   className?: string;
 }
@@ -19,6 +20,7 @@ const EditableInput = forwardRef<HTMLDivElement, EditableInputProps>(({
   onBlur,
   onKeyDown,
   disabled,
+  hasError,
   placeholder,
   className,
 }, ref) => {
@@ -40,7 +42,10 @@ const EditableInput = forwardRef<HTMLDivElement, EditableInputProps>(({
         onBlur={onBlur}
         onKeyDown={onKeyDown}
         className={cn(
-          "min-h-[44px] rounded-md border border-white/20 bg-white/5 px-3 py-2 font-mono text-sm text-white placeholder:text-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:border-white/30",
+          "min-h-[44px] rounded-md border bg-white/5 px-3 py-2 font-mono text-sm text-white placeholder:text-white/40 focus-visible:outline-none focus-visible:ring-0",
+          hasError
+            ? "border-red-500/50 focus-visible:border-red-500/50"
+            : "border-white/20 focus-visible:border-white/40",
           disabled && "opacity-50 cursor-not-allowed",
           className
         )}

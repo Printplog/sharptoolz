@@ -38,6 +38,7 @@ export default function IdEditor({
     applySuggestion,
     handleValueInput,
     handleInput,
+    validation,
   } = useIdEditor(value, onChange);
 
   const suggestions = useSuggestions(internalValue, isFocused);
@@ -73,7 +74,7 @@ export default function IdEditor({
         }
       }
     },
-    [suggestions, activeIndex, applySuggestion, showValueInput]
+    [suggestions, activeIndex, applySuggestion, showValueInput, setActiveIndex]
   );
 
   const handleFocus = useCallback(() => {
@@ -91,7 +92,7 @@ export default function IdEditor({
   }, [setShowValueInput, setPendingExtension]);
 
   return (
-    <div className="relative">
+    <div className="relative space-y-2">
       <EditableInput
         ref={editorRef}
         value={internalValue}
@@ -100,9 +101,17 @@ export default function IdEditor({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         disabled={disabled}
+        hasError={!validation.isValid}
         placeholder={placeholder}
         className={className}
       />
+
+      {!validation.isValid && validation.error && (
+        <div className="text-[10px] text-red-400 font-medium px-1 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="w-1 h-1 rounded-full bg-red-400" />
+          {validation.error}
+        </div>
+      )}
 
       {/* Value input dialog for extensions that require values */}
       {showValueInput && pendingExtension && (

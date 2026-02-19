@@ -55,6 +55,7 @@ export default function AdminSettings() {
       setIsChallengeOpen(false);
       setAnswers({ otp: "" });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       const msg = error.response?.data?.error || "Failed to update settings.";
       toast.error(msg);
@@ -66,6 +67,7 @@ export default function AdminSettings() {
     try {
       const res = await requestSettingsVerificationCode();
       toast.success(res.message);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const msg = error.response?.data?.error || "Failed to send code.";
       toast.error(msg);

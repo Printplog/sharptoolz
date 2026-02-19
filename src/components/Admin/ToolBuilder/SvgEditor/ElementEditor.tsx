@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useState, useMemo, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Save, Bookmark, Trash2, Loader2 } from "lucide-react";
+import { Minus, Plus, Save, Bookmark, Trash2, Loader2, Wand2 } from "lucide-react";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
-import type { TransformVariable } from "@/types";
+import type { TransformVariable, SvgPatch } from "@/types";
 import { CollapsiblePanel } from "./components/CollapsiblePanel";
 
 interface VariableDropdownProps {
@@ -32,8 +32,8 @@ interface VariableDropdownProps {
   currentValue: number;
   onApply: (val: number) => void;
   variables: TransformVariable[];
-  saveMutation: any;
-  deleteMutation: any;
+  saveMutation: { mutate: (data: Partial<TransformVariable>) => void; isPending: boolean };
+  deleteMutation: { mutate: (id: number) => void; isPending: boolean };
 }
 
 const VariableDropdown = ({
@@ -105,7 +105,7 @@ const VariableDropdown = ({
           <div className="flex gap-2">
             <Input
               placeholder="Name..."
-              className="h-8 text-[11px] bg-white/5 border-white/10"
+              className="h-8 text-[11px] bg-white/5 border-white/10 focus-visible:ring-0 focus-visible:border-white/30"
               value={variableName}
               onChange={(e) => setVariableName(e.target.value)}
             />
@@ -140,7 +140,7 @@ interface ElementEditorProps {
   isImageElement: (el: SvgElement) => boolean;
   allElements?: SvgElement[];
   onLiveUpdate?: (element: SvgElement) => void;
-  onPatchUpdate?: (patch: any) => void;
+  onPatchUpdate?: (patch: SvgPatch) => void;
 }
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
@@ -156,7 +156,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     useEffect(() => {
       setLocalElement(element);
       setIsDirty(false);
-    }, [element.id, element.innerText, index]);
+    }, [element, index]);
 
     const handleLocalUpdate = (updates: Partial<SvgElement>) => {
       setLocalElement(prev => {
@@ -258,10 +258,12 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const handleGenRuleChange = (newRule: string) => {
       const parts = localElement.id?.split(".") || [];
-      const newParts = parts.some(p => p.startsWith("gen_"))
-        ? parts.map(p => p.startsWith("gen_") ? `gen_${newRule}` : p)
-        : [...parts, `gen_${newRule}`];
-      handleLocalUpdate({ id: newParts.join(".") });
+      // Remove ALL existing gen_ parts AND the base 'gen' type to prevent duplication/stacking
+      // usage: Given_Name.gen_(rn[5]) instead of Given_Name.gen.gen_(rn[5])
+      const cleanParts = parts.filter(p => p !== "gen" && !p.startsWith("gen_"));
+      // Add the new rule
+      const finalParts = [...cleanParts, `gen_${newRule}`];
+      handleLocalUpdate({ id: finalParts.join(".") });
     };
 
     const currentFieldValues = useMemo(() => {
@@ -297,10 +299,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         return match ? parseFloat(match[1]) : null;
       };
 
-      let rotate = getVal(/rotate\s*\(\s*(-?\d+\.?\d*)/);
-      let scale = getVal(/scale\s*\(\s*(-?\d+\.?\d*)/);
-      let translateX = getVal(/translate\s*\(\s*(-?\d+\.?\d*)/);
-      let translateY = getVal(/translate\s*\((?:[^,]+,)?\s*(-?\d+\.?\d*)/);
+      const rotate = getVal(/rotate\s*\(\s*(-?\d+\.?\d*)/);
+      const scale = getVal(/scale\s*\(\s*(-?\d+\.?\d*)/);
+      const translateX = getVal(/translate\s*\(\s*(-?\d+\.?\d*)/);
+      const translateY = getVal(/translate\s*\((?:[^,]+,)?\s*(-?\d+\.?\d*)/);
 
       return {
         rotate: rotate ?? 0,
@@ -382,17 +384,25 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         {isGenField && (
           <div className="space-y-2">
             <Label className="text-sm font-medium">Generation Rule</Label>
-            <GenRuleBuilder
-              value={currentGenRule}
-              onChange={handleGenRuleChange}
-              allElements={allElements}
-              maxLength={maxLength}
-              open={showGenBuilder}
-              onOpenChange={setShowGenBuilder}
-              currentFieldValues={currentFieldValues}
-              defaultTextContent={localElement.innerText || ""}
-              trigger={<Input value={previewGenRule} readOnly className="bg-white/5 text-white/60 cursor-pointer" />}
-            />
+            <div className="flex gap-2">
+              <Input value={previewGenRule} readOnly className="bg-white/5 text-white/60 font-mono text-xs border-white/20 focus-visible:ring-0" />
+              <GenRuleBuilder
+                value={currentGenRule}
+                onChange={handleGenRuleChange}
+                allElements={allElements}
+                maxLength={maxLength}
+                open={showGenBuilder}
+                onOpenChange={setShowGenBuilder}
+                currentFieldValues={currentFieldValues}
+                defaultTextContent={localElement.innerText || ""}
+                trigger={
+                  <Button variant="outline" className="shrink-0 bg-white/5 border-white/20 hover:bg-white/10 gap-2">
+                    <Wand2 className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="text-xs">Builder</span>
+                  </Button>
+                }
+              />
+            </div>
           </div>
         )}
 
@@ -402,7 +412,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
             value={localElement.attributes['data-helper'] || ""}
             onChange={(val) => handleLocalUpdate({ attributes: { ...localElement.attributes, 'data-helper': val } })}
             rows={2}
-            className="bg-white/10 text-sm"
+            className="bg-white/10 text-sm border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
           />
         </div>
 
@@ -414,7 +424,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                 value={localElement.innerText || ""}
                 onChange={(val) => handleLocalUpdate({ innerText: val })}
                 rows={6}
-                className="bg-white/10 text-sm font-mono"
+                className="bg-white/10 text-sm font-mono border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
               />
             </div>
             <div className="space-y-2">
@@ -423,7 +433,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                 type="number"
                 value={localElement.attributes['data-max-width'] || ""}
                 onChange={(val) => handleLocalUpdate({ attributes: { ...localElement.attributes, 'data-max-width': String(val) } })}
-                className="bg-white/10 h-8"
+                className="bg-white/10 h-8 border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
               />
             </div>
           </div>
@@ -449,26 +459,26 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                   <div className="flex justify-between items-center">
                     <Label className="text-[10px] uppercase font-bold text-white/40">{t.label}</Label>
                     <VariableDropdown
-                      category={t.key as any}
-                      currentValue={(currentTransform as any)[t.key]}
-                      onApply={(val) => updateTransform(t.key as any, val)}
+                      category={t.key as TransformVariable['category']}
+                      currentValue={(currentTransform as Record<string, number>)[t.key]}
+                      onApply={(val) => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', val)}
                       variables={variables}
                       saveMutation={saveVariableMutation}
                       deleteMutation={deleteVariableMutation}
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="glass" size="icon" className="h-8 w-8" onClick={() => updateTransform(t.key as any, (currentTransform as any)[t.key] - (t.step || 1))}>
+                    <Button variant="glass" size="icon" className="h-8 w-8" onClick={() => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', (currentTransform as Record<string, number>)[t.key] - (t.step || 1))}>
                       <Minus className="w-3 h-3" />
                     </Button>
                     <DebouncedInput
                       type="number"
-                      value={(currentTransform as any)[t.key]}
+                      value={(currentTransform as Record<string, number>)[t.key]}
                       step={t.step || 1}
-                      onChange={(val) => updateTransform(t.key as any, parseFloat(String(val)) || 0)}
-                      className="h-8 bg-white/5 text-xs text-center"
+                      onChange={(val) => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', parseFloat(String(val)) || 0)}
+                      className="h-8 bg-white/5 text-xs text-center border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
                     />
-                    <Button variant="glass" size="icon" className="h-8 w-8" onClick={() => updateTransform(t.key as any, (currentTransform as any)[t.key] + (t.step || 1))}>
+                    <Button variant="glass" size="icon" className="h-8 w-8" onClick={() => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', (currentTransform as Record<string, number>)[t.key] + (t.step || 1))}>
                       <Plus className="w-3 h-3" />
                     </Button>
                   </div>

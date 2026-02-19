@@ -47,7 +47,7 @@ export default function RecentVisitors({ data, isLoading }: RecentVisitorsProps)
         }
       }
     });
-  }, [data]);
+  }, [data, locations]);
 
   if (isLoading) {
     return (

@@ -13,7 +13,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["intro"]));
   const [searchQuery, setSearchQuery] = useState("");
   const { ref: navbarRef } = useHeight<HTMLDivElement>();
-  
+
   // Auto-expand section when activeSection changes
   useEffect(() => {
     if (activeSection) {
@@ -24,7 +24,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
       });
     }
   }, [activeSection]);
-  
+
   // Listen for text selection in the document
   useEffect(() => {
     const handleSelectionChange = () => {
@@ -32,37 +32,26 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
       if (selection && selection.toString().trim()) {
         // Only update search if selection is in an input or editor area
         const activeElement = document.activeElement;
-        const isInInput = activeElement instanceof HTMLInputElement || 
-                          activeElement instanceof HTMLTextAreaElement ||
-                          activeElement?.classList.contains('element-editor');
-        
+        const isInInput = activeElement instanceof HTMLInputElement ||
+          activeElement instanceof HTMLTextAreaElement ||
+          activeElement?.classList.contains('element-editor');
+
         if (isInInput) {
           setSearchQuery(selection.toString().trim());
-          
+
           // Auto-expand all sections when searching
           const allSectionIds = getAllSectionIds(svgEditorDocs);
           setExpandedSections(new Set(allSectionIds));
         }
       }
     };
-    
+
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => {
       document.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, []);
-  
-  // Helper to get all section IDs for expanding during search
-  const getAllSectionIds = (sections: DocSection[]): string[] => {
-    return sections.flatMap(section => {
-      const ids = [section.id];
-      if (section.subsections) {
-        return [...ids, ...getAllSectionIds(section.subsections)];
-      }
-      return ids;
-    });
-  };
-  
+
   // Toggle section expansion
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => {
@@ -75,9 +64,9 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
       return newSet;
     });
   };
-  
+
   // Search filtering logic
-  const filteredDocs = searchQuery 
+  const filteredDocs = searchQuery
     ? filterDocsBySearch(svgEditorDocs, searchQuery.toLowerCase())
     : svgEditorDocs;
 
@@ -87,16 +76,16 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
         // Check if this section matches
         const titleMatch = section.title.toLowerCase().includes(query);
         const contentMatch = section.content.toLowerCase().includes(query);
-        const codeMatch = section.codeExamples?.some(ex => 
-          ex.code.toLowerCase().includes(query) || 
+        const codeMatch = section.codeExamples?.some(ex =>
+          ex.code.toLowerCase().includes(query) ||
           (ex.description && ex.description.toLowerCase().includes(query))
         );
-        
+
         // Process subsections
-        const matchedSubsections = section.subsections 
+        const matchedSubsections = section.subsections
           ? filterDocsBySearch(section.subsections, query)
           : [];
-        
+
         // Include this section if it matches or has matching subsections
         if (titleMatch || contentMatch || codeMatch || matchedSubsections.length > 0) {
           return {
@@ -104,13 +93,13 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
             subsections: matchedSubsections.length > 0 ? matchedSubsections : section.subsections
           };
         }
-        
+
         // Return null if no match (will be filtered out)
         return null;
       })
       .filter(Boolean) as DocSection[];
   }
-  
+
   // Render a code example
   const renderCodeExample = (example: NonNullable<DocSection['codeExamples']>[0]) => (
     <div className="my-2 bg-black/30 rounded-md overflow-hidden">
@@ -123,62 +112,62 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
       )}
     </div>
   );
-  
+
   // Recursive function to render sections and subsections
   const renderSection = (section: DocSection, depth = 0) => {
     const isExpanded = expandedSections.has(section.id);
-    
+
     return (
       <div key={section.id} className="mb-4">
-        <div 
+        <div
           className={`flex items-center gap-2 cursor-pointer ${depth > 0 ? 'pl-4' : ''}`}
           onClick={() => toggleSection(section.id)}
         >
           <span className="flex items-center justify-center w-5 h-5 text-white/70">
             {isExpanded ? (
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m6 9 6 6 6-6"/>
+                <path d="m6 9 6 6 6-6" />
               </svg>
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m9 6 6 6-6 6"/>
+                <path d="m9 6 6 6-6 6" />
               </svg>
             )}
           </span>
           <h3 className={`font-medium ${depth > 0 ? 'text-sm' : 'text-base'}`}>{section.title}</h3>
         </div>
-        
+
         {isExpanded && (
           <div className={`mt-2 ${depth > 0 ? 'pl-6' : 'pl-4'}`}>
             <div className="text-sm text-white/80">{section.content}</div>
-            
+
             {section.codeExamples?.map((example, i) => (
               <div key={i}>{renderCodeExample(example)}</div>
             ))}
-            
+
             {section.subsections?.map(subsection => renderSection(subsection, depth + 1))}
           </div>
         )}
       </div>
     );
   };
-  
+
   // Get reference to navbar for height calculation
   useEffect(() => {
     const navbar = document.querySelector('nav') || document.querySelector('header');
     if (navbar) {
       (navbarRef as React.RefObject<HTMLDivElement>).current = navbar as HTMLDivElement;
     }
-  }, []);
+  }, [navbarRef]);
 
   // Only need one useEffect to get the navbar height
 
   return (
-    <div 
+    <div
       className="overflow-auto custom-scrollbar h-full"
     >
       <h2 className="text-lg font-semibold mb-4">SVG Editor Documentation</h2>
-      
+
       <div className="mb-4 space-y-2">
         <div className="flex gap-2">
           <Input
@@ -188,14 +177,14 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 flex-1"
           />
           {searchQuery && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setSearchQuery("")}
               className="hover:bg-white/10"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                <path d="M18 6 6 18" /><path d="m6 6 12 12" />
               </svg>
             </Button>
           )}
@@ -204,10 +193,21 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
           Tip: Highlight any text in the editor to automatically search for it here
         </div>
       </div>
-      
+
       <div className="space-y-2 pr-2">
         {filteredDocs.map(section => renderSection(section))}
       </div>
     </div>
   );
 }
+
+// Helper to get all section IDs for expanding during search
+const getAllSectionIds = (sections: DocSection[]): string[] => {
+  return sections.flatMap(section => {
+    const ids = [section.id];
+    if (section.subsections) {
+      return [...ids, ...getAllSectionIds(section.subsections)];
+    }
+    return ids;
+  });
+};

@@ -39,7 +39,7 @@ type NavigationBlocker = {
 
 function useNavigationBlocker(when: boolean): NavigationBlocker {
   const navigatorContext = useContext(UNSAFE_NavigationContext);
-  const navigator = navigatorContext?.navigator as { block?: (cb: (tx: any) => void) => () => void } | undefined;
+  const navigator = navigatorContext?.navigator as { block?: (cb: (tx: { retry: () => void }) => void) => () => void } | undefined;
   const [state, setState] = useState<"blocked" | "unblocked">("unblocked");
   const retryRef = useRef<null | (() => void)>(null);
 
@@ -49,7 +49,7 @@ function useNavigationBlocker(when: boolean): NavigationBlocker {
       setState("unblocked");
       return;
     }
-    const unblock = navigator.block((tx: any) => {
+    const unblock = navigator.block((tx: { retry: () => void }) => {
       const retry = () => {
         unblock();
         tx.retry();
@@ -176,7 +176,7 @@ const FormPanel = React.memo(function FormPanel({
   // Check for startValues in location state (from duplicate feature)
   useEffect(() => {
     if (location.state && location.state.startValues && fields && fields.length > 0 && !appliedDuplicateValuesRef.current) {
-      const { startValues } = location.state as { startValues: Record<string, any> };
+      const { startValues } = location.state as { startValues: Record<string, unknown> };
 
       Object.entries(startValues).forEach(([key, value]) => {
         // Find field to ensure it exists before updating
@@ -427,7 +427,7 @@ const FormPanel = React.memo(function FormPanel({
       await createDocument(test);
       setShowUnsavedDialog(false);
       blocker.proceed();
-    } catch (error) {
+    } catch {
       blocker.reset();
     } finally {
       setIsSavingBeforeLeave(false);
@@ -573,7 +573,7 @@ const FormPanel = React.memo(function FormPanel({
                   variant="outline"
                   onClick={() => {
                     // Gather current values
-                    const currentValues: Record<string, any> = {};
+                    const currentValues: Record<string, string | number | boolean | null | undefined> = {};
                     fields?.forEach(f => {
                       currentValues[f.id] = f.currentValue;
                     });

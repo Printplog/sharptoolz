@@ -6,8 +6,11 @@
 // Uses Network Information API if available, otherwise estimates based on connection type
 export function estimateInternetSpeed(): number {
   // Try to use Network Information API
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const connection = (navigator as any).connection ||
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (navigator as any).mozConnection ||
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (navigator as any).webkitConnection;
 
   if (connection) {

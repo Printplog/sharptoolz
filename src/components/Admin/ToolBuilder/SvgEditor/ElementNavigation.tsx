@@ -141,7 +141,7 @@ function createDisplayList(elements: SvgElement[], expandedGroups: Set<string>) 
 
   elements.forEach((element, index) => {
     const id = element.id || '';
-    const internalId = (element as any).internalId || id;
+    const internalId = element.internalId || id;
     if (id.includes('.select_')) {
       const groupName = id.split('.select_')[0];
       if (!groups[groupName]) {
@@ -156,7 +156,7 @@ function createDisplayList(elements: SvgElement[], expandedGroups: Set<string>) 
     if (processedIndices.has(index)) return;
 
     const id = element.id || '';
-    const internalId = (element as any).internalId || id;
+    const internalId = element.internalId || id;
     if (id.includes('.select_')) {
       const groupName = id.split('.select_')[0];
       const groupExists = result.some(item => item.type === 'group' && item.groupName === groupName);

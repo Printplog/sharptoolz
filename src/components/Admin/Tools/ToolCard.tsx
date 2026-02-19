@@ -24,7 +24,7 @@ export default function ToolCard({ tool }: Props) {
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
       queryClient.invalidateQueries({ queryKey: ["templates"] });
-      const toolId = location.pathname.match(/\/admin\/tools\/([^\/]+)\/templates/)?.[1];
+      const toolId = location.pathname.match(new RegExp("/admin/tools/([^/]+)/templates"))?.[1];
       if (toolId) {
         queryClient.invalidateQueries({ queryKey: ["templates", "tool", toolId] });
       }

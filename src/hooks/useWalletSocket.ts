@@ -11,7 +11,7 @@ type WalletEvent = {
 };
 
 export function useWalletSocket() {
-  const {setWallet, setNewPayment} = useWalletStore();
+  const { setWallet, setNewPayment } = useWalletStore();
 
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const baseWsUrl = import.meta.env.VITE_WS_URL;
@@ -26,7 +26,7 @@ export function useWalletSocket() {
       }
       console.log("[WS] Wallet updated:", msg);
     },
-    [setWallet]
+    [setWallet, setNewPayment]
   );
 
   const { sendMessage, connect } = useWebSocketClient<WalletEvent>({

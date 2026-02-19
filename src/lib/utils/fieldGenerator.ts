@@ -19,7 +19,7 @@
 import type { FormField } from "@/types";
 
 export function generateValue(
-  generationRule: string, 
+  generationRule: string,
   allFields?: Record<string, string | number | boolean>,
   maxLength?: number
 ): string {
@@ -31,17 +31,17 @@ export function generateValue(
 
   // Extract all generation patterns (text)...(text)
   const patterns = rule.match(/([^()]+|\([^)]+\))/g) || [];
-  
+
   // First pass: identify fill patterns and process others
   const fillPatterns: Array<{ index: number; char: string; placeholder: string }> = [];
   const parts: Array<{ type: 'static' | 'generated' | 'fill'; value: string; fillChar?: string }> = [];
-  
+
   for (let i = 0; i < patterns.length; i++) {
     const pattern = patterns[i];
     if (pattern.startsWith('(') && pattern.endsWith(')')) {
       // This is a generation pattern
       const content = pattern.slice(1, -1); // Remove parentheses
-      
+
       // Check if it's a fill pattern
       const fillMatch = content.match(/^(.+?)\[fill\]$/);
       if (fillMatch && maxLength !== undefined) {
@@ -59,19 +59,19 @@ export function generateValue(
       parts.push({ type: 'static', value: pattern });
     }
   }
-  
+
   // Build result without fill
-  let resultWithoutFill = parts
+  const resultWithoutFill = parts
     .filter(p => p.type !== 'fill')
     .map(p => p.value)
     .join('');
-  
+
   // Calculate fill needed
   let fillNeeded = 0;
   if (fillPatterns.length > 0 && maxLength !== undefined) {
     fillNeeded = Math.max(0, maxLength - resultWithoutFill.length);
-    }
-  
+  }
+
   // Build final result with fill
   let result = '';
   for (const part of parts) {
@@ -84,12 +84,12 @@ export function generateValue(
       result += part.value;
     }
   }
-  
+
   // Enforce max length (truncate if needed)
   if (maxLength !== undefined && result.length > maxLength) {
     result = result.substring(0, maxLength);
   }
-  
+
   return result;
 }
 
@@ -99,7 +99,7 @@ function processGenerationPattern(pattern: string, allFields?: Record<string, st
     const count = parseInt(pattern.match(/\d+/)?.[0] || '0');
     return generateRandomNumbers(count);
   }
-  
+
   // Random characters: rc[6] (mixed), ru[6] (uppercase), rl[6] (lowercase)
   if (pattern.match(/^(rc|ru|rl)\[/) && pattern.endsWith(']')) {
     const match = pattern.match(/^(rc|ru|rl)\[(\d+)\]$/);
@@ -107,32 +107,32 @@ function processGenerationPattern(pattern: string, allFields?: Record<string, st
       const kind = match[1] as 'rc' | 'ru' | 'rl';
       const count = parseInt(match[2] || '0');
       return generateRandomChars(count, kind);
+    }
   }
-  }
-  
+
   // Random both (numbers + letters): rb[6] with case option
   // This is handled by combining rn and rc/ru/rl patterns
-  
+
   // Character duplication: A[10]
   const dupMatch = pattern.match(/^(.+)\[(\d+)\]$/);
   if (dupMatch) {
     const char = dupMatch[1];
     const count = parseInt(dupMatch[2]);
-    
+
     // Check if it's a field reference
     if (allFields && allFields[char]) {
       return String(allFields[char]).repeat(count);
     }
-    
+
     // Otherwise duplicate the character
     return char.repeat(count);
   }
-  
+
   // Field reference with extraction: field_name[w1] or field_name[ch1-4]
   if (allFields) {
     return extractFromField(pattern, allFields);
   }
-  
+
   return '';
 }
 
@@ -154,7 +154,7 @@ function generateRandomChars(count: number, kind: 'rc' | 'ru' | 'rl' = 'rc'): st
     // rc - mixed case
     chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   }
-  
+
   let result = '';
   for (let i = 0; i < count; i++) {
     result += chars[Math.floor(Math.random() * chars.length)];
@@ -165,13 +165,13 @@ function generateRandomChars(count: number, kind: 'rc' | 'ru' | 'rl' = 'rc'): st
 function extractFromField(pattern: string, allFields: Record<string, string | number | boolean>): string {
   // Check if pattern contains extraction syntax
   const extractMatch = pattern.match(/^(dep_)?(.+?)(\[(w|ch)(.+)\])?$/);
-  
+
   if (extractMatch) {
     const hasDep = !!extractMatch[1]; // 'dep_' prefix
     const fieldName = extractMatch[2]; // Field name without dep_ prefix
     const extractType = extractMatch[4]; // 'w' or 'ch'
     const extractPattern = extractMatch[5]; // '1', '1,2,5', '1-4'
-    
+
     // Get field value (try with and without dep_ prefix)
     let fieldValue = '';
     if (hasDep) {
@@ -180,7 +180,7 @@ function extractFromField(pattern: string, allFields: Record<string, string | nu
     } else {
       fieldValue = String(allFields[fieldName] || '');
     }
-    
+
     if (extractType === 'w') {
       // Word extraction
       return extractWord(fieldValue, extractPattern);
@@ -188,11 +188,11 @@ function extractFromField(pattern: string, allFields: Record<string, string | nu
       // Character extraction
       return extractChars(fieldValue, extractPattern);
     }
-    
+
     // Simple field reference (no extraction)
     return fieldValue;
   }
-  
+
   // Fallback: try direct field reference
   return String(allFields[pattern] || allFields[pattern.replace(/^dep_/, '')] || '');
 }
@@ -200,7 +200,7 @@ function extractFromField(pattern: string, allFields: Record<string, string | nu
 function extractWord(text: string, pattern: string): string {
   const words = text.trim().split(/\s+/);
   const wordIndex = parseInt(pattern) - 1; // Convert to 0-based index
-  
+
   return words[wordIndex] || '';
 }
 
@@ -210,13 +210,13 @@ function extractChars(text: string, pattern: string): string {
     const indices = pattern.split(',').map(i => parseInt(i.trim()) - 1);
     return indices.map(i => text[i] || '').join('');
   }
-  
+
   // Handle range: ch1-4
   if (pattern.includes('-')) {
     const [start, end] = pattern.split('-').map(i => parseInt(i.trim()));
     return text.slice(start - 1, end);
   }
-  
+
   // Handle single character: ch1
   const index = parseInt(pattern) - 1;
   return text[index] || '';
@@ -229,16 +229,16 @@ function extractChars(text: string, pattern: string): string {
 export function applyMaxGeneration(value: string, maxGeneration: string): string {
   const pattern = maxGeneration.slice(1, -1); // Remove parentheses
   const match = pattern.match(/^(.+)\[(\d+)\]$/);
-  
+
   if (match) {
     const char = match[1];
     const maxLength = parseInt(match[2]);
     const currentLength = value.length;
     const paddingNeeded = Math.max(0, maxLength - currentLength);
-    
+
     return value + char.repeat(paddingNeeded);
   }
-  
+
   return value;
 }
 
@@ -257,7 +257,7 @@ export function generateAutoFields(fields: FormField[], isPurchased: boolean = f
   // Build field value map for dependencies
   // For select fields, use the human-readable option text instead of the raw id,
   // so .gen and other dependency-based fields see the actual value.
-  const allFieldValues: Record<string, string | number | boolean | any> = {};
+  const allFieldValues: Record<string, string | number | boolean> = {};
   fields.forEach((f) => {
     if (f.type === "select" && f.options && f.options.length > 0) {
       const selected = f.options.find(

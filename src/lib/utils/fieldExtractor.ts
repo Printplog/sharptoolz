@@ -16,7 +16,7 @@ import { format } from "date-fns";
 
 export function extractFromDependency(
   dependsOn: string,
-  allFields: Record<string, string | number | boolean | any>
+  allFields: Record<string, string | number | boolean | unknown>
 ): string {
   // Check if pattern contains extraction syntax
   // Updated regex to support date extraction: [date:FORMAT] or [w1] or [ch1]
@@ -99,7 +99,7 @@ function extractDate(text: string, formatString: string): string {
     if (isNaN(date.getTime())) return text; // Return original if invalid date
 
     return format(date, formatString || 'MM/dd/yyyy');
-  } catch (e) {
+  } catch {
     return text;
   }
 }

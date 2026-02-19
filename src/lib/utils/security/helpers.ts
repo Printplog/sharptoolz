@@ -25,6 +25,7 @@ export const isSafari = () => {
 
 export const isOperaMini = () => {
     if (typeof window === 'undefined') return false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return navigator.userAgent.includes('Opera Mini') || (window as any).operamini !== undefined;
 };
 

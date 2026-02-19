@@ -15,11 +15,11 @@ interface CustomDateTimePickerProps {
   disabled?: boolean;
 }
 
-export default function CustomDateTimePicker({ 
-  value, 
-  onChange, 
+export default function CustomDateTimePicker({
+  value,
+  onChange,
   format,
-  disabled = false 
+  disabled = false
 }: CustomDateTimePickerProps) {
   // Parse the format to determine what components are needed
   // Check in order of most specific to least specific to avoid conflicts
@@ -43,7 +43,7 @@ export default function CustomDateTimePicker({
         if (!isNaN(parsed.getTime())) {
           return parsed;
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -67,7 +67,7 @@ export default function CustomDateTimePicker({
     if (isNaN(numValue)) return;
 
     const newDate = new Date(dateTime);
-    
+
     if (component === 'year') {
       newDate.setFullYear(numValue);
     } else if (component === 'month') {
@@ -75,20 +75,20 @@ export default function CustomDateTimePicker({
     } else if (component === 'day') {
       newDate.setDate(numValue);
     }
-    
+
     // Validate day after year/month changes (handle leap years and month lengths)
     const daysInNewMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
     if (newDate.getDate() > daysInNewMonth) {
       newDate.setDate(daysInNewMonth);
     }
-    
+
     // Preserve time components when updating date
     if (hasHour || hasMinute || hasSecond) {
       newDate.setHours(dateTime.getHours());
       newDate.setMinutes(dateTime.getMinutes());
       newDate.setSeconds(dateTime.getSeconds());
     }
-    
+
     setDateTime(newDate);
     // Update meridian if needed
     if (hasMeridian && !is12Hour) {
@@ -101,7 +101,7 @@ export default function CustomDateTimePicker({
     if (isNaN(numValue)) return;
 
     const newDateTime = new Date(dateTime);
-    
+
     if (component === 'hour') {
       if (is12Hour) {
         // For 12-hour format, convert to 24-hour
@@ -120,24 +120,24 @@ export default function CustomDateTimePicker({
     } else if (component === 'second') {
       newDateTime.setSeconds(numValue);
     }
-    
+
     setDateTime(newDateTime);
   };
 
   const handleMeridianChange = (value: string) => {
     const newMeridian = value as 'AM' | 'PM';
     setMeridian(newMeridian);
-    
+
     // Update hours when meridian changes
     const currentHour = dateTime.getHours();
     const newDateTime = new Date(dateTime);
-    
+
     if (newMeridian === 'PM' && currentHour < 12) {
       newDateTime.setHours(currentHour + 12);
     } else if (newMeridian === 'AM' && currentHour >= 12) {
       newDateTime.setHours(currentHour - 12);
     }
-    
+
     setDateTime(newDateTime);
   };
 
@@ -241,9 +241,9 @@ export default function CustomDateTimePicker({
       {hasHour && (
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-400">Hour</label>
-          <Select 
-            value={(is12Hour ? getDisplayHour() : dateTime.getHours()).toString()} 
-            onValueChange={(value) => handleTimeChange(value, 'hour')} 
+          <Select
+            value={(is12Hour ? getDisplayHour() : dateTime.getHours()).toString()}
+            onValueChange={(value) => handleTimeChange(value, 'hour')}
             disabled={disabled}
           >
             <SelectTrigger className="bg-white/10 border-white/20 text-white w-20">
@@ -277,9 +277,9 @@ export default function CustomDateTimePicker({
       {hasMinute && (
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-400">Minute</label>
-          <Select 
-            value={dateTime.getMinutes().toString()} 
-            onValueChange={(value) => handleTimeChange(value, 'minute')} 
+          <Select
+            value={dateTime.getMinutes().toString()}
+            onValueChange={(value) => handleTimeChange(value, 'minute')}
             disabled={disabled}
           >
             <SelectTrigger className="bg-white/10 border-white/20 text-white w-20">
@@ -300,9 +300,9 @@ export default function CustomDateTimePicker({
       {hasSecond && (
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-400">Second</label>
-          <Select 
-            value={dateTime.getSeconds().toString()} 
-            onValueChange={(value) => handleTimeChange(value, 'second')} 
+          <Select
+            value={dateTime.getSeconds().toString()}
+            onValueChange={(value) => handleTimeChange(value, 'second')}
             disabled={disabled}
           >
             <SelectTrigger className="bg-white/10 border-white/20 text-white w-20">

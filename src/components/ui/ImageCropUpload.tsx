@@ -142,7 +142,7 @@ export default function ImageCropUpload({
       setImage(null);
       setOriginalImage(null);
     }
-  }, [currentValue, fieldId]); // Only depend on currentValue and fieldId
+  }, [currentValue, fieldId, image]); // Only depend on currentValue and fieldId
 
   // Analyze default image for annotations when component mounts
   useEffect(() => {
@@ -302,7 +302,7 @@ export default function ImageCropUpload({
     } finally {
       setIsRemovingBackground(false);
     }
-  }, [originalFile, cachedBgRemovedImage]);
+  }, [originalFile, cachedBgRemovedImage, originalImage]);
 
   // Free background removal (Hugging Face API)
   const handleFreeBgRemoval = useCallback(async () => {
@@ -358,7 +358,7 @@ export default function ImageCropUpload({
     } finally {
       setIsRemovingBackground(false);
     }
-  }, [originalFile, cachedFreeBgRemoved]);
+  }, [originalFile, cachedFreeBgRemoved, originalImage]);
 
   const handleConfirmCrop = useCallback(async () => {
     if (!image || !completedCrop) return;
@@ -465,10 +465,10 @@ export default function ImageCropUpload({
         <div
           {...getRootProps()}
           className={`block w-full h-40 border-2 border-dashed rounded-lg cursor-pointer transition-colors overflow-hidden ${disabled
-              ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50"
-              : isDragActive
-                ? "border-white/40 bg-white/10"
-                : "border-white/20 hover:border-white/40"
+            ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50"
+            : isDragActive
+              ? "border-white/40 bg-white/10"
+              : "border-white/20 hover:border-white/40"
             }`}
         >
           <input {...getInputProps()} />

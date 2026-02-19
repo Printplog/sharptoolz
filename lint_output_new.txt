@@ -11,23 +11,7 @@
   172:6  warning  React Hook useEffect has a missing dependency: 'navbarRef'. Either include it or remove the dependency array         react-hooks/exhaustive-deps
 
 /home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/ElementEditor.tsx
-   35:17   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-   36:19   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  143:27   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  159:8    warning  React Hook useEffect has a missing dependency: 'element'. Either include it or remove the dependency array. If 'setLocalElement' needs the current value of 'element', you can also switch to useReducer instead of useState and read 'element' in the reducer  react-hooks/exhaustive-deps
-  300:11   error    'rotate' is never reassigned. Use 'const' instead                                                                                                                                                                                                               prefer-const
-  301:11   error    'scale' is never reassigned. Use 'const' instead                                                                                                                                                                                                                prefer-const
-  302:11   error    'translateX' is never reassigned. Use 'const' instead                                                                                                                                                                                                           prefer-const
-  303:11   error    'translateY' is never reassigned. Use 'const' instead                                                                                                                                                                                                           prefer-const
-  452:42   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  453:58   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  454:66   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  461:117  error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  461:143  error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  466:51   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  468:67   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  471:117  error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
-  471:143  error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  159:8  warning  React Hook useEffect has a missing dependency: 'element'. Either include it or remove the dependency array. If 'setLocalElement' needs the current value of 'element', you can also switch to useReducer instead of useState and read 'element' in the reducer  react-hooks/exhaustive-deps
 
 /home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/ElementNavigation.tsx
   144:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -76,23 +60,10 @@
   27:66  error  Unnecessary escape character: \/  no-useless-escape
 
 /home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Dashboard/SVGFormTranslator/FormField.tsx
-   58:16  error    'e' is defined but never used                                                                                                                                                                  @typescript-eslint/no-unused-vars
-  175:6   warning  React Hook useEffect has a missing dependency: 'field.isTrackingId'. Either include it or remove the dependency array                                                                          react-hooks/exhaustive-deps
-  186:5   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
-  200:70  error    Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
-  259:28  error    React Hook "useRef" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?       react-hooks/rules-of-hooks
-  263:39  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?     react-hooks/rules-of-hooks
-  266:3   error    React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?    react-hooks/rules-of-hooks
-  272:24  error    React Hook "useCallback" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
-  292:22  error    React Hook "useCallback" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
-  303:3   error    React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?    react-hooks/rules-of-hooks
+  63:18  error  '_e' is defined but never used  @typescript-eslint/no-unused-vars
 
 /home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Dashboard/SVGFormTranslator/FormPanel/index.tsx
-   42:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-   52:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  179:79  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  430:14  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
-  576:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  430:14  error  '_error' is defined but never used  @typescript-eslint/no-unused-vars
 
 /home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Dashboard/SVGFormTranslator/SvgFormTranslator.tsx
   180:107  error    Unexpected any. Specify a different type                                                                                                          @typescript-eslint/no-explicit-any
@@ -196,7 +167,7 @@
 /home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/router.ts
   2:1  warning  Unused eslint-disable directive (no problems were reported)
 
-✖ 109 problems (84 errors, 25 warnings)
-  8 errors and 2 warnings potentially fixable with the `--fix` option.
+✖ 80 problems (57 errors, 23 warnings)
+  4 errors and 1 warning potentially fixable with the `--fix` option.
 
  ELIFECYCLE  Command failed with exit code 1.

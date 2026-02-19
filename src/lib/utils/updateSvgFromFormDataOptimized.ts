@@ -6,8 +6,8 @@ import { extractFromDependency } from "./fieldExtractor";
  * This is much faster when only a few fields have changed
  */
 export default function updateSvgFromFormDataOptimized(
-  svgRaw: string, 
-  allFields: FormField[], 
+  svgRaw: string,
+  allFields: FormField[],
   changedFieldIds: string[]
 ): string {
   if (!svgRaw || changedFieldIds.length === 0) return svgRaw;
@@ -18,7 +18,7 @@ export default function updateSvgFromFormDataOptimized(
   // Build field value map for dependencies
   // For select fields, use the human-readable option text instead of the raw id,
   // so .gen and other dependency-based fields see the actual value.
-  const allFieldValues: Record<string, string | number | boolean | any> = {};
+  const allFieldValues: Record<string, string | number | boolean | unknown> = {};
   allFields.forEach((f) => {
     if (f.type === "select" && f.options && f.options.length > 0) {
       const selected = f.options.find(
@@ -33,7 +33,7 @@ export default function updateSvgFromFormDataOptimized(
 
   // Find all fields that need updating (changed fields + their dependents)
   const fieldsToUpdate = new Set<string>(changedFieldIds);
-  
+
   // Add dependent fields (fields that depend on changed fields)
   allFields.forEach(field => {
     if (field.dependsOn) {
@@ -123,14 +123,14 @@ export default function updateSvgFromFormDataOptimized(
         case "hide": {
           // Toggle visibility based on checkbox state
           let isVisible = false;
-          
+
           if (typeof value === 'boolean') {
             isVisible = value;
           } else if (typeof value === 'string') {
             const valueStr = value.toLowerCase();
             isVisible = valueStr === "true" || valueStr === "1";
           }
-          
+
           el.setAttribute("opacity", isVisible ? "1" : "0");
           el.setAttribute("visibility", isVisible ? "visible" : "hidden");
           if (isVisible) {

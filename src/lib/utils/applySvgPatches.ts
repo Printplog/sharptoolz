@@ -55,7 +55,7 @@ export function applySvgPatches(svgContent: string, patches: SvgPatch[]): string
             const existingId = domEl.getAttribute("id");
             const existingInternalId = domEl.getAttribute("data-internal-id");
 
-            let baseId = existingId || existingInternalId || `el-${tag}`;
+            const baseId = existingId || existingInternalId || `el-${tag}`;
             idCount[baseId] = (idCount[baseId] || 0) + 1;
             const finalId = idCount[baseId] > 1 ? `${baseId}_${idCount[baseId]}` : baseId;
 

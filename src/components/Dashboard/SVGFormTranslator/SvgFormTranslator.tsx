@@ -177,7 +177,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
           console.warn("Failed to load SVG via direct URL, trying backend proxy...", e);
           try {
             // Fallback to proxy
-            const targetId = isPurchased && templateData && 'template' in templateData ? (templateData as any).template : templateId as string;
+            const targetId = isPurchased && templateData && 'template' in templateData ? (templateData as PurchasedTemplate).template : templateId as string;
             const text = await getTemplateSvgForAdmin(targetId);
             const patchedBase = applySvgPatches(text, templateData.svg_patches || []);
             setSvgContent(patchedBase);
@@ -194,7 +194,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
 
       loadSvg();
     }
-  }, [data?.svg_url, isLoading]);
+  }, [data?.svg_url, isLoading, data, id, isPurchased, svgContent]);
 
   // Initialize fields immediately when template data loads (before SVG)
   useEffect(() => {
@@ -300,7 +300,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
     finalizeSvg();
 
     // Only run when SVG data loads, NOT when fields change
-  }, [svgContent, isSvgFetching, data, setSvgRaw]); // Removed 'fields' dependency
+  }, [svgContent, isSvgFetching, data, setSvgRaw, isPurchased, fields]);
 
   const purchasedData = data as PurchasedTemplate;
 
@@ -398,7 +398,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
       {user?.is_staff && (
         <div className="flex justify-end mb-4">
           <Link
-            to={`/admin/templates/${isPurchased && data ? (data as any).template : id}`}
+            to={`/admin/templates/${isPurchased && data ? (data as PurchasedTemplate).template : id}`}
             className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/50 px-4 py-2 rounded-xl transition-colors text-sm font-medium backdrop-blur-sm"
           >
             <FilePen className="w-4 h-4" />
@@ -437,7 +437,7 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
                 tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
                 templateId={isPurchased ? purchasedData?.template : undefined}
                 isPurchased={Boolean(isPurchased)}
-                toolPrice={(data as any)?.tool_price}
+                toolPrice={(data as unknown as Record<string, number>)?.tool_price}
                 keywords={data?.keywords || []}
               />
             </div>

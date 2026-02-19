@@ -288,7 +288,7 @@ export function getAllowedExtensionsAfter(
 
   // Check if we already have a field type
   const hasFieldType = FIELD_TYPES.some((ft) =>
-    currentExtensions.includes(ft.key)
+    currentExtensions.some(ext => ext === ft.key || ext.startsWith(ft.key + "_"))
   );
 
   if (!hasFieldType) {
@@ -359,8 +359,8 @@ export function getSuggestions(id: string): ExtensionDefinition[] {
   // Get the last part to determine what can come next
   const lastPart = parts[parts.length - 1];
 
-  // Check if we have a field type yet
-  const fieldType = FIELD_TYPES.find((ft) => parts.includes(ft.key));
+  // Check if we have a field type yet (handle simple keys and key_value formats)
+  const fieldType = FIELD_TYPES.find((ft) => parts.some(p => p === ft.key || p.startsWith(ft.key + "_")));
 
   if (!fieldType) {
     // Still need a field type - suggest field types

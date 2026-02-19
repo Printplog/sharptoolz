@@ -15,7 +15,7 @@ import SettingsDialog from "./sections/SettingsDialog";
 import DocsPanel from "./DocsPanel";
 
 import { Eye } from "lucide-react";
-import type { Tutorial, Font } from "@/types";
+import type { Tutorial, Font, SvgPatch } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
 import { regenerateSvg } from "./utils/regenerateSvg";
 import type { FormField } from "@/types";
@@ -40,7 +40,7 @@ interface SvgEditorProps {
   isSvgLoading?: boolean;
   onElementSelect?: (elementType: string, idPattern?: string) => void;
   formFields?: FormField[];
-  onPatchUpdate?: (patch: { id: string; attribute: string; value: any }) => void;
+  onPatchUpdate?: (patch: SvgPatch) => void;
   onSvgReplace?: (svg: string) => void;
 }
 
@@ -165,7 +165,7 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     const element = elements[index];
     if (!element) return;
 
-    const internalId = (element as any).internalId;
+    const internalId = element.internalId;
     if (!internalId) return;
 
     updateElementInStore(internalId, updates);
@@ -226,8 +226,8 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     }
     const element = elements[index];
     if (element) {
-      const id = (element as any).internalId;
-      selectElement(id);
+      const id = element.internalId;
+      selectElement(id || null);
       setDraftElement(null);
       setIsEditorOpen(true);
 
@@ -239,16 +239,16 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   }, [elements, selectElement, onElementSelect]);
 
   const handleElementReorder = useCallback((reorderedElements: SvgElement[]) => {
-    const newOrder = reorderedElements.map(el => (el as any).internalId);
+    const newOrder = reorderedElements.map(el => el.internalId!);
 
     // Find moved element for patch
     let movedElementId: string | null = null;
     let newIdx = -1;
     for (let i = 0; i < reorderedElements.length; i++) {
-      const elId = (reorderedElements[i] as any).internalId;
-      const oldId = (elements[i] as any).internalId;
+      const elId = reorderedElements[i].internalId;
+      const oldId = elements[i].internalId;
       if (elId !== oldId) {
-        movedElementId = (reorderedElements[i] as any).id; // Backend needs real ID
+        movedElementId = reorderedElements[i].id || null; // Backend needs real ID
         newIdx = i;
         break;
       }

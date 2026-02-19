@@ -8,7 +8,7 @@ interface FontSelectionProps {
   selectedFontIds: string[];
   onFontSelect: (fontId: string) => void;
   onFontRemove: (fontId: string) => void;
-  fontUploadMutation: UseMutationResult<any, Error, FormData, unknown>;
+  fontUploadMutation: UseMutationResult<Font, Error, FormData, unknown>;
 }
 
 export default function FontSelection({

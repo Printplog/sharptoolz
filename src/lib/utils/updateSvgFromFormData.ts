@@ -34,7 +34,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
       try {
         const items = Array.from(doc.querySelectorAll(selector));
         results.push(...items);
-      } catch (e) { /* ignore invalid selectors */ }
+      } catch { /* ignore invalid selectors */ }
     });
 
     // Filter duplicates and return as SVGElement array
@@ -99,10 +99,11 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
       // Build field value map for extraction.
       // For select fields, use the human-readable option text instead of the raw id,
       // so .gen and other dependency-based fields see the actual value.
-      const allFieldValues: Record<string, string | number | boolean | any> = {};
+      const allFieldValues: Record<string, string | number | boolean | unknown> = {};
       fields.forEach((f) => {
         if (f.type === "select" && f.options && f.options.length > 0) {
           const selected = f.options.find(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (opt: any) => String(opt.value) === String(f.currentValue)
           );
           allFieldValues[f.id] =
@@ -121,6 +122,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
     // Handle select fields (options)
     if (field.options && field.options.length > 0) {
       // Hide all options first
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       field.options.forEach((opt: any) => {
         if (opt.svgElementId) {
           const optEls = findElements(opt.svgElementId);
@@ -137,6 +139,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
       // Show only the selected option
       const selectedOption = field.options.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (opt: any) => String(opt.value) === String(field.currentValue)
       );
       if (selectedOption?.svgElementId) {
@@ -155,7 +158,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
       targets.forEach(el => {
         // Consolidate any existing transforms (from style or attribute) before applying new ones
-        normalizeTransform(el as any);
+        normalizeTransform(el);
 
         switch (field.type) {
           case "upload":

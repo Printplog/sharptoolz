@@ -46,13 +46,13 @@ export default function AddFundsDialog({
       setCopied(false);
       reset();
     }
-  }, [open]);
+  }, [open, reset]);
 
   useEffect(() => {
     if (mode && !data && !isPending) {
       mutate('bep20/usdt');
     }
-  }, [mode]);
+  }, [mode, data, isPending, mutate]);
 
   const handleCopy = () => {
     if (!data?.payment_address) return;

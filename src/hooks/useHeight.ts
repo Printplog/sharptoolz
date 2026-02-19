@@ -23,12 +23,15 @@ export function useHeight<T extends HTMLElement = HTMLDivElement>() {
 
     // Update height on resize
     const resizeObserver = new ResizeObserver(updateHeight);
-    resizeObserver.observe(ref.current);
+    const currentRef = ref.current;
+    if (currentRef) {
+      resizeObserver.observe(currentRef);
+    }
 
     // Cleanup
     return () => {
-      if (ref.current) {
-        resizeObserver.unobserve(ref.current);
+      if (currentRef) {
+        resizeObserver.unobserve(currentRef);
       }
       resizeObserver.disconnect();
     };

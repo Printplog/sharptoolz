@@ -5,6 +5,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import type { AuditLog } from "@/types";
 
 export default function AuditLogsPage() {
     const { data: logs, isLoading, error } = useQuery({
@@ -54,7 +55,7 @@ export default function AuditLogsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {logs?.map((log: any) => (
+                                {logs?.map((log: AuditLog) => (
                                     <TableRow key={log.id} className="border-white/10 hover:bg-white/5">
                                         <TableCell className="font-mono text-sm text-white/70">
                                             {format(new Date(log.timestamp), "MMM d, yyyy HH:mm:ss")}

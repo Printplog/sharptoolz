@@ -8,6 +8,7 @@ const redirect = () => {
 export function disableConsole() {
     const methods = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd'];
     methods.forEach(method => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window.console as any)[method] = () => { };
     });
     console.clear();
@@ -42,7 +43,9 @@ export function detectDevTools() {
             });
             console.log(tracker);
             console.clear();
-        } catch (e) { }
+        } catch {
+            // ignore
+        }
     }, 2000);
 }
 
@@ -55,8 +58,11 @@ export function detectDebugger() {
             // Only execute debugger if we are NOT in production usually, 
             // but here we want to detect it.
             // Increased threshold significantly for slow devices
+            // eslint-disable-next-line no-debugger
             (function () { debugger; }());
-        } catch (e) { }
+        } catch {
+            // ignore
+        }
         const end = performance.now();
         if (end - start > 150) {
             // Only redirect if it's very likely a debugger (halted execution)

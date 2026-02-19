@@ -13,7 +13,7 @@ function findMatchingElement(
   editedEl: SvgElement,
   doc: Document
 ): Element | null {
-  const internalId = (editedEl as any).internalId;
+  const internalId = editedEl.internalId;
   if (internalId) {
     return doc.querySelector(`[data-internal-id="${CSS.escape(internalId)}"]`);
   }
@@ -87,7 +87,7 @@ export function regenerateSvg(
         }
 
         // Apply Highlight
-        if (highlightElementId && (editedEl as any).internalId === highlightElementId) {
+        if (highlightElementId && editedEl.internalId === highlightElementId) {
           const currentStyle = matchingOriginalEl.getAttribute("style") || "";
           matchingOriginalEl.setAttribute("style", `${currentStyle}; outline: 2px dashed #4ade80; outline-offset: 2px;`);
         }

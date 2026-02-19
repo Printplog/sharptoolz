@@ -109,7 +109,7 @@ export default function PreviewDialog({
       try {
         // Get base SVG without fonts (fonts are already injected in svgText)
         // We need to re-inject fonts after updating form data
-        let baseSvg = svgContent;
+        const baseSvg = svgContent;
         const updatedSvg = updateSvgFromFormData(baseSvg, fields);
 
         // Re-inject fonts after updating form data

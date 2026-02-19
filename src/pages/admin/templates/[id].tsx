@@ -78,7 +78,7 @@ export default function SvgTemplateEditor() {
 
       loadSvg();
     }
-  }, [data?.svg_url, id]); // Only re-run if the URL changes
+  }, [data?.svg_url, id, data?.svg_patches, svgContent]); // Only re-run if the URL changes
 
   // Save template mutation
   const saveMutation = useMutation({
@@ -129,6 +129,7 @@ export default function SvgTemplateEditor() {
         } else {
           console.log('[SaveMutation] Using JSON payload');
           // Otherwise, send as JSON
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const payload: any = {
             name: templateData.name,
             hot: templateData.hot || false,
@@ -205,6 +206,7 @@ export default function SvgTemplateEditor() {
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: any = { ...templateData };
     if (templateData.isActive !== undefined) {
       payload.is_active = templateData.isActive;
