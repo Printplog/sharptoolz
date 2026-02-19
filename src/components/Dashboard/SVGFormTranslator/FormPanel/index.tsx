@@ -6,8 +6,8 @@ import {
   Copy,
   PenLine,
 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import useToolStore from "@/store/formStore";
+import { FancyProgress } from "@/components/ui/FancyProgress";
 import {
   useLocation,
   useNavigate,
@@ -21,7 +21,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { purchaseTemplate, updatePurchasedTemplate } from "@/api/apiEndpoints";
 import type { PurchasedTemplate, FieldUpdate } from "@/types";
 import errorMessage from "@/lib/utils/errorMessage";
-import { DownloadDocDialog } from "../../Documents/DownloadDoc";
+import { DownloadDocDialog } from "../../Documents/DownloadDoc/index";
 import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
 import React, { useEffect, useMemo, useState, useRef, useContext, useCallback } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -437,22 +437,28 @@ const FormPanel = React.memo(function FormPanel({
   return (
     <>
       {/* Document Creation Progress Bar */}
+      {/* Document Creation Progress Bar */}
       {isCreatingDocument && (
-        <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-4 mb-4">
-          <div className="flex items-center justify-between text-sm text-white/80">
-            <span className="font-medium">
-              {isPurchased
-                ? (updatePending ? "Updating Document..." : "Document Updated!")
-                : (createPending ? "Creating Document..." : "Document Created!")
-              }
-            </span>
-            <span className="text-white/60">{documentProgress}%</span>
-          </div>
-          <Progress value={documentProgress} className="h-2" />
-          <p className="text-xs text-white/50 text-center">
+        <div className="bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8 mt-2 shadow-2xl overflow-hidden relative group">
+          {/* Animated Background Pulse */}
+          {!((isPurchased && !updatePending) || (!isPurchased && !createPending)) && (
+            <div className="absolute inset-0 bg-primary/5 animate-pulse pointer-events-none" />
+          )}
+
+          <FancyProgress
+            value={documentProgress}
+            statusText={isPurchased
+              ? (updatePending ? "Updating Document..." : "Document Updated!")
+              : (createPending ? "Creating Document..." : "Document Created!")
+            }
+            label={isPurchased ? "Updating Assets" : "Creating Assets"}
+            isComplete={(isPurchased && !updatePending) || (!isPurchased && !createPending)}
+          />
+
+          <p className="text-[10px] text-white/30 text-center mt-2 uppercase tracking-widest font-bold">
             {documentProgress < 100
-              ? "Processing your document, please wait..."
-              : "Document ready!"
+              ? "Optimization in progress..."
+              : "Ready for download"
             }
           </p>
         </div>

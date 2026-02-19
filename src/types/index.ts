@@ -60,7 +60,7 @@ export interface SelectOption {
 export interface SvgPatch {
   id: string;
   attribute: string;
-  value: any;
+  value: string | number | boolean | Record<string, string> | undefined | null;
 }
 
 export interface FormField {
@@ -158,7 +158,7 @@ export interface AuditLog {
   target: string;
   ip_address: string | null;
   timestamp: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }
 
 export type TemplateUpdatePayload = {

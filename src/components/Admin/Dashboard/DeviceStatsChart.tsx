@@ -46,6 +46,10 @@ interface DeviceStatsChartProps {
 }
 
 export default function DeviceStatsChart({ data, isLoading }: DeviceStatsChartProps) {
+  const totalVisitors = React.useMemo(() => {
+    return data?.reduce((acc, curr) => acc + curr.count, 0) || 0
+  }, [data])
+
   if (isLoading) {
     return (
       <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
@@ -65,9 +69,6 @@ export default function DeviceStatsChart({ data, isLoading }: DeviceStatsChartPr
       </Card>
     )
   }
-  const totalVisitors = React.useMemo(() => {
-    return data?.reduce((acc, curr) => acc + curr.count, 0) || 0
-  }, [data])
 
   const chartData = data?.map(item => {
     const config = chartConfig[item.device as keyof typeof chartConfig];

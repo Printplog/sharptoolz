@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
  * Utility for client-side document generation
  */
 
-interface GenerateOptions {
+export interface GenerateOptions {
     filename?: string;
     quality?: number;
     split?: {
@@ -20,7 +20,7 @@ export function isOperaMini(): boolean {
     const userAgent = navigator.userAgent;
     return (
         userAgent.includes('Opera Mini') ||
-        (window as any).operamini !== undefined ||
+        (window as { operamini?: unknown }).operamini !== undefined ||
         userAgent.includes('OPios') || // Opera on iOS
         userAgent.includes('OPR/')   // Opera for Android
     );
@@ -71,7 +71,6 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
     const parser = new DOMParser();
     const doc = parser.parseFromString(svg, 'image/svg+xml');
 
-    // SAFARI FIX: Ensure the SVG has the correct namespace
     const svgEl = doc.documentElement;
     if (!svgEl.getAttribute('xmlns')) {
         svgEl.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -79,18 +78,17 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
 
     const { width: fullWidth, height: fullHeight } = getSvgDimensions(doc);
 
-    // High quality scaling (2x)
-    const scale = 2;
+    // High quality scaling (3x for print-ready quality if possible, otherwise 2x)
+    const scale = options?.quality === 1 ? 3 : 2;
 
-    // 1. Create temporary canvas for full render
     const fullCanvas = document.createElement('canvas');
     fullCanvas.width = fullWidth * scale;
     fullCanvas.height = fullHeight * scale;
 
-    const ctx = fullCanvas.getContext('2d');
+    const ctx = fullCanvas.getContext('2d', { alpha: true });
     if (!ctx) throw new Error('Could not get canvas context');
 
-    // SAFARI FIX: Set style dimensions explicitly
+    // SAFARI/MOBILE FIX: Set style dimensions explicitly for consistent rendering
     fullCanvas.style.width = `${fullWidth}px`;
     fullCanvas.style.height = `${fullHeight}px`;
 
@@ -102,13 +100,13 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
     const url = URL.createObjectURL(blob);
     const img = new Image();
 
-    // SAFARI FIX: Cross-origin attribute
     img.crossOrigin = 'anonymous';
 
     await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('SVG rendering timeout')), 10000);
+        const timeout = setTimeout(() => reject(new Error('SVG rendering timeout')), 15000);
         img.onload = () => {
             clearTimeout(timeout);
+            ctx.clearRect(0, 0, fullWidth, fullHeight);
             ctx.drawImage(img, 0, 0, fullWidth, fullHeight);
             URL.revokeObjectURL(url);
             resolve(true);
@@ -121,11 +119,8 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
         img.src = url;
     });
 
-    // 2. Handle splitting if requested
     if (options?.split) {
-        const direction = options.split.direction;
-        const side = options.split.side;
-
+        const { direction, side } = options.split;
         const targetWidth = direction === 'vertical' ? fullWidth / 2 : fullWidth;
         const targetHeight = direction === 'horizontal' ? fullHeight / 2 : fullHeight;
 
@@ -133,26 +128,17 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
         targetCanvas.width = targetWidth * scale;
         targetCanvas.height = targetHeight * scale;
 
-        // SAFARI FIX: Set style dimensions
-        targetCanvas.style.width = `${targetWidth}px`;
-        targetCanvas.style.height = `${targetHeight}px`;
-
         const targetCtx = targetCanvas.getContext('2d');
         if (!targetCtx) throw new Error('Could not get target canvas context');
 
-        // Calculate source rectangle
         let sx = 0, sy = 0;
         if (direction === 'vertical' && side === 'back') sx = (fullWidth / 2) * scale;
         if (direction === 'horizontal' && side === 'back') sy = (fullHeight / 2) * scale;
 
-        const sWidth = targetWidth * scale;
-        const sHeight = targetHeight * scale;
-
-        // Draw cropped section
         targetCtx.drawImage(
             fullCanvas,
-            sx, sy, sWidth, sHeight, // source
-            0, 0, sWidth, sHeight    // destination
+            sx, sy, targetWidth * scale, targetHeight * scale, // source
+            0, 0, targetWidth * scale, targetHeight * scale    // destination
         );
 
         return targetCanvas;

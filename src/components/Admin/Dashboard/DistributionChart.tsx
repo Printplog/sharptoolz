@@ -45,6 +45,23 @@ interface DistributionChartProps {
 }
 
 export default function DistributionChart({ data, isLoading }: DistributionChartProps) {
+  const chartData = React.useMemo(() => {
+    if (!data) return []
+
+    // Aggregate data
+    const totalPaid = data.reduce((acc, item) => acc + item.paid, 0)
+    const totalTest = data.reduce((acc, item) => acc + item.test, 0)
+
+    return [
+      { type: "paid", count: totalPaid, fill: "var(--color-paid)" },
+      { type: "test", count: totalTest, fill: "var(--color-test)" },
+    ]
+  }, [data])
+
+  const totalDocuments = React.useMemo(() => {
+    return chartData.reduce((acc, curr) => acc + curr.count, 0)
+  }, [chartData])
+
   if (isLoading) {
     return (
       <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
@@ -67,22 +84,6 @@ export default function DistributionChart({ data, isLoading }: DistributionChart
       </Card>
     )
   }
-  const chartData = React.useMemo(() => {
-    if (!data) return []
-
-    // Aggregate data
-    const totalPaid = data.reduce((acc, item) => acc + item.paid, 0)
-    const totalTest = data.reduce((acc, item) => acc + item.test, 0)
-
-    return [
-      { type: "paid", count: totalPaid, fill: "var(--color-paid)" },
-      { type: "test", count: totalTest, fill: "var(--color-test)" },
-    ]
-  }, [data])
-
-  const totalDocuments = React.useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.count, 0)
-  }, [chartData])
 
   if (!data || data.length === 0) {
     return null

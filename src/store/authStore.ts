@@ -7,21 +7,21 @@ const safeStorage = {
   getItem: (key: string) => {
     try {
       return localStorage.getItem(key);
-    } catch (e) {
+    } catch {
       return null;
     }
   },
   setItem: (key: string, value: string) => {
     try {
       localStorage.setItem(key, value);
-    } catch (e) {
+    } catch {
       // Fallback: stay in memory only
     }
   },
   removeItem: (key: string) => {
     try {
       localStorage.removeItem(key);
-    } catch (e) {
+    } catch {
       // Ignore
     }
   },

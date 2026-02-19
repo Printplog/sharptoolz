@@ -6,8 +6,8 @@ export interface SvgPatch {
     id: string;
     attribute: string;
     subKey?: string;
-    oldValue: any;
-    newValue: any;
+    oldValue: string | number | boolean | Record<string, string> | string[] | undefined | null;
+    newValue: string | number | boolean | Record<string, string> | string[] | undefined | null;
 }
 
 interface SvgStore {
@@ -65,9 +65,9 @@ export const useSvgStore = create<SvgStore>()(
 
                 if (nonEditableTags.includes(tag)) return;
 
-                let id = domEl.getAttribute("id");
-                let internalIdAttr = domEl.getAttribute("data-internal-id");
-                let baseId = id || internalIdAttr || `el-${tag}`;
+                const id = domEl.getAttribute("id");
+                const internalIdAttr = domEl.getAttribute("data-internal-id");
+                const baseId = id || internalIdAttr || `el-${tag}`;
                 idCount[baseId] = (idCount[baseId] || 0) + 1;
                 const internalId = idCount[baseId] > 1 ? `${baseId}_${idCount[baseId]}` : baseId;
 
@@ -99,7 +99,7 @@ export const useSvgStore = create<SvgStore>()(
                     tag,
                     id: id || undefined,
                     originalId: id || undefined,
-                    internalId: internalId as any,
+                    internalId: internalId,
                     attributes,
                     innerText: innerText || undefined
                 };
@@ -196,10 +196,10 @@ export const useSvgStore = create<SvgStore>()(
             let newOrder = [...elementOrder];
             patches.forEach((patch) => {
                 if (patch.id === 'global' && patch.attribute === 'reorder') {
-                    newOrder = patch.oldValue;
+                    newOrder = patch.oldValue as string[];
                 } else if (patch.attribute === 'attributes' && patch.subKey) {
                     const el = newElements[patch.id];
-                    if (el) newElements[patch.id] = { ...el, attributes: { ...el.attributes, [patch.subKey]: patch.oldValue } };
+                    if (el) newElements[patch.id] = { ...el, attributes: { ...el.attributes, [patch.subKey]: patch.oldValue as string } };
                 } else {
                     const el = newElements[patch.id];
                     if (el) newElements[patch.id] = { ...el, [patch.attribute]: patch.oldValue };
@@ -217,10 +217,10 @@ export const useSvgStore = create<SvgStore>()(
             let newOrder = [...elementOrder];
             patches.forEach((patch) => {
                 if (patch.id === 'global' && patch.attribute === 'reorder') {
-                    newOrder = patch.newValue;
+                    newOrder = patch.newValue as string[];
                 } else if (patch.attribute === 'attributes' && patch.subKey) {
                     const el = newElements[patch.id];
-                    if (el) newElements[patch.id] = { ...el, attributes: { ...el.attributes, [patch.subKey]: patch.newValue } };
+                    if (el) newElements[patch.id] = { ...el, attributes: { ...el.attributes, [patch.subKey]: patch.newValue as string } };
                 } else {
                     const el = newElements[patch.id];
                     if (el) newElements[patch.id] = { ...el, [patch.attribute]: patch.newValue };

@@ -7,7 +7,7 @@ import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import type { FormField } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Download, Upload } from "lucide-react";
-import { DownloadDocDialog } from "@/components/Dashboard/Documents/DownloadDoc";
+import { DownloadDocDialog } from "@/components/Dashboard/Documents/DownloadDoc/index";
 import { toast } from "sonner";
 
 interface AdminSvgFormTranslatorProps {

@@ -1,0 +1,202 @@
+
+> docsmaker@0.0.0 lint /home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend
+> eslint .
+
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/Dashboard/RecentVisitors.tsx
+  50:6  warning  React Hook useEffect has a missing dependency: 'locations'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/DocsPanel.tsx
+   53:6  warning  React Hook useEffect has a missing dependency: 'getAllSectionIds'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  172:6  warning  React Hook useEffect has a missing dependency: 'navbarRef'. Either include it or remove the dependency array         react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/ElementEditor.tsx
+   35:17   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+   36:19   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  143:27   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  159:8    warning  React Hook useEffect has a missing dependency: 'element'. Either include it or remove the dependency array. If 'setLocalElement' needs the current value of 'element', you can also switch to useReducer instead of useState and read 'element' in the reducer  react-hooks/exhaustive-deps
+  300:11   error    'rotate' is never reassigned. Use 'const' instead                                                                                                                                                                                                               prefer-const
+  301:11   error    'scale' is never reassigned. Use 'const' instead                                                                                                                                                                                                                prefer-const
+  302:11   error    'translateX' is never reassigned. Use 'const' instead                                                                                                                                                                                                           prefer-const
+  303:11   error    'translateY' is never reassigned. Use 'const' instead                                                                                                                                                                                                           prefer-const
+  452:42   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  453:58   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  454:66   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  461:117  error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  461:143  error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  466:51   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  468:67   error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  471:117  error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  471:143  error    Unexpected any. Specify a different type                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/ElementNavigation.tsx
+  144:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  159:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/IdEditor/GenRuleBuilder.tsx
+  599:9  error  Unexpected lexical declaration in case block  no-case-declarations
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/IdEditor/index.tsx
+  76:5  warning  React Hook useCallback has a missing dependency: 'setActiveIndex'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/PreviewDialog.tsx
+  112:13  error  'baseSvg' is never reassigned. Use 'const' instead  prefer-const
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/hooks/useSvgLiveUpdate.ts
+  28:16  error    'e' is defined but never used                                                                                       @typescript-eslint/no-unused-vars
+  33:67  error    Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  35:49  error    Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  70:16  error    'e' is defined but never used                                                                                       @typescript-eslint/no-unused-vars
+  81:16  error    'e' is defined but never used                                                                                       @typescript-eslint/no-unused-vars
+  87:6   warning  React Hook useEffect has a missing dependency: 'overrideElement'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/index.tsx
+   43:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  168:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  229:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  242:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  249:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/sections/FontSelection.tsx
+  11:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/sections/SettingsDialog.tsx
+  31:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/utils/regenerateSvg.ts
+  16:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  90:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/ToolBuilder/SvgEditor/utils/svgUtils.ts
+  13:37  error  Unnecessary escape character: \/  no-useless-escape
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Admin/Tools/ToolCard.tsx
+  27:66  error  Unnecessary escape character: \/  no-useless-escape
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Dashboard/SVGFormTranslator/FormField.tsx
+   58:16  error    'e' is defined but never used                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  175:6   warning  React Hook useEffect has a missing dependency: 'field.isTrackingId'. Either include it or remove the dependency array                                                                          react-hooks/exhaustive-deps
+  186:5   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  200:70  error    Unexpected any. Specify a different type                                                                                                                                                       @typescript-eslint/no-explicit-any
+  259:28  error    React Hook "useRef" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?       react-hooks/rules-of-hooks
+  263:39  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?     react-hooks/rules-of-hooks
+  266:3   error    React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?    react-hooks/rules-of-hooks
+  272:24  error    React Hook "useCallback" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+  292:22  error    React Hook "useCallback" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+  303:3   error    React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?    react-hooks/rules-of-hooks
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Dashboard/SVGFormTranslator/FormPanel/index.tsx
+   42:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  179:79  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  430:14  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  570:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Dashboard/SVGFormTranslator/SvgFormTranslator.tsx
+  180:107  error    Unexpected any. Specify a different type                                                                                                          @typescript-eslint/no-explicit-any
+  197:6    warning  React Hook useEffect has missing dependencies: 'data', 'id', 'isPurchased', and 'svgContent'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  303:6    warning  React Hook useEffect has missing dependencies: 'fields' and 'isPurchased'. Either include them or remove the dependency array                     react-hooks/exhaustive-deps
+  401:68   error    Unexpected any. Specify a different type                                                                                                          @typescript-eslint/no-explicit-any
+  440:37   error    Unexpected any. Specify a different type                                                                                                          @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Dashboard/Wallet/AddFundsDialog.tsx
+  49:6  warning  React Hook useEffect has a missing dependency: 'reset'. Either include it or remove the dependency array                              react-hooks/exhaustive-deps
+  55:6  warning  React Hook useEffect has missing dependencies: 'data', 'isPending', and 'mutate'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/Dashboard/Wallet/SuccessPaymentDialog.tsx
+  32:6  warning  React Hook useEffect has a missing dependency: 'lastTx'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/ui/CustomDateTimePicker.tsx
+  46:16  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/ui/ImageCropUpload.tsx
+  145:6  warning  React Hook useEffect has a missing dependency: 'image'. Either include it or remove the dependency array            react-hooks/exhaustive-deps
+  305:6  warning  React Hook useCallback has a missing dependency: 'originalImage'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  361:6  warning  React Hook useCallback has a missing dependency: 'originalImage'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/ui/SeamlessEditor.tsx
+  23:6  warning  React Hook useEffect has a missing dependency: 'lines'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/ui/badge.tsx
+  46:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/ui/button.tsx
+  63:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/components/ui/form.tsx
+  157:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/hooks/useHeight.ts
+  31:38  warning  The ref value 'ref.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'ref.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/hooks/useWalletSocket.ts
+  29:5  warning  React Hook useCallback has a missing dependency: 'setNewPayment'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/layouts/ProtectedLayout.tsx
+  63:6  warning  React Hook useEffect has a missing dependency: 'logout'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/lib/utils/applySvgPatches.ts
+  58:17  error  'baseId' is never reassigned. Use 'const' instead  prefer-const
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/lib/utils/downloadProgress.ts
+   9:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/lib/utils/ensureSvgElementIds.ts
+  22:17  error  'baseId' is never reassigned. Use 'const' instead  prefer-const
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/lib/utils/fieldExtractor.ts
+   19:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:12  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/lib/utils/fieldGenerator.ts
+   64:7   error  'resultWithoutFill' is never reassigned. Use 'const' instead  prefer-const
+  260:68  error  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/lib/utils/security/detection.ts
+  11:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:18  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  45:21  error  Empty block statement                     no-empty
+  58:28  error  Unexpected 'debugger' statement           no-debugger
+  59:18  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  59:21  error  Empty block statement                     no-empty
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/lib/utils/security/helpers.ts
+  28:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/lib/utils/updateSvgFromFormData.ts
+   37:16  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  102:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  140:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/lib/utils/updateSvgFromFormDataOptimized.ts
+  21:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/pages/(site)/tutorials.tsx
+  84:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/pages/admin/audit-logs.tsx
+  57:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/pages/admin/settings.tsx
+  58:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/pages/admin/templates/[id].tsx
+   81:6   warning  React Hook useEffect has missing dependencies: 'data.svg_patches' and 'svgContent'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  132:26  error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+  208:20  error    Unexpected any. Specify a different type                                                                                                @typescript-eslint/no-explicit-any
+
+/home/urkel/Desktop/MyProjects/Clients/sharptoolz/frontend/src/router.ts
+  2:1  warning  Unused eslint-disable directive (no problems were reported)
+
+✖ 109 problems (84 errors, 25 warnings)
+  8 errors and 2 warnings potentially fixable with the `--fix` option.
+
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getTemplates, getTools } from "@/api/apiEndpoints";
-import { Link, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import ToolGridSkeleton from "../../ToolGridSkeleton";
+import DashboardToolCard from "./DashboardToolCard";
 import type { Template, Tool } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
@@ -14,13 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import BlurImage from "@/components/ui/BlurImage";
 
 interface Props {
   hot?: boolean;
@@ -37,8 +30,6 @@ export default function ToolsList({ hot }: Props) {
   const [tools, setTools] = useState<Template[]>([]);
   const [query, setQuery] = useState("");
   const [selectedTool, setSelectedTool] = useState<string>("all");
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const pathname = useLocation().pathname;
 
   const { data: templates, isLoading: templatesLoading } = useQuery({
     queryKey: ["tools", `${hot && "hot"}`],
@@ -84,64 +75,6 @@ export default function ToolsList({ hot }: Props) {
 
   const isLoading = templatesLoading || toolsLoading;
 
-  const handlePreview = (banner?: string) => {
-    if (!banner) return;
-    setPreviewImage(banner);
-  };
-
-  const renderTemplateCard = (template: Template) => {
-    const destination = `/${pathname.includes("all-tools") ? "all-tools" : "tools"}/${template.id}`;
-
-    return (
-      <div
-        key={template.id}
-        className="relative h-[400px] rounded-xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-sm p-5"
-      >
-        <button
-          type="button"
-          className="absolute inset-0 p-2 z-0 text-left"
-          onClick={() => handlePreview(template.banner)}
-          style={{
-            WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
-            maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
-          }}
-        >
-          {template.banner ? (
-            <BlurImage
-              src={template.banner}
-              alt={`${template.name} banner`}
-              className="h-full w-full rounded-lg"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-black/10">
-              No Preview
-            </div>
-          )}
-        </button>
-
-        <div className="absolute bottom-0 left-0 w-full z-10 bg-transparent p-4 flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <h3 className="text-white font-semibold truncate">
-              {template.name}
-            </h3>
-            {template?.hot ? (
-              <span className="text-lg" title="Hot Tool">🔥</span>
-            ) : (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30 bg-white/5 border border-white/10 px-2 py-1 rounded-md">
-                Template
-              </span>
-            )}
-          </div>
-
-          <Link to={destination} className="w-full mt-2">
-            <button className="w-full px-4 py-2 rounded-md bg-primary text-background font-medium hover:bg-primary/90 transition">
-              Use Template
-            </button>
-          </Link>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="space-y-10">
@@ -187,7 +120,9 @@ export default function ToolsList({ hot }: Props) {
           {/* Hot Tools */}
           {hot && filteredTools.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredTools.map((template) => renderTemplateCard(template))}
+              {filteredTools.map((template) => (
+                <DashboardToolCard key={template.id} template={template} />
+              ))}
             </div>
           )}
 
@@ -204,7 +139,9 @@ export default function ToolsList({ hot }: Props) {
                     <div className="mt-3 h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {templates.map((template) => renderTemplateCard(template))}
+                    {templates.map((template) => (
+                      <DashboardToolCard key={template.id} template={template} />
+                    ))}
                   </div>
                 </div>
               ))}
@@ -220,29 +157,6 @@ export default function ToolsList({ hot }: Props) {
         </>
       )}
 
-      <Dialog
-        open={!!previewImage}
-        onOpenChange={(open) => {
-          if (!open) setPreviewImage(null);
-        }}
-      >
-        <DialogContent className="max-w-4xl bg-black border border-white/20 max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="text-white">
-              Template Preview
-            </DialogTitle>
-          </DialogHeader>
-          {previewImage && (
-            <div className="w-full overflow-auto flex-1 min-h-0 custom-scrollbar">
-              <BlurImage
-                src={previewImage}
-                alt="Template preview"
-                className="h-full w-auto object-contain rounded-lg border border-white/10"
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

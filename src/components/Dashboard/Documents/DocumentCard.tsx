@@ -7,7 +7,7 @@ import { deletePurchasedTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LazyImage } from "@/components/LazyImage";
-import { DownloadDocDialog } from "./DownloadDoc";
+import { DownloadDocDialog } from "./DownloadDoc/index";
 
 type Props = {
   doc: PurchasedTemplate;
@@ -80,21 +80,6 @@ export default function DocumentCard({ doc }: Props) {
           <h3 className="text-white text-xl font-black tracking-tighter truncate drop-shadow-md">
             {doc.name}
           </h3>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-              {/* Red Circle for Text Mode / Test */}
-              {(doc.status?.toLowerCase().includes('text') || doc.test) && (
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-              )}
-              {/* Green Circle for Purchased / Paid */}
-              {(!doc.test || doc.status?.toLowerCase().includes('purchased')) && (
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-              )}
-              <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white/50">
-                {doc.status || (doc.test ? "Test Mode" : "Purchased")}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Action Buttons */}
