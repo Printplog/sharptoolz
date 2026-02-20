@@ -6,15 +6,13 @@ import { useAuthStore } from "@/store/authStore";
 import type { User } from "@/types";
 import { toast } from "sonner";
 import PageLoader from "@/components/PageLoader";
+import { ROLES } from "@/lib/constants/roles";
 
-// Obfuscated role code mapping
-const ROLE_MAP = {
-  "ZK7T-93XY": "admin",
-  "LQ5D-21VM": "user",
-  "S9K3-41TV": "staff",
-} as const;
-
-type RoleCode = keyof typeof ROLE_MAP;
+const ROLE_MAP: Record<string, string> = {
+  [ROLES.ADMIN]: "admin",
+  [ROLES.STANDARD]: "user",
+  [ROLES.STAFF]: "staff",
+};
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;

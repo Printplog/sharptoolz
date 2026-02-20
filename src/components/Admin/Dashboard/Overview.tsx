@@ -4,6 +4,7 @@ import type { AdminOverview } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import { isAdmin as checkAdmin, isAdminOrStaff } from "@/lib/constants/roles";
 
 interface OverviewProps {
   data: AdminOverview | undefined;
@@ -12,7 +13,7 @@ interface OverviewProps {
 
 export default function Overview({ data, isLoading }: OverviewProps) {
   const { user } = useAuthStore();
-  const isAdmin = user?.role === "ZK7T-93XY";
+  const isAdmin = checkAdmin(user?.role);
 
   if (isLoading) {
     return (
@@ -55,7 +56,7 @@ export default function Overview({ data, isLoading }: OverviewProps) {
       </Card>
 
       {/* Active Users - Visible to Admin & Staff */}
-      {(isAdmin || user?.role === "S9K3-41TV") && (
+      {isAdminOrStaff(user?.role) && (
         <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Active Users</CardTitle>
@@ -70,7 +71,7 @@ export default function Overview({ data, isLoading }: OverviewProps) {
       )}
 
       {/* Downloads - Visible to Admin & Staff */}
-      {(isAdmin || user?.role === "S9K3-41TV") && (
+      {isAdminOrStaff(user?.role) && (
         <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Downloads</CardTitle>

@@ -33,8 +33,8 @@ export default function PurchaseHistory({ purchases }: PurchaseHistoryProps) {
     });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+  const getStatusColor = (status?: string) => {
+    switch ((status ?? "").toLowerCase()) {
       case 'completed':
         return 'text-green-400';
       case 'pending':

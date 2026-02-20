@@ -20,6 +20,7 @@ import errorMessage from "@/lib/utils/errorMessage";
 import { useAuthStore } from "@/store/authStore";
 import { useDialogStore } from "@/store/dialogStore";
 import { useState } from "react";
+import { isAdminOrStaff } from "@/lib/constants/roles";
 import { Eye, EyeOff } from "lucide-react"; // <-- Icon import
 
 const loginSchema = z.object({
@@ -58,7 +59,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
       }
 
       // Check if user has admin role (Admin or Staff) and redirect accordingly
-      if (user.role === "ZK7T-93XY" || user.role === "S9K3-41TV") {
+      if (isAdminOrStaff(user.role)) {
         navigate("/admin/dashboard");
       } else {
         navigate(next);

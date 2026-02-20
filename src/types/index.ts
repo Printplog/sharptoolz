@@ -60,7 +60,7 @@ export interface SelectOption {
 export interface SvgPatch {
   id: string;
   attribute: string;
-  value: string | number | boolean | Record<string, any> | undefined | null;
+  value: string | number | boolean | Record<string, unknown> | undefined | null;
 }
 
 export interface FormField {

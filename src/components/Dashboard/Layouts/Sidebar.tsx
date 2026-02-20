@@ -10,13 +10,13 @@ import {
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { useAuthStore } from "@/store/authStore";
+import { isAdminOrStaff } from "@/lib/constants/roles";
 
 export default function Sidebar() {
   const { pathname } = useLocation();
   const { user } = useAuthStore();
 
-  // Check if user is admin or staff
-  const canAccessAdmin = user?.role === "ZK7T-93XY" || user?.role === "S9K3-41TV";
+  const canAccessAdmin = isAdminOrStaff(user?.role);
 
   const navigationItems = [
     {

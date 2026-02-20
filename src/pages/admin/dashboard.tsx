@@ -8,10 +8,11 @@ import QuickActions from "@/components/Admin/Dashboard/QuickActions";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { isAdmin as checkAdmin, isAdminOrStaff } from "@/lib/constants/roles";
 
 export default function Dashboard() {
   const { user } = useAuthStore();
-  const isAdmin = user?.role === "ZK7T-93XY";
+  const isAdmin = checkAdmin(user?.role);
 
   const { data: overviewData, isLoading: isOverviewLoading } = useQuery<AdminOverview>({
     queryFn: () => adminOverview(),
@@ -21,7 +22,7 @@ export default function Dashboard() {
   const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery({
     queryFn: () => getAdminAnalytics(),
     queryKey: ["adminAnalytics"],
-    enabled: !!(isAdmin || user?.role === "S9K3-41TV"), // Fetch if admin or staff
+    enabled: isAdminOrStaff(user?.role),
   });
 
   return (
@@ -33,7 +34,7 @@ export default function Dashboard() {
       <QuickActions />
 
       {/* Charts Section */}
-      {(isAdmin || user?.role === "S9K3-41TV") && (
+      {isAdminOrStaff(user?.role) && (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Wallet / Money Inflow - Admin Only */}

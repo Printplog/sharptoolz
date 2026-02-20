@@ -15,6 +15,7 @@ import Logo from "@/components/Logo";
 import { useQueryClient } from "@tanstack/react-query";
 import { adminOverview, getAdminAnalytics, adminUsers } from "@/api/apiEndpoints";
 import { useAuthStore } from "@/store/authStore";
+import { ROLES } from "@/lib/constants/roles";
 
 export default function Sidebar() {
   const { pathname } = useLocation();
@@ -102,8 +103,8 @@ export default function Sidebar() {
         {navigationItems.filter(item => {
           // Strict Role check
           const role = user?.role;
-          const isStaff = role === "S9K3-41TV";
-          const isAdmin = role === "ZK7T-93XY";
+          const isStaff = role === ROLES.STAFF;
+          const isAdmin = role === ROLES.ADMIN;
 
           // 1. Staff: ALLOW-LIST only
           if (isStaff) {

@@ -10,6 +10,7 @@ export type Path =
   | `/admin/audit-logs`
   | `/admin/dashboard`
   | `/admin/fonts`
+  | `/admin/fonts/FontUploadDialog`
   | `/admin/settings`
   | `/admin/templates`
   | `/admin/templates/:id`

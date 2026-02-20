@@ -1,13 +1,14 @@
-import { Eye, Loader, Trash2, Download } from "lucide-react";
+import { Eye, Loader, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { PurchasedTemplate } from "@/types";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ConfirmAction } from "@/components/ConfirmAction";
 import { deletePurchasedTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LazyImage } from "@/components/LazyImage";
-import { DownloadDocDialog } from "./DownloadDoc/index";
+
 
 type Props = {
   doc: PurchasedTemplate;
@@ -15,7 +16,7 @@ type Props = {
 
 export default function DocumentCard({ doc }: Props) {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const [svgLoaded, setSvgLoaded] = useState(false);
 
   const { mutate, isPending } = useMutation({
     mutationFn: (id: string) => deletePurchasedTemplate(id),
@@ -57,6 +58,7 @@ export default function DocumentCard({ doc }: Props) {
               src={doc.banner}
               alt={`${doc.name} preview`}
               className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110"
+              onLoad={() => setSvgLoaded(true)}
             />
           </div>
         ) : doc.svg_url ? (
@@ -65,6 +67,7 @@ export default function DocumentCard({ doc }: Props) {
               src={doc.svg_url}
               alt={`${doc.name} preview`}
               className="w-full h-full object-contain p-4 transition-transform duration-700 group-hover/card:scale-105"
+              onLoad={() => setSvgLoaded(true)}
             />
           </div>
         ) : (
@@ -86,21 +89,13 @@ export default function DocumentCard({ doc }: Props) {
         <div className="flex items-center gap-3">
           <Link to={!isPending ? `/documents/${doc.id}` : "#"} className="flex-1">
             <Button
-              disabled={isPending}
+              disabled={isPending || !svgLoaded}
               className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-white/5"
             >
               <Eye className="h-3.5 w-3.5 mr-2" />
               View Document
             </Button>
           </Link>
-          <Button
-            variant="outline"
-            disabled={isPending}
-            onClick={() => navigate(`?dialog=download-${doc.id}`)}
-            className="h-11 w-11 p-0 bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl transition-colors"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
           <ConfirmAction
             trigger={
               <Button
@@ -120,12 +115,7 @@ export default function DocumentCard({ doc }: Props) {
         </div>
       </div>
 
-      <DownloadDocDialog
-        purchasedTemplateId={doc.id}
-        templateName={doc.name}
-        keywords={doc.keywords || []}
-        dialogName={`download-${doc.id}`}
-      />
+
     </div>
   );
 }

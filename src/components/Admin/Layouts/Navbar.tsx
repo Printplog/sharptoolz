@@ -9,6 +9,7 @@ import { LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { logout } from "@/api/apiEndpoints";
 import { useAuthStore } from "@/store/authStore";
+import { ROLES, getRoleLabel } from "@/lib/constants/roles";
 
 export default function Navbar() {
   const { user, logout: logoutStore } = useAuthStore()
@@ -35,11 +36,11 @@ export default function Navbar() {
         {/* Role Badge */}
         {user?.role && (
           <div className={
-            user.role === "ZK7T-93XY" ? "bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" :
-              user.role === "S9K3-41TV" ? "bg-amber-500/20 text-amber-500 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" :
+            user.role === ROLES.ADMIN ? "bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" :
+              user.role === ROLES.STAFF ? "bg-amber-500/20 text-amber-500 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" :
                 "bg-white/10 text-white/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
           }>
-            {user.role === "ZK7T-93XY" ? "Admin" : user.role === "S9K3-41TV" ? "Staff" : "User"}
+            {getRoleLabel(user.role)}
           </div>
         )}
 

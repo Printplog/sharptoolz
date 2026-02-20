@@ -1,33 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Upload, Trash2, Download, Loader, RefreshCw } from "lucide-react";
+import { Trash2, Download, Loader, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { addFont, deleteFont, getFonts } from "@/api/apiEndpoints";
 import type { Font } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { ConfirmAction } from "@/components/ConfirmAction";
 import { DataTable } from "@/components/ui/data-table";
+import FontUploadDialog from "./FontUploadDialog";
+import { useFontPreviewStyles } from "./useFontPreviewStyles";
 
 export default function AdminFontsPage() {
   const queryClient = useQueryClient();
-  const [fontName, setFontName] = useState("");
-  const [fontFile, setFontFile] = useState<File | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -44,8 +30,6 @@ export default function AdminFontsPage() {
     mutationFn: (formData: FormData) => addFont(formData),
     onSuccess: () => {
       toast.success("Font uploaded successfully");
-      setFontName("");
-      setFontFile(null);
       setDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["fonts"] });
     },
@@ -75,74 +59,7 @@ export default function AdminFontsPage() {
     [deleteMutation]
   );
 
-  const handleUpload = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!fontName.trim()) {
-      toast.error("Font name is required");
-      return;
-    }
-    if (!fontFile) {
-      toast.error("Choose a font file");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("name", fontName.trim());
-    formData.append("font_file", fontFile);
-
-    uploadMutation.mutate(formData);
-  };
-
-  const injectPreviewStyles = useMemo(() => {
-    if (!fonts.length) return "";
-
-    const getFontFormat = (url: string | undefined): string => {
-      if (!url) return 'truetype'; // Default if URL is missing or undefined
-      if (url.endsWith('.woff2')) return 'woff2';
-      if (url.endsWith('.woff')) return 'woff';
-      if (url.endsWith('.otf')) return 'opentype';
-      return 'truetype'; // Default for .ttf
-    };
-
-    return fonts
-      .filter((font) => font.font_url)
-      .map(
-        (font) => `
-        @font-face {
-          font-family: "FontPreview-${font.id}";
-          src: url("${font.font_url}") format("${getFontFormat(font.font_url)}");
-          font-display: swap;
-        }
-      `
-      )
-      .join("\n");
-  }, [fonts]);
-
-  useEffect(() => {
-    if (!injectPreviewStyles) return;
-    const styleId = "fonts-preview-style";
-    if (typeof document === "undefined") return;
-
-    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
-    if (!styleEl) {
-      styleEl = document.createElement("style");
-      styleEl.id = styleId;
-      document.head.appendChild(styleEl);
-    }
-    styleEl.textContent = injectPreviewStyles;
-
-    return () => {
-      if (styleEl?.parentNode) {
-        styleEl.parentNode.removeChild(styleEl);
-      }
-    };
-  }, [injectPreviewStyles]);
-
-  const resetForm = () => {
-    setFontName("");
-    setFontFile(null);
-    setDialogOpen(false);
-  };
+  useFontPreviewStyles(fonts);
 
   const columns = useMemo<ColumnDef<Font>[]>(() => {
     return [
@@ -192,11 +109,7 @@ export default function AdminFontsPage() {
             <div className="flex items-center justify-end gap-2">
               {row.original.font_url && (
                 <a href={row.original.font_url} download>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                  >
+                  <Button variant="outline" size="icon" className="h-8 w-8">
                     <Download className="h-4 w-4" />
                   </Button>
                 </a>
@@ -253,83 +166,23 @@ export default function AdminFontsPage() {
             )}
             Refresh
           </Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="inline-flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Add Font
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Upload a new font</DialogTitle>
-                <DialogDescription>
-                  Supported formats: .ttf, .otf, .woff, .woff2
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleUpload} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="font-name">Font name</Label>
-                  <Input
-                    id="font-name"
-                    placeholder="e.g., Inter Bold"
-                    value={fontName}
-                    onChange={(event) => setFontName(event.target.value)}
-                    disabled={uploadMutation.isPending}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="font-file">Font file</Label>
-                  <Input
-                    id="font-file"
-                    type="file"
-                    accept=".ttf,.otf,.woff,.woff2"
-                    onChange={(event) => {
-                      setFontFile(event.target.files?.[0] || null);
-                    }}
-                    disabled={uploadMutation.isPending}
-                  />
-                </div>
-                <div className="flex justify-end gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={resetForm}
-                    disabled={uploadMutation.isPending}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="inline-flex items-center gap-2"
-                    disabled={uploadMutation.isPending}
-                  >
-                    {uploadMutation.isPending ? (
-                      <Loader className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
-                    Upload Font
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <FontUploadDialog
+            dialogOpen={dialogOpen}
+            setDialogOpen={setDialogOpen}
+            uploadMutation={uploadMutation}
+          />
         </div>
       </div>
 
-      <div>
-        <DataTable
-          columns={columns}
-          data={fonts}
-          filterKey="name"
-          searchPlaceholder="Search fonts..."
-          emptyMessage="No fonts yet. Upload your first font to get started."
-          isLoading={isLoading}
-          hideColumnToggle
-        />
-      </div>
+      <DataTable
+        columns={columns}
+        data={fonts}
+        filterKey="name"
+        searchPlaceholder="Search fonts..."
+        emptyMessage="No fonts yet. Upload your first font to get started."
+        isLoading={isLoading}
+        hideColumnToggle
+      />
     </div>
   );
 }
-

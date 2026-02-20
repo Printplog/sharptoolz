@@ -2,6 +2,7 @@ import { LayoutDashboard, Hammer, Users, LayoutTemplate, Type, ArrowLeft, Settin
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import { ROLES } from "@/lib/constants/roles";
 
 const navigationItems = [
   {
@@ -49,7 +50,7 @@ export default function BottomBar() {
     <nav className="fixed bottom-0 z-50 w-full bg-background border-t border-white/10 flex justify-around items-center py-4 lg:hidden">
       {navigationItems.filter(item => {
         // Explicitly check for role codes to avoid ambiguity
-        const isStaff = user?.role === "S9K3-41TV";
+        const isStaff = user?.role === ROLES.STAFF;
 
         // Staff can see Tools, Templates, Fonts
         if (isStaff) {
