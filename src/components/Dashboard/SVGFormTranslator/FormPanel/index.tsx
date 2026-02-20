@@ -441,18 +441,18 @@ const FormPanel = React.memo(function FormPanel({
       {isCreatingDocument && (
         <div className="bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8 mt-2 shadow-2xl overflow-hidden relative group">
           {/* Animated Background Pulse */}
-          {!((isPurchased && !updatePending) || (!isPurchased && !createPending)) && (
+          {documentProgress < 100 && (
             <div className="absolute inset-0 bg-primary/5 animate-pulse pointer-events-none" />
           )}
 
           <FancyProgress
             value={documentProgress}
-            statusText={isPurchased
-              ? (updatePending ? "Updating Document..." : "Document Updated!")
-              : (createPending ? "Creating Document..." : "Document Created!")
+            statusText={documentProgress < 100
+              ? (isPurchased ? "Updating Document..." : "Creating Document...")
+              : (isPurchased ? "Document Updated!" : "Document Created!")
             }
             label={isPurchased ? "Updating Assets" : "Creating Assets"}
-            isComplete={(isPurchased && !updatePending) || (!isPurchased && !createPending)}
+            isComplete={documentProgress === 100}
           />
 
           <p className="text-[10px] text-white/30 text-center mt-2 uppercase tracking-widest font-bold">

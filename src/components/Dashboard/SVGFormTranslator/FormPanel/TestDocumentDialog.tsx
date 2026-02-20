@@ -27,19 +27,15 @@ export function TestDocumentDialog({
       setProgress(0);
       const interval = setInterval(() => {
         setProgress((prev) => {
-          if (prev >= 90) {
-            return 90; // Stop at 90% until request completes
-          }
+          if (prev >= 90) return 90;
           return prev + 20;
         });
       }, 300);
-
       return () => clearInterval(interval);
-    } else if (!isSubmitting && progress > 0 && progress < 100) {
-      // Complete progress when submission finishes
-      setProgress(100);
+    } else {
+      setProgress((prev) => (prev > 0 && prev < 100 ? 100 : prev));
     }
-  }, [isSubmitting, progress]);
+  }, [isSubmitting]);
 
   return (
     <Dialog
