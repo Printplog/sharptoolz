@@ -48,5 +48,6 @@ export default function Documents() {
         )}
         {isLoading && <ToolGridSkeleton />}
       </div>
-      );
+    </div>
+  );
 }
