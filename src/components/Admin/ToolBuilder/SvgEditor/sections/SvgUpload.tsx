@@ -16,27 +16,51 @@ interface SvgUploadProps {
 }
 
 export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, elements = [], activeElementId, draftElement }: SvgUploadProps) {
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
+  const [selectionRect, setSelectionRect] = useState<{ top: number; left: number; width: number; height: number; rotation?: number } | null>(null);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dragStartRef = useRef<{ x: number, y: number, startPanX: number, startPanY: number } | null>(null);
-  const hasDraggedRef = useRef(false);
+  // Update selection bounding box whenever selection or zoom/pan changes
+  useEffect(() => {
+    if (!activeElementId || !containerRef.current) {
+      setSelectionRect(null);
+      return;
+    }
 
-  // Use the live update hook to modify the DOM imperatively
-  useSvgLiveUpdate(containerRef as React.RefObject<HTMLDivElement>, elements, activeElementId, draftElement);
+    const updateRect = () => {
+      const selectedEl = containerRef.current?.querySelector(`[data-internal-id="${activeElementId}"]`);
+      if (selectedEl) {
+        const rect = selectedEl.getBoundingClientRect();
+        const containerRect = containerRef.current!.parentElement!.getBoundingClientRect();
+
+        setSelectionRect({
+          top: rect.top - containerRect.top,
+          left: rect.left - containerRect.left,
+          width: rect.width,
+          height: rect.height,
+        });
+      } else {
+        setSelectionRect(null);
+      }
+    };
+
+    updateRect();
+    const timer = setTimeout(updateRect, 50); // Small delay to catch live updates
+    return () => clearTimeout(timer);
+  }, [activeElementId, zoom, pan, elements, draftElement]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!currentSvg) return;
-    setIsDragging(true);
-    hasDraggedRef.current = false;
-    dragStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      startPanX: pan.x,
-      startPanY: pan.y
-    };
+    // Only pan if we click the background or hold space (panning is standard with space or right click, but we'll use left click on background)
+    const isBackground = (e.target as HTMLElement).classList.contains('canvas-bg');
+    if (isBackground || e.button === 1) {
+      setIsDragging(true);
+      hasDraggedRef.current = false;
+      dragStartRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        startPanX: pan.x,
+        startPanY: pan.y
+      };
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -45,7 +69,7 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
 
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
       hasDraggedRef.current = true;
     }
 
@@ -68,18 +92,36 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
   };
 
   const handlePreviewClick = (e: React.MouseEvent) => {
-    // If we dragged, don't select elements
-    if (hasDraggedRef.current) return;
+    if (hasDraggedRef.current) {
+      hasDraggedRef.current = false;
+      return;
+    }
 
     if (!onSelectElement) return;
 
-    // Find the closest parent with an internal ID
     const target = (e.target as HTMLElement).closest('[data-internal-id]');
     if (target) {
       const id = target.getAttribute('data-internal-id');
       if (id) {
         onSelectElement(id);
       }
+    } else {
+      // Clicked on background
+      onSelectElement("");
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = -e.deltaY;
+      const factor = 0.01;
+      setZoom(prev => Math.min(Math.max(0.1, prev + delta * factor), 10));
+    } else {
+      setPan(prev => ({
+        x: prev.x - e.deltaX,
+        y: prev.y - e.deltaY
+      }));
     }
   };
 
@@ -89,49 +131,52 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <Label htmlFor="template-svg" className="text-sm font-medium">
-          Live Editor Preview
-        </Label>
+    <div className="h-full flex flex-col pointer-events-auto">
+      <div className="flex items-center justify-between p-4 shrink-0 bg-black/20 border-b border-white/5">
         <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-widest text-white/90">Canvas</h3>
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-tighter">
+              {zoom.toFixed(1)}x Zoom • {currentSvg ? (currentSvg.length / 1024).toFixed(1) : 0} KB
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
           {currentSvg && (
-            <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-2 py-0.5 rounded-lg mr-2">
-              <ZoomOut className="w-3 h-3 text-white/40" />
-              <Slider
-                value={[zoom]}
-                min={0.1}
-                max={5}
-                step={0.1}
-                className="w-24"
-                onValueChange={(vals) => setZoom(vals[0])}
-              />
-              <ZoomIn className="w-3 h-3 text-white/40" />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-6 h-6 hover:bg-white/10"
-                onClick={resetView}
-                title="Reset View"
-              >
-                <RefreshCw className="w-3 h-3" />
-              </Button>
+            <div className="flex items-center gap-3 px-3 py-1 bg-white/5 border border-white/10 rounded-xl mr-2">
+              <button onClick={() => setZoom(z => Math.max(0.1, z - 0.2))} className="text-white/40 hover:text-white transition-colors">
+                <ZoomOut className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-[10px] font-mono w-8 text-center text-white/60">{Math.round(zoom * 100)}%</span>
+              <button onClick={() => setZoom(z => Math.min(10, z + 0.2))} className="text-white/40 hover:text-white transition-colors">
+                <ZoomIn className="w-3.5 h-3.5" />
+              </button>
+              <div className="w-px h-3 bg-white/10 mx-1" />
+              <button onClick={resetView} className="text-white/40 hover:text-white transition-colors" title="Reset View">
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
           {currentSvg && (
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-[10px] bg-white/5 border-white/10 hover:bg-white/10"
+              className="h-8 text-[10px] font-black uppercase tracking-widest bg-white/5 border-white/10 hover:bg-white/10 rounded-lg"
               onClick={() => document.getElementById('template-svg')?.click()}
             >
-              Replace SVG
+              Replace
             </Button>
           )}
         </div>
       </div>
 
-      <div className="relative">
+      <div className="flex-1 relative overflow-hidden">
         <input
           id="template-svg"
           type="file"
@@ -148,59 +193,101 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
         />
 
         <div
-          className={`block w-full min-h-[400px] max-h-[600px] border border-white/10 rounded-xl overflow-hidden relative group shadow-2xl transition-all select-none ${!currentSvg ? "cursor-pointer hover:border-white/30" : ""
+          className={`absolute inset-0 canvas-bg transition-colors select-none bg-[#0a0a0a] ${!currentSvg ? "cursor-pointer hover:bg-[#0f0f0f]" : isDragging ? 'cursor-grabbing' : 'cursor-default'
             }`}
-          onClick={!currentSvg ? () => document.getElementById('template-svg')?.click() : undefined}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onWheel={handleWheel}
+          onClick={!currentSvg ? () => document.getElementById('template-svg')?.click() : handlePreviewClick}
         >
-          {/* Subtle Checkered Background for Transparency */}
-          <div className="absolute inset-0 bg-[#0a0a0a] opacity-50" />
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3M3RxMAgsWvNfS4GCI0pDBCc4G9MMXm600MW4PyDjjUMTSEAn1Y81X7hm6IAAAAASUVORK5CYII=')] bg-repeat" />
+          {/* Professional Design Grid */}
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
+            style={{
+              backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
+              backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
+              backgroundPosition: `${pan.x % (20 * zoom)}px ${pan.y % (20 * zoom)}px`
+            }}
+          />
 
           {currentSvg ? (
-            <div
-              className={`relative w-full h-full min-h-[400px] flex items-center justify-center overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'
-                }`}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseLeave}
-              onClick={handlePreviewClick}
-              title="Click to select, drag to pan"
-            >
+            <div className="w-full h-full relative flex items-center justify-center pointer-events-none">
               <div
                 style={{
                   transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                  transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                  transition: isDragging ? 'none' : 'transform 0.1s cubic-bezier(0.2, 0, 0.2, 1)',
                   transformOrigin: 'center center',
                   willChange: 'transform'
                 }}
-                className="[&_svg]:max-w-full [&_svg]:max-h-full [&_svg]:h-auto [&_svg]:w-auto pointer-events-none [&_svg]:pointer-events-auto"
-                dangerouslySetInnerHTML={{ __html: currentSvg }}
+                className="pointer-events-none relative"
                 ref={containerRef}
-              />
+              >
+                {/* Visual SVG Content */}
+                <div
+                  className="[&_svg]:max-w-none [&_svg]:max-h-none [&_svg]:h-auto [&_svg]:w-auto pointer-events-auto"
+                  dangerouslySetInnerHTML={{ __html: currentSvg }}
+                />
+              </div>
+
+              {/* Selection Overlay (Independent of SVG transform to avoid double scaling jitter) */}
+              {selectionRect && (
+                <div
+                  className="absolute pointer-events-none transition-all duration-75 border-2 border-primary z-[60] shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                  style={{
+                    top: selectionRect.top,
+                    left: selectionRect.left,
+                    width: selectionRect.width,
+                    height: selectionRect.height,
+                  }}
+                >
+                  {/* Handle dots (Just visual for Phase 1) */}
+                  <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-primary rounded-full" />
+                  <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-primary rounded-full" />
+                  <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-primary rounded-full" />
+                  <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-primary rounded-full" />
+
+                  {/* Label tag */}
+                  <div className="absolute -top-6 left-0 bg-primary text-black text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-tighter shadow-lg">
+                    {activeElementId}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-[400px] text-white/40 hover:text-white/60 transition-colors relative z-10">
-              <div className="w-16 h-16 border-2 border-dashed border-current rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center justify-center h-full text-white/40 hover:text-white/60 transition-colors relative z-10 pointer-events-none">
+              <div className="w-20 h-20 border-2 border-dashed border-current rounded-3xl flex items-center justify-center mb-6 animate-pulse">
+                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </div>
               <div className="text-center px-4">
-                <div className="text-lg font-medium">Upload SVG Template</div>
-                <div className="text-sm opacity-60 mt-1">Enhance your workflow by uploading an SVG file</div>
+                <div className="text-xl font-black uppercase tracking-widest text-white/80">Drop your Canvas</div>
+                <div className="text-xs font-bold opacity-60 mt-2 uppercase tracking-tighter">Click anywhere to upload an SVG Template</div>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex justify-between items-center text-[10px] text-white/40 px-2">
-        <div className="flex gap-3">
-          <span>🎯 Hint: Click to select, Drag to pan</span>
-          {currentSvg && <span>📏 {(currentSvg.length / 1024).toFixed(1)} KB</span>}
+      <div className="flex justify-between items-center bg-black/40 border-t border-white/5 py-2 px-6 shrink-0">
+        <div className="flex gap-5 text-[9px] font-black uppercase tracking-widest text-white/30">
+          <span className="flex items-center gap-1.5">
+            <div className="w-1 h-1 bg-primary rounded-full" />
+            Click to Select
+          </span>
+          <span className="flex items-center gap-1.5">
+            <div className="w-1 h-1 bg-white/40 rounded-full" />
+            Cmd + Scroll to Zoom
+          </span>
+          <span className="flex items-center gap-1.5">
+            <div className="w-1 h-1 bg-white/40 rounded-full" />
+            Drag Canvas to Pan
+          </span>
         </div>
-        <span>Preview is debounced for performance</span>
+        <div className="text-[9px] font-mono text-white/20">
+          SharpToolz Engine v2.0
+        </div>
       </div>
     </div>
   );

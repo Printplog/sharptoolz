@@ -85,8 +85,14 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   const [freshSvgContent, setFreshSvgContent] = useState<string | null>(null);
 
   // Layout State
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [rightPanelOrder, setRightPanelOrder] = useState(['preview', 'docs']);
+  const [activeTab, setActiveTab] = useState("layers");
+
+  // Auto-switch to inspector when element is selected
+  useEffect(() => {
+    if (selectedElementId) {
+      setActiveTab("inspector");
+    }
+  }, [selectedElementId]);
 
   // Fetch tools
   const { data: tools = [] } = useQuery({
@@ -229,7 +235,6 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       const id = element.internalId;
       selectElement(id || null);
       setDraftElement(null);
-      setIsEditorOpen(true);
 
       if (onElementSelect) {
         const elementType = isTextElement(element) ? 'text' : isImageElement(element) ? 'image' : element.tag;
@@ -273,22 +278,39 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
 
   const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (active.id !== over?.id && over?.id) {
-      setRightPanelOrder((items) => {
-        const oldIndex = items.indexOf(active.id as string);
-        const newIndex = items.indexOf(over.id as string);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between pb-5 border-b border-white/10 gap-4">
-        <h2 className="text-xl font-semibold">SVG Editor</h2>
-        <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
+      {/* Top Toolbar */}
+      <div className="flex flex-wrap items-center justify-between pb-4 border-b border-white/10 gap-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-black tracking-tighter uppercase text-white/90">Designer</h2>
+          <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-white/10 text-white/60"
+              onClick={undo}
+              title="Undo (Ctrl+Z)"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-white/10 text-white/60"
+              onClick={redo}
+              title="Redo (Ctrl+Y)"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
           <SettingsDialog
             name={name}
             keywords={keywordsTags}
@@ -320,36 +342,79 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
               href={`/tools/${templateId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 gap-2 border border-white/20 bg-white/5 text-white hover:bg-white/20"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs font-bold h-9 px-4 gap-2 border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition-all"
             >
-              <Eye className="h-4 w-4" />
-              <span className="hidden sm:inline">Public View</span>
+              <Eye className="h-3.5 w-3.5" />
+              <span>Public View</span>
             </a>
           )}
 
-          <Button onClick={() => setShowPreviewDialog(true)} variant="outline" className="gap-2">
-            <Eye className="h-4 w-4" />
-            <span className="hidden sm:inline">Final Preview</span>
+          <Button onClick={() => setShowPreviewDialog(true)} variant="outline" className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 rounded-lg shadow-sm">
+            <Eye className="h-3.5 w-3.5" />
+            <span>Final Preview</span>
           </Button>
 
           {onSave && (
-            <Button onClick={handleSave} disabled={!name.trim() || isLoading} className="min-w-32">
-              {isLoading ? "Saving..." : "Save Template"}
+            <Button
+              onClick={handleSave}
+              disabled={!name.trim() || isLoading}
+              className="h-9 px-6 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-lg hover:scale-105 transition-all shadow-lg shadow-primary/20"
+            >
+              {isLoading ? "Saving..." : "Save Changes"}
             </Button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start h-full">
-        <div className="flex flex-col gap-4">
+      {/* Main Designer Layout */}
+      <div className="flex-1 flex overflow-hidden pt-4 gap-6">
+        {/* Left Side: Canvas (The Heart of the Designer) */}
+        <div className="flex-1 min-w-0 bg-[#070707]/30 rounded-3xl border border-white/10 overflow-hidden relative shadow-inner">
           {isSvgLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-16 w-full bg-white/5 rounded-lg animate-pulse" />)}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                <p className="text-xs font-black uppercase tracking-widest text-white/40">Initializing Canvas...</p>
+              </div>
             </div>
-          ) : (
-            <>
-              <CollapsiblePanel id="elements" title="Elements" defaultOpen={true} className="max-h-[50vh] flex flex-col" forceMount={true}>
-                <div className="overflow-y-auto custom-scrollbar max-h-[40vh] pr-2 pt-4 pl-4">
+          ) : null}
+
+          <div className="h-full w-full">
+            <SvgUpload
+              currentSvg={originalSvg}
+              onSvgUpload={handleSvgUpload}
+              onSelectElement={(id) => {
+                const idx = elements.findIndex(el => el.id === id || el.internalId === id);
+                if (idx >= 0) handleElementSelect(idx);
+              }}
+              elements={elements}
+              activeElementId={selectedElementId}
+              draftElement={draftElement}
+            />
+          </div>
+        </div>
+
+        {/* Right Side: Tabbed Toolbox */}
+        <aside className="w-[420px] shrink-0 flex flex-col overflow-hidden bg-white/5 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+            <div className="px-5 pt-5 pb-0">
+              <TabsList className="w-full bg-black/40 border border-white/5 h-11 p-1 rounded-xl">
+                <TabsTrigger value="layers" className="flex-1 rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                  Layers
+                </TabsTrigger>
+                <TabsTrigger value="inspector" className="flex-1 rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                  Inspector
+                </TabsTrigger>
+                <TabsTrigger value="docs" className="flex-1 rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                  Docs
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <div className="flex-1 overflow-hidden pointer-events-auto">
+              {/* Layers Tab */}
+              <TabsContent value="layers" className="h-full m-0 p-5 focus-visible:outline-none flex flex-col">
+                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                   <ElementNavigation
                     onElementClick={handleElementSelect}
                     onElementReorder={handleElementReorder}
@@ -357,11 +422,22 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                     isTextElement={isTextElement}
                     isImageElement={isImageElement}
                   />
-                  {!originalSvg && <div className="p-8 text-center text-white/40 mt-4">Upload an SVG</div>}
+                  {!originalSvg && (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-8 text-white/20">
+                      <div className="w-12 h-12 border-2 border-dashed border-current rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                      </div>
+                      <p className="text-xs font-bold uppercase tracking-widest">No Layers</p>
+                      <p className="text-[10px] opacity-60 mt-1">Upload an SVG to start designing</p>
+                    </div>
+                  )}
                 </div>
-              </CollapsiblePanel>
+              </TabsContent>
 
-              <CollapsiblePanel id="editor" title="Element Editor" isOpen={isEditorOpen} onOpenChange={setIsEditorOpen}>
+              {/* Inspector Tab */}
+              <TabsContent value="inspector" className="h-full m-0 p-5 focus-visible:outline-none overflow-y-auto custom-scrollbar">
                 {selectedElementIndex !== null && elements[selectedElementIndex] ? (
                   <ElementEditor
                     element={elements[selectedElementIndex]}
@@ -376,36 +452,28 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
                       if (selectedElementIndex !== null) elementRefs.current[selectedElementIndex] = el;
                     }}
                   />
-                ) : <div className="p-8 text-center text-white/40">Select an element</div>}
-              </CollapsiblePanel>
-            </>
-          )}
-        </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-8 text-white/20">
+                    <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-4 border border-white/5">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                      </svg>
+                    </div>
+                    <p className="text-xs font-bold uppercase tracking-widest">Inspector</p>
+                    <p className="text-[10px] opacity-60 mt-1">Select an element on the canvas to edit its properties</p>
+                  </div>
+                )}
+              </TabsContent>
 
-        <div className="space-y-4">
-          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={rightPanelOrder} strategy={verticalListSortingStrategy}>
-              {rightPanelOrder.map(id => (
-                <CollapsiblePanel key={id} id={id} title={id === 'preview' ? 'Preview' : 'Documentation'} dragHandle={true} defaultOpen={id === 'preview'}>
-                  {id === 'preview' ? (
-                    <SvgUpload
-                      currentSvg={originalSvg}
-                      onSvgUpload={handleSvgUpload}
-                      onSelectElement={(id) => {
-                        const idx = elements.findIndex(el => el.id === id);
-                        if (idx >= 0) handleElementSelect(idx);
-                      }}
-                      elements={elements}
-                      activeElementId={selectedElementId}
-                      draftElement={draftElement}
-                    />
-                  ) : <div className="max-h-[500px] overflow-y-auto custom-scrollbar"><DocsPanel /></div>}
-                </CollapsiblePanel>
-              ))}
-            </SortableContext>
-          </DndContext>
-        </div>
+              {/* Docs Tab */}
+              <TabsContent value="docs" className="h-full m-0 p-0 focus-visible:outline-none overflow-y-auto custom-scrollbar">
+                <DocsPanel />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </aside>
       </div>
+
       <FloatingScrollButton show={showScrollTop} onClick={scrollToTop} />
       <PreviewDialog
         open={showPreviewDialog}
