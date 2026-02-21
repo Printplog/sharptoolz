@@ -164,7 +164,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
 
   return (
     <div
-      className="overflow-auto custom-scrollbar h-full"
+      className="overflow-auto custom-scrollbar h-full p-5"
     >
       <h2 className="text-lg font-semibold mb-4">SVG Editor Documentation</h2>
 

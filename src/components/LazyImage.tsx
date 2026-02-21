@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Layout } from 'lucide-react';
 
 interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     src: string;
@@ -11,6 +12,7 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 export const LazyImage = ({ src, alt, className, placeholderColor = "transparent", ...props }: LazyImageProps) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isInView, setIsInView] = useState(false);
+    const [isError, setIsError] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -45,22 +47,30 @@ export const LazyImage = ({ src, alt, className, placeholderColor = "transparent
             style={{ backgroundColor: placeholderColor }}
         >
             <AnimatePresence>
-                {!isLoaded && (
+                {(!isLoaded || isError) && (
                     <motion.div
                         initial={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="absolute inset-0 bg-white/5 animate-pulse z-10"
-                    />
+                        className="absolute inset-0 bg-white/5 animate-pulse z-10 flex items-center justify-center"
+                    >
+                        {isError && (
+                            <div className="flex flex-col items-center gap-2 opacity-20">
+                                <Layout className="w-12 h-12" />
+                                <span className="text-[10px] uppercase font-black tracking-tighter">Preview Error</span>
+                            </div>
+                        )}
+                    </motion.div>
                 )}
             </AnimatePresence>
 
-            {isInView && (
+            {isInView && !isError && (
                 <img
                     src={src}
                     alt={alt}
                     className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                     onLoad={() => setIsLoaded(true)}
+                    onError={() => setIsError(true)}
                     decoding="async"
                     {...props}
                 />

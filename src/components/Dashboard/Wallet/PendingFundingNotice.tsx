@@ -1,7 +1,7 @@
 // src/components/Dashboard/Wallet/PendingFundingNotice.tsx
 
 import React, { useState } from "react";
-import { AlertTriangle, Loader2, Copy, CheckCircle } from "lucide-react";
+import { AlertTriangle, Loader2, Copy, CheckCircle, MessageSquare, XCircle } from "lucide-react";
 import { useWalletStore } from "@/store/walletStore";
 import { useMutation } from "@tanstack/react-query";
 import { cancelCryptoPayment } from "@/api/apiEndpoints";
@@ -26,9 +26,6 @@ const PendingFundingNotice: React.FC = () => {
   if (!transaction || transaction.status !== "pending") return null;
 
   const { address, amount = 0 } = transaction;
-
-  const symbol = "USDT";
-  const network = "BEP20 (Binance Smart Chain)";
   const VENDOR_PHONE = "2349160914217";
 
   const copyToClipboard = () => {
@@ -42,80 +39,63 @@ const PendingFundingNotice: React.FC = () => {
   };
 
   const handleWhatsApp = () => {
-    const msg = `Hello, I made a payment of approximately ₦${amount.toLocaleString()} to this USDT BEP20 address:\n${address}\n\nKindly confirm the funding.`;
+    const msg = `Hello. I want to buy ${amount} BNB. Send the BNB to this Binance Smart Chain wallet address: ${address}`;
     const encoded = encodeURIComponent(msg);
     const link = `https://wa.me/${VENDOR_PHONE}?text=${encoded}`;
     window.open(link, "_blank");
   };
 
   return (
-    <div className="bg-white/5 border border-yellow-500/30 rounded-xl p-5 space-y-5">
-      {/* Top Info */}
-      <div className="flex items-center gap-3">
-        <Loader2 className="w-5 h-5 text-yellow-400 animate-spin" />
-        <p className="text-yellow-300 font-medium">
-          A fund transfer is being processed. Waiting for network confirmation.
-        </p>
-      </div>
-
-      {/* Network Warning */}
-      <div className="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-lg">
-        <AlertTriangle className="text-yellow-400 w-5 h-5 mt-0.5" />
-        <div>
-          <p className="text-sm text-yellow-300 mb-1">
-            <strong>Send only {symbol}</strong> using the{" "}
-            <strong>{network}</strong> network.
-          </p>
-          <p className="text-yellow-200/80 text-xs">
-            Using another token or network will cause permanent loss of funds.
-          </p>
+    <div className="relative overflow-hidden rounded-[2rem] border border-yellow-500/20 bg-yellow-500/[0.03] backdrop-blur-3xl p-6 space-y-6 animate-in fade-in zoom-in-95 duration-700">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-4 h-4 text-yellow-400 animate-spin" />
+          <span className="text-white text-xs font-black uppercase tracking-widest italic">Incomplete Funding</span>
         </div>
+        <AlertTriangle className="w-4 h-4 text-yellow-500/50" />
       </div>
 
-      {/* Payment Details */}
-      <div className="space-y-2">
-        <div>
-          <label className="text-white/60 text-sm block mb-1">
-            Send Payment To
-          </label>
-          <div className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center justify-between">
-            <span className="text-white text-sm font-mono break-all mr-2">
-              {address}
-            </span>
-            <button
-              onClick={copyToClipboard}
-              className="p-1 text-white/60 hover:text-white transition-colors"
-              title="Copy address"
-            >
-              {copied ? (
-                <CheckCircle className="w-4 h-4 text-green-400" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
+      <div className="space-y-4">
+        <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-white/40 text-xs font-black uppercase tracking-widest">Payment Address</span>
+            <div className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-xs font-black uppercase tracking-tighter">
+              BEP20
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 bg-black/20 rounded-xl p-3 border border-white/5">
+            <span className="text-white text-xs font-mono truncate">{address}</span>
+            <button onClick={copyToClipboard} className="shrink-0 text-white/40 hover:text-white transition-colors">
+              {copied ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
-        </div>
 
-        {/* WhatsApp Vendor Button */}
-        <button
-          onClick={handleWhatsApp}
-          className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-500 transition text-sm font-medium"
-        >
-          Pay with Naira
-        </button>
+          <p className="text-xs text-white/40 leading-relaxed italic">
+            Send only <span className="text-yellow-500 font-bold uppercase tracking-tighter">USDT (BEP20)</span> to avoid loss of funds.
+          </p>
+        </div>
       </div>
 
-      {/* Cancel Button */}
-      <div className="pt-3">
+      <div className="flex gap-3">
+        <button
+          onClick={handleWhatsApp}
+          className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          Pay on WhatsApp
+        </button>
+
         <ConfirmAction
-          title="Are you sure?"
-          description="Do not cancel if you have made payment to the address. If you cancel, the transaction cannot be confirmed!"
+          title="Cancel Payment?"
+          description="Action cannot be undone."
           trigger={
             <button
               disabled={isPending}
-              className="w-full disabled:bg-red-300 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 transition-colors text-sm font-medium"
+              className="px-6 flex items-center justify-center bg-white/5 text-white/40 border border-white/5 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 disabled:opacity-50"
             >
-              {isPending ? "Cancelling..." : "Cancel Payment"}
+              <XCircle className="w-3.5 h-3.5 mr-2" />
+              {isPending ? "..." : "Cancel"}
             </button>
           }
           onConfirm={onCancel}

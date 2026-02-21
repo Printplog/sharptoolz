@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Receipt } from "lucide-react";
+import { Plus, Receipt, History } from "lucide-react";
 import AddFundsDialog from "@/components/Dashboard/Wallet/AddFundsDialog";
 import TransactionHistory from "@/components/Dashboard/Wallet/TransactionHistory";
 import BalanceCard from "@/components/Dashboard/Wallet/BalanceCard";
@@ -30,41 +30,59 @@ const WalletPage: React.FC = () => {
   if (!wallet) return <LoadingWallet />;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700">
+      {/* Header Section */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-white">Wallet</h1>
+        <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">
+          My <span className="text-primary">Wallet</span>
+        </h1>
+
         <button
           onClick={handleOpenAddFunds}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+          className="group relative flex items-center gap-3 bg-white text-black px-6 py-3 rounded-2xl hover:bg-white/90 transition-all active:scale-95"
         >
           <Plus className="w-4 h-4" />
-          Add Funds
+          <span className="text-[11px] font-black uppercase tracking-widest">Add Funds</span>
         </button>
       </div>
 
-      {/* Balance Card */}
-      <BalanceCard
-        balance={Number(wallet?.balance)} 
-        onTopUp={handleOpenAddFunds}
-      />
+      {/* Main Grid Layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+        {/* Left Column: Balance & Pending */}
+        <div className="xl:col-span-5 space-y-8">
+          <BalanceCard
+            balance={Number(wallet?.balance)}
+            onTopUp={handleOpenAddFunds}
+          />
 
-      {wallet?.transactions?.[0]?.status === "pending" && (
-        <PendingFundingNotice />
-      )}
-
-      {/* Transaction History */}
-      <div className="bg-white/5 border border-white/10 rounded-lg">
-        <div className="border-b border-white/10 px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-white/60" />
-            <h2 className="text-lg font-medium text-white">
-              Transaction History
-            </h2>
-          </div>
+          {wallet?.transactions?.[0]?.status === "pending" && (
+            <PendingFundingNotice />
+          )}
         </div>
-        <div className="p-6">
-          <TransactionHistory />
+
+        {/* Right Column: Transaction Log */}
+        <div className="xl:col-span-7">
+          <div className="relative h-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.02] backdrop-blur-3xl transition-all duration-500 hover:border-white/20 shadow-2xl">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+            <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                  <Receipt className="w-5 h-5 text-white/40" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-white tracking-tight italic uppercase">
+                    History
+                  </h2>
+                </div>
+              </div>
+              <History className="w-4 h-4 text-white/10" />
+            </div>
+
+            <div className="p-8">
+              <TransactionHistory />
+            </div>
+          </div>
         </div>
       </div>
 

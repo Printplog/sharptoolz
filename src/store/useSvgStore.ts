@@ -31,6 +31,10 @@ interface SvgStore {
     undo: () => void;
     redo: () => void;
 
+    // Element Management
+    deleteElement: (id: string, undoable?: boolean) => void;
+    duplicateElement: (id: string, undoable?: boolean) => void;
+
     // Reset
     reset: () => void;
 
@@ -195,8 +199,18 @@ export const useSvgStore = create<SvgStore>()(
             const newElements = { ...elements };
             let newOrder = [...elementOrder];
             patches.forEach((patch) => {
-                if (patch.id === 'global' && patch.attribute === 'reorder') {
-                    newOrder = patch.oldValue as string[];
+                if (patch.id === 'global') {
+                    if (patch.attribute === 'reorder') {
+                        newOrder = patch.oldValue as string[];
+                    } else if (patch.attribute === 'delete') {
+                        const { id, element, orderIndex } = patch.oldValue as any;
+                        newElements[id] = element;
+                        newOrder.splice(orderIndex, 0, id);
+                    } else if (patch.attribute === 'add') {
+                        const { id } = patch.newValue as any;
+                        delete newElements[id];
+                        newOrder = newOrder.filter(oid => oid !== id);
+                    }
                 } else if (patch.attribute === 'attributes' && patch.subKey) {
                     const el = newElements[patch.id];
                     if (el) newElements[patch.id] = { ...el, attributes: { ...el.attributes, [patch.subKey]: patch.oldValue as string } };
@@ -216,8 +230,18 @@ export const useSvgStore = create<SvgStore>()(
             const newElements = { ...elements };
             let newOrder = [...elementOrder];
             patches.forEach((patch) => {
-                if (patch.id === 'global' && patch.attribute === 'reorder') {
-                    newOrder = patch.newValue as string[];
+                if (patch.id === 'global') {
+                    if (patch.attribute === 'reorder') {
+                        newOrder = patch.newValue as string[];
+                    } else if (patch.attribute === 'add') {
+                        const { id, element, orderIndex } = patch.newValue as any;
+                        newElements[id] = element;
+                        newOrder.splice(orderIndex, 0, id);
+                    } else if (patch.attribute === 'delete') {
+                        const { id } = patch.oldValue as any;
+                        delete newElements[id];
+                        newOrder = newOrder.filter(oid => oid !== id);
+                    }
                 } else if (patch.attribute === 'attributes' && patch.subKey) {
                     const el = newElements[patch.id];
                     if (el) newElements[patch.id] = { ...el, attributes: { ...el.attributes, [patch.subKey]: patch.newValue as string } };
@@ -227,6 +251,72 @@ export const useSvgStore = create<SvgStore>()(
                 }
             });
             set({ elements: newElements, elementOrder: newOrder, historyIndex: nextIndex });
+        },
+
+        deleteElement: (id, undoable = true) => {
+            const { elements, elementOrder, history, historyIndex } = get();
+            const element = elements[id];
+            if (!element) return;
+
+            const newElements = { ...elements };
+            delete newElements[id];
+            const newOrder = elementOrder.filter(orderId => orderId !== id);
+
+            const newState: Partial<SvgStore> = { elements: newElements, elementOrder: newOrder, selectedElementId: null };
+
+            if (undoable) {
+                const patches: SvgPatch[] = [{
+                    id: 'global',
+                    attribute: 'delete',
+                    oldValue: { id, element, orderIndex: elementOrder.indexOf(id) },
+                    newValue: null
+                }];
+                const newHistory = history.slice(0, historyIndex + 1);
+                newHistory.push(patches);
+                newState.history = newHistory;
+                newState.historyIndex = historyIndex + 1;
+            }
+            set(newState);
+        },
+
+        duplicateElement: (id, undoable = true) => {
+            const { elements, elementOrder, history, historyIndex } = get();
+            const element = elements[id];
+            if (!element) return;
+
+            // Generate new ID
+            const newId = `${id}_copy_${Date.now()}`;
+            const newElement = {
+                ...element,
+                internalId: newId,
+                attributes: {
+                    ...element.attributes,
+                    x: String(parseFloat(element.attributes.x || '0') + 20),
+                    y: String(parseFloat(element.attributes.y || '0') + 20),
+                    id: `${element.id || 'el'}_copy`
+                }
+            };
+
+            const newElements = { ...elements, [newId]: newElement };
+            const index = elementOrder.indexOf(id);
+            const newOrder = [...elementOrder];
+            newOrder.splice(index + 1, 0, newId);
+
+            const newState: Partial<SvgStore> = { elements: newElements, elementOrder: newOrder, selectedElementId: newId };
+
+            if (undoable) {
+                const patches: SvgPatch[] = [{
+                    id: 'global',
+                    attribute: 'add',
+                    oldValue: null,
+                    newValue: { id: newId, element: newElement, orderIndex: index + 1 }
+                }];
+                const newHistory = history.slice(0, historyIndex + 1);
+                newHistory.push(patches);
+                newState.history = newHistory;
+                newState.historyIndex = historyIndex + 1;
+            }
+            set(newState);
         },
 
         reset: () => set({

@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ZoomIn, ZoomOut, RefreshCw } from "lucide-react";
 import { useSvgLiveUpdate } from "../hooks/useSvgLiveUpdate";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
+import { useSvgStore } from "@/store/useSvgStore";
 
 interface SvgUploadProps {
   currentSvg: string | null;
@@ -16,7 +17,70 @@ interface SvgUploadProps {
 }
 
 export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, elements = [], activeElementId, draftElement }: SvgUploadProps) {
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ x: number, y: number, startPanX: number, startPanY: number } | null>(null);
+  const moveStartRef = useRef<{ x: number, y: number, initialX: number, initialY: number } | null>(null);
+  const hasDraggedRef = useRef(false);
+
+  const [movingElementId, setMovingElementId] = useState<string | null>(null);
+  const [localMove, setLocalMove] = useState<{ x: number, y: number } | null>(null);
+
+  // Get update action from store
+  const { updateElement } = useSvgStore();
+
+  // Create a draft for the moving element to reflect changes in real-time
+  const moveDraft = useMemo(() => {
+    if (!movingElementId || !localMove) return null;
+    const el = elements.find(el => el.internalId === movingElementId);
+    if (!el) return null;
+    return {
+      ...el,
+      attributes: {
+        ...el.attributes,
+        x: String(localMove.x),
+        y: String(localMove.y)
+      }
+    };
+  }, [movingElementId, localMove, elements]);
+
+  // Use the live update hook to modify the DOM imperatively
+  useSvgLiveUpdate(containerRef as React.RefObject<HTMLDivElement>, elements, activeElementId, moveDraft || draftElement);
+
   const [selectionRect, setSelectionRect] = useState<{ top: number; left: number; width: number; height: number; rotation?: number } | null>(null);
+
+  // Auto-fit SVG on load
+  useEffect(() => {
+    if (currentSvg && containerRef.current) {
+      const svgElement = containerRef.current.querySelector('svg');
+      if (svgElement) {
+        // Use a small timeout to ensure layout is calculated
+        const timer = setTimeout(() => {
+          const container = containerRef.current?.parentElement;
+          if (!container) return;
+
+          const containerWidth = container.clientWidth - 80; // Margin
+          const containerHeight = container.clientHeight - 80;
+
+          // Get raw viewBox info if available
+          const viewBox = svgElement.viewBox.baseVal;
+          const svgW = viewBox.width || svgElement.width.baseVal.value || 800;
+          const svgH = viewBox.height || svgElement.height.baseVal.value || 600;
+
+          const zoomX = containerWidth / svgW;
+          const zoomY = containerHeight / svgH;
+          const fitZoom = Math.min(zoomX, zoomY, 1.2); // Cap at 1.2x for clarity
+
+          setZoom(fitZoom);
+          setPan({ x: 0, y: 0 });
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [currentSvg]);
 
   // Update selection bounding box whenever selection or zoom/pan changes
   useEffect(() => {
@@ -45,15 +109,40 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
     updateRect();
     const timer = setTimeout(updateRect, 50); // Small delay to catch live updates
     return () => clearTimeout(timer);
-  }, [activeElementId, zoom, pan, elements, draftElement]);
+  }, [activeElementId, zoom, pan, elements, draftElement, moveDraft]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!currentSvg) return;
-    // Only pan if we click the background or hold space (panning is standard with space or right click, but we'll use left click on background)
-    const isBackground = (e.target as HTMLElement).classList.contains('canvas-bg');
-    if (isBackground || e.button === 1) {
+    hasDraggedRef.current = false;
+
+    // 1. Check if we're clicking an element
+    const target = (e.target as HTMLElement).closest('[data-internal-id]');
+    const targetId = target?.getAttribute('data-internal-id');
+
+    if (targetId && !e.shiftKey) {
+      // If clicking a new element, select it immediately
+      if (targetId !== activeElementId && onSelectElement) {
+        onSelectElement(targetId);
+      }
+
+      // Start movement logic
+      const el = elements.find(el => el.internalId === targetId);
+      if (el) {
+        setMovingElementId(targetId);
+        moveStartRef.current = {
+          x: e.clientX,
+          y: e.clientY,
+          initialX: parseFloat(el.attributes.x || '0'),
+          initialY: parseFloat(el.attributes.y || '0')
+        };
+        return;
+      }
+    }
+
+    // 2. Pan logic (only if background or middle click or shift+left click)
+    const isBackground = !targetId;
+    if (isBackground || e.button === 1 || (e.button === 0 && e.shiftKey)) {
       setIsDragging(true);
-      hasDraggedRef.current = false;
       dragStartRef.current = {
         x: e.clientX,
         y: e.clientY,
@@ -64,6 +153,23 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    // 1. Handle element moving
+    if (movingElementId && moveStartRef.current) {
+      const dx = (e.clientX - moveStartRef.current.x) / zoom;
+      const dy = (e.clientY - moveStartRef.current.y) / zoom;
+
+      if (Math.abs(dx * zoom) > 2 || Math.abs(dy * zoom) > 2) {
+        hasDraggedRef.current = true;
+      }
+
+      setLocalMove({
+        x: moveStartRef.current.initialX + dx * 0.9,
+        y: moveStartRef.current.initialY + dy * 0.9
+      });
+      return;
+    }
+
+    // 2. Handle canvas panning
     if (!isDragging || !dragStartRef.current) return;
 
     const dx = e.clientX - dragStartRef.current.x;
@@ -74,14 +180,28 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
     }
 
     setPan({
-      x: dragStartRef.current.startPanX + dx,
-      y: dragStartRef.current.startPanY + dy
+      x: dragStartRef.current.startPanX + dx * 0.8,
+      y: dragStartRef.current.startPanY + dy * 0.8
     });
   };
 
   const handleMouseUp = () => {
+    if (movingElementId && localMove) {
+      // Sync to store on release
+      updateElement(movingElementId, {
+        attributes: {
+          ...localMove,
+          x: String(localMove.x),
+          y: String(localMove.y)
+        }
+      });
+    }
+
     setIsDragging(false);
+    setMovingElementId(null);
+    setLocalMove(null);
     dragStartRef.current = null;
+    moveStartRef.current = null;
   };
 
   const handleMouseLeave = () => {
@@ -111,23 +231,44 @@ export default function SvgUpload({ currentSvg, onSvgUpload, onSelectElement, el
     }
   };
 
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  // Keyboard zoom support (+ intercepts browser zoom)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === "=" || e.key === "+") {
+          e.preventDefault();
+          setZoom((prev) => Math.min(prev + 0.05, 10)); // Smaller steps
+        } else if (e.key === "-") {
+          e.preventDefault();
+          setZoom((prev) => Math.max(0.1, prev - 0.05));
+        } else if (e.key === "0") {
+          e.preventDefault();
+          resetView();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handleWheel = (e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const delta = -e.deltaY;
-      const factor = 0.01;
-      setZoom(prev => Math.min(Math.max(0.1, prev + delta * factor), 10));
+      const factor = 0.0005; // Ultra-smooth zoom
+      setZoom((prev) => Math.min(Math.max(0.1, prev + delta * factor), 10));
     } else {
-      setPan(prev => ({
-        x: prev.x - e.deltaX,
-        y: prev.y - e.deltaY
+      // Very smooth panning
+      setPan((prev) => ({
+        x: prev.x - e.deltaX * 0.4,
+        y: prev.y - e.deltaY * 0.4,
       }));
     }
-  };
-
-  const resetView = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
   };
 
   return (

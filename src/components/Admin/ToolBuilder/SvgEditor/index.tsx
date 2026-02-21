@@ -1,5 +1,5 @@
 // Main SvgEditor component
-import { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
+import React, { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
 import { type SvgElement } from "@/lib/utils/parseSvgElements";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import PreviewDialog from "./PreviewDialog";
 import SvgUpload from "./sections/SvgUpload";
 import SettingsDialog from "./sections/SettingsDialog";
 import DocsPanel from "./DocsPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Eye } from "lucide-react";
 import type { Tutorial, Font, SvgPatch } from "@/types";
@@ -50,7 +51,26 @@ export interface SvgEditorRef {
   openPreview: () => void;
 }
 
-const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateName = "", banner = "", hot = false, isActive = true, tool = "", tutorial, keywords = [], fonts: initialFonts = [], onSave, isLoading, isSvgLoading = false, onElementSelect, formFields = [], templateId, onPatchUpdate, onSvgReplace }, ref) => {
+const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditorProps> = (props, ref) => {
+  const {
+    svgRaw,
+    templateName = "",
+    banner = "",
+    hot = false,
+    isActive = true,
+    tool = "",
+    tutorial,
+    keywords = [],
+    fonts: initialFonts = [],
+    onSave,
+    isLoading,
+    isSvgLoading = false,
+    onElementSelect,
+    formFields = [],
+    templateId,
+    onPatchUpdate,
+    onSvgReplace
+  } = props;
   const {
     setInitialSvg,
     elements: elementsMap,
@@ -60,6 +80,8 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
     updateElement: updateElementInStore,
     undo,
     redo,
+    deleteElement,
+    duplicateElement,
     originalSvg
   } = useSvgStore();
 
@@ -143,9 +165,14 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
   useEffect(() => { setTutorialTitleState(tutorial?.title || ""); }, [tutorial]);
   useEffect(() => { setKeywordsTags(Array.isArray(keywords) ? keywords : []); }, [keywords]);
 
-  // Handle Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts if user is typing in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         if (e.shiftKey) redo();
         else undo();
@@ -153,11 +180,21 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
         redo();
         e.preventDefault();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedElementId) {
+          deleteElement(selectedElementId);
+          e.preventDefault();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        if (selectedElementId) {
+          duplicateElement(selectedElementId);
+          e.preventDefault();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo]);
+  }, [undo, redo, deleteElement, duplicateElement, selectedElementId]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -485,7 +522,9 @@ const SvgEditor = forwardRef<SvgEditorRef, SvgEditorProps>(({ svgRaw, templateNa
       />
     </div>
   );
-});
+};
+
+const SvgEditor = forwardRef(SvgEditorComponent);
 
 SvgEditor.displayName = "SvgEditor";
 export default SvgEditor;
