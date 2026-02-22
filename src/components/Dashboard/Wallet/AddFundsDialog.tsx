@@ -7,13 +7,11 @@ import {
 } from '@/components/ui/dialog';
 import { Copy, CheckCircle, Loader2, Wallet, Send, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
-import { createCryptoPayment } from '@/api/apiEndpoints';
-import { useMutation } from '@tanstack/react-query';
+import { createCryptoPayment, getSiteSettings } from '@/api/apiEndpoints';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
-import type { CryptoPaymentData } from '@/types';
+import type { CryptoPaymentData, SiteSettings } from '@/types';
 import errorMessage from '@/lib/utils/errorMessage';
-
-const VENDOR_WHATSAPP = '2349160914217';
 
 export default function AddFundsDialog({
   open,
@@ -25,6 +23,11 @@ export default function AddFundsDialog({
   const [mode, setMode] = useState<'crypto' | 'naira' | null>(null);
   const [copied, setCopied] = useState(false);
   const [amount, setAmount] = useState('');
+
+  const { data: siteSettings } = useQuery<SiteSettings>({
+    queryKey: ['siteSettings'],
+    queryFn: getSiteSettings,
+  });
 
   const {
     mutate,
@@ -70,7 +73,8 @@ export default function AddFundsDialog({
     // Specific format requested by user
     const msg = `Hello. I want to buy ${amount} BNB. Send the BNB to this Binance Smart Chain wallet address: ${data.payment_address}`;
     const encoded = encodeURIComponent(msg);
-    const link = `https://wa.me/${VENDOR_WHATSAPP}?text=${encoded}`;
+    const vendorNumber = siteSettings?.whatsapp_number || '2349160914217';
+    const link = `https://wa.me/${vendorNumber}?text=${encoded}`;
     window.open(link, '_blank');
     onOpenChange(false);
   };

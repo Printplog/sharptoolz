@@ -3,13 +3,20 @@
 import React, { useState } from "react";
 import { AlertTriangle, Loader2, Copy, CheckCircle, MessageSquare, XCircle } from "lucide-react";
 import { useWalletStore } from "@/store/walletStore";
-import { useMutation } from "@tanstack/react-query";
-import { cancelCryptoPayment } from "@/api/apiEndpoints";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { cancelCryptoPayment, getSiteSettings } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { ConfirmAction } from "@/components/ConfirmAction";
+import type { SiteSettings } from "@/types";
 
 const PendingFundingNotice: React.FC = () => {
   const [copied, setCopied] = useState(false);
+
+  const { data: siteSettings } = useQuery<SiteSettings>({
+    queryKey: ["siteSettings"],
+    queryFn: getSiteSettings,
+  });
+
   const { wallet } = useWalletStore();
   const { mutate, isPending } = useMutation({
     mutationFn: (id: string) => cancelCryptoPayment(id),
@@ -26,7 +33,6 @@ const PendingFundingNotice: React.FC = () => {
   if (!transaction || transaction.status !== "pending") return null;
 
   const { address, amount = 0 } = transaction;
-  const VENDOR_PHONE = "2349160914217";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(address);
@@ -41,7 +47,8 @@ const PendingFundingNotice: React.FC = () => {
   const handleWhatsApp = () => {
     const msg = `Hello. I want to buy ${amount} BNB. Send the BNB to this Binance Smart Chain wallet address: ${address}`;
     const encoded = encodeURIComponent(msg);
-    const link = `https://wa.me/${VENDOR_PHONE}?text=${encoded}`;
+    const vendorNumber = siteSettings?.whatsapp_number || "2349160914217";
+    const link = `https://wa.me/${vendorNumber}?text=${encoded}`;
     window.open(link, "_blank");
   };
 

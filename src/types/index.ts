@@ -330,9 +330,32 @@ export interface DocSection {
 }
 
 export type SiteSettings = {
-  crypto_address: string;
+  // 1. Contact & Support Configurations
   whatsapp_number: string;
+  support_email: string;
+  telegram_link: string;
+  twitter_link: string;
+  instagram_link: string;
+
+  // 2. Wallet & Financial Constraints
+  min_topup_amount: string; // Decimal field usually strings over JSON
+  crypto_address: string;
+  exchange_rate_override: string;
+
+  // 3. Platform Toggles (Kill Switches)
+  maintenance_mode: boolean;
+  disable_new_signups: boolean;
+  disable_deposits: boolean;
+
+  // 4. Branding Defaults
+  global_announcement_text: string;
+  global_announcement_link: string;
+  enable_global_announcement: boolean;
+
+  // Legacy
   manual_purchase_text: string;
+  dev_name_obfuscated: string;
+  owner_name_obfuscated: string;
   updated_at: string;
 };
 
