@@ -33,7 +33,7 @@ const WalletPage: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700">
       {/* Header Section */}
       <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-extrabold text-white tracking-tighter uppercase italic">
+        <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
           My <span className="text-primary">Wallet</span>
         </h1>
 
@@ -71,7 +71,7 @@ const WalletPage: React.FC = () => {
                   <Receipt className="w-5 h-5 text-white/40" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-white tracking-tight italic uppercase">
+                  <h2 className="text-lg font-bold text-white tracking-tight italic uppercase">
                     History
                   </h2>
                 </div>

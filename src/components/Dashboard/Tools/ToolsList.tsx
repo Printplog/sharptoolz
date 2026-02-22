@@ -80,27 +80,24 @@ export default function ToolsList({ hot }: Props) {
     <div className="space-y-10">
       {/* Search Box */}
       {!hot && (
-        <div className="flex justify-center bg-white/5 border border-white/10 px-4 py-5 rounded-lg">
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-            <div className="flex-1 relative w-full">
-              <Input
-                type="text"
-                placeholder="Search tools..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-full px-5 py-3 h-fit border border-white/30 rounded-full bg-white/10 text-white placeholder:text-white/50"
-              />
-              <Button className="flex items-center gap-2 rounded-full absolute right-0 top-0 bottom-0 bg-white/10 hover:bg-white/20 text-white m-1 mr-2 px-4 border-0">
-                <Search className="w-4 h-4" />
-                <span className="hidden sm:inline">Search</span>
-              </Button>
-            </div>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full bg-white/[0.02] border border-white/5 p-4 rounded-2xl backdrop-blur-md">
+          <div className="flex-1 relative w-full group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+            <Input
+              type="text"
+              placeholder="Search for tools..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-6 h-12 border-white/5 rounded-xl bg-white/[0.03] text-white placeholder:text-white/20 focus:border-primary/50 focus:ring-primary/20 transition-all text-sm"
+            />
+          </div>
+          <div className="w-full sm:w-auto flex gap-3">
             <Select value={selectedTool} onValueChange={setSelectedTool}>
-              <SelectTrigger className="w-full sm:w-[200px] rounded-full bg-white/10 border-white/30 text-white h-[48px]">
-                <SelectValue placeholder="Filter by tool" />
+              <SelectTrigger className="w-full sm:w-[200px] rounded-xl bg-white/[0.03] border-white/5 text-white h-12 text-sm focus:ring-primary/20">
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent className="bg-zinc-950 border-white/10 text-white">
-                <SelectItem value="all">All Tools</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {toolCategories?.map((tool) => (
                   <SelectItem key={tool.id} value={tool.id}>
                     {tool.name}
@@ -134,7 +131,7 @@ export default function ToolsList({ hot }: Props) {
                   <div className="relative pb-4">
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-1 bg-gradient-to-b from-primary via-primary/80 to-primary/60 rounded-full"></div>
-                      <h2 className="text-3xl font-bold text-white tracking-tight">{tool.name}</h2>
+                      <h2 className="text-2xl font-bold text-white tracking-tight">{tool.name}</h2>
                     </div>
                     <div className="mt-3 h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                   </div>
