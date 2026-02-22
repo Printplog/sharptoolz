@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MessageCircle, Send, Twitter, Instagram, ArrowUpRight } from "lucide-react";
+import { MessageCircle, Send, Twitter, Instagram, ArrowUpRight, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings } from "@/api/apiEndpoints";
 import type { SiteSettings } from "@/types";
@@ -74,38 +74,43 @@ export default function SocialsSection() {
     };
 
     return (
-        <section className="relative py-24 overflow-hidden bg-[#F9F9F9]">
+        <section className="relative py-24 overflow-hidden">
             {/* Background Decorative Elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl opacity-50" />
-                <div className="absolute top-1/2 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl opacity-30" />
+                <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-[120px] opacity-20" />
+                <div className="absolute top-1/2 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-[120px] opacity-10" />
             </div>
 
             <SectionPadding>
                 <div className="text-center mb-16 relative z-10">
-                    <motion.span
-                        initial={{ opacity: 0, y: 10 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        className="text-primary font-black uppercase tracking-[0.2em] text-xs mb-4 block"
+                        className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full mb-6"
                     >
-                        Stay Connected
-                    </motion.span>
+                        <Zap className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-primary font-black uppercase tracking-[0.2em] text-[10px]">
+                            Stay Connected
+                        </span>
+                    </motion.div>
+
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.1 }}
-                        className="text-4xl md:text-5xl lg:text-6xl font-black text-secondary tracking-tighter italic uppercase mb-6"
+                        className="text-4xl md:text-5xl lg:text-7xl font-fancy font-black text-white tracking-tighter uppercase italic mb-6 leading-[0.9]"
                     >
                         Join the <span className="text-primary">Community</span>
                     </motion.h2>
+
                     <motion.p
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.2 }}
-                        className="text-secondary/60 max-w-2xl mx-auto text-lg leading-relaxed"
+                        className="text-white/50 max-w-2xl mx-auto text-lg leading-relaxed"
                     >
                         Be part of our fast-growing ecosystem. Get exclusive access to tools,
                         tutorials, and real-time support directly from our community channels.
@@ -129,44 +134,51 @@ export default function SocialsSection() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 variants={cardVariants}
-                                whileHover={{ y: -8, scale: 1.02 }}
-                                className="group relative bg-white border border-secondary/5 p-8 rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden"
+                                whileHover={{ y: -10, scale: 1.02 }}
+                                className="group relative bg-white/[0.03] border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl transition-all duration-500 overflow-hidden"
                             >
                                 {/* Brand Color Glow on Hover */}
                                 <div
-                                    className="absolute -right-12 -top-12 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+                                    className="absolute -right-12 -bottom-12 w-48 h-48 rounded-full blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-700"
                                     style={{ backgroundColor: platform.color }}
                                 />
 
                                 <div className="relative z-10">
                                     <div
-                                        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:rotate-12"
-                                        style={{ backgroundColor: `${platform.color}15`, color: platform.color }}
+                                        className="w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-8 transition-all duration-500 group-hover:rotate-[15deg] group-hover:scale-110 shadow-lg"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${platform.color}20, ${platform.color}05)`,
+                                            color: platform.color,
+                                            border: `1px solid ${platform.color}30`
+                                        }}
                                     >
                                         {platform.icon}
                                     </div>
 
-                                    <h3 className="text-xl font-black text-secondary uppercase italic tracking-tighter mb-2 flex items-center gap-2">
+                                    <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-3 flex items-center gap-2">
                                         {platform.name}
-                                        <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-y-1 translate-x-1" />
+                                        <ArrowUpRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all -translate-y-1 translate-x-1 duration-300" />
                                     </h3>
 
-                                    <p className="text-secondary/50 text-sm leading-relaxed mb-6 h-12 overflow-hidden line-clamp-2">
+                                    <p className="text-white/40 text-sm font-medium leading-relaxed mb-8 h-12 overflow-hidden line-clamp-2">
                                         {platform.description}
                                     </p>
 
-                                    <div className="flex items-center justify-between pt-6 border-t border-secondary/5">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-secondary/30">
+                                    <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">
                                             {platform.stats}
                                         </span>
                                         <span
-                                            className="text-xs font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="text-xs font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300"
                                             style={{ color: platform.color }}
                                         >
-                                            Join Now
+                                            Join now
                                         </span>
                                     </div>
                                 </div>
+
+                                {/* Subtle Shine Effect */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                             </motion.a>
                         );
                     })}
