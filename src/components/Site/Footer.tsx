@@ -104,6 +104,13 @@ export default function Footer() {
                   </a>
                 </li>
               )}
+              {settings?.whatsapp_community_link && (
+                <li>
+                  <a href={settings.whatsapp_community_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    <i className="fab fa-whatsapp"></i>
+                  </a>
+                </li>
+              )}
               {/* Fallback icons if no settings found - strictly adhering to showing nothing if empty */}
             </ul>
           </div>

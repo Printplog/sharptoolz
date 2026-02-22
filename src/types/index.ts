@@ -332,6 +332,7 @@ export interface DocSection {
 export type SiteSettings = {
   // 1. Contact & Support Configurations
   whatsapp_number: string;
+  whatsapp_community_link: string;
   support_email: string;
   telegram_link: string;
   twitter_link: string;

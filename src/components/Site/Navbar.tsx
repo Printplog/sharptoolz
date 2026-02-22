@@ -23,7 +23,7 @@ export default function Navbar() {
     { href: "/all-tools", label: "All Tools" },
     { href: "/tutorials", label: "Tutorials" },
     {
-      href: settings?.telegram_link || "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu",
+      href: settings?.whatsapp_community_link || settings?.telegram_link || "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu",
       label: "Community",
     },
     { href: "/contact", label: "Contact" },
@@ -44,8 +44,8 @@ export default function Navbar() {
                 to={link.href}
                 target={link.href.startsWith("http") ? "_blank" : "_self"}
                 className={`transition-colors font-medium ${link.href === pathname
-                    ? "text-primary"
-                    : "text-foreground/80 hover:text-primary"
+                  ? "text-primary"
+                  : "text-foreground/80 hover:text-primary"
                   }`}
               >
                 {link.label}
@@ -116,8 +116,8 @@ export default function Navbar() {
                       to={link.href}
                       onClick={() => setIsMenuOpen(false)}
                       className={`transition-colors font-medium py-2 ${link.href === pathname
-                          ? "text-primary"
-                          : "text-foreground hover:text-primary"
+                        ? "text-primary"
+                        : "text-foreground hover:text-primary"
                         }`}
                     >
                       {link.label}

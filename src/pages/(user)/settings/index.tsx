@@ -48,7 +48,7 @@ export default function SettingsPage() {
     },
     {
       label: "Join Community",
-      to: settings?.telegram_link || "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu",
+      to: settings?.whatsapp_community_link || settings?.telegram_link || "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu",
       icon: MessageCircle,
     },
   ];

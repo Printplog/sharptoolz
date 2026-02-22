@@ -43,6 +43,7 @@ export default function AdminSettings() {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<SiteSettings>>({
     whatsapp_number: "",
+    whatsapp_community_link: "",
     support_email: "",
     telegram_link: "",
     twitter_link: "",
@@ -73,6 +74,7 @@ export default function AdminSettings() {
     if (settings) {
       setFormData({
         whatsapp_number: settings.whatsapp_number || "",
+        whatsapp_community_link: settings.whatsapp_community_link || "",
         support_email: settings.support_email || "",
         telegram_link: settings.telegram_link || "",
         twitter_link: settings.twitter_link || "",
@@ -208,6 +210,20 @@ export default function AdminSettings() {
                     placeholder="2349160914217"
                   />
                   <p className="text-[11px] text-white/40 italic">Used for manual Naira payments and fallback support.</p>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="whatsapp_community" className="text-white/70 text-xs font-black uppercase tracking-widest">WhatsApp Community Link</Label>
+                  </div>
+                  <Input
+                    id="whatsapp_community"
+                    type="url"
+                    value={formData.whatsapp_community_link}
+                    onChange={(e) => setFormData({ ...formData, whatsapp_community_link: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
+                    placeholder="https://chat.whatsapp.com/..."
+                  />
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
