@@ -123,7 +123,7 @@ export default function AdminSettings() {
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tighter uppercase italic">
+          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
             Site <span className="text-primary">Settings</span>
           </h1>
           <p className="text-white/50 text-sm mt-1">Configure your platform's global behavior</p>

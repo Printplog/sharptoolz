@@ -69,8 +69,8 @@ export default function ToolTemplates() {
       <div className="flex items-center justify-between border-b border-white/10 pb-5">
         <div className="flex flex-col items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              {tool.name}
+            <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+              {tool.name} <span className="text-primary">Templates</span>
             </h1>
             <p className="text-white/60 mt-1">
               {tool.description || "No description available"}
