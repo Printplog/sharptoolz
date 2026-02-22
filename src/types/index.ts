@@ -340,6 +340,7 @@ export type SiteSettings = {
   // 2. Wallet & Financial Constraints
   min_topup_amount: string; // Decimal field usually strings over JSON
   crypto_address: string;
+  funding_whatsapp_number: string;
   exchange_rate_override: string;
 
   // 3. Platform Toggles (Kill Switches)

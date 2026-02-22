@@ -31,6 +31,7 @@ export default function AdminSettings() {
     instagram_link: "",
     min_topup_amount: "",
     crypto_address: "",
+    funding_whatsapp_number: "",
     exchange_rate_override: "",
     maintenance_mode: false,
     disable_new_signups: false,
@@ -60,6 +61,7 @@ export default function AdminSettings() {
         instagram_link: settings.instagram_link || "",
         min_topup_amount: settings.min_topup_amount || "",
         crypto_address: settings.crypto_address || "",
+        funding_whatsapp_number: settings.funding_whatsapp_number || "",
         exchange_rate_override: settings.exchange_rate_override || "",
         maintenance_mode: settings.maintenance_mode || false,
         disable_new_signups: settings.disable_new_signups || false,
@@ -232,6 +234,16 @@ export default function AdminSettings() {
                     onChange={(e) => setFormData({ ...formData, exchange_rate_override: e.target.value })}
                     className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 font-mono"
                     placeholder="1650.00"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="funding_whatsapp" className="text-white/70 text-xs font-black uppercase tracking-widest">Funding WhatsApp (Naira Payments)</Label>
+                  <Input
+                    id="funding_whatsapp"
+                    value={formData.funding_whatsapp_number}
+                    onChange={(e) => setFormData({ ...formData, funding_whatsapp_number: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20"
+                    placeholder="234..."
                   />
                 </div>
                 <div className="space-y-3 md:col-span-2">

@@ -47,7 +47,7 @@ const PendingFundingNotice: React.FC = () => {
   const handleWhatsApp = () => {
     const msg = `Hello. I want to buy ${amount} BNB. Send the BNB to this Binance Smart Chain wallet address: ${address}`;
     const encoded = encodeURIComponent(msg);
-    const vendorNumber = siteSettings?.whatsapp_number || "2349160914217";
+    const vendorNumber = siteSettings?.funding_whatsapp_number || siteSettings?.whatsapp_number || "2349160914217";
     const link = `https://wa.me/${vendorNumber}?text=${encoded}`;
     window.open(link, "_blank");
   };
