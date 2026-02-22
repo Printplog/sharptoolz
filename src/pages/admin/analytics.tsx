@@ -29,7 +29,9 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6 w-full p-6">
-      <h1 className="text-3xl font-bold text-white mb-8">Platform Analytics</h1>
+      <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic mb-8">
+        Platform <span className="text-primary">Analytics</span>
+      </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Row 1 */}
