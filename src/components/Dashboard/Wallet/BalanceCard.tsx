@@ -21,7 +21,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, onTopUp }) => {
           </div>
           <div className="space-y-1 min-w-0">
             <h3 className="text-white/40 text-xs font-black uppercase tracking-[0.2em] truncate">
-              Total Available Balance
+              Wallet Balance
             </h3>
             <div className="flex items-baseline gap-2 md:gap-3">
               <span className="text-white/40 text-lg md:text-2xl font-medium font-mono shrink-0">$</span>

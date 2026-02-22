@@ -47,9 +47,9 @@ const WalletPage: React.FC = () => {
       </div>
 
       {/* Main Grid Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left Column: Balance & Pending */}
-        <div className="xl:col-span-5 space-y-8">
+        <div className="space-y-6">
           <BalanceCard
             balance={Number(wallet?.balance)}
             onTopUp={handleOpenAddFunds}
@@ -61,7 +61,7 @@ const WalletPage: React.FC = () => {
         </div>
 
         {/* Right Column: Transaction Log */}
-        <div className="xl:col-span-7">
+        <div className="w-full h-full">
           <div className="relative h-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.02] backdrop-blur-3xl transition-all duration-500 hover:border-white/20 shadow-2xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
