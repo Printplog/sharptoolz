@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import type { User } from "@/types";
 import { toast } from "sonner";
 import PageLoader from "@/components/PageLoader";
-import { ROLES } from "@/lib/constants/roles";
+import { ROLES, type RoleCode } from "@/lib/constants/roles";
 
 const ROLE_MAP: Record<string, string> = {
   [ROLES.ADMIN]: "admin",

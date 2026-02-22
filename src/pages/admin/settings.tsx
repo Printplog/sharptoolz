@@ -24,7 +24,6 @@ import {
   Wallet,
   Activity,
   Flag,
-  Globe,
   Info,
   MessageSquare,
   Twitter,

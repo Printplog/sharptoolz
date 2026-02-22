@@ -6,8 +6,8 @@ export interface SvgPatch {
     id: string;
     attribute: string;
     subKey?: string;
-    oldValue: string | number | boolean | Record<string, string> | string[] | undefined | null;
-    newValue: string | number | boolean | Record<string, string> | string[] | undefined | null;
+    oldValue: any;
+    newValue: any;
 }
 
 interface SvgStore {
