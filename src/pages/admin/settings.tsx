@@ -160,19 +160,19 @@ export default function AdminSettings() {
 
       <Tabs defaultValue="support" className="space-y-4">
         <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl h-auto flex flex-wrap md:flex-nowrap gap-1">
-          <TabsTrigger value="support" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+          <TabsTrigger value="support" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Headset className="w-4 h-4" />
             Contact & Support
           </TabsTrigger>
-          <TabsTrigger value="financial" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+          <TabsTrigger value="financial" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Wallet className="w-4 h-4" />
             Financial
           </TabsTrigger>
-          <TabsTrigger value="toggles" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+          <TabsTrigger value="toggles" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Activity className="w-4 h-4" />
             Platform Toggles
           </TabsTrigger>
-          <TabsTrigger value="branding" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+          <TabsTrigger value="branding" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Flag className="w-4 h-4" />
             Branding Defaults
           </TabsTrigger>
@@ -180,7 +180,7 @@ export default function AdminSettings() {
 
         {/* 1. Contact & Support Tab */}
         <TabsContent value="support" className="space-y-6 focus:outline-none focus-visible:outline-none">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
               <div className="flex items-center gap-4">
@@ -272,7 +272,7 @@ export default function AdminSettings() {
 
         {/* 2. Financial Tab */}
         <TabsContent value="financial" className="space-y-6 focus:outline-none focus-visible:outline-none">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
               <div className="flex items-center gap-4">
@@ -361,7 +361,7 @@ export default function AdminSettings() {
 
         {/* 3. Platform Toggles Tab */}
         <TabsContent value="toggles" className="space-y-6 focus:outline-none focus-visible:outline-none">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-red-500/20">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-red-500/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full blur-3xl" />
               <div className="flex items-center gap-4">
@@ -414,7 +414,7 @@ export default function AdminSettings() {
 
         {/* 4. Branding Tab */}
         <TabsContent value="branding" className="space-y-6 focus:outline-none focus-visible:outline-none">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
               <div className="flex items-center justify-between gap-4">
