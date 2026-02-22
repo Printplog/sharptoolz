@@ -16,7 +16,25 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
-import { ShieldCheck, Loader2, Save } from "lucide-react";
+import {
+  ShieldCheck,
+  Loader2,
+  Save,
+  Headset,
+  Wallet,
+  Activity,
+  Flag,
+  Globe,
+  Info,
+  MessageSquare,
+  Twitter,
+  Instagram,
+  Mail,
+  Zap,
+  Lock,
+  MessageCircle,
+  Link as LinkIcon
+} from "lucide-react";
 import { toast } from "sonner";
 import type { SiteSettings } from "@/types";
 import SettingsSkeleton from "@/components/Admin/Layouts/SettingsSkeleton";
@@ -132,72 +150,119 @@ export default function AdminSettings() {
         </div>
         <Button
           onClick={handleSaveClick}
-          className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs px-6 py-5 rounded-2xl shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all"
+          className="relative group overflow-hidden gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs px-8 py-6 rounded-2xl transition-all duration-500 shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] active:scale-95"
         >
-          <Save className="h-4 w-4" />
-          Save Changes
+          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+          <Save className="h-4 w-4 relative z-10" />
+          <span className="relative z-10">Save Configuration</span>
         </Button>
       </div>
 
       <Tabs defaultValue="support" className="space-y-6">
-        <TabsList className="bg-white/5 border border-white/10 p-1 rounded-2xl h-auto">
-          <TabsTrigger value="support" className="rounded-xl px-6 py-3 text-sm font-bold">Contact & Support</TabsTrigger>
-          <TabsTrigger value="financial" className="rounded-xl px-6 py-3 text-sm font-bold">Financial</TabsTrigger>
-          <TabsTrigger value="toggles" className="rounded-xl px-6 py-3 text-sm font-bold">Platform Toggles</TabsTrigger>
-          <TabsTrigger value="branding" className="rounded-xl px-6 py-3 text-sm font-bold">Branding Defaults</TabsTrigger>
+        <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl h-auto flex flex-wrap md:flex-nowrap gap-1">
+          <TabsTrigger value="support" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+            <Headset className="w-4 h-4" />
+            Contact & Support
+          </TabsTrigger>
+          <TabsTrigger value="financial" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+            <Wallet className="w-4 h-4" />
+            Financial
+          </TabsTrigger>
+          <TabsTrigger value="toggles" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+            <Activity className="w-4 h-4" />
+            Platform Toggles
+          </TabsTrigger>
+          <TabsTrigger value="branding" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+            <Flag className="w-4 h-4" />
+            Branding Defaults
+          </TabsTrigger>
         </TabsList>
 
         {/* 1. Contact & Support Tab */}
         <TabsContent value="support" className="space-y-6 focus:outline-none focus-visible:outline-none">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem]">
-            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6">
-              <CardTitle className="text-xl font-bold italic uppercase">Support Configurations</CardTitle>
-              <CardDescription className="text-white/50">Manage how users contact you and join your communities.</CardDescription>
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20">
+            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-2xl">
+                  <Headset className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold italic uppercase">Support Configurations</CardTitle>
+                  <CardDescription className="text-white/50">Manage how users contact you and join your communities.</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label htmlFor="whatsapp_number" className="text-white/70 text-xs font-black uppercase tracking-widest">WhatsApp Number</Label>
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="whatsapp_number" className="text-white/70 text-xs font-black uppercase tracking-widest">WhatsApp Number</Label>
+                  </div>
                   <Input
                     id="whatsapp_number"
                     value={formData.whatsapp_number}
                     onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20"
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                     placeholder="2349160914217"
                   />
-                  <p className="text-[11px] text-white/40">Used for manual Naira payments and fallback support.</p>
+                  <p className="text-[11px] text-white/40 italic">Used for manual Naira payments and fallback support.</p>
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="support_email" className="text-white/70 text-xs font-black uppercase tracking-widest">Support Email</Label>
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="support_email" className="text-white/70 text-xs font-black uppercase tracking-widest">Support Email</Label>
+                  </div>
                   <Input
                     id="support_email"
                     type="email"
                     value={formData.support_email}
                     onChange={(e) => setFormData({ ...formData, support_email: e.target.value })}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20"
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                     placeholder="support@domain.com"
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="telegram_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Telegram Link</Label>
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="telegram_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Telegram Link</Label>
+                  </div>
                   <Input
                     id="telegram_link"
                     type="url"
                     value={formData.telegram_link}
                     onChange={(e) => setFormData({ ...formData, telegram_link: e.target.value })}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20"
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                     placeholder="https://t.me/yourgroup"
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="twitter_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Twitter (X) Link</Label>
+                  <div className="flex items-center gap-2">
+                    <Twitter className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="twitter_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Twitter (X) Link</Label>
+                  </div>
                   <Input
                     id="twitter_link"
                     type="url"
                     value={formData.twitter_link}
                     onChange={(e) => setFormData({ ...formData, twitter_link: e.target.value })}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20"
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                     placeholder="https://x.com/yourhandle"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Instagram className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="instagram_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Instagram Link</Label>
+                  </div>
+                  <Input
+                    id="instagram_link"
+                    type="url"
+                    value={formData.instagram_link}
+                    onChange={(e) => setFormData({ ...formData, instagram_link: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
+                    placeholder="https://instagram.com/yourhandle"
                   />
                 </div>
               </div>
@@ -207,62 +272,85 @@ export default function AdminSettings() {
 
         {/* 2. Financial Tab */}
         <TabsContent value="financial" className="space-y-6 focus:outline-none focus-visible:outline-none">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem]">
-            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6">
-              <CardTitle className="text-xl font-bold italic uppercase">Wallet & Exchange</CardTitle>
-              <CardDescription className="text-white/50">Manage top-up constraints and crypto fallbacks.</CardDescription>
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20">
+            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-2xl">
+                  <Wallet className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold italic uppercase">Wallet & Exchange</CardTitle>
+                  <CardDescription className="text-white/50">Manage top-up constraints and crypto fallbacks.</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label htmlFor="min_topup" className="text-white/70 text-xs font-black uppercase tracking-widest">Min Top-Up (USD)</Label>
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="min_topup" className="text-white/70 text-xs font-black uppercase tracking-widest">Min Top-Up (USD)</Label>
+                  </div>
                   <Input
                     id="min_topup"
                     type="number"
                     value={formData.min_topup_amount}
                     onChange={(e) => setFormData({ ...formData, min_topup_amount: e.target.value })}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 font-mono"
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono"
                     placeholder="5.00"
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="exchange_rate" className="text-white/70 text-xs font-black uppercase tracking-widest">Dollar/Naira Override</Label>
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="exchange_rate" className="text-white/70 text-xs font-black uppercase tracking-widest">Dollar/Naira Override</Label>
+                  </div>
                   <Input
                     id="exchange_rate"
                     type="number"
                     value={formData.exchange_rate_override}
                     onChange={(e) => setFormData({ ...formData, exchange_rate_override: e.target.value })}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 font-mono"
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono"
                     placeholder="1650.00"
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="funding_whatsapp" className="text-white/70 text-xs font-black uppercase tracking-widest">Funding WhatsApp (Naira Payments)</Label>
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="funding_whatsapp" className="text-white/70 text-xs font-black uppercase tracking-widest">Funding WhatsApp (Naira Payments)</Label>
+                  </div>
                   <Input
                     id="funding_whatsapp"
                     value={formData.funding_whatsapp_number}
                     onChange={(e) => setFormData({ ...formData, funding_whatsapp_number: e.target.value })}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20"
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                     placeholder="234..."
                   />
                 </div>
                 <div className="space-y-3 md:col-span-2">
-                  <Label htmlFor="crypto_address" className="text-white/70 text-xs font-black uppercase tracking-widest">Master Crypto Address (USDT BEP20)</Label>
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="crypto_address" className="text-white/70 text-xs font-black uppercase tracking-widest">Master Crypto Address (USDT BEP20)</Label>
+                  </div>
                   <Input
                     id="crypto_address"
                     value={formData.crypto_address}
                     onChange={(e) => setFormData({ ...formData, crypto_address: e.target.value })}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 font-mono text-sm"
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono text-sm"
                     placeholder="0x..."
                   />
                 </div>
                 <div className="space-y-3 md:col-span-2">
-                  <Label htmlFor="manual" className="text-white/70 text-xs font-black uppercase tracking-widest">Manual Purchase Instructions</Label>
+                  <div className="flex items-center gap-2">
+                    <Info className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="manual" className="text-white/70 text-xs font-black uppercase tracking-widest">Manual Purchase Instructions</Label>
+                  </div>
                   <Textarea
                     id="manual"
                     value={formData.manual_purchase_text}
                     onChange={(e) => setFormData({ ...formData, manual_purchase_text: e.target.value })}
-                    className="bg-white/5 border-white/10 min-h-[100px] rounded-xl focus:ring-primary/20"
+                    className="bg-white/5 border-white/10 min-h-[100px] rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                     placeholder="Instructions shown on manual purchase..."
                   />
                 </div>
@@ -273,10 +361,18 @@ export default function AdminSettings() {
 
         {/* 3. Platform Toggles Tab */}
         <TabsContent value="toggles" className="space-y-6 focus:outline-none focus-visible:outline-none">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem]">
-            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6">
-              <CardTitle className="text-xl font-bold italic uppercase">Kill Switches</CardTitle>
-              <CardDescription className="text-white/50">Emergency controls for your platform.</CardDescription>
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-red-500/20">
+            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full blur-3xl" />
+              <div className="flex items-center gap-4">
+                <div className="bg-red-500/10 p-3 rounded-2xl">
+                  <Activity className="w-6 h-6 text-red-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold italic uppercase">Kill Switches</CardTitle>
+                  <CardDescription className="text-white/50">Emergency controls for your platform.</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-2 p-8">
               <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02]">
@@ -318,12 +414,18 @@ export default function AdminSettings() {
 
         {/* 4. Branding Tab */}
         <TabsContent value="branding" className="space-y-6 focus:outline-none focus-visible:outline-none">
-          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem]">
-            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl font-bold italic uppercase">Global Announcement</CardTitle>
-                  <CardDescription className="text-white/50">Show a banner message at the top of the user dashboard.</CardDescription>
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20">
+            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="bg-primary/10 p-3 rounded-2xl">
+                    <Flag className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold italic uppercase">Global Announcement</CardTitle>
+                    <CardDescription className="text-white/50">Show a banner message at the top of the user dashboard.</CardDescription>
+                  </div>
                 </div>
                 <Switch
                   checked={formData.enable_global_announcement}
@@ -333,24 +435,30 @@ export default function AdminSettings() {
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="space-y-3">
-                <Label htmlFor="announcement_text" className="text-white/70 text-xs font-black uppercase tracking-widest">Banner Text</Label>
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                  <Label htmlFor="announcement_text" className="text-white/70 text-xs font-black uppercase tracking-widest">Banner Text</Label>
+                </div>
                 <Input
                   id="announcement_text"
                   value={formData.global_announcement_text}
                   onChange={(e) => setFormData({ ...formData, global_announcement_text: e.target.value })}
-                  className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20"
+                  className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                   placeholder="e.g. ⚠️ Scheduled maintenance on Sunday at 2 AM"
                   disabled={!formData.enable_global_announcement}
                 />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="announcement_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Clickable Link (Optional)</Label>
+                <div className="flex items-center gap-2">
+                  <LinkIcon className="w-3.5 h-3.5 text-primary" />
+                  <Label htmlFor="announcement_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Clickable Link (Optional)</Label>
+                </div>
                 <Input
                   id="announcement_link"
                   type="url"
                   value={formData.global_announcement_link}
                   onChange={(e) => setFormData({ ...formData, global_announcement_link: e.target.value })}
-                  className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20"
+                  className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                   placeholder="https://t.me/yourgroup"
                   disabled={!formData.enable_global_announcement}
                 />
