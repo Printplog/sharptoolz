@@ -20,7 +20,7 @@ export default function Documents() {
   const documents = Array.isArray(data) ? data : [];
 
   const filteredDocuments = documents.filter((doc) =>
-    doc.template_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    doc.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
