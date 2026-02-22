@@ -10,37 +10,48 @@ import { Link, useNavigate } from "react-router-dom";
 import UserInfoCard from "@/components/Dashboard/Settings/UserInfoCard";
 import ChangePassword from "@/components/Dashboard/Settings/ChangePassword";
 import { useAuthStore } from "@/store/authStore";
-const settingsLinks = [
-  {
-    label: "Change Password",
-    to: "?dialog=change-password",
-    icon: KeyRound,
-  },
-  {
-    label: "API",
-    to: "/settings/api",
-    icon: Code2,
-  },
-  {
-    label: "Customer Service",
-    to: "https://wa.me/2348147929994",
-    icon: LifeBuoy,
-  },
-  {
-    label: "Help",
-    to: "/help",
-    icon: Mail,
-  },
-  {
-    label: "Join WhatsApp Community",
-    to: "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu", // Replace with real invite link
-    icon: MessageCircle,
-  },
-];
-
+import { useQuery } from "@tanstack/react-query";
+import { getSiteSettings } from "@/api/apiEndpoints";
+import type { SiteSettings } from "@/types";
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
+  const { data: settings } = useQuery<SiteSettings>({
+    queryKey: ["siteSettings"],
+    queryFn: getSiteSettings,
+  });
+
+  const settingsLinks = [
+    {
+      label: "Change Password",
+      to: "?dialog=change-password",
+      icon: KeyRound,
+    },
+    {
+      label: "API",
+      to: "/settings/api",
+      icon: Code2,
+    },
+    {
+      label: "Customer Service",
+      to: settings?.whatsapp_number
+        ? `https://wa.me/${settings.whatsapp_number}`
+        : "https://wa.me/2348147929994",
+      icon: LifeBuoy,
+    },
+    {
+      label: "Help",
+      to: settings?.support_email
+        ? `mailto:${settings.support_email}`
+        : "/help",
+      icon: Mail,
+    },
+    {
+      label: "Join Community",
+      to: settings?.telegram_link || "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu",
+      icon: MessageCircle,
+    },
+  ];
 
   const handleLogout = () => {
     // perform logout logic here (clear tokens, call API, etc.)

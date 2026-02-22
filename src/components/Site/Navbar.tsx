@@ -1,5 +1,8 @@
 import { useState } from "react";
 import SectionPadding from "../../layouts/SectionPadding";
+import { useQuery } from "@tanstack/react-query";
+import { getSiteSettings } from "@/api/apiEndpoints";
+import type { SiteSettings } from "@/types";
 import { Button } from "../ui/button";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../Logo";
@@ -10,13 +13,17 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = useLocation().pathname;
   const { isAuthenticated } = useAuthStore();
+  const { data: settings } = useQuery<SiteSettings>({
+    queryKey: ["siteSettings"],
+    queryFn: getSiteSettings,
+  });
 
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/all-tools", label: "All Tools" },
     { href: "/tutorials", label: "Tutorials" },
     {
-      href: "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu",
+      href: settings?.telegram_link || "https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu",
       label: "Community",
     },
     { href: "/contact", label: "Contact" },
@@ -36,11 +43,10 @@ export default function Navbar() {
                 key={index}
                 to={link.href}
                 target={link.href.startsWith("http") ? "_blank" : "_self"}
-                className={`transition-colors font-medium ${
-                  link.href === pathname
+                className={`transition-colors font-medium ${link.href === pathname
                     ? "text-primary"
                     : "text-foreground/80 hover:text-primary"
-                }`}
+                  }`}
               >
                 {link.label}
               </Link>
@@ -109,11 +115,10 @@ export default function Navbar() {
                       key={index}
                       to={link.href}
                       onClick={() => setIsMenuOpen(false)}
-                      className={`transition-colors font-medium py-2 ${
-                        link.href === pathname
+                      className={`transition-colors font-medium py-2 ${link.href === pathname
                           ? "text-primary"
                           : "text-foreground hover:text-primary"
-                      }`}
+                        }`}
                     >
                       {link.label}
                     </Link>

@@ -1,6 +1,7 @@
 import BottomBar from "@/components/Dashboard/Layouts/BottomBar";
 import Navbar from "@/components/Dashboard/Layouts/Navbar";
 import Sidebar from "@/components/Dashboard/Layouts/Sidebar";
+import GlobalAnnouncement from "@/components/Dashboard/Layouts/GlobalAnnouncement";
 import Disclaimer from "@/components/Disclaimer";
 import ProtectedLayout from "@/layouts/ProtectedLayout";
 import { useDialogStore } from "@/store/dialogStore";
@@ -21,12 +22,13 @@ export default function DashboardLayout() {
       <div className="flex h-screen text-white">
         <Sidebar />
         <main className="flex-1 overflow-auto bg-background pb-30">
+          <GlobalAnnouncement />
           <Navbar />
           <div className="px-3 sm:px-6 md:px-10 py-5">
             <Outlet />
             <Disclaimer />
           </div>
-          
+
         </main>
         <BottomBar />
       </div>

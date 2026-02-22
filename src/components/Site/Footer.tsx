@@ -1,7 +1,14 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getSiteSettings } from "@/api/apiEndpoints";
+import type { SiteSettings } from "@/types";
 import Logo from "../Logo";
 
 export default function Footer() {
+  const { data: settings } = useQuery<SiteSettings>({
+    queryKey: ["siteSettings"],
+    queryFn: getSiteSettings,
+  });
   return (
     <div className="mt-[120px] p-2 sm:p-5">
       <footer className="bg-black rounded-2xl text-foreground py-12">
@@ -76,26 +83,28 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Connect with Us</h4>
             <ul className="flex space-x-4 text-sm">
-              <li>
-                <Link to="#" className="hover:text-primary transition-colors">
-                  <i className="fab fa-facebook"></i>
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-primary transition-colors">
-                  <i className="fab fa-twitter"></i>
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-primary transition-colors">
-                  <i className="fab fa-instagram"></i>
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-primary transition-colors">
-                  <i className="fab fa-linkedin"></i>
-                </Link>
-              </li>
+              {settings?.twitter_link && (
+                <li>
+                  <a href={settings.twitter_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    <i className="fab fa-twitter"></i>
+                  </a>
+                </li>
+              )}
+              {settings?.instagram_link && (
+                <li>
+                  <a href={settings.instagram_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    <i className="fab fa-instagram"></i>
+                  </a>
+                </li>
+              )}
+              {settings?.telegram_link && (
+                <li>
+                  <a href={settings.telegram_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    <i className="fab fa-telegram"></i>
+                  </a>
+                </li>
+              )}
+              {/* Fallback icons if no settings found - strictly adhering to showing nothing if empty */}
             </ul>
           </div>
 
