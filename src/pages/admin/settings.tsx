@@ -140,7 +140,7 @@ export default function AdminSettings() {
   if (isLoading) return <SettingsSkeleton />;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
@@ -158,7 +158,7 @@ export default function AdminSettings() {
         </Button>
       </div>
 
-      <Tabs defaultValue="support" className="space-y-6">
+      <Tabs defaultValue="support" className="space-y-4">
         <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl h-auto flex flex-wrap md:flex-nowrap gap-1">
           <TabsTrigger value="support" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
             <Headset className="w-4 h-4" />
