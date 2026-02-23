@@ -69,7 +69,7 @@ export default function SocialsSection() {
                 type: "spring",
                 stiffness: 100,
                 damping: 12,
-            },
+            } as any,
         },
     };
 

@@ -23,7 +23,7 @@ interface ExtendedFormField extends FormField {
 }
 import { Textarea } from "@/components/ui/textarea";
 
-import ImageCropUpload from "@/components/ui/ImageCropUpload";
+import ImageCropUpload from "@/components/ui/ImageCropUpload.tsx";
 import SignatureField from "@/components/ui/SignatureField";
 import CustomDateTimePicker from "@/components/ui/CustomDateTimePicker";
 import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
@@ -587,7 +587,7 @@ const FormFieldComponent: React.FC<{
               fieldName={field.helperText ? "" : field.name}
               currentValue={value as string}
               onImageSelect={(fieldId: string, croppedImageDataUrl: string, rotation?: number) => {
-                updateField(fieldId, croppedImageDataUrl, rotation ? { rotation } : undefined);
+                updateField(fieldId, croppedImageDataUrl, typeof rotation !== 'undefined' ? { rotation } : undefined);
                 // Notify dependent fields when an image changes
                 notifyDependents(fieldId, croppedImageDataUrl);
               }}

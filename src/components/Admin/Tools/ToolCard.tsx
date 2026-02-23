@@ -1,7 +1,7 @@
 import { Loader, Pencil, Trash2, Calendar, Layout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Template } from "@/types";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ConfirmAction } from "@/components/ConfirmAction";
 import { deleteTemplate } from "@/api/apiEndpoints";
 import { toast } from "sonner";
@@ -32,10 +32,6 @@ export default function ToolCard({ tool }: Props) {
   const handleModifyClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/admin/templates/${tool.id}`);
-  };
-
-  const handleDelete = async (id: string) => {
-    mutate(id);
   };
 
   const formattedDate = tool.created_at

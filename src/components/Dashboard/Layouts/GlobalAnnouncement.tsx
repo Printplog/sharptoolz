@@ -3,7 +3,6 @@ import { getSiteSettings } from "@/api/apiEndpoints";
 import type { SiteSettings } from "@/types";
 import { Megaphone, ExternalLink, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
 
 export default function GlobalAnnouncement() {
     const [isVisible, setIsVisible] = useState(true);

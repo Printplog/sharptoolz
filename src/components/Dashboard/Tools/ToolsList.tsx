@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import ToolGridSkeleton from "../../ToolGridSkeleton";
 import DashboardToolCard from "./DashboardToolCard";
 import type { Template, Tool } from "@/types";
-import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import {
   Select,

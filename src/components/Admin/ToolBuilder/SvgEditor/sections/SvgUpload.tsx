@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { ZoomIn, ZoomOut, RefreshCw } from "lucide-react";
 import { useSvgLiveUpdate } from "../hooks/useSvgLiveUpdate";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";

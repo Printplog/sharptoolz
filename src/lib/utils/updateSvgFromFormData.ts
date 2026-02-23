@@ -166,7 +166,10 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
             const hrefNS = "http://www.w3.org/1999/xlink";
             // Only update href if there's a value, otherwise preserve original
             if (value && value.trim() !== "") {
+              // Set both plain href and xlink:href for maximum compatibility
+              el.setAttribute("href", value);
               el.setAttributeNS(hrefNS, "href", value);
+              el.setAttribute("preserveAspectRatio", "none");
             }
 
             // Apply rotation if present
@@ -215,12 +218,6 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
               } else {
                 el.removeAttribute("transform");
               }
-
-              // Also set style-based properties for browser-side redundancy, 
-              // but the normalization should have handled the attribute correctly.
-              // We use 'fill-box' to help browsers that prioritize CSS.
-              (el as SVGElement).style.transformBox = "fill-box";
-              (el as SVGElement).style.transformOrigin = "center";
             }
             break;
           }
@@ -228,7 +225,9 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
             const hrefNS = "http://www.w3.org/1999/xlink";
             // Only update href if there's a value, otherwise preserve original
             if (value && value.trim() !== "") {
+              el.setAttribute("href", value);
               el.setAttributeNS(hrefNS, "href", value);
+              el.setAttribute("preserveAspectRatio", "none");
             }
             break;
           }

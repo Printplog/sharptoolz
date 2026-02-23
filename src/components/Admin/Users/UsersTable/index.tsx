@@ -119,7 +119,7 @@ export default function UsersTable() {
                                     {users.map((user, index) => (
                                         <UserRow
                                             key={user.pk}
-                                            user={user}
+                                            user={user as any}
                                             index={index}
                                             onPrefetch={handlePrefetchUser}
                                         />

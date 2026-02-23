@@ -16,13 +16,9 @@ import DocsPanel from "./DocsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Eye } from "lucide-react";
-import type { Tutorial, Font, SvgPatch } from "@/types";
+import type { Tutorial, Font, SvgPatch, FormField } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
 import { regenerateSvg } from "./utils/regenerateSvg";
-import type { FormField } from "@/types";
-import { CollapsiblePanel } from "./components/CollapsiblePanel";
-import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { useSvgStore } from "@/store/useSvgStore";
 
 interface SvgEditorProps {

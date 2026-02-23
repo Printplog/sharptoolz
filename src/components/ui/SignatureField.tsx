@@ -6,6 +6,7 @@ import { Upload, Pen, Type, RotateCcw, Check, X, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import SignatureCanvas from 'react-signature-canvas';
 import { LazyImage } from '@/components/LazyImage';
+import { getSvgElementDimensions } from "@/lib/utils/svgDimensions";
 
 interface SignatureFieldProps {
   fieldId: string;
@@ -21,100 +22,51 @@ interface SignatureFieldProps {
   disabled?: boolean;
 }
 
-// Helper function to get SVG element dimensions from the DOM
-function getSvgElementDimensions(svgElementId: string): { width: number; height: number } | null {
-  if (!svgElementId) return null;
-  
-  // Try multiple times to find the element (in case of timing issues)
-  let element = document.getElementById(svgElementId);
-  if (!element) {
-    // Try to find it in the SVG preview container
-    const svgPreview = document.querySelector('[data-svg-preview]');
-    if (svgPreview) {
-      element = svgPreview.querySelector(`#${svgElementId}`) as HTMLElement;
-    }
-  }
-  
-  if (!element) {
-    console.log('SVG element not found:', svgElementId);
-    return null;
-  }
-  
-  console.log('Found SVG element:', element, 'Tag:', element.tagName);
-  
-  // For image elements, try to get the natural dimensions first
-  if (element.tagName === 'image') {
-    const img = element as HTMLImageElement;
-    if (img.naturalWidth && img.naturalHeight) {
-      console.log('Using natural image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
-      return { width: img.naturalWidth, height: img.naturalHeight };
-    }
-  }
-  
-  // Get computed style dimensions
-  const computedStyle = window.getComputedStyle(element);
-  const width = parseFloat(computedStyle.width);
-  const height = parseFloat(computedStyle.height);
-  
-  console.log('Computed style dimensions:', width, 'x', height);
-  
-  // Check if we got valid dimensions
-  if (width && height && width > 0 && height > 0) {
-    console.log('Returning computed style dimensions:', width, 'x', height);
-    return { width, height };
-  }
-  
-  // Fallback to getBoundingClientRect if computed style doesn't work
-  const rect = element.getBoundingClientRect();
-  console.log('Using bounding rect dimensions:', rect.width, 'x', rect.height);
-  return { width: rect.width, height: rect.height };
-}
-
 // Pre-made signature options - Using local images from /sign/ directory
 const PRESET_SIGNATURES = [
-  { 
-    id: 'sign1', 
-    name: 'Signature 1', 
+  {
+    id: 'sign1',
+    name: 'Signature 1',
     data: '/sign/sign1.png'
   },
-  { 
-    id: 'sign2', 
-    name: 'Signature 2', 
+  {
+    id: 'sign2',
+    name: 'Signature 2',
     data: '/sign/sign2.png'
   },
-  { 
-    id: 'sign3', 
-    name: 'Signature 3', 
+  {
+    id: 'sign3',
+    name: 'Signature 3',
     data: '/sign/sign3.png'
   },
-  { 
-    id: 'sign4', 
-    name: 'Signature 4', 
+  {
+    id: 'sign4',
+    name: 'Signature 4',
     data: '/sign/sign4.png'
   },
-  { 
-    id: 'sign5', 
-    name: 'Signature 5', 
+  {
+    id: 'sign5',
+    name: 'Signature 5',
     data: '/sign/sign5.png'
   },
-  { 
-    id: 'sign6', 
-    name: 'Signature 6', 
+  {
+    id: 'sign6',
+    name: 'Signature 6',
     data: '/sign/sign6.png'
   },
-  { 
-    id: 'sign7', 
-    name: 'Signature 7', 
+  {
+    id: 'sign7',
+    name: 'Signature 7',
     data: '/sign/sign7.png'
-  }, 
-  { 
-    id: 'sign8', 
-    name: 'Signature 8', 
+  },
+  {
+    id: 'sign8',
+    name: 'Signature 8',
     data: '/sign/sign8.png'
   },
-  { 
-    id: 'sign9', 
-    name: 'Signature 9', 
+  {
+    id: 'sign9',
+    name: 'Signature 9',
     data: '/sign/sign9.png'
   },
 ];
@@ -134,18 +86,18 @@ export default function SignatureField({
 }: SignatureFieldProps) {
   // State for dimensions to handle timing issues
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
-  
+
   // Get exact dimensions from SVG element with retry logic
   useEffect(() => {
     if (!svgElementId) {
       setDimensions(null);
       return;
     }
-    
+
     const getDimensions = () => {
       const svgDimensions = getSvgElementDimensions(svgElementId);
       setDimensions(svgDimensions);
-      
+
       // Debug logging
       console.log('Signature Field Debug:', {
         svgElementId,
@@ -156,22 +108,22 @@ export default function SignatureField({
         fallbackHeight: height
       });
     };
-    
+
     // Try immediately
     getDimensions();
-    
+
     // Retry after a short delay in case the SVG isn't ready yet
     const timeout = setTimeout(getDimensions, 100);
-    
+
     return () => clearTimeout(timeout);
   }, [svgElementId, width, height]);
-  
+
   const canvasWidth = dimensions?.width || width;
   const canvasHeight = dimensions?.height || height;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'draw' | 'preset'>('draw');
-//   const [isProcessing, setIsProcessing] = useState(false);
-  
+  //   const [isProcessing, setIsProcessing] = useState(false);
+
   const signatureRef = useRef<SignatureCanvas>(null);
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
@@ -229,7 +181,7 @@ export default function SignatureField({
       <label htmlFor={fieldId} className="text-sm font-medium text-white">
         {fieldName}
       </label>
-      
+
       {/* Hidden file input */}
       <input
         ref={hiddenInputRef}
@@ -242,11 +194,10 @@ export default function SignatureField({
 
       <div className="relative">
         <div
-          className={`block w-full h-40 border-2 border-dashed rounded-lg transition-colors overflow-hidden ${
-            disabled
-              ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50"
-              : "border-white/20 cursor-pointer hover:border-white/40"
-          }`}
+          className={`block w-full h-40 border-2 border-dashed rounded-lg transition-colors overflow-hidden ${disabled
+            ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50"
+            : "border-white/20 cursor-pointer hover:border-white/40"
+            }`}
           onClick={() => {
             if (!disabled) {
               setIsDialogOpen(true);
@@ -256,8 +207,8 @@ export default function SignatureField({
           {currentValue ? (
             <div className="relative w-full h-full group">
               <div className="w-full h-full overflow-auto custom-scrollbar">
-                <img 
-                  src={currentValue} 
+                <img
+                  src={currentValue}
                   alt={`${fieldName} signature`}
                   className="w-full max-w-none h-auto object-contain min-h-full"
                 />
@@ -335,7 +286,7 @@ export default function SignatureField({
           <DialogHeader>
             <DialogTitle className="text-white">Add {fieldName}</DialogTitle>
           </DialogHeader>
-          
+
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'draw' | 'upload' | 'preset')}>
             <TabsList className="grid w-full grid-cols-3 bg-white/10">
               <TabsTrigger value="draw" className="text-white data-[state=active]:bg-white/20">
@@ -385,7 +336,7 @@ export default function SignatureField({
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-center gap-2">
                 <Button
                   type="button"
@@ -400,7 +351,7 @@ export default function SignatureField({
                 <Button
                   type="button"
                   onClick={handleDrawSignature}
-                  className="bg-primary text-background hover:bg-primary/90"
+                  className="bg-primary text-black hover:bg-primary/90"
                   disabled={disabled}
                 >
                   <Check className="w-4 h-4 mr-2" />
@@ -432,11 +383,10 @@ export default function SignatureField({
                 {PRESET_SIGNATURES.map((preset) => (
                   <div
                     key={preset.id}
-                    className={`flex items-center gap-4 p-4 border border-white/20 rounded-lg bg-white/5 transition-colors ${
-                      disabled 
-                        ? "opacity-50 cursor-not-allowed" 
-                        : "hover:bg-white/10 cursor-pointer"
-                    }`}
+                    className={`flex items-center gap-4 p-4 border border-white/20 rounded-lg bg-white/5 transition-colors ${disabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-white/10 cursor-pointer"
+                      }`}
                     onClick={disabled ? undefined : () => handlePresetSignature(preset)}
                   >
                     <LazyImage
@@ -449,7 +399,7 @@ export default function SignatureField({
                     <Button
                       type="button"
                       size="sm"
-                      className="bg-primary text-background hover:bg-primary/90"
+                      className="bg-primary text-black hover:bg-primary/90"
                       disabled={disabled}
                     >
                       Use
