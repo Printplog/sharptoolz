@@ -125,7 +125,7 @@ export default function ImageCropUpload({
 
   // Sync with external currentValue changes (e.g., from dependsOn updates)
   useEffect(() => {
-    // If currentValue is set externally (e.g., from dependsOn) and is different from our local state
+    // Sync with external currentValue changes (e.g., from dependsOn updates)
     if (currentValue && currentValue !== image && (currentValue.startsWith('data:image/') || currentValue.startsWith('blob:'))) {
       console.log(`[ImageCropUpload.${fieldId}] Syncing with external currentValue change:`, {
         hasCurrentValue: !!currentValue,
@@ -136,13 +136,8 @@ export default function ImageCropUpload({
       // Update local image state to reflect the external change
       setImage(currentValue);
       setOriginalImage(currentValue);
-    } else if (!currentValue && image) {
-      // If currentValue is cleared externally, clear local state
-      console.log(`[ImageCropUpload.${fieldId}] Clearing image due to external currentValue change`);
-      setImage(null);
-      setOriginalImage(null);
     }
-  }, [currentValue, fieldId, image]); // Only depend on currentValue and fieldId
+  }, [currentValue, fieldId, image]); // Simplified: only sync TOWARDS local state
 
   // Analyze default image for annotations when component mounts
   useEffect(() => {
@@ -550,26 +545,28 @@ export default function ImageCropUpload({
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] flex flex-col bg-[#0f1620] border-white/10 p-0 overflow-hidden rounded-[2rem] shadow-2xl">
-          <DialogHeader className="p-6 pb-0 flex-shrink-0">
-            <DialogTitle className="text-2xl font-fancy font-black text-white italic uppercase tracking-tighter">
+        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] flex flex-col bg-[#0f1620] border-white/10 p-0 overflow-hidden rounded-[2.5rem] shadow-2xl">
+          <DialogHeader className="p-6 pb-2 flex-shrink-0 border-b border-white/5">
+            <DialogTitle className="text-xl font-fancy font-black text-white italic uppercase tracking-tighter">
               Adjust <span className="text-primary">Image</span>
             </DialogTitle>
           </DialogHeader>
 
-          {image && (
-            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'crop' | 'remove-bg')} className="flex-1 flex flex-col min-h-0 px-6 py-4">
-              <TabsList className="bg-white/5 border border-white/10 p-1 rounded-2xl h-auto shrink-0 self-start">
-                <TabsTrigger value="crop" className="rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
-                  Crop & Frame
-                </TabsTrigger>
-                <TabsTrigger value="remove-bg" className="rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
-                  Magic Remove
-                </TabsTrigger>
-              </TabsList>
+          {image ? (
+            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'crop' | 'remove-bg')} className="flex-1 flex flex-col min-h-[500px]">
+              <div className="px-6 py-4 flex-shrink-0">
+                <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl h-auto flex items-center w-fit">
+                  <TabsTrigger value="crop" className="rounded-lg px-6 py-2 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+                    Crop & Frame
+                  </TabsTrigger>
+                  <TabsTrigger value="remove-bg" className="rounded-lg px-6 py-2 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300">
+                    Magic Remove
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               {/* Crop Tab */}
-              <TabsContent value="crop" className="flex-1 flex flex-col space-y-4 min-h-0 mt-4 outline-none focus:outline-none data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:slide-in-from-bottom-2 duration-300">
+              <TabsContent value="crop" className="flex-1 flex flex-col space-y-4 min-h-0 outline-none focus:outline-none px-6 pb-4">
                 {/* Control Bar */}
                 <div className="flex-shrink-0 flex items-center justify-between gap-4 p-4 bg-white/[0.03] border border-white/10 rounded-3xl backdrop-blur-3xl">
                   <div className="flex items-center gap-3">
@@ -605,7 +602,7 @@ export default function ImageCropUpload({
                 </div>
 
                 {/* Cropper Container */}
-                <div className="flex-1 bg-black/20 border border-white/5 rounded-[2rem] p-6 flex items-center justify-center overflow-auto custom-scrollbar relative">
+                <div className="flex-1 bg-black/40 border border-white/5 rounded-3xl p-4 flex items-center justify-center overflow-auto custom-scrollbar relative min-h-[300px]">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
                   <ReactCrop
                     crop={crop}
@@ -622,7 +619,7 @@ export default function ImageCropUpload({
                       ref={imgRef}
                       alt="Crop target"
                       src={image}
-                      className="max-w-full max-h-[400px] w-auto h-auto rounded-lg shadow-2xl"
+                      className="w-full h-auto rounded-lg shadow-2xl"
                       style={{
                         transform: `rotate(${rotation}deg)`,
                       }}
@@ -634,39 +631,39 @@ export default function ImageCropUpload({
               </TabsContent>
 
               {/* Remove Background Tab */}
-              <TabsContent value="remove-bg" className="flex-1 flex flex-col space-y-4 min-h-0 mt-4 outline-none focus:outline-none data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:slide-in-from-bottom-2 duration-300">
+              <TabsContent value="remove-bg" className="flex-1 flex flex-col space-y-4 min-h-0 outline-none focus:outline-none px-6 pb-4">
                 {!bgRemovedImage ? (
-                  <div className="flex-1 flex flex-col items-center justify-center space-y-8 p-6">
-                    <div className="text-center space-y-3">
-                      <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full mb-2">
-                        <Sparkles className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-primary font-black uppercase tracking-[0.2em] text-[10px]">AI Powered</span>
+                  <div className="flex-1 flex flex-col items-center justify-center space-y-6 p-4 overflow-y-auto">
+                    <div className="text-center space-y-2">
+                      <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-1 rounded-full mb-1">
+                        <Sparkles className="w-3 h-3 text-primary" />
+                        <span className="text-primary font-black uppercase tracking-[0.2em] text-[8px]">AI Powered</span>
                       </div>
-                      <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Choose Removal <span className="text-primary">Method</span></h3>
-                      <p className="text-sm text-white/40 max-w-sm mx-auto">Select how you want our AI to process your image background.</p>
+                      <h3 className="text-base font-black text-white uppercase italic tracking-tighter">Choose Removal <span className="text-primary">Method</span></h3>
+                      <p className="text-xs text-white/40 max-w-sm mx-auto">Select how you want our AI to process your image background.</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-xl">
                       {/* Paid Method - Remove.bg */}
                       <button
                         onClick={handlePaidBgRemoval}
                         disabled={isRemovingBackground}
-                        className="group relative border border-white/10 bg-white/[0.03] rounded-[2rem] p-8 hover:bg-white/[0.05] hover:border-primary/50 transition-all duration-500 text-left disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden shadow-2xl"
+                        className="group relative border border-white/10 bg-white/[0.03] rounded-2xl p-6 hover:bg-white/[0.05] hover:border-primary/50 transition-all duration-500 text-left disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden shadow-xl"
                       >
-                        <div className="absolute -right-8 -top-8 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all" />
+                        <div className="absolute -right-6 -top-6 w-16 h-16 bg-primary/10 rounded-full blur-xl group-hover:bg-primary/20 transition-all" />
 
-                        <div className="space-y-4 relative z-10">
+                        <div className="space-y-3 relative z-10">
                           <div className="flex items-center justify-between">
-                            <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:scale-110 transition-transform">
-                              <Zap className="h-6 w-6 text-primary" />
+                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:scale-110 transition-transform">
+                              <Zap className="h-5 w-5 text-primary" />
                             </div>
-                            <div className="bg-primary/10 text-primary text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                            <div className="bg-primary/10 text-primary text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                               Best Quality
                             </div>
                           </div>
                           <div>
-                            <h4 className="font-black text-white text-lg uppercase italic italic tracking-tighter">HD Removal</h4>
-                            <p className="text-xs text-white/40 leading-relaxed font-medium mt-1">Professional grade results. Best for complex images. Charged at <span className="text-primary">$0.20</span> per use.</p>
+                            <h4 className="font-black text-white text-sm uppercase italic tracking-tighter">Professional</h4>
+                            <p className="text-[10px] text-white/40 leading-relaxed font-medium mt-1">3-5 seconds • Best quality. Best for complex images. Charged at <span className="text-primary">$0.20</span> per use.</p>
                           </div>
                           {isRemovingBackground && activeTab === 'remove-bg' && (
                             <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
@@ -680,22 +677,22 @@ export default function ImageCropUpload({
                       <button
                         onClick={handleFreeBgRemoval}
                         disabled={isRemovingBackground}
-                        className="group relative border border-white/10 bg-white/[0.03] rounded-[2rem] p-8 hover:bg-white/[0.05] hover:border-green-400/50 transition-all duration-500 text-left disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden shadow-2xl"
+                        className="group relative border border-white/10 bg-white/[0.03] rounded-2xl p-6 hover:bg-white/[0.05] hover:border-green-400/50 transition-all duration-500 text-left disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden shadow-xl"
                       >
-                        <div className="absolute -right-8 -top-8 w-24 h-24 bg-green-400/10 rounded-full blur-2xl group-hover:bg-green-400/20 transition-all" />
+                        <div className="absolute -right-6 -top-6 w-16 h-16 bg-green-400/10 rounded-full blur-xl group-hover:bg-green-400/20 transition-all" />
 
-                        <div className="space-y-4 relative z-10">
+                        <div className="space-y-3 relative z-10">
                           <div className="flex items-center justify-between">
-                            <div className="w-12 h-12 rounded-2xl bg-green-400/20 flex items-center justify-center border border-green-400/30 group-hover:scale-110 transition-transform">
-                              <Sparkles className="h-6 w-6 text-green-400" />
+                            <div className="w-10 h-10 rounded-xl bg-green-400/20 flex items-center justify-center border border-green-400/30 group-hover:scale-110 transition-transform">
+                              <Sparkles className="h-5 w-5 text-green-400" />
                             </div>
-                            <div className="bg-green-400/10 text-green-400 text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest border border-green-400/20">
+                            <div className="bg-green-400/10 text-green-400 text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-green-400/20">
                               Unlimited
                             </div>
                           </div>
                           <div>
-                            <h4 className="font-black text-white text-lg uppercase italic tracking-tighter">Free Removal</h4>
-                            <p className="text-xs text-white/40 leading-relaxed font-medium mt-1">Good quality for simple backgrounds. Slower processing time but completely <span className="text-green-400">FREE</span>.</p>
+                            <h4 className="font-black text-white text-sm uppercase italic tracking-tighter">Free</h4>
+                            <p className="text-[10px] text-white/40 leading-relaxed font-medium mt-1">10-15 seconds • Good quality. Good quality for simple backgrounds.completely <span className="text-green-400">FREE</span>.</p>
                           </div>
                           {isRemovingBackground && activeTab === 'remove-bg' && (
                             <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
@@ -747,30 +744,34 @@ export default function ImageCropUpload({
                     </div>
 
                     {/* Image Display with Label */}
-                    <div className="flex-1 bg-black/20 border border-white/5 rounded-[2rem] p-6 flex items-center justify-center relative overflow-hidden min-h-[300px]">
+                    <div className="flex-1 bg-black/40 border border-white/5 rounded-3xl p-4 flex items-center justify-center relative overflow-hidden min-h-[300px]">
                       <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent pointer-events-none" />
                       <LazyImage
                         src={(showOriginal ? originalImage : bgRemovedImage) || ''}
                         alt={showOriginal ? "Original" : "Background Removed"}
-                        className="max-w-full max-h-[350px] w-auto h-auto rounded-lg shadow-2xl"
+                        className="w-full h-auto rounded-lg shadow-2xl"
                       />
                       {/* Image Label */}
-                      <div className="absolute top-6 left-6 flex items-center gap-2 bg-black/60 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
+                      <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/60 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10">
                         {showOriginal ? (
-                          <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
                         ) : (
-                          <div className="w-2 h-2 rounded-full bg-green-400" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
                         )}
-                        {showOriginal ? "Original Image" : "Magic Output"}
+                        {showOriginal ? "Original" : "Magic Output"}
                       </div>
                     </div>
                   </div>
                 )}
               </TabsContent>
             </Tabs>
+          ) : (
+            <div className="flex-1 flex items-center justify-center p-12 text-center">
+              <p className="text-white/40">No image selected</p>
+            </div>
           )}
 
-          <DialogFooter className="flex-shrink-0 p-6 pt-2 gap-3 border-t border-white/5">
+          <DialogFooter className="flex-shrink-0 p-4 pt-2 gap-3 border-t border-white/5">
             <Button
               type="button"
               variant="outline"
@@ -783,7 +784,7 @@ export default function ImageCropUpload({
                 setCachedBgRemovedImage(null);
                 setCachedFreeBgRemoved(null);
               }}
-              className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 h-12 rounded-2xl font-bold uppercase tracking-widest text-xs"
+              className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 h-10 rounded-xl font-bold uppercase tracking-widest text-[10px]"
             >
               Discard
             </Button>
@@ -791,9 +792,9 @@ export default function ImageCropUpload({
               type="button"
               onClick={handleConfirmCrop}
               disabled={!completedCrop}
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-2xl font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(var(--primary),0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-[0_0_20px_rgba(var(--primary),0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              <Check className="h-4 w-4 mr-2" />
+              <Check className="h-3.5 w-3.5 mr-2" />
               Apply Changes
             </Button>
           </DialogFooter>
