@@ -1,5 +1,4 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { LazyImage } from "@/components/LazyImage";
 import { X } from "lucide-react";
 
 interface BannerPreviewModalProps {
