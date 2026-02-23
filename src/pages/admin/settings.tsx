@@ -397,7 +397,7 @@ export default function AdminSettings() {
                 </div>
                 <Switch
                   checked={formData.maintenance_mode}
-                  onCheckedChange={(checked) => setFormData({ ...formData, maintenance_mode: checked })}
+                  onCheckedChange={(checked: boolean) => setFormData({ ...formData, maintenance_mode: checked })}
                   className="data-[state=checked]:bg-red-500"
                 />
               </div>
@@ -408,7 +408,7 @@ export default function AdminSettings() {
                 </div>
                 <Switch
                   checked={formData.disable_new_signups}
-                  onCheckedChange={(checked) => setFormData({ ...formData, disable_new_signups: checked })}
+                  onCheckedChange={(checked: boolean) => setFormData({ ...formData, disable_new_signups: checked })}
                   className="data-[state=checked]:bg-yellow-500"
                 />
               </div>
@@ -419,7 +419,7 @@ export default function AdminSettings() {
                 </div>
                 <Switch
                   checked={formData.disable_deposits}
-                  onCheckedChange={(checked) => setFormData({ ...formData, disable_deposits: checked })}
+                  onCheckedChange={(checked: boolean) => setFormData({ ...formData, disable_deposits: checked })}
                   className="data-[state=checked]:bg-yellow-500"
                 />
               </div>
@@ -444,7 +444,7 @@ export default function AdminSettings() {
                 </div>
                 <Switch
                   checked={formData.enable_global_announcement}
-                  onCheckedChange={(checked) => setFormData({ ...formData, enable_global_announcement: checked })}
+                  onCheckedChange={(checked: boolean) => setFormData({ ...formData, enable_global_announcement: checked })}
                 />
               </div>
             </CardHeader>
