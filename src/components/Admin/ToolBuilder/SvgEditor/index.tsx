@@ -20,7 +20,7 @@ import type { Tutorial, Font, SvgPatch, FormField } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
 import { regenerateSvg } from "./utils/regenerateSvg";
 import { useSvgStore } from "@/store/useSvgStore";
-
+  
 interface SvgEditorProps {
   svgRaw: string;
   templateName?: string;
