@@ -294,11 +294,21 @@ export default function ImageCropUpload({
   });
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
+      {fieldName && (
+        <label htmlFor={fieldId} className="text-sm font-medium text-white">
+          {fieldName}
+        </label>
+      )}
+
       <div className="relative">
         <div
           {...getRootProps()}
-          className={`block w-full h-40 border-2 border-dashed rounded-[1rem] cursor-pointer transition-all overflow-hidden bg-[#0f1620]/30 ${disabled ? "opacity-50 cursor-not-allowed border-white/10" : isDragActive ? "border-primary/50 bg-primary/5" : "border-white/10 hover:border-primary/30 hover:bg-primary/5"
+          className={`block w-full h-40 border-2 border-dashed rounded-lg transition-colors overflow-hidden ${disabled
+            ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50"
+            : isDragActive
+              ? "border-primary/50 bg-primary/5 cursor-pointer"
+              : "border-white/20 cursor-pointer hover:border-white/40"
             }`}
         >
           <input {...getInputProps()} />
@@ -307,18 +317,21 @@ export default function ImageCropUpload({
               <div className="w-12 h-12 border-2 border-dashed border-current rounded-full flex items-center justify-center mb-3">
                 <Upload className="w-6 h-6" />
               </div>
-              <div className="text-center font-black uppercase tracking-widest">
-                <div className="text-[10px]">{isDragActive ? "Drop Here" : `Click to add ${fieldName}`}</div>
-                <div className="text-[8px] opacity-60">Upload or drag your image here</div>
+              <div className="text-center">
+                <div className="text-sm font-medium">{isDragActive ? "Drop here" : "Click to add image"}</div>
+                <div className="text-xs opacity-80">Upload or drag your image here</div>
               </div>
             </div>
           ) : (
             <div className="relative w-full h-full group">
-              <div className="w-full h-full flex items-center justify-center bg-black/40">
-                <LazyImage src={currentValue} alt={fieldName} className="max-w-full max-h-full object-contain p-2" />
+              <div className="w-full h-full overflow-auto custom-scrollbar">
+                <LazyImage src={currentValue} alt={fieldName} className="w-full max-w-none h-auto object-contain min-h-full" />
               </div>
-              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                <div className="bg-primary text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-xl">Replace Image</div>
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                <div className="text-center text-white">
+                  <div className="text-sm font-medium">Click to change image</div>
+                  <div className="text-xs opacity-80">Upload a new image</div>
+                </div>
               </div>
             </div>
           )}
@@ -326,8 +339,27 @@ export default function ImageCropUpload({
 
         {currentValue && (
           <div className="mt-2 flex gap-2">
-            <Button onClick={() => setIsDialogOpen(true)} variant="outline" size="sm" className="flex-1 bg-white/5 border-white/10 text-white h-10 rounded-xl text-[9px] font-black uppercase tracking-widest">Adjust</Button>
-            <Button onClick={() => onImageSelect(fieldId, "")} variant="outline" size="sm" className="flex-1 bg-red-500/10 border-red-500/20 text-red-400 h-10 rounded-xl text-[9px] font-black uppercase tracking-widest">Remove</Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); setIsDialogOpen(true); }}
+              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+              disabled={disabled}
+            >
+              <Upload className="h-3.5 w-3.5 mr-1.5" />
+              Adjust
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); onImageSelect(fieldId, ""); }}
+              className="bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30"
+              disabled={disabled}
+            >
+              Remove
+            </Button>
           </div>
         )}
       </div>
