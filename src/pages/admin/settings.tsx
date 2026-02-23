@@ -183,7 +183,7 @@ export default function AdminSettings() {
         <TabsContent value="support" className="space-y-6 focus:outline-none focus-visible:outline-none">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
-              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
               <div className="flex items-center gap-4">
                 <div className="bg-primary/10 p-3 rounded-2xl">
                   <Headset className="w-6 h-6 text-primary" />
@@ -289,7 +289,7 @@ export default function AdminSettings() {
         <TabsContent value="financial" className="space-y-6 focus:outline-none focus-visible:outline-none">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
-              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
               <div className="flex items-center gap-4">
                 <div className="bg-primary/10 p-3 rounded-2xl">
                   <Wallet className="w-6 h-6 text-primary" />
@@ -378,7 +378,7 @@ export default function AdminSettings() {
         <TabsContent value="toggles" className="space-y-6 focus:outline-none focus-visible:outline-none">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-red-500/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
-              <div className="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full blur-3xl" />
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
               <div className="flex items-center gap-4">
                 <div className="bg-red-500/10 p-3 rounded-2xl">
                   <Activity className="w-6 h-6 text-red-500" />
@@ -431,24 +431,29 @@ export default function AdminSettings() {
         <TabsContent value="branding" className="space-y-6 focus:outline-none focus-visible:outline-none">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
-              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="bg-primary/10 p-3 rounded-2xl">
-                    <Flag className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold italic uppercase">Global Announcement</CardTitle>
-                    <CardDescription className="text-white/50">Show a banner message at the top of the user dashboard.</CardDescription>
-                  </div>
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-2xl">
+                  <Flag className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold italic uppercase">Global Announcement</CardTitle>
+                  <CardDescription className="text-white/50">Show a banner message at the top of the user dashboard.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 p-8">
+              <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-bold text-white">Enable Announcement Banner</Label>
+                  <p className="text-sm text-white/50">Visibility toggle for the global dashboard message.</p>
                 </div>
                 <Switch
                   checked={formData.enable_global_announcement}
                   onCheckedChange={(checked: boolean) => setFormData({ ...formData, enable_global_announcement: checked })}
                 />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6 p-8">
+
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-3.5 h-3.5 text-primary" />
