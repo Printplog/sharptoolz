@@ -795,7 +795,7 @@ export default function ImageCropUpload({
               className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-[0_0_20px_rgba(var(--primary),0.4)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               <Check className="h-3.5 w-3.5 mr-2" />
-              Apply Changes
+              Confirm Crop
             </Button>
           </DialogFooter>
         </DialogContent>
