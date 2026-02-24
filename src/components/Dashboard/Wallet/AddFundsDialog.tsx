@@ -70,7 +70,7 @@ export default function AddFundsDialog({
   }, [open, reset]);
 
   useEffect(() => {
-    if (mode === 'crypto' && !data && !isPending && !attempted) {
+    if (mode && !data && !isPending && !attempted) {
       setAttempted(true);
       mutate('bep20/usdt');
     }
@@ -257,28 +257,32 @@ export default function AddFundsDialog({
               </div>
             ) : (
               data?.payment_address && (
-                <button
-                  onClick={() => {
-                    if (!amountUsd || !usdToNgn) return;
-                    const usdVal = (parseFloat(amountUsd) / usdToNgn).toFixed(2);
-                    if (parseFloat(usdVal) < minTopup) {
-                      toast.error(`Minimum top-up is $${minTopup}`);
-                      return;
-                    }
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-white/40 ml-1">Assigned BSC Address</label>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                      <div className="text-sm font-mono break-all text-white/60">{data.payment_address}</div>
+                    </div>
+                  </div>
 
-                    const msg = `Hello. I want to fund my Sharptoolz wallet with ₦${parseFloat(amountUsd).toLocaleString('en-NG')} (≈ $${usdVal} USD). Please confirm and send the equivalent USDT to this BEP20 address: ${data.payment_address}`;
-                    const encoded = encodeURIComponent(msg);
-                    const vendorNumber = siteSettings?.funding_whatsapp_number || siteSettings?.whatsapp_number || '2349160914217';
-                    const link = `https://wa.me/${vendorNumber}?text=${encoded}`;
-                    window.open(link, '_blank');
-                    onOpenChange(false);
-                  }}
-                  disabled={!amountUsd || (amountUsd && usdToNgn && (parseFloat(amountUsd) / usdToNgn) < minTopup) || rateLoading}
-                  className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Chat with Vendor on WhatsApp
-                </button>
+                  <button
+                    onClick={() => {
+                      if (!amountUsd || !usdToNgn) return;
+                      const usdVal = (parseFloat(amountUsd) / usdToNgn).toFixed(2);
+                      const msg = `Hello. I want to fund my Sharptoolz wallet with ₦${parseFloat(amountUsd).toLocaleString('en-NG')} (≈ $${usdVal} USD). Please confirm and send the equivalent USDT to this BEP20 address: ${data.payment_address}`;
+                      const encoded = encodeURIComponent(msg);
+                      const vendorNumber = siteSettings?.funding_whatsapp_number || siteSettings?.whatsapp_number || '2349160914217';
+                      const link = `https://wa.me/${vendorNumber}?text=${encoded}`;
+                      window.open(link, '_blank');
+                      onOpenChange(false);
+                    }}
+                    disabled={!amountUsd || (amountUsd && usdToNgn && (parseFloat(amountUsd) / usdToNgn) < minTopup) || rateLoading}
+                    className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    Chat with Vendor on WhatsApp
+                  </button>
+                </div>
               )
             )}
           </div>
