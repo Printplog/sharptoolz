@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Copy, CheckCircle, Loader2, Wallet, Send, MessageSquare } from 'lucide-react';
+import { Copy, CheckCircle, Loader2, Wallet, Send, MessageSquare, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { createCryptoPayment, getSiteSettings } from '@/api/apiEndpoints';
+import { fetchUsdToNgn } from '@/api/exchangeRate';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import type { CryptoPaymentData, SiteSettings } from '@/types';
@@ -22,12 +23,25 @@ export default function AddFundsDialog({
 }) {
   const [mode, setMode] = useState<'crypto' | 'naira' | null>(null);
   const [copied, setCopied] = useState(false);
-  const [amount, setAmount] = useState('');
+  const [amountUsd, setAmountUsd] = useState('');
+  const [usdToNgn, setUsdToNgn] = useState<number | null>(null);
+  const [rateLoading, setRateLoading] = useState(false);
 
   const { data: siteSettings } = useQuery<SiteSettings>({
     queryKey: ['siteSettings'],
     queryFn: getSiteSettings,
   });
+
+  const adminFallbackRate = Number(siteSettings?.exchange_rate_override) || 1650;
+  const minTopup = Number(siteSettings?.min_topup_amount) || 5;
+
+  // Fetch live exchange rate when naira mode is selected
+  const loadRate = useCallback(async () => {
+    setRateLoading(true);
+    const rate = await fetchUsdToNgn(adminFallbackRate);
+    setUsdToNgn(rate);
+    setRateLoading(false);
+  }, [adminFallbackRate]);
 
   const {
     mutate,
@@ -45,8 +59,9 @@ export default function AddFundsDialog({
   useEffect(() => {
     if (open) {
       setMode(null);
-      setAmount('');
+      setAmountUsd('');
       setCopied(false);
+      setUsdToNgn(null);
       reset();
     }
   }, [open, reset]);
@@ -55,7 +70,10 @@ export default function AddFundsDialog({
     if (mode && !data && !isPending) {
       mutate('bep20/usdt');
     }
-  }, [mode, data, isPending, mutate]);
+    if (mode === 'naira') {
+      loadRate();
+    }
+  }, [mode, data, isPending, mutate, loadRate]);
 
   const handleCopy = () => {
     if (!data?.payment_address) return;
@@ -65,19 +83,7 @@ export default function AddFundsDialog({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleNairaRedirect = () => {
-    if (!amount || !data?.payment_address) {
-      toast.error('Enter amount and wait for address');
-      return;
-    }
-    // Specific format requested by user
-    const msg = `Hello. I want to buy ${amount} BNB. Send the BNB to this Binance Smart Chain wallet address: ${data.payment_address}`;
-    const encoded = encodeURIComponent(msg);
-    const vendorNumber = siteSettings?.funding_whatsapp_number || siteSettings?.whatsapp_number || '2349160914217';
-    const link = `https://wa.me/${vendorNumber}?text=${encoded}`;
-    window.open(link, '_blank');
-    onOpenChange(false);
-  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,6 +101,16 @@ export default function AddFundsDialog({
         {/* Step 1: Choose method */}
         {!mode && (
           <div className="grid grid-cols-1 gap-4">
+            {/* Minimum Top-up Notice */}
+            {siteSettings && (
+              <div className="flex items-center gap-3 bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3">
+                <AlertCircle className="w-4 h-4 text-primary shrink-0" />
+                <p className="text-xs font-bold text-white/50">
+                  Minimum top-up: <span className="text-primary">${minTopup.toFixed(2)} USD</span>
+                </p>
+              </div>
+            )}
+
             <button
               onClick={() => setMode('crypto')}
               className="group relative flex items-center justify-between bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-white/10 hover:border-primary/50 transition-all duration-300 overflow-hidden"
@@ -136,6 +152,14 @@ export default function AddFundsDialog({
         {/* Step 2: Crypto Mode */}
         {mode === 'crypto' && (
           <div className="space-y-6">
+            {/* Min Deposit Info */}
+            <div className="flex items-center gap-3 bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3">
+              <AlertCircle className="w-4 h-4 text-primary shrink-0" />
+              <p className="text-xs font-bold text-white/50">
+                Minimum deposit: <span className="text-primary">${minTopup.toFixed(2)} USDT</span>
+              </p>
+            </div>
+
             {isPending ? (
               <div className="flex flex-col items-center justify-center py-10 gap-4">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -179,43 +203,80 @@ export default function AddFundsDialog({
         {/* Step 2: Naira Mode */}
         {mode === 'naira' && (
           <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-white/40 ml-1">Amount to buy (BNB)</label>
+            {/* Live Rate Badge */}
+            <div className="flex items-center justify-between bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${rateLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`} />
+                <span className="text-xs font-bold text-white/50">
+                  {rateLoading ? 'Fetching live rate...' : `Live Rate: $1 = ₦${usdToNgn?.toLocaleString('en-NG') ?? '...'}`}
+                </span>
+              </div>
+              <span className="text-[10px] text-white/20 uppercase tracking-widest font-black">
+                Min: ${minTopup}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-xs font-black uppercase tracking-widest text-white/40 ml-1">Amount in Naira (₦)</label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-white/40">₦</div>
                 <Input
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="e.g. 0.0151"
-                  className="h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-green-500/50 focus:border-green-500/50"
+                  type="number"
+                  value={amountUsd} // Reusing the state name but it will hold Naira amount now
+                  onChange={(e) => setAmountUsd(e.target.value)}
+                  placeholder="Enter amount"
+                  className="h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-green-500/50 focus:border-green-500/50 text-lg font-bold pl-10"
                 />
               </div>
 
-              {isPending ? (
-                <div className="flex flex-col items-center justify-center py-10 gap-4">
-                  <Loader2 className="w-8 h-8 animate-spin text-green-500" />
-                  <span className="text-xs font-black uppercase tracking-widest text-white/40">Preparing Payment...</span>
+              {/* Conversion Preview */}
+              {amountUsd && usdToNgn && (
+                <div className="flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-2xl animate-in fade-in duration-300">
+                  <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Equivalent in USD</span>
+                  <span className="text-lg font-black text-primary">${(parseFloat(amountUsd) / usdToNgn).toFixed(2)}</span>
                 </div>
-              ) : (
-                data?.payment_address && (
-                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-white/40 ml-1">Assigned BSC Address</label>
-                      <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-                        <div className="text-sm font-mono break-all text-white/60">{data.payment_address}</div>
-                      </div>
-                    </div>
+              )}
 
-                    <button
-                      onClick={handleNairaRedirect}
-                      className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      Chat with Vendor
-                    </button>
-                  </div>
-                )
+              {/* Min check */}
+              {amountUsd && usdToNgn && (parseFloat(amountUsd) / usdToNgn) < minTopup && (
+                <p className="text-xs text-red-400 font-bold ml-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Minimum top-up is ₦{(minTopup * usdToNgn).toLocaleString('en-NG', { maximumFractionDigits: 0 })} (~${minTopup})
+                </p>
               )}
             </div>
+
+            {isPending ? (
+              <div className="flex flex-col items-center justify-center py-6 gap-4">
+                <Loader2 className="w-8 h-8 animate-spin text-green-500" />
+                <span className="text-xs font-black uppercase tracking-widest text-white/40">Preparing Payment...</span>
+              </div>
+            ) : (
+              data?.payment_address && (
+                <button
+                  onClick={() => {
+                    if (!amountUsd || !usdToNgn) return;
+                    const usdVal = (parseFloat(amountUsd) / usdToNgn).toFixed(2);
+                    if (parseFloat(usdVal) < minTopup) {
+                      toast.error(`Minimum top-up is $${minTopup}`);
+                      return;
+                    }
+
+                    const msg = `Hello. I want to fund my Sharptoolz wallet with ₦${parseFloat(amountUsd).toLocaleString('en-NG')} (≈ $${usdVal} USD). Please confirm and send the equivalent USDT to this BEP20 address: ${data.payment_address}`;
+                    const encoded = encodeURIComponent(msg);
+                    const vendorNumber = siteSettings?.funding_whatsapp_number || siteSettings?.whatsapp_number || '2349160914217';
+                    const link = `https://wa.me/${vendorNumber}?text=${encoded}`;
+                    window.open(link, '_blank');
+                    onOpenChange(false);
+                  }}
+                  disabled={!amountUsd || (amountUsd && usdToNgn && (parseFloat(amountUsd) / usdToNgn) < minTopup) || rateLoading}
+                  className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Chat with Vendor on WhatsApp
+                </button>
+              )
+            )}
           </div>
         )}
       </DialogContent>
