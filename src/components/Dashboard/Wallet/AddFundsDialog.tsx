@@ -56,24 +56,28 @@ export default function AddFundsDialog({
     },
   });
 
+  const [attempted, setAttempted] = useState(false);
+
   useEffect(() => {
-    if (open) {
+    if (!open) {
       setMode(null);
       setAmountUsd('');
       setCopied(false);
       setUsdToNgn(null);
+      setAttempted(false);
       reset();
     }
   }, [open, reset]);
 
   useEffect(() => {
-    if (mode && !data && !isPending) {
+    if (mode === 'crypto' && !data && !isPending && !attempted) {
+      setAttempted(true);
       mutate('bep20/usdt');
     }
-    if (mode === 'naira') {
+    if (mode === 'naira' && !usdToNgn && !rateLoading) {
       loadRate();
     }
-  }, [mode, data, isPending, mutate, loadRate]);
+  }, [mode, data, isPending, mutate, loadRate, attempted, usdToNgn, rateLoading]);
 
   const handleCopy = () => {
     if (!data?.payment_address) return;
