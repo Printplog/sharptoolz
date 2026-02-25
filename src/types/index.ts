@@ -337,6 +337,7 @@ export type SiteSettings = {
   telegram_link: string;
   twitter_link: string;
   instagram_link: string;
+  tiktok_link: string;
 
   // 2. Wallet & Financial Constraints
   min_topup_amount: string; // Decimal field usually strings over JSON

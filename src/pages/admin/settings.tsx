@@ -58,6 +58,7 @@ export default function AdminSettings() {
     global_announcement_link: "",
     enable_global_announcement: false,
     manual_purchase_text: "",
+    tiktok_link: "",
   });
 
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
@@ -89,6 +90,7 @@ export default function AdminSettings() {
         global_announcement_link: settings.global_announcement_link || "",
         enable_global_announcement: settings.enable_global_announcement || false,
         manual_purchase_text: settings.manual_purchase_text || "",
+        tiktok_link: settings.tiktok_link || "",
       });
     }
   }, [settings]);
@@ -278,6 +280,22 @@ export default function AdminSettings() {
                     onChange={(e) => setFormData({ ...formData, instagram_link: e.target.value })}
                     className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                     placeholder="https://instagram.com/yourhandle"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-3.5 h-3.5 text-primary fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.03 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                    </svg>
+                    <Label htmlFor="tiktok_link" className="text-white/70 text-xs font-black uppercase tracking-widest">TikTok Link</Label>
+                  </div>
+                  <Input
+                    id="tiktok_link"
+                    type="url"
+                    value={formData.tiktok_link}
+                    onChange={(e) => setFormData({ ...formData, tiktok_link: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
+                    placeholder="https://tiktok.com/@yourhandle"
                   />
                 </div>
               </div>

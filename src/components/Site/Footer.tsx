@@ -111,6 +111,13 @@ export default function Footer() {
                   </a>
                 </li>
               )}
+              {settings?.tiktok_link && (
+                <li>
+                  <a href={settings.tiktok_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    <i className="fab fa-tiktok"></i>
+                  </a>
+                </li>
+              )}
               {/* Fallback icons if no settings found - strictly adhering to showing nothing if empty */}
             </ul>
           </div>
