@@ -450,9 +450,9 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           <CollapsiblePanel id={`transform-${index}`} title="Transformations" defaultOpen={false}>
             <div className="space-y-6 bg-white/[0.03] p-4 rounded-xl border border-white/5">
               {[
+                { key: 'rotate', label: 'Rotate' },
                 { key: 'translateX', label: 'Pos X' },
                 { key: 'translateY', label: 'Pos Y' },
-                { key: 'rotate', label: 'Rotate' },
                 { key: 'scale', label: 'Scale', step: 0.1 }
               ].map((t) => (
                 <div key={t.key} className="space-y-2">
