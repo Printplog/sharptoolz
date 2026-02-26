@@ -109,13 +109,15 @@ function ActionButtonsRenderer() {
 
 interface Props {
   isPurchased?: boolean;
+  /** Optional explicit template id — use when rendering outside the router (e.g. in a dialog) */
+  templateId?: string;
 }
 
 import { FilePen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 
-export default function SvgFormTranslator({ isPurchased }: Props) {
+export default function SvgFormTranslator({ isPurchased, templateId: templateIdProp }: Props) {
   const user = useAuthStore((state) => state.user);
   // ... rest of imports/setup logic ... (wait, I should only replace the top imports and start of function, but I need to insert the button in JSX)
 
@@ -131,7 +133,8 @@ export default function SvgFormTranslator({ isPurchased }: Props) {
   const setName = useToolStore((state) => state.setName);
   const fields = useToolStore((state) => state.fields);
 
-  const { id } = useParams<{ id: string }>();
+  const { id: paramId } = useParams<{ id: string }>();
+  const id = templateIdProp ?? paramId;
 
   // Fetch template data (without SVG for faster loading)
   const { data, isLoading, error } = useQuery<PurchasedTemplate | Template>({

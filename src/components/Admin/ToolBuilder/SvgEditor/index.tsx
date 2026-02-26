@@ -15,12 +15,12 @@ import SettingsDialog from "./sections/SettingsDialog";
 import DocsPanel from "./DocsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { Eye } from "lucide-react";
+import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Tutorial, Font, SvgPatch, FormField } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
 import { regenerateSvg } from "./utils/regenerateSvg";
 import { useSvgStore } from "@/store/useSvgStore";
-  
+
 interface SvgEditorProps {
   svgRaw: string;
   templateName?: string;
@@ -145,12 +145,20 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     setSelectedFontIds(initialFonts.map((f) => f.id));
   }, [initialFonts]);
 
-  // Sync with prop
+  // Keep a ref so the svgRaw effect can read current selection without adding it as a dep
+  const selectedElementIdRef = useRef<string | null>(null);
+  useEffect(() => { selectedElementIdRef.current = selectedElementId ?? null; });
+
+  // Sync SVG with prop — re-select the previously focused element after the store resets
   useEffect(() => {
     if (svgRaw) {
+      const preservedId = selectedElementIdRef.current;
       setInitialSvg(svgRaw);
+      if (preservedId) {
+        requestAnimationFrame(() => selectElement(preservedId));
+      }
     }
-  }, [svgRaw, setInitialSvg]);
+  }, [svgRaw, setInitialSvg, selectElement]);
 
   useEffect(() => { setName(templateName); }, [templateName]);
   useEffect(() => { setBannerImage(banner); }, [banner]);
@@ -275,6 +283,16 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       }
     }
   }, [elements, selectElement, onElementSelect]);
+
+  // Navigate to prev/next element from the inspector tab
+  const handleNavigate = useCallback((direction: 'prev' | 'next') => {
+    if (elements.length === 0) return;
+    const currentIdx = selectedElementIndex ?? -1;
+    const nextIdx = direction === 'next'
+      ? (currentIdx + 1) % elements.length
+      : (currentIdx - 1 + elements.length) % elements.length;
+    handleElementSelect(nextIdx);
+  }, [elements, selectedElementIndex, handleElementSelect]);
 
   const handleElementReorder = useCallback((reorderedElements: SvgElement[]) => {
     const newOrder = reorderedElements.map(el => el.internalId!);
@@ -472,19 +490,43 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
               {/* Inspector Tab */}
               <TabsContent value="inspector" className="h-full m-0 p-5 focus-visible:outline-none overflow-y-auto custom-scrollbar">
                 {selectedElementIndex !== null && elements[selectedElementIndex] ? (
-                  <ElementEditor
-                    element={elements[selectedElementIndex]}
-                    index={selectedElementIndex}
-                    onUpdate={updateElement}
-                    onLiveUpdate={setDraftElement}
-                    onPatchUpdate={onPatchUpdate}
-                    isTextElement={isTextElement}
-                    isImageElement={isImageElement}
-                    allElements={elements}
-                    ref={(el: HTMLDivElement | null) => {
-                      if (selectedElementIndex !== null) elementRefs.current[selectedElementIndex] = el;
-                    }}
-                  />
+                  <>
+                    {/* Prev / Next navigator */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                        {selectedElementIndex + 1} / {elements.length}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleNavigate('prev')}
+                          className="h-7 w-7 rounded-lg flex items-center justify-center bg-white/5 border border-white/10 text-white/60 hover:bg-white/15 hover:text-white transition-all"
+                          title="Previous element"
+                        >
+                          <ChevronLeft className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleNavigate('next')}
+                          className="h-7 w-7 rounded-lg flex items-center justify-center bg-white/5 border border-white/10 text-white/60 hover:bg-white/15 hover:text-white transition-all"
+                          title="Next element"
+                        >
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <ElementEditor
+                      element={elements[selectedElementIndex]}
+                      index={selectedElementIndex}
+                      onUpdate={updateElement}
+                      onLiveUpdate={setDraftElement}
+                      onPatchUpdate={onPatchUpdate}
+                      isTextElement={isTextElement}
+                      isImageElement={isImageElement}
+                      allElements={elements}
+                      ref={(el: HTMLDivElement | null) => {
+                        if (selectedElementIndex !== null) elementRefs.current[selectedElementIndex] = el;
+                      }}
+                    />
+                  </>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center p-8 text-white/20">
                     <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-4 border border-white/5">

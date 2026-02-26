@@ -149,7 +149,8 @@ const FormPanel = React.memo(function FormPanel({
       fields?.filter(
         (field) =>
           field.type !== "status" &&
-          // Hide auto-generated .gen fields from the form (they'll be generated before save)
+          // Hide .gen fields that are in AUTO mode — they are auto-generated before save
+          // and should not appear in the form. Non-AUTO gen fields show with a Regenerate button.
           !field.generationRule?.startsWith("AUTO:")
       ) ?? [],
     [fields]
