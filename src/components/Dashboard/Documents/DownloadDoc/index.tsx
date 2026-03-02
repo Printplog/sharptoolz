@@ -22,6 +22,7 @@ interface DownloadDocDialogProps {
     keywords?: string[];
     dialogName?: string;
     fields?: FormField[];
+    isTest?: boolean;
 }
 
 export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
@@ -30,6 +31,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
     templateName,
     keywords = [],
     dialogName = "download-doc",
+    isTest = false,
 }) => {
     // 1. Identify split download capability
     const splitInfo = React.useMemo(() => {
@@ -59,6 +61,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
         templateName,
         hasSplitDownload: splitInfo.enabled,
         splitInfo,
+        isTest,
     });
 
     const onDownloadClick = async () => {

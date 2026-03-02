@@ -627,6 +627,7 @@ const FormPanel = React.memo(function FormPanel({
             purchasedTemplateId={isPurchased ? id : undefined}
             templateName={name}
             keywords={keywords}
+            isTest={test}
           />
           <TestDocumentDialog
             open={showTestDialog}

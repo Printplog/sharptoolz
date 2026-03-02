@@ -7,6 +7,7 @@ import { injectImagesIntoSVG } from "@/lib/utils/imageInjector";
 import { getPurchasedTemplate } from "@/api/apiEndpoints";
 import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
+import { addWatermarkToSvg } from "@/lib/utils/svgWatermark";
 import { BASE_URL } from "@/api/apiClient";
 import type { FormField } from "@/types";
 
@@ -18,6 +19,7 @@ interface UseDownloadLogicProps {
     templateName?: string;
     hasSplitDownload: boolean;
     splitInfo: { enabled: boolean; direction: "horizontal" | "vertical" };
+    isTest?: boolean;
 }
 
 export const useDownloadLogic = ({
@@ -26,6 +28,7 @@ export const useDownloadLogic = ({
     templateName,
     hasSplitDownload,
     splitInfo,
+    isTest = false,
 }: UseDownloadLogicProps) => {
     const [isGenerating, setIsGenerating] = React.useState(false);
     const [progressStep, setProgressStep] = React.useState<ProgressStep>('idle');
@@ -96,6 +99,12 @@ export const useDownloadLogic = ({
             // This is the CRITICAL STEP to match what the user sees in preview
             setProgressStep('processing-svg');
             workingSvg = await injectImagesIntoSVG(workingSvg, BASE_URL);
+
+            // 1.5 Apply watermark if this is a test document
+            // If purchasedTemplateId exists, we can also check the data we might have fetched
+            if (isTest) {
+                workingSvg = addWatermarkToSvg(workingSvg);
+            }
 
             // 2. Document generation
             toast.info(`Generating ${type.toUpperCase()}...`);
