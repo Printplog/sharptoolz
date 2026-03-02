@@ -12,77 +12,111 @@ export function useSvgLiveUpdate(
   highlightId?: string | null,
   overrideElement?: SvgElement | null
 ) {
+  const prevStatesRef = useRef<Record<string, string>>({});
   const prevHighlightIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // 1. Clear previous highlight
-    if (prevHighlightIdRef.current && prevHighlightIdRef.current !== highlightId) {
-      try {
-        const prevEl = containerRef.current.querySelector(`[data-internal-id="${CSS.escape(prevHighlightIdRef.current)}"]`);
-        if (prevEl) {
-          (prevEl as HTMLElement).style.outline = '';
-          (prevEl as HTMLElement).style.outlineOffset = '';
-        }
-      } catch { /* ignore */ }
+    // 1. Handle Highlight changes efficiently
+    if (prevHighlightIdRef.current !== highlightId) {
+      if (prevHighlightIdRef.current) {
+        try {
+          const escapedId = CSS.escape(prevHighlightIdRef.current);
+          const prevEl = containerRef.current.querySelector(`[data-internal-id="${escapedId}"]`);
+          if (prevEl) {
+            (prevEl as HTMLElement).style.outline = '';
+            (prevEl as HTMLElement).style.outlineOffset = '';
+          }
+        } catch { /* ignore */ }
+      }
+
+      if (highlightId) {
+        try {
+          const escapedId = CSS.escape(highlightId);
+          const highlightEl = containerRef.current.querySelector(`[data-internal-id="${escapedId}"]`);
+          if (highlightEl) {
+            (highlightEl as HTMLElement).style.outline = '2px dashed #4ade80';
+            (highlightEl as HTMLElement).style.outlineOffset = '2px';
+          }
+        } catch { /* ignore */ }
+      }
+      prevHighlightIdRef.current = highlightId ?? null;
     }
 
-    // 2. Update ONLY the active element
-    // highlightId is the internalId in the new store
-    const activeElement = (overrideElement && overrideElement.internalId === highlightId)
-      ? overrideElement
-      : (highlightId ? elements.find(e => e.internalId === highlightId) : null);
+    // 2. Surgical Element Updates
+    // We only update what's changed. 
+    // If we have an overrideElement, it's our top priority for fast updates.
+    const elementsToProcess = overrideElement ? [overrideElement] : elements;
 
-    if (activeElement && highlightId) {
+    elementsToProcess.forEach((activeElement) => {
       try {
-        const domEl = containerRef.current.querySelector(`[data-internal-id="${CSS.escape(highlightId)}"]`);
-        if (domEl) {
-          // Apply attributes
-          Object.entries(activeElement.attributes).forEach(([key, value]) => {
-            if (value === undefined || value === null) return;
+        if (!activeElement.internalId) return;
 
-            if (key === 'xlink:href' || (key === 'href' && activeElement.tag === 'image')) {
+        // Fast dirty check using stringification of relevant parts
+        // This is much faster than full DOM diffing or React reconciliation
+        const currentStateKey = JSON.stringify({
+          attrs: activeElement.attributes,
+          text: activeElement.innerText
+        });
+
+        if (prevStatesRef.current[activeElement.internalId] === currentStateKey) {
+          return; // Skip if no change
+        }
+
+        const safeId = String(activeElement.internalId);
+        const domEl = containerRef.current?.querySelector(`[data-internal-id="${CSS.escape(safeId)}"]`);
+        if (!domEl) return;
+
+        // Apply attributes surgically
+        Object.entries(activeElement.attributes).forEach(([key, value]) => {
+          if (value === undefined || value === null) return;
+
+          if (value === "" && key !== 'innerText') {
+            if (domEl.hasAttribute(key)) domEl.removeAttribute(key);
+            return;
+          }
+
+          if (key === 'xlink:href' || (key === 'href' && activeElement.tag === 'image')) {
+            if (domEl.getAttributeNS('http://www.w3.org/1999/xlink', 'href') !== value) {
               domEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', value);
-            } else if (key.startsWith('xlink:')) {
-              const parts = key.split(':');
-              if (parts[1]) domEl.setAttributeNS('http://www.w3.org/1999/xlink', parts[1], value);
-            } else {
-              domEl.setAttribute(key, value);
             }
-          });
+          } else if (key.startsWith('xlink:')) {
+            const parts = key.split(':');
+            if (parts[1]) domEl.setAttributeNS('http://www.w3.org/1999/xlink', parts[1], value);
+          } else if (domEl.getAttribute(key) !== value) {
+            domEl.setAttribute(key, value);
+          }
+        });
 
-          // Update text with wrapping support
-          if (activeElement.innerText !== undefined) {
-            if (activeElement.tag === 'text') {
-              const fontSize = parseFloat(activeElement.attributes['font-size'] || window.getComputedStyle(domEl).fontSize || '16');
+        // Update text with wrapping support (expensive, so we check if text actually changed)
+        if (activeElement.innerText !== undefined) {
+          if (activeElement.tag === 'text') {
+            // Only re-wrap if text or font-size changed
+            const fSize = activeElement.attributes['font-size'] || '16';
+            const wrapKey = `${activeElement.internalId}_wrap_${activeElement.innerText}_${fSize}`;
+            if (prevStatesRef.current[activeElement.internalId + '_wrap'] !== wrapKey) {
+              const fontSize = parseFloat(fSize);
               applyWrappedText(domEl as SVGTextElement, activeElement.innerText, fontSize);
-            } else if (domEl.textContent !== activeElement.innerText) {
-              domEl.textContent = activeElement.innerText;
+              prevStatesRef.current[activeElement.internalId + '_wrap'] = wrapKey;
             }
-          }
-
-          // Update style
-          if (activeElement.attributes.style) {
-            domEl.setAttribute('style', activeElement.attributes.style);
+          } else if (domEl.textContent !== activeElement.innerText) {
+            domEl.textContent = activeElement.innerText;
           }
         }
-      } catch { /* ignore */ }
-    }
 
-    // 3. Apply New Highlight
-    if (highlightId) {
-      try {
-        const highlightEl = containerRef.current.querySelector(`[data-internal-id="${CSS.escape(highlightId)}"]`);
-        if (highlightEl) {
-          (highlightEl as HTMLElement).style.outline = '2px dashed #4ade80';
-          (highlightEl as HTMLElement).style.outlineOffset = '2px';
+        // Specifically handle style attribute to ensure it's synced
+        const styleVal = activeElement.attributes.style || "";
+        if (domEl.getAttribute('style') !== styleVal) {
+          if (styleVal) domEl.setAttribute('style', styleVal);
+          else domEl.removeAttribute('style');
         }
-      } catch { /* ignore */ }
-      prevHighlightIdRef.current = highlightId;
-    } else {
-      prevHighlightIdRef.current = null;
-    }
+
+        prevStatesRef.current[activeElement.internalId] = currentStateKey;
+      } catch (err) {
+        console.warn('[useSvgLiveUpdate] Error updating element:', activeElement.internalId, err);
+      }
+    });
 
   }, [elements, highlightId, containerRef, overrideElement]);
 }

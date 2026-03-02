@@ -57,6 +57,14 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
     const y = parseFloat(el.getAttribute("y") || "0");
     const w = parseFloat(el.getAttribute("width") || "0");
     const h = parseFloat(el.getAttribute("height") || "0");
+
+    // Skip if can't compute valid center (protects images)
+    if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h) || w <= 0 || h <= 0) {
+      el.style.transform = "";  // Just clear invalid style
+      return;
+    }
+
+    const hasDimensions = el.hasAttribute("width") && el.hasAttribute("height");
     const cx = x + w / 2;
     const cy = y + h / 2;
 
@@ -67,17 +75,24 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
       .replace(/translate\(([^,)]+)px\)/g, 'translate($1)');
 
     // 2. Convert rotate(Xdeg) to rotate(X, cx, cy)
-    // We must inject the center coordinates because the attribute transform defaults to (0,0)
-    normalized = normalized.replace(/rotate\(([^)]+)\)/g, (_, p1) => {
-      const angle = p1.replace('deg', '').trim();
-      return `rotate(${angle}, ${cx}, ${cy})`;
+    // SVG attributes MUST NOT have 'deg' units. We strip them and inject center if possible.
+    normalized = normalized.replace(/rotate\(([^)]+)\)/g, (_fullMatch, p1) => {
+      const parts = p1.split(',');
+      const angle = parts[0].replace('deg', '').trim();
+
+      if (parts.length === 1 && hasDimensions) {
+        return `rotate(${angle}, ${cx}, ${cy})`;
+      }
+      // If it already has parameters or we can't calculate a center, 
+      // just ensure it's a valid SVG rotate (no units)
+      return `rotate(${angle}${parts.length > 1 ? ',' + parts.slice(1).join(',') : ''})`;
     });
 
     // Merge them: style usually overrides attribute in browser
     const combined = `${attrTransform} ${normalized}`.trim();
     el.setAttribute("transform", combined);
 
-    // Clear styles to prevent double application in browser
+    // Clear styles to prevent double application, but only the transform ones
     el.style.transform = "";
     el.style.transformOrigin = "";
     el.style.transformBox = "";
@@ -158,26 +173,34 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
       targets.forEach(el => {
         // Consolidate any existing transforms (from style or attribute) before applying new ones
-        normalizeTransform(el);
+        // ONLY normalize non-image elements (images rely on x/y/w/h positioning)
+        if (el.tagName.toLowerCase() !== 'image') {
+          normalizeTransform(el);
+        }
 
         switch (field.type) {
           case "upload":
           case "file": {
             const hrefNS = "http://www.w3.org/1999/xlink";
-            // Only update href if there's a value, otherwise preserve original
+            // Only update href if there's a value, otherwise preserve original.
+            // IMPORTANT: We do NOT override x, y, width, height, transform, or
+            // preserveAspectRatio — those come from the original SVG template placeholder
+            // and define exactly where/how the image is placed/sized.
             if (value && value.trim() !== "") {
-              // Set both plain href and xlink:href for maximum compatibility
               el.setAttribute("href", value);
               el.setAttributeNS(hrefNS, "href", value);
-              el.setAttribute("preserveAspectRatio", "none");
+              // Preserve the original preserveAspectRatio if set by template designer.
+              // Only fall back to "xMidYMid meet" (fit box) if no value is present.
+              if (!el.getAttribute("preserveAspectRatio")) {
+                el.setAttribute("preserveAspectRatio", "xMidYMid meet");
+              }
             }
 
-            // Apply rotation if present
+            // Apply user-controlled rotation ON TOP of the existing template rotation.
             let rotationValue = field.rotation;
 
-            // Inheritance logic: If this field depends on another field AND has no rotation of its own,
-            // try to inherit the rotation from the parent field.
-            // This ensures ghost photos and overlays follow the main photo's transformation.
+            // Inheritance: if this field has no rotation of its own but depends on
+            // another image field, inherit that field's rotation (e.g. ghost overlays).
             if ((rotationValue === undefined || rotationValue === null) && field.dependsOn) {
               const baseParentId = field.dependsOn.split('[')[0];
               const parentField = fieldsMap.get(baseParentId);
@@ -188,36 +211,29 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
             if (rotationValue !== undefined && rotationValue !== null) {
               const rotation = parseFloat(String(rotationValue));
+              if (isNaN(rotation)) break; // Skip invalid
 
-              // Canvg doesn't support transform-origin: center well, so we calculate the center manually.
-              // This is necessary because in the download engine (canvg), rotation defaults to (0,0).
-              const x = parseFloat(el.getAttribute("x") || "0");
-              const y = parseFloat(el.getAttribute("y") || "0");
-              const w = parseFloat(el.getAttribute("width") || "0");
-              const h = parseFloat(el.getAttribute("height") || "0");
-              const cx = x + w / 2;
-              const cy = y + h / 2;
+              let cx = 0, cy = 0;
+              try {
+                // Use getBBox() for accurate bounds (handles viewBox/transforms)
+                const bbox = (el as any).getBBox();
+                cx = bbox.x + bbox.width / 2;
+                cy = bbox.y + bbox.height / 2;
+              } catch (e) {
+                // Fallback to explicit attributes if getBBox is unsupported in the current DOM environment
+                const x = parseFloat(el.getAttribute("x") || "0");
+                const y = parseFloat(el.getAttribute("y") || "0");
+                const w = parseFloat(el.getAttribute("width") || "0");
+                const h = parseFloat(el.getAttribute("height") || "0");
+                cx = x + w / 2;
+                cy = y + h / 2;
+              }
 
-              const rotationStr = rotation !== 0 ? `rotate(${rotation}, ${cx}, ${cy})` : "";
-
+              // Append NEW rotation to END of existing transform (composes correctly)
               const existingTransform = el.getAttribute("transform") || "";
-              let newTransform = "";
-
-              if (existingTransform.includes("rotate(")) {
-                // Replace existing rotation
-                newTransform = existingTransform.replace(/rotate\([^)]+\)/g, rotationStr).trim();
-              } else if (rotationStr) {
-                // Append new rotation
-                newTransform = `${existingTransform} ${rotationStr}`.trim();
-              } else {
-                newTransform = existingTransform;
-              }
-
-              if (newTransform) {
-                el.setAttribute("transform", newTransform);
-              } else {
-                el.removeAttribute("transform");
-              }
+              const newRotation = `rotate(${rotation}, ${cx}, ${cy})`;
+              const updatedTransform = existingTransform ? `${existingTransform} ${newRotation}` : newRotation;
+              el.setAttribute("transform", updatedTransform);
             }
             break;
           }
@@ -227,7 +243,9 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
             if (value && value.trim() !== "") {
               el.setAttribute("href", value);
               el.setAttributeNS(hrefNS, "href", value);
-              el.setAttribute("preserveAspectRatio", "none");
+              if (!el.getAttribute("preserveAspectRatio")) {
+                el.setAttribute("preserveAspectRatio", "xMidYMid meet");
+              }
             }
             break;
           }

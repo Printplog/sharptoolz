@@ -135,7 +135,7 @@ const VariableDropdown = ({
 interface ElementEditorProps {
   element: SvgElement;
   index: number;
-  onUpdate: (index: number, updates: Partial<SvgElement>) => void;
+  onUpdate: (index: number, updates: Partial<SvgElement>, undoable?: boolean) => void;
   isTextElement: (el: SvgElement) => boolean;
   isImageElement: (el: SvgElement) => boolean;
   allElements?: SvgElement[];
@@ -153,27 +153,90 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     const updateTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const imageMap = useRef<Record<string, string>>({});
 
+    // Use a ref to track the last committed internalId to detect selection changes accurately
+    const prevId = useRef<string | null>(element.internalId || null);
+
     useEffect(() => {
-      setLocalElement(element);
-      setIsDirty(false);
+      // ONLY reset local state if we actually switched to a DIFFERENT element
+      // or if it's the initial load.
+      if (element.internalId !== prevId.current) {
+        setLocalElement(element);
+        setIsDirty(false);
+        prevId.current = element.internalId || null;
+      }
     }, [element, index]);
 
-    const handleLocalUpdate = (updates: Partial<SvgElement>) => {
+    // Robust Transformation Parser
+    const getTransform = () => {
+      const style = localElement.attributes.style || "";
+      const transformAttr = localElement.attributes.transform || "";
+      const combined = `${style} ${transformAttr}`.replace(/,/g, ' '); // Replace commas with spaces for easier parsing
+
+      const getVal = (regex: RegExp) => {
+        const match = combined.match(regex);
+        return match ? parseFloat(match[1]) : null;
+      };
+
+      const rotate = getVal(/rotate\s*\(\s*(-?\d+\.?\d*)/);
+      const scale = getVal(/scale\s*\(\s*(-?\d+\.?\d*)/);
+
+      // Improved translate parsing
+      const transMatch = combined.match(/translate\s*\(\s*(-?\d+\.?\d*)\s*(-?\d+\.?\d*|)/);
+      let translateX = 0;
+      let translateY = 0;
+      if (transMatch) {
+        translateX = parseFloat(transMatch[1]);
+        translateY = transMatch[2] ? parseFloat(transMatch[2]) : 0;
+      }
+
+      return {
+        rotate: rotate ?? 0,
+        scale: scale ?? 1,
+        translateX: translateX,
+        translateY: translateY,
+      };
+    };
+
+    const currentTransform = getTransform();
+
+    const patchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleLocalUpdate = (updates: Partial<SvgElement>, undoable = false) => {
       setLocalElement(prev => {
         const updated = {
           ...prev,
           ...updates,
           attributes: { ...prev.attributes, ...(updates.attributes || {}) }
         };
+        // Auto-update parent/store on every change (throttled by the store's commitChanges)
+        onUpdate(index, updated, undoable);
+
+        // SYNC PATCHES: This was missing!
+        // We debounce patch updates so we don't spam the parent/backend
+        if (onPatchUpdate && element.internalId) {
+          if (patchTimeout.current) clearTimeout(patchTimeout.current);
+          patchTimeout.current = setTimeout(() => {
+            const patchId = element.id || element.internalId || "";
+            if (updates.innerText !== undefined) {
+              onPatchUpdate({ id: patchId, attribute: 'innerText', value: updates.innerText });
+            }
+            if (updates.attributes) {
+              Object.entries(updates.attributes).forEach(([key, value]) => {
+                onPatchUpdate({ id: patchId, attribute: key, value: String(value) });
+              });
+            }
+          }, 300);
+        }
+
         return updated;
       });
       setIsDirty(true);
     };
 
-    // Throttled Live Update
+    // Throttled Live Update (Still useful for hyper-fast feedback)
     useEffect(() => {
       const now = Date.now();
-      const limit = 32;
+      const limit = 16; // Faster 60fps local update
 
       if (localElement !== element) {
         if (now - lastUpdate.current >= limit) {
@@ -193,7 +256,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     }, [localElement, onLiveUpdate, element]);
 
     const handleApply = () => {
-      console.log('[ElementEditor] Apply button clicked - generating patches');
+      console.log('[ElementEditor] Apply button clicked - finalizing state');
       const finalElement = { ...localElement };
       const href = finalElement.attributes.href;
 
@@ -208,38 +271,26 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         }
       }
 
-      // CRITICAL: Generate patches when Apply is clicked
-      // Use internalId because it exists for all elements (native id or generated)
+      // Generate patches for backend
       if (onPatchUpdate && element.internalId) {
         const patchId = element.internalId;
-        console.log(`[ElementEditor] Comparing changes for patches (ID: ${patchId})...`);
 
-        // Compare text content
         if (finalElement.innerText !== element.innerText) {
-          console.log(`[ElementEditor] Text changed: "${element.innerText}" → "${finalElement.innerText}"`);
           onPatchUpdate({ id: patchId, attribute: 'innerText', value: finalElement.innerText });
         }
-
-        // Compare ID change (this is a special case, rarely happens for generated IDs)
         if (finalElement.id !== element.id) {
-          console.log(`[ElementEditor] ID changed: "${element.id}" → "${finalElement.id}"`);
           onPatchUpdate({ id: patchId, attribute: 'id', value: finalElement.id });
         }
-
-        // Compare all attributes
         Object.entries(finalElement.attributes).forEach(([key, value]) => {
           if (value !== element.attributes[key]) {
-            console.log(`[ElementEditor] Attribute ${key} changed: "${element.attributes[key]}" → "${value}"`);
             onPatchUpdate({ id: patchId, attribute: key, value });
           }
         });
-
-        console.log('[ElementEditor] Patches generated successfully');
       }
 
-      onUpdate(index, finalElement);
+      onUpdate(index, finalElement, true); // Final update with UNDO enabled
       setIsDirty(false);
-      toast.success("Changes applied to SVG");
+      toast.success("Changes finalized");
     };
 
     const handleDiscard = () => {
@@ -290,29 +341,6 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       reader.readAsDataURL(file);
     };
 
-    const getTransform = () => {
-      const style = localElement.attributes.style || "";
-      const transformAttr = localElement.attributes.transform || "";
-      const combined = `${style} ${transformAttr}`;
-      const getVal = (regex: RegExp) => {
-        const match = combined.match(regex);
-        return match ? parseFloat(match[1]) : null;
-      };
-
-      const rotate = getVal(/rotate\s*\(\s*(-?\d+\.?\d*)/);
-      const scale = getVal(/scale\s*\(\s*(-?\d+\.?\d*)/);
-      const translateX = getVal(/translate\s*\(\s*(-?\d+\.?\d*)/);
-      const translateY = getVal(/translate\s*\((?:[^,]+,)?\s*(-?\d+\.?\d*)/);
-
-      return {
-        rotate: rotate ?? 0,
-        scale: scale ?? 1,
-        translateX: translateX ?? 0,
-        translateY: translateY ?? 0,
-      };
-    };
-
-    const currentTransform = getTransform();
     const queryClient = useQueryClient();
     const { data: variables = [] } = useQuery<TransformVariable[]>({
       queryKey: ["transformVariables"],
@@ -337,21 +365,41 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const updateTransform = (key: 'rotate' | 'scale' | 'translateX' | 'translateY', value: number) => {
       const newTransform = { ...currentTransform, [key]: value };
+
+      // Generate Normalized SVG Transform components (NO 'deg', NO 'px')
+      const components: string[] = [];
+
+      if (newTransform.translateX !== 0 || newTransform.translateY !== 0) {
+        components.push(`translate(${newTransform.translateX} ${newTransform.translateY})`);
+      }
+
+      if (newTransform.rotate !== 0) {
+        // If we have dimensions, we could inject center (rotate(angle, cx, cy))
+        // but simple rotate(angle) is fine if transform-origin: center is set in CSS
+        components.push(`rotate(${newTransform.rotate})`);
+      }
+
+      if (newTransform.scale !== 1) {
+        components.push(`scale(${newTransform.scale})`);
+      }
+
+      const tStr = components.join(' ');
+
+      // Keep CSS for things like transform-origin for preview, but MOVE actual transform to attribute
       let newStyle = localElement.attributes.style || "";
       if (!newStyle.includes("transform-box")) newStyle = `transform-box: fill-box; ${newStyle}`;
       if (!newStyle.includes("transform-origin")) newStyle = `transform-origin: center; ${newStyle}`;
 
-      const tStr = [
-        newTransform.translateX || newTransform.translateY ? `translate(${newTransform.translateX}px, ${newTransform.translateY}px)` : '',
-        newTransform.rotate ? `rotate(${newTransform.rotate}deg)` : '',
-        newTransform.scale !== 1 ? `scale(${newTransform.scale})` : ''
-      ].filter(Boolean).join(' ');
+      // Strip transform from style to avoid double-application if browser supports both
+      newStyle = newStyle.replace(/transform:[^;]+;?/g, '').trim();
 
-      newStyle = newStyle.includes("transform:")
-        ? newStyle.replace(/transform:[^;]+/, `transform: ${tStr}`)
-        : `${newStyle}; transform: ${tStr}`;
-
-      handleLocalUpdate({ attributes: { ...localElement.attributes, style: newStyle.replace(/;;/g, ";"), transform: "" } });
+      handleLocalUpdate({
+        attributes: {
+          ...localElement.attributes,
+          style: newStyle.replace(/;;/g, ";"),
+          transform: tStr
+        }
+      });
     };
 
     return (

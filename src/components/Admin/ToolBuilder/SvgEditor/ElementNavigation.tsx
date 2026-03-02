@@ -337,25 +337,30 @@ function ElementNavigationComponent({
   if (elements.length === 0) return null;
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3 shrink-0">
-        <h3 className="text-sm font-medium text-white/80">Select Element</h3>
-        <div className="text-xs text-white/60">
-          {elements.length} elements
+    <div className="flex flex-col relative">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-medium text-white/80">Layers</h3>
+        <div className="text-xs text-white/50 bg-white/5 px-2 py-0.5 rounded-full">
+          {elements.length}
         </div>
       </div>
 
-      <div className="relative mb-4 shrink-0">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/40" />
-        <Input
-          placeholder="Search..."
-          className="pl-9 bg-white/5 border-white/10 h-9 text-xs"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      {/* Sticky Search Only */}
+      <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-md pb-3 pt-2 -mx-2 px-2 -mt-2">
+        <div className="bg-white/5 rounded-lg p-1 border border-white/5">
+          <div className="relative group">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
+            <Input
+              placeholder="Search layers..."
+              className="pl-8 h-8 bg-transparent border-none text-xs shadow-none placeholder:text-white/30 focus-visible:ring-0"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
       </div>
 
-      <div ref={scrollRef} className="max-h-[500px] overflow-y-auto custom-scrollbar pr-1 -mr-1 pt-4 pl-4">
+      <div ref={scrollRef}>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -365,7 +370,7 @@ function ElementNavigationComponent({
           autoScroll={{ acceleration: 2 }}
         >
           <SortableContext items={displayList.map(item => item.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 auto-rows-fr">
+            <div className="flex flex-col gap-2">
               {displayList.length > 0 ? displayList.map((item) => {
                 if (item.type === 'group') {
                   return (

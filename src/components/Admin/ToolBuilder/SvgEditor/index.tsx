@@ -97,7 +97,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [keywordsTags, setKeywordsTags] = useState<string[]>(Array.isArray(keywords) ? keywords : []);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
-  const elementRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [draftElement, setDraftElement] = useState<SvgElement | null>(null);
   const [isReplaced, setIsReplaced] = useState(false);
   const [freshSvgContent, setFreshSvgContent] = useState<string | null>(null);
@@ -140,6 +139,10 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [selectedFontIds, setSelectedFontIds] = useState<string[]>(
     initialFonts.map((f) => f.id)
   );
+
+  const handleLiveUpdate = useCallback((element: SvgElement) => {
+    setDraftElement(element);
+  }, []);
 
   useEffect(() => {
     setSelectedFontIds(initialFonts.map((f) => f.id));
@@ -208,15 +211,15 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  function updateElement(index: number, updates: Partial<SvgElement>) {
+  const updateElement = useCallback((index: number, updates: Partial<SvgElement>, undoable = true) => {
     const element = elements[index];
     if (!element) return;
 
     const internalId = element.internalId;
     if (!internalId) return;
 
-    updateElementInStore(internalId, updates);
-  }
+    updateElementInStore(internalId, updates, undoable);
+  }, [elements, updateElementInStore]);
 
   const handleSave = useCallback(() => {
     if (!onSave) return;
@@ -329,6 +332,8 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
   const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
+  const workingSvg = useSvgStore(state => state.workingSvg);
+
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
       {/* Top Toolbar */}
@@ -432,7 +437,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
           <div className="h-full w-full">
             <SvgUpload
-              currentSvg={originalSvg}
+              currentSvg={workingSvg}
               onSvgUpload={handleSvgUpload}
               onSelectElement={(id) => {
                 const idx = elements.findIndex(el => el.id === id || el.internalId === id);
@@ -464,8 +469,8 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
             <div className="flex-1 overflow-hidden pointer-events-auto">
               {/* Layers Tab */}
-              <TabsContent value="layers" className="h-full m-0 p-5 focus-visible:outline-none flex flex-col">
-                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+              <TabsContent value="layers" className="h-full m-0 p-5 focus-visible:outline-none flex flex-col overflow-y-auto custom-scrollbar">
+                <div className="flex-1 pb-10">
                   <ElementNavigation
                     onElementClick={handleElementSelect}
                     onElementReorder={handleElementReorder}
@@ -517,14 +522,10 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
                       element={elements[selectedElementIndex]}
                       index={selectedElementIndex}
                       onUpdate={updateElement}
-                      onLiveUpdate={setDraftElement}
+                      onLiveUpdate={handleLiveUpdate}
                       onPatchUpdate={onPatchUpdate}
                       isTextElement={isTextElement}
                       isImageElement={isImageElement}
-                      allElements={elements}
-                      ref={(el: HTMLDivElement | null) => {
-                        if (selectedElementIndex !== null) elementRefs.current[selectedElementIndex] = el;
-                      }}
                     />
                   </>
                 ) : (

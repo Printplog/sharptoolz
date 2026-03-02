@@ -1,13 +1,11 @@
 export function getSvgElementDimensions(svgElementId: string): { width: number; height: number } | null {
     if (!svgElementId) return null;
 
-    // Try multiple times to find the element (in case of timing issues)
-    let element = document.getElementById(svgElementId);
+    let element: Element | null = document.getElementById(svgElementId);
     if (!element) {
-        // Try to find it in the SVG preview container
         const svgPreview = document.querySelector('[data-svg-preview]');
         if (svgPreview) {
-            element = svgPreview.querySelector(`#${svgElementId}`) as HTMLElement;
+            element = svgPreview.querySelector(`#${CSS.escape(svgElementId)}`);
         }
     }
 
@@ -15,25 +13,23 @@ export function getSvgElementDimensions(svgElementId: string): { width: number; 
         return null;
     }
 
-    // For image elements, try to get the natural dimensions first
-    if (element.tagName === 'image') {
-        const img = element as HTMLImageElement;
-        if (img.naturalWidth && img.naturalHeight) {
-            return { width: img.naturalWidth, height: img.naturalHeight };
+    // PRIORITY 1: Use raw SVG/HTML attributes — these reflect the template's
+    // intended dimensions, not a CSS-scaled visual size.
+    const attrW = element.getAttribute('width');
+    const attrH = element.getAttribute('height');
+    if (attrW && attrH) {
+        const w = parseFloat(attrW);
+        const h = parseFloat(attrH);
+        if (w > 0 && h > 0) {
+            return { width: w, height: h };
         }
     }
 
-    // Get computed style dimensions
-    const computedStyle = window.getComputedStyle(element);
-    const width = parseFloat(computedStyle.width);
-    const height = parseFloat(computedStyle.height);
-
-    // Check if we got valid dimensions
-    if (width && height && width > 0 && height > 0) {
-        return { width, height };
+    // PRIORITY 2: getBoundingClientRect (visual size, less accurate in scaled SVGs)
+    const rect = element.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+        return { width: rect.width, height: rect.height };
     }
 
-    // Fallback to getBoundingClientRect if computed style doesn't work
-    const rect = element.getBoundingClientRect();
-    return { width: rect.width, height: rect.height };
+    return null;
 }

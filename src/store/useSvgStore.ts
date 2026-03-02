@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { type SvgElement } from '@/lib/utils/parseSvgElements';
+import { regenerateSvg } from '@/components/Admin/ToolBuilder/SvgEditor/utils/regenerateSvg';
 
 export interface SvgPatch {
     id: string;
@@ -13,9 +14,11 @@ export interface SvgPatch {
 interface SvgStore {
     // Data
     originalSvg: string;
+    workingSvg: string; // Patched SVG for canvas display
     elements: Record<string, SvgElement>;
     elementOrder: string[];
     selectedElementId: string | null;
+    commitTimeout: ReturnType<typeof setTimeout> | null;
 
     // Undo/Redo
     history: SvgPatch[][];
@@ -24,6 +27,7 @@ interface SvgStore {
     // Actions
     setInitialSvg: (svg: string) => void;
     updateElement: (id: string, updates: Partial<SvgElement>, undoable?: boolean) => void;
+    commitChanges: (immediate?: boolean) => void; // Bake elements into workingSvg
     selectElement: (id: string | null) => void;
     reorderElements: (newOrder: string[], undoable?: boolean) => void;
 
@@ -45,9 +49,11 @@ interface SvgStore {
 export const useSvgStore = create<SvgStore>()(
     subscribeWithSelector((set, get) => ({
         originalSvg: '',
+        workingSvg: '',
         elements: {},
         elementOrder: [],
         selectedElementId: null,
+        commitTimeout: null,
         history: [],
         historyIndex: -1,
 
@@ -117,6 +123,7 @@ export const useSvgStore = create<SvgStore>()(
 
             set({
                 originalSvg: modifiedSvg,
+                workingSvg: modifiedSvg,
                 elements: elementsMap,
                 elementOrder: order,
                 history: [],
@@ -175,6 +182,31 @@ export const useSvgStore = create<SvgStore>()(
                 newState.historyIndex = historyIndex + 1;
             }
             set(newState);
+            get().commitChanges();
+        },
+
+        commitChanges: (immediate = false) => {
+            const { originalSvg, elements, elementOrder, commitTimeout } = get();
+
+            if (commitTimeout) clearTimeout(commitTimeout);
+
+            const run = () => {
+                const orderedElements = elementOrder.map(id => elements[id]);
+                const newWorkingSvg = regenerateSvg(originalSvg, orderedElements, { keepInternalIds: true });
+
+                if (newWorkingSvg !== get().workingSvg) {
+                    set({ workingSvg: newWorkingSvg, commitTimeout: null });
+                } else {
+                    set({ commitTimeout: null });
+                }
+            };
+
+            if (immediate) {
+                run();
+            } else {
+                const timeout = setTimeout(run, 1000); // 1000ms debounce for workingSvg (High-Performance mode)
+                set({ commitTimeout: timeout });
+            }
         },
 
         selectElement: (id) => set({ selectedElementId: id }),
@@ -190,6 +222,7 @@ export const useSvgStore = create<SvgStore>()(
                 newState.historyIndex = historyIndex + 1;
             }
             set(newState);
+            get().commitChanges();
         },
 
         undo: () => {
@@ -220,6 +253,7 @@ export const useSvgStore = create<SvgStore>()(
                 }
             });
             set({ elements: newElements, elementOrder: newOrder, historyIndex: historyIndex - 1 });
+            get().commitChanges();
         },
 
         redo: () => {
@@ -251,6 +285,7 @@ export const useSvgStore = create<SvgStore>()(
                 }
             });
             set({ elements: newElements, elementOrder: newOrder, historyIndex: nextIndex });
+            get().commitChanges();
         },
 
         deleteElement: (id, undoable = true) => {
@@ -277,6 +312,7 @@ export const useSvgStore = create<SvgStore>()(
                 newState.historyIndex = historyIndex + 1;
             }
             set(newState);
+            get().commitChanges();
         },
 
         duplicateElement: (id, undoable = true) => {
@@ -317,6 +353,7 @@ export const useSvgStore = create<SvgStore>()(
                 newState.historyIndex = historyIndex + 1;
             }
             set(newState);
+            get().commitChanges();
         },
 
         reset: () => set({
