@@ -196,7 +196,10 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
               }
             }
 
-            // Apply user-controlled rotation ON TOP of the existing template rotation.
+            // Apply user-controlled rotation ON TOP of the original template rotation.
+            // IMPORTANT: We save the original (template) transform the first time we
+            // encounter this element so that repeated calls to updateSvgFromFormData
+            // (e.g. every live-preview refresh) don't keep stacking rotate() calls.
             let rotationValue = field.rotation;
 
             // Inheritance: if this field has no rotation of its own but depends on
@@ -213,14 +216,20 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
               const rotation = parseFloat(String(rotationValue));
               if (isNaN(rotation)) break; // Skip invalid
 
+              // Snapshot the *original template* transform once and cache it.
+              // On every subsequent call we restore from the snapshot and apply
+              // exactly one user-rotation on top — no stacking.
+              if (!el.hasAttribute("data-base-transform")) {
+                el.setAttribute("data-base-transform", el.getAttribute("transform") || "");
+              }
+              const baseTransform = el.getAttribute("data-base-transform") || "";
+
               let cx = 0, cy = 0;
               try {
-                // Use getBBox() for accurate bounds (handles viewBox/transforms)
                 const bbox = (el as any).getBBox();
                 cx = bbox.x + bbox.width / 2;
                 cy = bbox.y + bbox.height / 2;
-              } catch (e) {
-                // Fallback to explicit attributes if getBBox is unsupported in the current DOM environment
+              } catch {
                 const x = parseFloat(el.getAttribute("x") || "0");
                 const y = parseFloat(el.getAttribute("y") || "0");
                 const w = parseFloat(el.getAttribute("width") || "0");
@@ -229,10 +238,9 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
                 cy = y + h / 2;
               }
 
-              // Append NEW rotation to END of existing transform (composes correctly)
-              const existingTransform = el.getAttribute("transform") || "";
+              // Build final transform: base (from template) + exactly one user rotation
               const newRotation = `rotate(${rotation}, ${cx}, ${cy})`;
-              const updatedTransform = existingTransform ? `${existingTransform} ${newRotation}` : newRotation;
+              const updatedTransform = baseTransform ? `${baseTransform} ${newRotation}` : newRotation;
               el.setAttribute("transform", updatedTransform);
             }
             break;

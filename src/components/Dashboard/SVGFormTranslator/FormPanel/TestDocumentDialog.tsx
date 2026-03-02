@@ -102,7 +102,7 @@ export function TestDocumentDialog({
                 Test Document
               </Button>
               <Button onClick={onCreatePaid} disabled={isSubmitting}>
-                Pay &amp; Create
+                Pay & Create
               </Button>
             </div>
           </>
