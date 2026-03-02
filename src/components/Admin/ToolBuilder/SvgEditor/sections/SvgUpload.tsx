@@ -614,6 +614,7 @@ export default function SvgUpload({
 
 function PanCoords({ vpRef, zoomLabel }: { vpRef: React.RefObject<VP>; zoomLabel: string }) {
   // zoomLabel is a proxy re-render trigger (~100ms cadence)
+  void zoomLabel;
   const x = Math.round(vpRef.current?.x ?? 0);
   const y = Math.round(vpRef.current?.y ?? 0);
   return <span className="tabular-nums">X {x >= 0 ? "+" : ""}{x} · Y {y >= 0 ? "+" : ""}{y}</span>;

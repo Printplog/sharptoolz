@@ -30,7 +30,6 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
     templateName,
     keywords = [],
     dialogName = "download-doc",
-    fields,
 }) => {
     // 1. Identify split download capability
     const splitInfo = React.useMemo(() => {
@@ -57,7 +56,6 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
     const { isGenerating, progressStep, currentSvg, handleDownload } = useDownloadLogic({
         purchasedTemplateId,
         initialSvg: svg,
-        fields,
         templateName,
         hasSplitDownload: splitInfo.enabled,
         splitInfo,
