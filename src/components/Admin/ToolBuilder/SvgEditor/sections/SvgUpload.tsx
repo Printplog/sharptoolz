@@ -537,7 +537,7 @@ export default function SvgUpload({
               >
                 <div className="absolute inset-0 -z-10 shadow-[0_4px_60px_rgba(0,0,0,0.85)]" />
                 <div
-                  className="[&_svg]:block [&_svg]:max-w-none [&_svg]:max-h-none pointer-events-auto"
+                  className="[&_svg]:block [&_svg]:max-w-none [&_svg]:max-h-none pointer-events-auto bg-white"
                   dangerouslySetInnerHTML={{ __html: baseSvg }}
                 />
               </div>
@@ -623,7 +623,7 @@ function ToolBtn({ active, onClick, children, title }: {
   return (
     <button onClick={onClick} title={title}
       className={`p-1.5 rounded-md transition-all ${active ? "bg-primary text-black shadow-[0_0_8px_rgba(var(--primary),0.4)]"
-          : "text-white/40 hover:text-white hover:bg-white/10"
+        : "text-white/40 hover:text-white hover:bg-white/10"
         }`}>
       {children}
     </button>
