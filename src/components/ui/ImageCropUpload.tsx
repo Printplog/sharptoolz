@@ -324,7 +324,7 @@ export default function ImageCropUpload({
             </div>
           ) : (
             <div className="relative w-full h-full group">
-              <div className="w-full h-full overflow-auto custom-scrollbar">
+              <div className="w-full h-full overflow-auto">
                 <LazyImage src={currentValue} alt={fieldName} className="w-full max-w-none h-auto object-contain min-h-full" />
               </div>
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
@@ -379,7 +379,7 @@ export default function ImageCropUpload({
                 </TabsList>
               </div>
 
-              <TabsContent value="crop" className="flex-1 overflow-y-auto px-6 pb-24 custom-scrollbar outline-none">
+              <TabsContent value="crop" className="flex-1 overflow-y-auto px-6 pb-24 outline-none">
                 <div className="space-y-6">
                   {/* Controls Header */}
                   <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/10 rounded-2xl shadow-inner">
@@ -448,7 +448,7 @@ export default function ImageCropUpload({
                 </div>
               </TabsContent>
 
-              <TabsContent value="remove-bg" className="flex-1 overflow-y-auto px-6 pb-24 custom-scrollbar outline-none">
+              <TabsContent value="remove-bg" className="flex-1 overflow-y-auto px-6 pb-24 outline-none">
                 {!bgRemovedImage ? (
                   <div className="flex flex-col items-center justify-center space-y-10 py-12">
                     <div className="text-center space-y-3">

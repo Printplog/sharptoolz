@@ -105,7 +105,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 mt-[20px] overflow-y-auto custom-scrollbar pr-2">
+      <nav className="flex-1 space-y-0.5 mt-[20px] overflow-y-auto pr-2">
         {navigationItems.filter(item => {
           // Strict Role check
           const role = user?.role;

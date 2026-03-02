@@ -210,7 +210,7 @@ export default function SignatureField({
         >
           {currentValue ? (
             <div className="relative w-full h-full group">
-              <div className="w-full h-full overflow-auto custom-scrollbar">
+              <div className="w-full h-full overflow-auto">
                 <img
                   src={currentValue}
                   alt={`${fieldName} signature`}
@@ -286,7 +286,7 @@ export default function SignatureField({
 
       {/* Signature Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto custom-scrollbar  ">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto  ">
           <DialogHeader>
             <DialogTitle className="text-white">Add {fieldName}</DialogTitle>
           </DialogHeader>

@@ -94,7 +94,7 @@ export default function SettingsDialog({
           Template Settings
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto custom-scrollbar">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Template Configuration</DialogTitle>
         </DialogHeader>

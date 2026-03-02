@@ -469,7 +469,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
             <div className="flex-1 overflow-hidden pointer-events-auto">
               {/* Layers Tab */}
-              <TabsContent value="layers" className="h-full m-0 p-5 focus-visible:outline-none flex flex-col overflow-y-auto custom-scrollbar">
+              <TabsContent value="layers" className="h-full m-0 px-5 focus-visible:outline-none flex flex-col overflow-y-auto">
                 <div className="flex-1 pb-10">
                   <ElementNavigation
                     onElementClick={handleElementSelect}
@@ -493,7 +493,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
               </TabsContent>
 
               {/* Inspector Tab */}
-              <TabsContent value="inspector" className="h-full m-0 p-5 focus-visible:outline-none overflow-y-auto custom-scrollbar">
+              <TabsContent value="inspector" className="h-full m-0 p-5 focus-visible:outline-none overflow-y-auto">
                 {selectedElementIndex !== null && elements[selectedElementIndex] ? (
                   <>
                     {/* Prev / Next navigator */}
@@ -542,7 +542,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
               </TabsContent>
 
               {/* Docs Tab */}
-              <TabsContent value="docs" className="h-full m-0 p-0 focus-visible:outline-none overflow-y-auto custom-scrollbar">
+              <TabsContent value="docs" className="h-full m-0 p-0 focus-visible:outline-none overflow-y-auto">
                 <DocsPanel />
               </TabsContent>
             </div>

@@ -268,7 +268,7 @@ export default function BuilderDialog() {
 
   return (
     <CustomDialog dialogName="toolBuilder">
-      <DialogContent className="bg-gray-900 border-white/20 text-white max-w-3xl w-full p-0 max-h-[90vh] flex flex-col overflow-hidden overflow-y-auto custom-scrollbar">
+      <DialogContent className="bg-gray-900 border-white/20 text-white max-w-3xl w-full p-0 max-h-[90vh] flex flex-col overflow-hidden overflow-y-auto">
         <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle className="text-xl">Tool Builder</DialogTitle>
         </DialogHeader>

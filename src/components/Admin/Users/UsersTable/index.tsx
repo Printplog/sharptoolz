@@ -91,7 +91,7 @@ export default function UsersTable() {
 
             {/* Table Container */}
             <div className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md overflow-hidden flex flex-col">
-                <div className="overflow-x-auto custom-scrollbar">
+                <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="border-b border-white/10 bg-white/[0.02]">

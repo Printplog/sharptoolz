@@ -338,15 +338,8 @@ function ElementNavigationComponent({
 
   return (
     <div className="flex flex-col relative">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-white/80">Layers</h3>
-        <div className="text-xs text-white/50 bg-white/5 px-2 py-0.5 rounded-full">
-          {elements.length}
-        </div>
-      </div>
-
       {/* Sticky Search Only */}
-      <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-md pb-3 pt-2 -mx-2 px-2 -mt-2">
+      <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-md p-3 mb-4">
         <div className="bg-white/5 rounded-lg p-1 border border-white/5">
           <div className="relative group">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
@@ -357,6 +350,13 @@ function ElementNavigationComponent({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-medium text-white/80">Layers</h3>
+        <div className="text-xs text-white/50 bg-white/5 px-2 py-0.5 rounded-full">
+          {elements.length}
         </div>
       </div>
 

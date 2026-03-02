@@ -172,7 +172,7 @@ export default function GenRuleBuilder({
           "w-[700px] max-w-[90vw] h-[350px]",
           "bg-black/95 backdrop-blur-sm border-white/20",
           "p-3 shadow-xl text-white flex flex-col",
-          "z-[100] overflow-y-auto custom-scrollbar"
+          "z-[100] overflow-y-auto"
         )}
       >
         <div className="mb-2 flex flex-col gap-1 shrink-0">
@@ -214,7 +214,7 @@ export default function GenRuleBuilder({
           {/* Left Section - Rules */}
           <div className="flex-1 flex flex-col min-w-0">
             <div className="text-white/60 text-xs mb-2 shrink-0">Rules</div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
               {parts.length === 0 ? (
                 <div className="text-white/40 text-sm text-center py-4">No parts yet. Click buttons to add.</div>
               ) : (
@@ -475,7 +475,7 @@ export default function GenRuleBuilder({
                   {isAuto && <span className="px-1 rounded text-[10px] border bg-cyan-500/20 border-cyan-500/30 text-cyan-300 ml-1">AUTO</span>}
                 </div>
                 <div className="text-white/60 text-xs mb-1 shrink-0">Result:</div>
-                <div className="font-mono text-green-400 text-xs overflow-x-auto custom-scrollbar whitespace-nowrap shrink-0">
+                <div className="font-mono text-green-400 text-xs overflow-x-auto whitespace-nowrap shrink-0">
                   {preview}
                 </div>
                 {maxLength !== undefined && (

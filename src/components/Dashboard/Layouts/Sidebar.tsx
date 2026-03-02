@@ -64,7 +64,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 mt-[20px] overflow-y-auto custom-scrollbar pr-2">
+      <nav className="flex-1 space-y-0.5 mt-[20px] overflow-y-auto pr-2">
         {navigationItems.map((item) => {
           // Special handling for "Switch to Admin" link - only active if pathname starts with /admin/
           let isActive = false;

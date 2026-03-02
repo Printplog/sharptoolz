@@ -17,7 +17,7 @@ export default function SuggestionsDropdown({
   if (suggestions.length === 0) return null;
 
   return (
-    <div className="absolute left-0 right-0 z-10 mt-2 max-h-64 overflow-auto rounded-md border border-white/20 bg-black/90 backdrop-blur-sm shadow-xl custom-scrollbar">
+    <div className="absolute left-0 right-0 z-10 mt-2 max-h-64 overflow-auto rounded-md border border-white/20 bg-black/90 backdrop-blur-sm shadow-xl">
       {suggestions.map((extension, idx) => (
         <button
           key={`${extension.key}-${idx}`}

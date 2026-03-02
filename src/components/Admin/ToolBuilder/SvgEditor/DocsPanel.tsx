@@ -104,7 +104,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
   const renderCodeExample = (example: NonNullable<DocSection['codeExamples']>[0]) => (
     <div className="my-2 bg-black/30 rounded-md overflow-hidden">
       <div className="bg-black/50 px-3 py-1 text-xs font-medium">{example.title}</div>
-      <div className="p-3 font-mono text-sm overflow-x-auto custom-scrollbar">
+      <div className="p-3 font-mono text-sm overflow-x-auto">
         <code className="text-primary whitespace-pre">{example.code}</code>
       </div>
       {example.description && (
@@ -164,7 +164,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
 
   return (
     <div
-      className="overflow-auto custom-scrollbar h-full p-5"
+      className="overflow-auto h-full p-5"
     >
       <h2 className="text-lg font-semibold mb-4">SVG Editor Documentation</h2>
 

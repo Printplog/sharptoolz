@@ -30,7 +30,7 @@ export function BannerPreviewModal({
                     </button>
 
                     {bannerUrl ? (
-                        <div className="overflow-y-auto custom-scrollbar flex-1">
+                        <div className="overflow-y-auto flex-1">
                             <img
                                 src={bannerUrl}
                                 alt={templateName}

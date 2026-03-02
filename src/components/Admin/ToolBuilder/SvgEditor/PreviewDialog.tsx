@@ -130,7 +130,7 @@ export default function PreviewDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="!w-[70%] !max-w-[70%] h-[80vh] p-0 bg-gray-900 z-[999999] overflow-hidden custom-scrollbar"
+        className="!w-[70%] !max-w-[70%] h-[80vh] p-0 bg-gray-900 z-[999999] overflow-hidden"
         style={{
           zIndex: 999999
         }}
@@ -141,7 +141,7 @@ export default function PreviewDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           {formFields.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center p-8 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">

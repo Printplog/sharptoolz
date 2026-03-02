@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut, Maximize2, MousePointer, Hand } from "lucide-react";
 import { useSvgLiveUpdate } from "../hooks/useSvgLiveUpdate";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
-import { useSvgStore } from "@/store/useSvgStore";
 import { sanitizeSvgGradients, svgNamespace } from "@/lib/utils/sanitizeSvgGradients";
 
 
@@ -88,22 +87,16 @@ export default function SvgUpload({
   // ── Pointer gesture state — ALL refs, zero setState per frame ────────────
   const spaceDown = useRef(false);
   const isPanning = useRef(false);
-  const isMoving = useRef(false);
   const hasDragged = useRef(false);
   const panStart = useRef<{ mx: number; my: number; vx: number; vy: number } | null>(null);
-  const moveStart = useRef<{ mx: number; my: number; elX: number; elY: number } | null>(null);
-  const movingId = useRef<string | null>(null);
   const lastPtr = useRef({ x: 0, y: 0, t: 0 });
 
   // ── React state — only toolbar / labels ──────────────────────────────────
   const [tool, setTool] = useState<ToolMode>("select");
   const [zoomLabel, setZoomLabel] = useState("100%");
 
-  // Bridge for live-update hook
-  const [movingElementId, setMovingElementId] = useState<string | null>(null);
-  const [localMove, setLocalMove] = useState<{ x: number; y: number } | null>(null);
 
-  const { updateElement } = useSvgStore();
+
 
   // ══════════════════════════════════════════════════════════════════════════
   // Core: write viewport → DOM (one write per rAF)
@@ -151,14 +144,13 @@ export default function SvgUpload({
       if (!node) { box.style.display = "none"; return; }
 
       const er = node.getBoundingClientRect();
-      const cr = containerRef.current!.getBoundingClientRect();
-      const z = vp.current.z;
+      const wr = wrapper.getBoundingClientRect();
 
       box.style.display = "block";
-      box.style.top = `${(er.top - cr.top) / z}px`;
-      box.style.left = `${(er.left - cr.left) / z}px`;
-      box.style.width = `${er.width / z}px`;
-      box.style.height = `${er.height / z}px`;
+      box.style.top = `${er.top - wr.top}px`;
+      box.style.left = `${er.left - wr.left}px`;
+      box.style.width = `${er.width}px`;
+      box.style.height = `${er.height}px`;
 
       if (selLabelRef.current) selLabelRef.current.textContent = id;
 
@@ -302,19 +294,7 @@ export default function SvgUpload({
 
     if (!isHand && targetId && e.button === 0) {
       if (targetId !== activeElementId) onSelectElement?.(targetId);
-      const elData = elements.find(el => el.internalId === targetId);
-      if (elData) {
-        isMoving.current = true;
-        movingId.current = targetId;
-        setMovingElementId(targetId);
-        moveStart.current = {
-          mx: e.clientX, my: e.clientY,
-          elX: parseFloat(elData.attributes.x ?? "0"),
-          elY: parseFloat(elData.attributes.y ?? "0"),
-        };
-        (e.target as HTMLElement).setPointerCapture(e.pointerId);
-        return;
-      }
+      return;
     }
 
     if (isHand || !targetId || e.button === 1) {
@@ -327,13 +307,7 @@ export default function SvgUpload({
   }, [currentSvg, tool, activeElementId, elements, onSelectElement, stopInertia]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (isMoving.current && moveStart.current) {
-      const dx = (e.clientX - moveStart.current.mx) / vp.current.z;
-      const dy = (e.clientY - moveStart.current.my) / vp.current.z;
-      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) hasDragged.current = true;
-      setLocalMove({ x: moveStart.current.elX + dx, y: moveStart.current.elY + dy });
-      return;
-    }
+    // Element moving disabled per user request
     if (isPanning.current && panStart.current) {
       const dx = e.clientX - panStart.current.mx;
       const dy = e.clientY - panStart.current.my;
@@ -352,23 +326,13 @@ export default function SvgUpload({
   }, [flushVP]);
 
   const handlePointerUp = useCallback((_e: React.PointerEvent) => {
-    if (isMoving.current && movingId.current && localMove) {
-      updateElement(movingId.current, {
-        attributes: { x: String(localMove.x), y: String(localMove.y) },
-      });
-    }
     if (isPanning.current) {
       const speed = Math.hypot(vel.current.x, vel.current.y);
       if (speed > INERTIA_STOP) startInertia();
     }
     isPanning.current = false;
-    isMoving.current = false;
-    movingId.current = null;
     panStart.current = null;
-    moveStart.current = null;
-    setMovingElementId(null);
-    setLocalMove(null);
-  }, [localMove, updateElement, startInertia]);
+  }, [startInertia]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (hasDragged.current) { hasDragged.current = false; return; }
@@ -435,14 +399,7 @@ export default function SvgUpload({
   // ══════════════════════════════════════════════════════════════════════════
   // Live DOM surgical updates
   // ══════════════════════════════════════════════════════════════════════════
-  const moveDraft = useMemo(() => {
-    if (!movingElementId || !localMove) return null;
-    const el = elements.find(e => e.internalId === movingElementId);
-    if (!el) return null;
-    return { ...el, attributes: { ...el.attributes, x: String(localMove.x), y: String(localMove.y) } };
-  }, [movingElementId, localMove, elements]);
-
-  useSvgLiveUpdate(containerRef as React.RefObject<HTMLDivElement>, elements, activeElementId, moveDraft || draftElement);
+  useSvgLiveUpdate(containerRef as React.RefObject<HTMLDivElement>, elements, activeElementId, draftElement);
 
   // ══════════════════════════════════════════════════════════════════════════
   // Cleanup
@@ -461,8 +418,7 @@ export default function SvgUpload({
   // ══════════════════════════════════════════════════════════════════════════
   const cursorClass = !currentSvg ? "cursor-default"
     : tool === "hand" ? (isPanning.current ? "cursor-grabbing" : "cursor-grab")
-      : isMoving.current ? "cursor-grabbing"
-        : "cursor-default";
+      : "cursor-default";
 
   // ══════════════════════════════════════════════════════════════════════════
   // Render
@@ -556,33 +512,32 @@ export default function SvgUpload({
                   className="[&_svg]:block [&_svg]:max-w-none [&_svg]:max-h-none pointer-events-auto"
                   dangerouslySetInnerHTML={{ __html: baseSvg }}
                 />
+              </div>
 
-                {/*
-                 * Selection overlay — moved INSIDE the transform div.
-                 * Position is written every rAF frame by startSelectionLoop().
-                 * Using getBoundingClientRect divided by z-scale.
-                 */}
-                <div ref={selBoxRef} className="absolute pointer-events-none z-50" style={{ display: "none" }}>
-                  <div className="absolute inset-0 border border-dashed border-primary/80" />
-                  <div className="absolute inset-0 bg-primary/[0.03]" />
-                  {/* 8 handles */}
-                  {[
-                    "top-0 left-0 -translate-x-1/2 -translate-y-1/2",
-                    "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                    "top-0 right-0 translate-x-1/2 -translate-y-1/2",
-                    "top-1/2 right-0 translate-x-1/2 -translate-y-1/2",
-                    "bottom-0 right-0 translate-x-1/2 translate-y-1/2",
-                    "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
-                    "bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
-                    "top-1/2 left-0 -translate-x-1/2 -translate-y-1/2",
-                  ].map((cls, i) => (
-                    <div key={i} className={`absolute w-2 h-2 bg-white border border-primary rounded-[2px] shadow-sm ${cls}`} />
-                  ))}
-                  <div
-                    ref={selLabelRef}
-                    className="absolute -top-6 left-0 bg-primary text-black text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tight whitespace-nowrap shadow-md"
-                  />
-                </div>
+              {/*
+               * Selection overlay — moved OUTSIDE the transform div.
+               * Position is written every rAF frame by startSelectionLoop().
+               * No division by z is needed anymore; positions are in screen space
+               * relative to the wrapper.
+               */}
+              <div ref={selBoxRef} className="absolute pointer-events-none z-50 border border-dashed border-primary/80 bg-primary/[0.03]" style={{ display: "none" }}>
+                {/* 8 handles — now consistent screen-space size */}
+                {[
+                  "top-0 left-0 -translate-x-1/2 -translate-y-1/2",
+                  "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                  "top-0 right-0 translate-x-1/2 -translate-y-1/2",
+                  "top-1/2 right-0 translate-x-1/2 -translate-y-1/2",
+                  "bottom-0 right-0 translate-x-1/2 translate-y-1/2",
+                  "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
+                  "bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
+                  "top-1/2 left-0 -translate-x-1/2 -translate-y-1/2",
+                ].map((cls, i) => (
+                  <div key={i} className={`absolute w-2 h-2 bg-white border border-primary rounded-[1px] shadow-sm ${cls}`} />
+                ))}
+                <div
+                  ref={selLabelRef}
+                  className="absolute -top-7 left-0 bg-primary text-black text-[11px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tight whitespace-nowrap shadow-md"
+                />
               </div>
 
             </div>

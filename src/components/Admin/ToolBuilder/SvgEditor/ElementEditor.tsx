@@ -65,7 +65,7 @@ const VariableDropdown = ({
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-white/5 mx-1" />
 
-        <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
+        <div className="max-h-[200px] overflow-y-auto">
           {filteredVars.length > 0 ? (
             filteredVars.map((v) => (
               <div key={v.id} className="flex items-center px-1 group/item">

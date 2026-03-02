@@ -9,11 +9,11 @@ interface ValueInputDialogProps {
   allElements?: SvgElement[];
 }
 
-export default function ValueInputDialog({ 
-  extension, 
-  onApply, 
+export default function ValueInputDialog({
+  extension,
+  onApply,
   onCancel,
-  allElements = [] 
+  allElements = []
 }: ValueInputDialogProps) {
   const [baseIdSuggestions, setBaseIdSuggestions] = useState<string[]>([]);
   const [showBaseIdSuggestions, setShowBaseIdSuggestions] = useState(false);
@@ -81,7 +81,7 @@ export default function ValueInputDialog({
         />
         {/* Base ID suggestions for depends */}
         {extension.key === "depends" && showBaseIdSuggestions && baseIdSuggestions.length > 0 && (
-          <div className="absolute left-0 right-0 mt-1 max-h-48 overflow-auto rounded-md border border-white/20 bg-black/90 backdrop-blur-sm shadow-xl custom-scrollbar z-30">
+          <div className="absolute left-0 right-0 mt-1 max-h-48 overflow-auto rounded-md border border-white/20 bg-black/90 backdrop-blur-sm shadow-xl z-30">
             <div className="px-2 py-1.5 text-xs font-semibold text-white/60 border-b border-white/10">
               Available Base IDs
             </div>
