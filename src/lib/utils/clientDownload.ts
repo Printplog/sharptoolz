@@ -66,6 +66,11 @@ function getSvgDimensions(doc: Document): { width: number, height: number } {
 /**
  * Converts an SVG string to a Canvas element using native browser rendering.
  * Supports split cropping via options.
+ *
+ * IMPORTANT: Chrome blocks data: and blob: URLs inside SVG when loaded as <img> via blob URL.
+ * To work around this, we strip out data:/blob: href images from the SVG before rendering,
+ * draw the base SVG to canvas, then manually draw each extracted image on top at the
+ * correct SVG coordinates.
  */
 async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTMLCanvasElement> {
     const parser = new DOMParser();
@@ -88,12 +93,18 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
     const ctx = fullCanvas.getContext('2d', { alpha: true });
     if (!ctx) throw new Error('Could not get canvas context');
 
-    // SAFARI/MOBILE FIX: Set style dimensions explicitly for consistent rendering
     fullCanvas.style.width = `${fullWidth}px`;
     fullCanvas.style.height = `${fullHeight}px`;
 
     ctx.scale(scale, scale);
 
+    // Fill with white background to prevent black transparency in JPEG/PDF
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, fullWidth, fullHeight);
+
+    // Render SVG directly to canvas
+    // Native browser rendering supports base64-encoded <image> tags perfectly,
+    // which preserves opacity="0" and display="none" for <select> overlays.
     const serializer = new XMLSerializer();
     const processedSvg = serializer.serializeToString(doc);
     const blob = new Blob([processedSvg], { type: 'image/svg+xml;charset=utf-8' });
@@ -106,7 +117,7 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
         const timeout = setTimeout(() => reject(new Error('SVG rendering timeout')), 15000);
         img.onload = () => {
             clearTimeout(timeout);
-            ctx.clearRect(0, 0, fullWidth, fullHeight);
+            // Draw SVG over the white background (DO NOT use clearRect)
             ctx.drawImage(img, 0, 0, fullWidth, fullHeight);
             URL.revokeObjectURL(url);
             resolve(true);
@@ -168,8 +179,9 @@ export async function generatePdf(svg: string, options?: GenerateOptions): Promi
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
     // Create PDF with target dimensions
-    const width = canvas.width / 2; // back to original units (ignoring 2x scale)
-    const height = canvas.height / 2;
+    const scale = options?.quality === 1 ? 3 : 2;
+    const width = canvas.width / scale; // back to original units
+    const height = canvas.height / scale;
 
     const orientation = width > height ? 'l' : 'p';
     const pdf = new jsPDF({

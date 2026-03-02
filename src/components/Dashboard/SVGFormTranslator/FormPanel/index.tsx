@@ -623,6 +623,7 @@ const FormPanel = React.memo(function FormPanel({
           </Button>
           <DownloadDocDialog
             svg={svgRaw}
+            fields={fields ?? []}
             purchasedTemplateId={isPurchased ? id : undefined}
             templateName={name}
             keywords={keywords}

@@ -179,6 +179,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
         }
 
         switch (field.type) {
+          case "sign":
           case "upload":
           case "file": {
             const hrefNS = "http://www.w3.org/1999/xlink";
@@ -245,18 +246,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
             }
             break;
           }
-          case "sign": {
-            const hrefNS = "http://www.w3.org/1999/xlink";
-            // Only update href if there's a value, otherwise preserve original
-            if (value && value.trim() !== "") {
-              el.setAttribute("href", value);
-              el.setAttributeNS(hrefNS, "href", value);
-              if (!el.getAttribute("preserveAspectRatio")) {
-                el.setAttribute("preserveAspectRatio", "xMidYMid meet");
-              }
-            }
-            break;
-          }
+
           case "hide": {
             // Toggle visibility based on checkbox state
             // When checked (true), SHOW the overlay element; when unchecked (false), HIDE it

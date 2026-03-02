@@ -13,6 +13,7 @@ import DownloadProgress from "../DownloadProgress";
 import { FormatSelector } from "./FormatSelector";
 import { SideSelector } from "./SideSelector";
 import { useDownloadLogic } from "./hooks/useDownloadLogic";
+import type { FormField } from "@/types";
 
 interface DownloadDocDialogProps {
     svg?: string;
@@ -20,6 +21,7 @@ interface DownloadDocDialogProps {
     templateName?: string;
     keywords?: string[];
     dialogName?: string;
+    fields?: FormField[];
 }
 
 export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
@@ -28,6 +30,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
     templateName,
     keywords = [],
     dialogName = "download-doc",
+    fields,
 }) => {
     // 1. Identify split download capability
     const splitInfo = React.useMemo(() => {
@@ -54,6 +57,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
     const { isGenerating, progressStep, currentSvg, handleDownload } = useDownloadLogic({
         purchasedTemplateId,
         initialSvg: svg,
+        fields,
         templateName,
         hasSplitDownload: splitInfo.enabled,
         splitInfo,

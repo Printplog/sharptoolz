@@ -13,6 +13,7 @@ export type Path =
   | `/admin/fonts`
   | `/admin/fonts/FontUploadDialog`
   | `/admin/settings`
+  | `/admin/svg-test-render`
   | `/admin/templates`
   | `/admin/templates/:id`
   | `/admin/tools`
@@ -32,6 +33,7 @@ export type Path =
   | `/settings`
   | `/settings/api`
   | `/sub`
+  | `/svg-test-render`
   | `/tools`
   | `/tools/:id`
   | `/tutorials`

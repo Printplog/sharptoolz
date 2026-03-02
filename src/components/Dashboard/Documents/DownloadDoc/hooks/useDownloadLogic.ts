@@ -48,7 +48,7 @@ export const useDownloadLogic = ({
 
             let workingSvg = currentSvg;
 
-            // 1. Fetch SVG if missing
+            // 1. Fetch SVG if missing (or if we want a fresh copy for purchased template)
             if (!workingSvg && purchasedTemplateId) {
                 toast.info("Downloading document data...");
                 try {
@@ -79,14 +79,10 @@ export const useDownloadLogic = ({
 
                         workingSvg = updateSvgFromFormData(workingSvg, fieldsForUpdate);
 
-                        // Inject fonts
+                        // Inject fonts (with base64 embedding for stable PDF rendering)
                         if (data.fonts && data.fonts.length > 0) {
                             workingSvg = await injectFontsIntoSVG(workingSvg, data.fonts, BASE_URL, true);
                         }
-
-                        // Inject images
-                        workingSvg = await injectImagesIntoSVG(workingSvg, BASE_URL);
-                        setCurrentSvg(workingSvg);
                     }
                 } catch (fetchError) {
                     console.error("SVG fetch error:", fetchError);
@@ -96,7 +92,8 @@ export const useDownloadLogic = ({
 
             if (!workingSvg) throw new Error("Could not retrieve document content");
 
-            // Ensure all images are base64-embedded
+            // Ensure all images (including signatures) are base64-embedded
+            // This is the CRITICAL STEP to match what the user sees in preview
             setProgressStep('processing-svg');
             workingSvg = await injectImagesIntoSVG(workingSvg, BASE_URL);
 

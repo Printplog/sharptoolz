@@ -38,11 +38,11 @@ export async function injectImagesIntoSVG(
     for (const img of images) {
         const href = img.getAttribute("href") || img.getAttributeNS(hrefNS, "href");
 
-        // Skip if no href or already base64/blob
-        if (!href || href.startsWith("data:") || href.startsWith("blob:")) continue;
+        // Skip if no href or already base64
+        if (!href || href.startsWith("data:")) continue;
 
         let fullUrl = href;
-        if (baseUrl && !/^https?:\/\//i.test(href)) {
+        if (baseUrl && !/^https?:\/\//i.test(href) && !href.startsWith('blob:')) {
             fullUrl = `${baseUrl}${href.startsWith("/") ? "" : "/"}${href}`;
         }
 

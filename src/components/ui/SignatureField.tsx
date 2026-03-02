@@ -97,16 +97,6 @@ export default function SignatureField({
     const getDimensions = () => {
       const svgDimensions = getSvgElementDimensions(svgElementId);
       setDimensions(svgDimensions);
-
-      // Debug logging
-      console.log('Signature Field Debug:', {
-        svgElementId,
-        svgDimensions,
-        canvasWidth: svgDimensions?.width || width,
-        canvasHeight: svgDimensions?.height || height,
-        fallbackWidth: width,
-        fallbackHeight: height
-      });
     };
 
     // Try immediately
@@ -148,10 +138,24 @@ export default function SignatureField({
     }
   };
 
-  const handlePresetSignature = (preset: typeof PRESET_SIGNATURES[0]) => {
-    // Use the URL directly to avoid CORS issues in production
-    onSignatureSelect(fieldId, preset.data);
-    setIsDialogOpen(false);
+  const handlePresetSignature = async (preset: typeof PRESET_SIGNATURES[0]) => {
+    try {
+      // Fetch the image and convert to base64 so it can be safely embedded in SVG for Canvas rendering
+      // This is crucial because drawn/uploaded signatures are base64, and Canvas requires it to avoid taint
+      const response = await fetch(preset.data);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onSignatureSelect(fieldId, reader.result as string);
+        setIsDialogOpen(false);
+      };
+      reader.readAsDataURL(blob);
+    } catch (e) {
+      console.error("Failed to load preset signature as base64", e);
+      // Fallback to raw URL if fetch fails
+      onSignatureSelect(fieldId, preset.data);
+      setIsDialogOpen(false);
+    }
   };
 
   const handleClearSignature = () => {
