@@ -20,7 +20,6 @@ type AdminDoc = {
     name: string;
     test: boolean;
     tracking_id: string;
-    status: string;
     created_at: string;
     buyer: { id: number; username: string; email: string } | null;
     template: { id: string; name: string } | null;
@@ -64,16 +63,16 @@ export default function AdminDocumentsPage() {
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-black text-white tracking-tighter uppercase italic">
-                    All <span className="text-primary">Documents</span>
+                    Purchased <span className="text-primary">Templates</span>
                 </h1>
-                <p className="text-white/40 text-sm mt-1">Manage all user-purchased documents</p>
+                <p className="text-white/40 text-sm mt-1">Manage all user-purchased templates</p>
             </div>
 
             {/* Search & Info Bar */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-md">
                 <div className="flex items-center gap-3">
                     <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/20 rounded-full hidden md:block" />
-                    <h2 className="text-xl font-semibold text-white">Documents</h2>
+                    <h2 className="text-xl font-semibold text-white">Templates</h2>
                     <span className="px-3 py-1 rounded-full bg-white/10 text-white/60 text-xs font-bold tracking-tight">
                         {totalCount} TOTAL
                     </span>
@@ -105,9 +104,9 @@ export default function AdminDocumentsPage() {
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="border-b border-white/10 bg-white/[0.02]">
-                                <th className="px-6 py-5 text-left text-white/40 text-[11px] font-black uppercase tracking-[0.1em]">Document</th>
+                                <th className="px-6 py-5 text-left text-white/40 text-[11px] font-black uppercase tracking-[0.1em]">Template File</th>
                                 <th className="px-6 py-5 text-left text-white/40 text-[11px] font-black uppercase tracking-[0.1em]">Buyer</th>
-                                <th className="px-6 py-5 text-left text-white/40 text-[11px] font-black uppercase tracking-[0.1em]">Template</th>
+                                <th className="px-6 py-5 text-left text-white/40 text-[11px] font-black uppercase tracking-[0.1em]">Original Template</th>
                                 <th className="px-6 py-5 text-left text-white/40 text-[11px] font-black uppercase tracking-[0.1em]">Type</th>
                                 <th className="px-6 py-5 text-left text-white/40 text-[11px] font-black uppercase tracking-[0.1em]">Created</th>
                             </tr>
@@ -255,7 +254,7 @@ export default function AdminDocumentsPage() {
                     <div className="py-20 flex flex-col items-center gap-4 text-white/30">
                         <FileText className="h-12 w-12 opacity-20" />
                         <p className="text-sm italic">
-                            {searchQuery ? `No documents match "${searchQuery}"` : "No documents found."}
+                            {searchQuery ? `No templates match "${searchQuery}"` : "No purchased templates found."}
                         </p>
                         {searchQuery && (
                             <Button

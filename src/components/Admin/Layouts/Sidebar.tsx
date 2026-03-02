@@ -67,6 +67,11 @@ export default function Sidebar() {
       to: "/admin/templates",
     },
     {
+      icon: <FileText className="h-4 w-4" />,
+      label: "Purchased Templates",
+      to: "/admin/documents",
+    },
+    {
       icon: <Type className="h-4 w-4" />,
       label: "Fonts",
       to: "/admin/fonts",
@@ -75,11 +80,6 @@ export default function Sidebar() {
       icon: <Users className="h-4 w-4" />,
       label: "Users",
       to: "/admin/users",
-    },
-    {
-      icon: <FileText className="h-4 w-4" />,
-      label: "Documents",
-      to: "/admin/documents",
     },
     {
       icon: <Settings className="h-4 w-4" />,
@@ -114,7 +114,7 @@ export default function Sidebar() {
 
           // 1. Staff: ALLOW-LIST only
           if (isStaff) {
-            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Documents", "Switch to User"];
+            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Purchased Templates", "Switch to User"];
             return allowedForStaff.includes(item.label);
           }
 
