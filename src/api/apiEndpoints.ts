@@ -210,6 +210,15 @@ export const updateAdminUser = async (userId: string, data: { role?: string; is_
   return res.data;
 };
 
+export const adminDocuments = async (params?: { page?: number; page_size?: number; search?: string }) => {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append('page', params.page.toString());
+  if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
+  if (params?.search) searchParams.append('search', params.search);
+  const res = await apiClient.get(`/admin/documents/?${searchParams.toString()}`);
+  return res.data;
+};
+
 // Tools API (same as categories but with different naming)
 export const getTools = async (): Promise<Tool[]> => {
   const res = await apiClient.get('/tools/');

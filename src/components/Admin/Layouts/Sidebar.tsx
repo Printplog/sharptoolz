@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   LineChart,
   ShieldAlert,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -76,6 +77,11 @@ export default function Sidebar() {
       to: "/admin/users",
     },
     {
+      icon: <FileText className="h-4 w-4" />,
+      label: "Documents",
+      to: "/admin/documents",
+    },
+    {
       icon: <Settings className="h-4 w-4" />,
       label: "Settings",
       to: "/admin/settings",
@@ -108,7 +114,7 @@ export default function Sidebar() {
 
           // 1. Staff: ALLOW-LIST only
           if (isStaff) {
-            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Switch to User"];
+            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Documents", "Switch to User"];
             return allowedForStaff.includes(item.label);
           }
 

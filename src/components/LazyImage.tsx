@@ -9,13 +9,22 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     placeholderColor?: string;
 }
 
-export const LazyImage = ({ src, alt, className, placeholderColor = "transparent", ...props }: LazyImageProps) => {
+/** Detect iPhone / iOS Safari — very memory-constrained, needs JS lazy loading */
+const isIOS = () =>
+    typeof navigator !== 'undefined' &&
+    /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+export const LazyImage = ({ src, alt, className, placeholderColor = "transparent", onLoad, onError, ...props }: LazyImageProps) => {
     const [isLoaded, setIsLoaded] = useState(false);
-    const [isInView, setIsInView] = useState(false);
     const [isError, setIsError] = useState(false);
+
+    // iOS-only: intersection-observer gated loading to prevent memory crashes
+    const [isInView, setIsInView] = useState(!isIOS());
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        if (!isIOS()) return; // only need observer on iOS
+
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
@@ -25,19 +34,11 @@ export const LazyImage = ({ src, alt, className, placeholderColor = "transparent
                     }
                 });
             },
-            {
-                rootMargin: '50px', // Start loading slightly before it comes into view
-                threshold: 0.1
-            }
+            { rootMargin: '80px', threshold: 0.1 }
         );
 
-        if (containerRef.current) {
-            observer.observe(containerRef.current);
-        }
-
-        return () => {
-            observer.disconnect();
-        };
+        if (containerRef.current) observer.observe(containerRef.current);
+        return () => observer.disconnect();
     }, []);
 
     return (
@@ -68,10 +69,12 @@ export const LazyImage = ({ src, alt, className, placeholderColor = "transparent
                 <img
                     src={src}
                     alt={alt}
-                    className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    onLoad={() => setIsLoaded(true)}
-                    onError={() => setIsError(true)}
+                    // Non-iOS: rely on native browser lazy loading (no JS overhead)
+                    loading={isIOS() ? undefined : "lazy"}
                     decoding="async"
+                    className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    onLoad={(e) => { setIsLoaded(true); onLoad?.(e); }}
+                    onError={(e) => { setIsError(true); onError?.(e); }}
                     {...props}
                 />
             )}
