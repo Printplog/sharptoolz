@@ -201,38 +201,23 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const patchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const handleLocalUpdate = (updates: Partial<SvgElement>, undoable = false) => {
+    const handleLocalUpdate = (updates: Partial<SvgElement>, _undoable = false) => {
       setLocalElement(prev => {
         const updated = {
           ...prev,
           ...updates,
           attributes: { ...prev.attributes, ...(updates.attributes || {}) }
         };
-        // Auto-update parent/store on every change (throttled by the store's commitChanges)
-        onUpdate(index, updated, undoable);
-
-        // SYNC PATCHES: This was missing!
-        // We debounce patch updates so we don't spam the parent/backend
-        if (onPatchUpdate && element.internalId) {
-          if (patchTimeout.current) clearTimeout(patchTimeout.current);
-          patchTimeout.current = setTimeout(() => {
-            const patchId = element.id || element.internalId || "";
-            if (updates.innerText !== undefined) {
-              onPatchUpdate({ id: patchId, attribute: 'innerText', value: updates.innerText });
-            }
-            if (updates.attributes) {
-              Object.entries(updates.attributes).forEach(([key, value]) => {
-                onPatchUpdate({ id: patchId, attribute: key, value: String(value) });
-              });
-            }
-          }, 300);
-        }
-
+        // Removed immediate onUpdate(index, updated, undoable);
+        // We only update the local state and mark as dirty.
         return updated;
       });
       setIsDirty(true);
     };
 
+    // Live update is now disabled to ensure canvas only changes on "Apply"
+    // as per user request "make sure changes dont apply to canvas until the apply button is clicked"
+    /*
     // Throttled Live Update (Still useful for hyper-fast feedback)
     useEffect(() => {
       const now = Date.now();
@@ -254,6 +239,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         if (updateTimeout.current) clearTimeout(updateTimeout.current);
       };
     }, [localElement, onLiveUpdate, element]);
+    */
 
     const handleApply = () => {
       console.log('[ElementEditor] Apply button clicked - finalizing state');

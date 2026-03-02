@@ -27,7 +27,7 @@ const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 64;
 const INERTIA_DECAY = 0.85;
 const INERTIA_STOP = 0.3;
-const ZOOM_LERP = 0.16;
+const ZOOM_LERP = 0.12; // Smoother zoom (reduced from 0.16)
 const SNAP_LEVELS = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 8];
 const LABEL_THROTTLE = 100;
 
@@ -245,14 +245,22 @@ export default function SvgUpload({
     const pad = 80;
     const wrap = wrapperRef.current;
     const fitZ = Math.min((wrap.clientWidth - pad) / svgW, (wrap.clientHeight - pad) / svgH, 2);
-    vp.current = { x: 0, y: 0, z: 1 };
+
+    // Removed hard reset: vp.current = { x: 0, y: 0, z: 1 };
+    // This allows animateZoom to work from the current viewport state smoothly.
     animateZoom(fitZ, 0, 0);
   }, [animateZoom]);
 
+  const hasFittedForId = useRef<string | null>(null);
   useEffect(() => {
-    const t = setTimeout(fitToView, 150);
-    return () => clearTimeout(t);
-  }, [currentSvg, fitToView]);
+    if (!currentSvg) return;
+    const structureId = elements.length + (elements[0]?.internalId || ""); // unique enough to detect new template vs edits
+    if (hasFittedForId.current !== structureId) {
+      const t = setTimeout(fitToView, 250); // increased for smoother initial load
+      hasFittedForId.current = structureId;
+      return () => clearTimeout(t);
+    }
+  }, [currentSvg, elements.length, fitToView]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // Wheel — non-passive so we can preventDefault (kills browser page-zoom)
