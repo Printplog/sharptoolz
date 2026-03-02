@@ -20,6 +20,215 @@ import { ZoomIn, ZoomOut, Maximize2, MousePointer, Hand } from "lucide-react";
 import { useSvgLiveUpdate } from "../hooks/useSvgLiveUpdate";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import { useSvgStore } from "@/store/useSvgStore";
+// ─── SVG gradient sanitizer (inlined) ────────────────────────────────────────
+// Fixes gradient ID collisions and transparent-gradient banding when SVG is
+// injected via dangerouslySetInnerHTML into the page DOM.
+
+function svgNamespace(svg: string): string {
+  let h = 5381;
+  for (let i = 0; i < Math.min(svg.length, 2000); i++) {
+    h = ((h << 5) + h) ^ svg.charCodeAt(i);
+    h = h >>> 0;
+  }
+  return h.toString(36);
+}
+
+function remapUrlRefs(value: string, idMap: Map<string, string>): string {
+  return value.replace(/url\(\s*["']?#([^"')]+)["']?\s*\)/g, (_m, origId) => {
+    const newId = idMap.get(origId);
+    return newId ? `url(#${newId})` : _m;
+  });
+}
+
+function sanitizeSvgGradients(svgString: string, namespace: string): string {
+  if (!svgString || typeof DOMParser === "undefined") return svgString;
+
+  let doc: Document;
+  try {
+    doc = new DOMParser().parseFromString(svgString, "image/svg+xml");
+    if (doc.querySelector("parsererror")) return svgString;
+  } catch {
+    return svgString;
+  }
+
+  const REFERENCEABLE = new Set([
+    "lineargradient", "radialgradient", "pattern",
+    "clippath", "mask", "filter", "marker", "symbol",
+  ]);
+
+  const idMap = new Map<string, string>();
+
+  doc.querySelectorAll("*").forEach((el) => {
+    if (!REFERENCEABLE.has(el.tagName.toLowerCase())) return;
+    const origId = el.getAttribute("id");
+    if (!origId) return;
+    const newId = `ns-${namespace}-${origId}`;
+    idMap.set(origId, newId);
+    el.setAttribute("id", newId);
+  });
+
+  if (idMap.size === 0) return svgString;
+
+  const URL_ATTRS = [
+    "fill", "stroke", "filter", "clip-path", "mask",
+    "marker-start", "marker-mid", "marker-end",
+  ];
+
+  doc.querySelectorAll("*").forEach((el) => {
+    URL_ATTRS.forEach((attr) => {
+      const val = el.getAttribute(attr);
+      if (!val) return;
+      const r = remapUrlRefs(val, idMap);
+      if (r !== val) el.setAttribute(attr, r);
+    });
+
+    const style = el.getAttribute("style");
+    if (style) {
+      const r = remapUrlRefs(style, idMap);
+      if (r !== style) el.setAttribute("style", r);
+    }
+
+    // xlink:href on <use>
+    const xlinkHref = el.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+    if (xlinkHref?.startsWith("#")) {
+      const newId = idMap.get(xlinkHref.slice(1));
+      if (newId) el.setAttributeNS("http://www.w3.org/1999/xlink", "href", `#${newId}`);
+    }
+
+    const href = el.getAttribute("href");
+    if (href?.startsWith("#")) {
+      const newId = idMap.get(href.slice(1));
+      if (newId) el.setAttribute("href", `#${newId}`);
+    }
+  });
+
+  // ── Fix premultiplied-alpha "muddy fade" bug ──────────────────────────────
+  //
+  // The root cause of the blurry/washed smear on transparent gradients:
+  // CSS/SVG "transparent" = rgba(0,0,0,0) — BLACK with zero opacity.
+  // When the browser interpolates "white → transparent" in premultiplied
+  // alpha space it actually blends toward black, producing a grey smear.
+  //
+  // Fix: any stop that is fully transparent must have its stop-color set to
+  // the SAME rgb values as the nearest opaque stop, just with opacity 0.
+  // This way the interpolation is "white → white@0" = clean invisible fade.
+  doc.querySelectorAll("linearGradient, radialGradient").forEach((grad) => {
+    const stops = Array.from(grad.querySelectorAll("stop"));
+    if (stops.length < 2) return;
+
+    // Parse each stop into { r, g, b, a, el }
+    type StopInfo = { r: number; g: number; b: number; a: number; el: Element };
+
+    const parseColor = (el: Element): { r: number; g: number; b: number } => {
+      const raw = (el.getAttribute("stop-color") ?? "").trim();
+      // Handle hex #rrggbb or #rgb
+      const hex6 = raw.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
+      if (hex6) return { r: parseInt(hex6[1], 16), g: parseInt(hex6[2], 16), b: parseInt(hex6[3], 16) };
+      const hex3 = raw.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);
+      if (hex3) return {
+        r: parseInt(hex3[1] + hex3[1], 16),
+        g: parseInt(hex3[2] + hex3[2], 16),
+        b: parseInt(hex3[3] + hex3[3], 16),
+      };
+      // Handle rgb() / rgba()
+      const rgba = raw.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      if (rgba) return { r: +rgba[1], g: +rgba[2], b: +rgba[3] };
+      // Named: white
+      if (raw === "white") return { r: 255, g: 255, b: 255 };
+      if (raw === "black") return { r: 0, g: 0, b: 0 };
+      // fallback — treat as black (will be overwritten below anyway)
+      return { r: 0, g: 0, b: 0 };
+    };
+
+    const infos: StopInfo[] = stops.map(el => {
+      const op = parseFloat(el.getAttribute("stop-opacity") ?? "1");
+      const { r, g, b } = parseColor(el);
+      return { r, g, b, a: op, el };
+    });
+
+    // Ensure every stop has explicit stop-opacity and offset
+    infos.forEach((s, i) => {
+      if (!s.el.hasAttribute("stop-opacity")) s.el.setAttribute("stop-opacity", "1");
+      if (!s.el.hasAttribute("offset")) {
+        const offsetVal = stops.length > 1 ? i / (stops.length - 1) : 0;
+        s.el.setAttribute("offset", `${offsetVal}`);
+      }
+    });
+
+    // Insert midpoint stop if blending from opaque to transparent
+    if (infos.some(s => s.a === 0)) {
+      for (let i = 0; i < infos.length - 1; i++) {
+        if ((infos[i].a > 0 && infos[i + 1].a === 0) || (infos[i].a === 0 && infos[i + 1].a > 0)) {
+          const midStop = doc.createElementNS("http://www.w3.org/2000/svg", "stop");
+          let offset1 = parseFloat(infos[i].el.getAttribute("offset") || "0");
+          let offset2 = parseFloat(infos[i + 1].el.getAttribute("offset") || "1");
+          // Handle % offsets by checking for % symbol
+          if (infos[i].el.getAttribute("offset")?.includes("%")) offset1 /= 100;
+          if (infos[i + 1].el.getAttribute("offset")?.includes("%")) offset2 /= 100;
+
+          midStop.setAttribute("offset", `${(offset1 + offset2) / 2}`);
+          const midR = Math.round((infos[i].r + infos[i + 1].r) / 2);
+          const midG = Math.round((infos[i].g + infos[i + 1].g) / 2);
+          const midB = Math.round((infos[i].b + infos[i + 1].b) / 2);
+          midStop.setAttribute("stop-color", `rgb(${midR},${midG},${midB})`);
+          midStop.setAttribute("stop-opacity", "0.5");
+          infos[i].el.after(midStop);
+        }
+      }
+    }
+
+    // For every transparent stop, copy rgb from the nearest NON-transparent stop
+    infos.forEach((stop, i) => {
+      if (stop.a > 0) return; // already opaque, nothing to fix
+
+      // Find nearest opaque neighbour
+      let donor: StopInfo | null = null;
+      // Look left
+      for (let j = i - 1; j >= 0; j--) {
+        if (infos[j].a > 0) { donor = infos[j]; break; }
+      }
+      // Look right if nothing on left
+      if (!donor) {
+        for (let j = i + 1; j < infos.length; j++) {
+          if (infos[j].a > 0) { donor = infos[j]; break; }
+        }
+      }
+      if (!donor) return;
+
+      // Set stop-color to donor rgb, keep stop-opacity 0
+      stop.el.setAttribute(
+        "stop-color",
+        `rgb(${donor.r},${donor.g},${donor.b})`
+      );
+      stop.el.setAttribute("stop-opacity", "0");
+    });
+
+    // Force sRGB interpolation — this is the PRIMARY fix for the muddy smear.
+    // SVG defaults to linearRGB for inline content which causes dark midpoint
+    // banding when going opaque → transparent. sRGB matches CSS gradient behaviour.
+    grad.setAttribute("color-interpolation", "sRGB");
+
+    // Also fix degenerate zero-length gradient axis (causes banding)
+    if (!grad.hasAttribute("spreadMethod")) grad.setAttribute("spreadMethod", "pad");
+    if (grad.tagName.toLowerCase() === "lineargradient") {
+      const x1 = parseFloat(grad.getAttribute("x1") ?? "0");
+      const y1 = parseFloat(grad.getAttribute("y1") ?? "0");
+      const x2 = parseFloat(grad.getAttribute("x2") ?? "1");
+      const y2 = parseFloat(grad.getAttribute("y2") ?? "0");
+      if (x1 === x2 && y1 === y2) grad.setAttribute("x2", String(x2 + 0.0001));
+    }
+  });
+
+  const svgRoot = doc.documentElement;
+  svgRoot.setAttribute("shape-rendering", "geometricPrecision");
+  svgRoot.style.colorInterpolation = "sRGB";
+
+  try {
+    return new XMLSerializer().serializeToString(doc.documentElement);
+  } catch {
+    return svgString;
+  }
+}
 
 // ─── tuning ───────────────────────────────────────────────────────────────────
 const MIN_ZOOM = 0.05;
@@ -149,13 +358,14 @@ export default function SvgUpload({
       if (!node) { box.style.display = "none"; return; }
 
       const er = node.getBoundingClientRect();
-      const wr = wrapper.getBoundingClientRect();
+      const cr = containerRef.current!.getBoundingClientRect();
+      const z = vp.current.z;
 
       box.style.display = "block";
-      box.style.top = `${er.top - wr.top}px`;
-      box.style.left = `${er.left - wr.left}px`;
-      box.style.width = `${er.width}px`;
-      box.style.height = `${er.height}px`;
+      box.style.top = `${(er.top - cr.top) / z}px`;
+      box.style.left = `${(er.left - cr.left) / z}px`;
+      box.style.width = `${er.width / z}px`;
+      box.style.height = `${er.height / z}px`;
 
       if (selLabelRef.current) selLabelRef.current.textContent = id;
 
@@ -407,21 +617,27 @@ export default function SvgUpload({
     () => `${elements.length}_${elements.map(e => e.internalId).join("-")}`,
     [elements]
   );
-  const [baseSvg, setBaseSvg] = useState(currentSvg ?? "");
+  const [baseSvg, setBaseSvg] = useState(() => sanitizeSvgGradients(currentSvg ?? "", svgNamespace(currentSvg ?? "")));
   const prevKey = useRef(structuralKey);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { if (currentSvg && !baseSvg) setBaseSvg(currentSvg); }, [currentSvg, baseSvg]);
+  // sanitize() is a plain function call — no useCallback needed, it's pure
+  const sanitize = (svg: string) => sanitizeSvgGradients(svg, svgNamespace(svg));
+
   useEffect(() => {
+    if (!currentSvg) return;
+    // Always re-sanitize when currentSvg changes (structural or content)
     if (structuralKey !== prevKey.current) {
-      setBaseSvg(currentSvg ?? ""); prevKey.current = structuralKey;
+      setBaseSvg(sanitize(currentSvg));
+      prevKey.current = structuralKey;
       if (syncTimer.current) clearTimeout(syncTimer.current);
-    } else if (currentSvg !== baseSvg) {
+    } else {
+      // Attribute-only change: debounce 2s to avoid interrupting live DOM edits
       if (syncTimer.current) clearTimeout(syncTimer.current);
-      syncTimer.current = setTimeout(() => setBaseSvg(currentSvg ?? ""), 2000);
+      syncTimer.current = setTimeout(() => setBaseSvg(sanitize(currentSvg)), 2000);
     }
     return () => { if (syncTimer.current) clearTimeout(syncTimer.current); };
-  }, [currentSvg, structuralKey, baseSvg]);
+  }, [currentSvg, structuralKey]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // Live DOM surgical updates
@@ -531,42 +747,49 @@ export default function SvgUpload({
                 style={{
                   transform: `translate(${vp.current.x}px,${vp.current.y}px) scale(${vp.current.z})`,
                   transformOrigin: "center center",
-                  willChange: "transform",
+                  // NOTE: NO willChange:"transform" here.
+                  // willChange promotes this element to its own GPU compositing layer,
+                  // which breaks transparency in Photoshop-exported SVGs that use
+                  // embedded <image> PNG layers with alpha. Those images composite
+                  // against the layer background (implicit black) instead of the
+                  // real page background, causing dark halos / banding on transparent areas.
+                  // We get smooth transforms without it — rAF writes style.transform directly.
                 }}
-                className="pointer-events-none relative"
+                className="pointer-events-none"
+              // No position:relative, no isolation, no overflow:hidden — any of these
+              // can accidentally create a stacking context that traps alpha compositing.
               >
-                <div className="absolute inset-0 -z-10 shadow-[0_4px_60px_rgba(0,0,0,0.85)]" />
                 <div
-                  className="[&_svg]:block [&_svg]:max-w-none [&_svg]:max-h-none pointer-events-auto bg-white"
+                  className="[&_svg]:block [&_svg]:max-w-none [&_svg]:max-h-none pointer-events-auto"
                   dangerouslySetInnerHTML={{ __html: baseSvg }}
                 />
-              </div>
 
-              {/*
-               * Selection overlay — lives OUTSIDE the transform div.
-               * Position is written every rAF frame by startSelectionLoop().
-               * display:none when nothing selected — no React re-render ever.
-               */}
-              <div ref={selBoxRef} className="absolute pointer-events-none z-50" style={{ display: "none" }}>
-                <div className="absolute inset-0 border border-dashed border-primary/80" />
-                <div className="absolute inset-0 bg-primary/[0.03]" />
-                {/* 8 handles */}
-                {[
-                  "top-0 left-0 -translate-x-1/2 -translate-y-1/2",
-                  "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                  "top-0 right-0 translate-x-1/2 -translate-y-1/2",
-                  "top-1/2 right-0 translate-x-1/2 -translate-y-1/2",
-                  "bottom-0 right-0 translate-x-1/2 translate-y-1/2",
-                  "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
-                  "bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
-                  "top-1/2 left-0 -translate-x-1/2 -translate-y-1/2",
-                ].map((cls, i) => (
-                  <div key={i} className={`absolute w-2 h-2 bg-white border border-primary rounded-[2px] shadow-sm ${cls}`} />
-                ))}
-                <div
-                  ref={selLabelRef}
-                  className="absolute -top-6 left-0 bg-primary text-black text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tight whitespace-nowrap shadow-md"
-                />
+                {/*
+                 * Selection overlay — moved INSIDE the transform div.
+                 * Position is written every rAF frame by startSelectionLoop().
+                 * Using getBoundingClientRect divided by z-scale.
+                 */}
+                <div ref={selBoxRef} className="absolute pointer-events-none z-50" style={{ display: "none" }}>
+                  <div className="absolute inset-0 border border-dashed border-primary/80" />
+                  <div className="absolute inset-0 bg-primary/[0.03]" />
+                  {/* 8 handles */}
+                  {[
+                    "top-0 left-0 -translate-x-1/2 -translate-y-1/2",
+                    "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                    "top-0 right-0 translate-x-1/2 -translate-y-1/2",
+                    "top-1/2 right-0 translate-x-1/2 -translate-y-1/2",
+                    "bottom-0 right-0 translate-x-1/2 translate-y-1/2",
+                    "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
+                    "bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
+                    "top-1/2 left-0 -translate-x-1/2 -translate-y-1/2",
+                  ].map((cls, i) => (
+                    <div key={i} className={`absolute w-2 h-2 bg-white border border-primary rounded-[2px] shadow-sm ${cls}`} />
+                  ))}
+                  <div
+                    ref={selLabelRef}
+                    className="absolute -top-6 left-0 bg-primary text-black text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tight whitespace-nowrap shadow-md"
+                  />
+                </div>
               </div>
 
             </div>
@@ -596,7 +819,7 @@ export default function SvgUpload({
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
-function PanCoords({ vpRef, zoomLabel: _zoomLabel }: { vpRef: React.RefObject<VP>; zoomLabel: string }) {
+function PanCoords({ vpRef, zoomLabel }: { vpRef: React.RefObject<VP>; zoomLabel: string }) {
   // zoomLabel is a proxy re-render trigger (~100ms cadence)
   const x = Math.round(vpRef.current?.x ?? 0);
   const y = Math.round(vpRef.current?.y ?? 0);
@@ -623,7 +846,7 @@ function ToolBtn({ active, onClick, children, title }: {
   return (
     <button onClick={onClick} title={title}
       className={`p-1.5 rounded-md transition-all ${active ? "bg-primary text-black shadow-[0_0_8px_rgba(var(--primary),0.4)]"
-        : "text-white/40 hover:text-white hover:bg-white/10"
+          : "text-white/40 hover:text-white hover:bg-white/10"
         }`}>
       {children}
     </button>

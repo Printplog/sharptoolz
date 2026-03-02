@@ -443,7 +443,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
                 <div className="min-w-[300px] inline-block max-w-full">
                   <div
                     data-svg-preview
-                    className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full bg-white shadow-xl"
+                    className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full"
                     dangerouslySetInnerHTML={{ __html: livePreview || svgText }}
                   />
                 </div>
