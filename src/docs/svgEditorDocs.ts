@@ -774,6 +774,7 @@ export const svgEditorDocs: DocSection[] = [
         codeExamples: [
           { title: "Booking Reference with Link", code: "Booking_Ref.gen.max_8.tracking_id.link_https://myflightlookup.com", description: "Main booking reference with link to MyFlightLookup (no .track_ extension needed)" },
           { title: "Passenger Name", code: "Passenger_Name.text.track_name", description: "Passenger name (.track_name must be last)" },
+          { title: "Passenger Email", code: "Passenger_Email.email.track_email", description: "Passenger email address (.track_email must be last)" },
           { title: "Flight Number", code: "FlightNumber.text.track_flight", description: "Flight number/identifier (.track_flight must be last)" },
           { title: "Status", code: "Status.text.track_status", description: "Booking status (.track_status must be last)" },
           { title: "Booking Date", code: "BookingDate.date.track_date", description: "Date of booking (.track_date must be last)" },
@@ -784,11 +785,14 @@ export const svgEditorDocs: DocSection[] = [
           { title: "Third Flight - Origin", code: "Departure3.text.track_origin3", description: "Third flight departure location for multi-leg journeys (.track_origin3 must be last)" },
           { title: "Third Flight - Destination", code: "Arrival3.text.track_destination3", description: "Third flight arrival location for multi-leg journeys (.track_destination3 must be last)" },
           { title: "Airline Selection", code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline", description: "Airline selection dropdown (.track_airline must be on ONE option only)" },
+          { title: "Departure Date", code: "DepDate.date.track_departure_date", description: "Flight departure date (.track_departure_date must be last)" },
           { title: "Departure Time", code: "DepartureTime.text.track_departure_time", description: "Flight departure time (.track_departure_time must be last)" },
+          { title: "Arrival Date", code: "ArrDate.date.track_arrival_date", description: "Flight arrival date (.track_arrival_date must be last)" },
           { title: "Arrival Time", code: "ArrivalTime.text.track_arrival_time", description: "Flight arrival time (.track_arrival_time must be last)" },
           { title: "Gate Number", code: "Gate.text.track_gate", description: "Departure gate number (.track_gate must be last)" },
           { title: "Flight Class", code: "Class.text.track_class", description: "Cabin class (e.g., Economy, Business) (.track_class must be last)" },
-          { title: "Seat Number", code: "Seat.text.track_seat", description: "Passenger seat number (.track_seat must be last)" }
+          { title: "Seat Number", code: "Seat.text.track_seat", description: "Passenger seat number (.track_seat must be last)" },
+          { title: "Error Message", code: "Error.text.track_error_message", description: "Internal error/status message (.track_error_message must be last)" }
         ]
       }
     ]

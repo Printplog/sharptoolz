@@ -103,7 +103,6 @@ const FormPanel = React.memo(function FormPanel({
   const svgRaw = useToolStore((state) => state.svgRaw);
   const getFieldValue = useToolStore((state) => state.getFieldValue);
   const setName = useToolStore((state) => state.setName);
-  const updateField = useToolStore((state) => state.updateField);
   const markFieldsSaved = useToolStore((state) => state.markFieldsSaved);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -175,24 +174,7 @@ const FormPanel = React.memo(function FormPanel({
   const appliedDuplicateValuesRef = useRef(false);
 
   // Check for startValues in location state (from duplicate feature)
-  useEffect(() => {
-    if (location.state && location.state.startValues && fields && fields.length > 0 && !appliedDuplicateValuesRef.current) {
-      const { startValues } = location.state as { startValues: Record<string, unknown> };
-
-      Object.entries(startValues).forEach(([key, value]) => {
-        // Find field to ensure it exists before updating
-        const field = fields.find(f => f.id === key);
-        if (field) {
-          updateField(key, value as string | number | boolean);
-        }
-      });
-
-      // Mark as applied so we don't do it again
-      appliedDuplicateValuesRef.current = true;
-    }
-  }, [location.state, fields, updateField]);
-
-  // Reset the ref when location changes (navigating to a different page)
+  // This is now handled in the parent SvgFormTranslator for better reliability
   useEffect(() => {
     appliedDuplicateValuesRef.current = false;
   }, [location.pathname]);

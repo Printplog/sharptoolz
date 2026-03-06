@@ -140,9 +140,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     initialFonts.map((f) => f.id)
   );
 
-  const handleLiveUpdate = useCallback((element: SvgElement) => {
-    setDraftElement(element);
-  }, []);
 
   useEffect(() => {
     setSelectedFontIds(initialFonts.map((f) => f.id));
@@ -522,10 +519,10 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
                       element={elements[selectedElementIndex]}
                       index={selectedElementIndex}
                       onUpdate={updateElement}
-                      onLiveUpdate={handleLiveUpdate}
                       onPatchUpdate={onPatchUpdate}
                       isTextElement={isTextElement}
                       isImageElement={isImageElement}
+                      allElements={elements}
                     />
                   </>
                 ) : (

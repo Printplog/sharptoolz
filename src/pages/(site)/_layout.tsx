@@ -4,6 +4,7 @@ import Navbar from '@/components/Site/Navbar'
 import GlobalAnnouncement from "@/components/Dashboard/Layouts/GlobalAnnouncement";
 import useDialog from '@/hooks/useDialog'
 import { Outlet } from 'react-router-dom'
+import TermsAgreementDialog from '@/components/Site/TermsAgreementDialog'
 
 export default function Layout() {
   useDialog()
@@ -15,6 +16,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <TermsAgreementDialog />
       <RegisterDialog />
     </div>
   )

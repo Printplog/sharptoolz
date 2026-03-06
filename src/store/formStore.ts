@@ -20,7 +20,7 @@ interface ToolStore {
   downloadSvg: (fileName?: string) => void;
 }
 
-const  useToolStore = create<ToolStore>((set, get) => ({
+const useToolStore = create<ToolStore>((set, get) => ({
   name: "",
   fields: [] as FormField[],
   svgRaw: "",
@@ -50,7 +50,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
     } else {
       const initializedFields = fields.map((field) => ({
         ...field,
-        currentValue: field.defaultValue ?? "",
+        currentValue: field.currentValue ?? field.defaultValue ?? "",
         touched: false,
       }));
       set({ fields: initializedFields });
@@ -61,7 +61,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
     set((state) => {
       // Optimize: Only create new array if the value actually changed
       const field = state.fields?.find(f => f.id === fieldId);
-      
+
       // Check if value changed OR if there are updates that differ
       let hasChanges = false;
       if (field?.currentValue !== value) hasChanges = true;
@@ -73,12 +73,12 @@ const  useToolStore = create<ToolStore>((set, get) => ({
           }
         }
       }
-      
+
       if (field && !hasChanges) {
         // Nothing changed, skip update to prevent unnecessary re-renders
         return state;
       }
-      
+
       // Use shallow copy optimization - only create new objects for changed field
       const newFields = state.fields?.map((field) => {
         if (field.id === fieldId) {
@@ -86,7 +86,7 @@ const  useToolStore = create<ToolStore>((set, get) => ({
         }
         return field; // Return same reference for unchanged fields
       });
-      
+
       return {
         fields: newFields,
       };

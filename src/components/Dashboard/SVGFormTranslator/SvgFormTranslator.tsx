@@ -11,7 +11,7 @@ import { addWatermarkToSvg } from "@/lib/utils/svgWatermark";
 import { sanitizeSvgGradients, svgNamespace } from "@/lib/utils/sanitizeSvgGradients";
 import { generateAutoFields } from "@/lib/utils/fieldGenerator";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import {
   getPurchasedTemplate,
   getTemplate,
@@ -137,6 +137,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   const setName = useToolStore((state) => state.setName);
   const fields = useToolStore((state) => state.fields);
 
+  const location = useLocation();
   const { id: paramId } = useParams<{ id: string }>();
   const id = templateIdProp ?? paramId;
 
@@ -209,11 +210,25 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   useEffect(() => {
     if (isLoading || !data) return;
 
+    // Check for duplicated values in location state
+    const startValues = (location.state as { startValues?: Record<string, unknown> } | null)?.startValues;
+
     // Initialize fields - use currentValue if available (for purchased templates), otherwise use defaultValue
-    const initializedFields = data.form_fields?.map((field: FormField) => ({
-      ...field,
-      currentValue: field.currentValue ?? field.defaultValue ?? "",
-    })) || [];
+    const initializedFields = data.form_fields?.map((field: FormField) => {
+      let currentValue = field.currentValue ?? field.defaultValue ?? "";
+
+      // Apply startValues (duplicated data) if present
+      if (startValues && startValues[field.id] !== undefined) {
+        currentValue = startValues[field.id] as string | number | boolean;
+      }
+
+      return {
+        ...field,
+        currentValue,
+        // If it came from startValues, mark it as touched so it's treated as "provided" data
+        touched: startValues ? (startValues[field.id] !== undefined) : false
+      };
+    }) || [];
 
     setName(data.name as string);
     setFields(initializedFields, isPurchased);
@@ -221,13 +236,15 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
     // Store fields in ref to apply changes once SVG loads
     pendingFieldsRef.current = initializedFields;
 
-  }, [data, isLoading, setName, setFields, isPurchased]);
+  }, [data, isLoading, setName, setFields, isPurchased, location.state]);
 
   const hasSyncedRef = useRef<string | null>(null);
 
   // EFFECT 3: Sync defaults from SVG text (runs once when SVG content is ready)
   useEffect(() => {
-    if (isSvgFetching || !svgContent || !data || isPurchased) return;
+    // skip sync if we have startValues (duplicating a doc) to prevent overwriting
+    const startValues = (location.state as { startValues?: Record<string, unknown> } | null)?.startValues;
+    if (isSvgFetching || !svgContent || !data || isPurchased || startValues) return;
 
     // Only run this sync once per SVG URL
     if (hasSyncedRef.current === data.svg_url) return;

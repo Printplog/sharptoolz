@@ -139,18 +139,15 @@ interface ElementEditorProps {
   isTextElement: (el: SvgElement) => boolean;
   isImageElement: (el: SvgElement) => boolean;
   allElements?: SvgElement[];
-  onLiveUpdate?: (element: SvgElement) => void;
   onPatchUpdate?: (patch: SvgPatch) => void;
 }
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
-  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onLiveUpdate, onPatchUpdate }, ref) => {
+  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onPatchUpdate }, ref) => {
     const [localElement, setLocalElement] = useState<SvgElement>(element);
     const [isDirty, setIsDirty] = useState(false);
     const [showGenBuilder, setShowGenBuilder] = useState(false);
 
-    const lastUpdate = useRef(0);
-    const updateTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const imageMap = useRef<Record<string, string>>({});
 
     // Use a ref to track the last committed internalId to detect selection changes accurately
@@ -198,8 +195,6 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     };
 
     const currentTransform = getTransform();
-
-    const patchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleLocalUpdate = (updates: Partial<SvgElement>, _undoable = false) => {
       setLocalElement(prev => {
