@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
+import { validateSvgId } from "@/lib/utils/svgIdValidator";
+import { useSvgStore } from "@/store/useSvgStore";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -140,13 +142,18 @@ interface ElementEditorProps {
   isImageElement: (el: SvgElement) => boolean;
   allElements?: SvgElement[];
   onPatchUpdate?: (patch: SvgPatch) => void;
+  onDirtyChange?: (isDirty: boolean) => void;
+  onDraftReset?: () => void;
 }
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
-  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onPatchUpdate }, ref) => {
-    const [localElement, setLocalElement] = useState<SvgElement>(element);
-    const [isDirty, setIsDirty] = useState(false);
+  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onPatchUpdate, onDirtyChange, onDraftReset }, ref) => {
+    const { draftElement, setDraftElement } = useSvgStore();
+    const [isDirty, setIsDirty] = useState(!!draftElement);
     const [showGenBuilder, setShowGenBuilder] = useState(false);
+
+    const localElement = draftElement || element;
+    const setLocalElement = setDraftElement; // Mapping for compatibility with existing code flow
 
     const imageMap = useRef<Record<string, string>>({});
 
@@ -154,14 +161,13 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     const prevId = useRef<string | null>(element.internalId || null);
 
     useEffect(() => {
-      // ONLY reset local state if we actually switched to a DIFFERENT element
-      // or if it's the initial load.
+      // If we switched to a DIFFERENT element, clear the draft
       if (element.internalId !== prevId.current) {
-        setLocalElement(element);
         setIsDirty(false);
+        onDirtyChange?.(false);
         prevId.current = element.internalId || null;
       }
-    }, [element, index]);
+    }, [element.internalId]);
 
     // Robust Transformation Parser
     const getTransform = () => {
@@ -197,17 +203,14 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     const currentTransform = getTransform();
 
     const handleLocalUpdate = (updates: Partial<SvgElement>, _undoable = false) => {
-      setLocalElement(prev => {
-        const updated = {
-          ...prev,
-          ...updates,
-          attributes: { ...prev.attributes, ...(updates.attributes || {}) }
-        };
-        // Removed immediate onUpdate(index, updated, undoable);
-        // We only update the local state and mark as dirty.
-        return updated;
-      });
+      const updated = {
+        ...localElement,
+        ...updates,
+        attributes: { ...localElement.attributes, ...(updates.attributes || {}) }
+      };
+      setLocalElement(updated);
       setIsDirty(true);
+      onDirtyChange?.(true);
     };
 
     // Live update is now disabled to ensure canvas only changes on "Apply"
@@ -271,12 +274,17 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
       onUpdate(index, finalElement, true); // Final update with UNDO enabled
       setIsDirty(false);
+      onDirtyChange?.(false);
+      setDraftElement(null);
+      onDraftReset?.();
       toast.success("Changes finalized");
     };
 
     const handleDiscard = () => {
-      setLocalElement(element);
       setIsDirty(false);
+      onDirtyChange?.(false);
+      setDraftElement(null);
+      onDraftReset?.();
       toast.info("Changes discarded");
     };
 
@@ -290,12 +298,28 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const handleGenRuleChange = (newRule: string) => {
       const parts = localElement.id?.split(".") || [];
-      // Remove ALL existing gen_ parts AND the base 'gen' type to prevent duplication/stacking
-      // usage: Given_Name.gen_(rn[5]) instead of Given_Name.gen.gen_(rn[5])
-      const cleanParts = parts.filter(p => p !== "gen" && !p.startsWith("gen_"));
-      // Add the new rule
-      const finalParts = [...cleanParts, `gen_${newRule}`];
-      handleLocalUpdate({ id: finalParts.join(".") });
+      
+      // We want to keep track_/hide_ at the end correctly if they exist.
+      // So let's strip out 'gen' and 'gen_...' first.
+      const cleanParts = parts.filter((p: string) => p !== "gen" && !p.startsWith("gen_"));
+      
+      // Determine where to insert the new gen_ rule
+      // It should ideally go before any tracking_id, track_, link_, grayscale_ or mode modifiers 
+      // to maintain DSL valid grammar.
+      let insertIndex = cleanParts.length;
+      const lateModifiers = ["tracking_id", "track_", "link_", "grayscale", "hide_", "mode"];
+      
+      for (let i = 0; i < cleanParts.length; i++) {
+        if (lateModifiers.some(mod => cleanParts[i].startsWith(mod))) {
+          insertIndex = i;
+          break;
+        }
+      }
+      
+      // Insert the new rule at the correct grammatical index
+      cleanParts.splice(insertIndex, 0, `gen_${newRule}`);
+      
+      handleLocalUpdate({ id: cleanParts.join(".") });
     };
 
     const currentFieldValues = useMemo(() => {
@@ -355,9 +379,32 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       }
 
       if (newTransform.rotate !== 0) {
-        // If we have dimensions, we could inject center (rotate(angle, cx, cy))
-        // but simple rotate(angle) is fine if transform-origin: center is set in CSS
-        components.push(`rotate(${newTransform.rotate})`);
+        // Use a proper pivot point for rotation to prevent elements from "flying away"
+        let cx = 0;
+        let cy = 0;
+
+        if (isTextElement(localElement)) {
+          // For text, the pivot should be its anchor (x, y)
+          cx = parseFloat(localElement.attributes.x || "0");
+          cy = parseFloat(localElement.attributes.y || "0");
+        } else {
+          // For other elements (like images), use the center if possible
+          const x = parseFloat(localElement.attributes.x || "0");
+          const y = parseFloat(localElement.attributes.y || "0");
+          const w = parseFloat(localElement.attributes.width || "0");
+          const h = parseFloat(localElement.attributes.height || "0");
+          
+          if (!isNaN(x) && !isNaN(y) && !isNaN(w) && !isNaN(h)) {
+            cx = x + w / 2;
+            cy = y + h / 2;
+          }
+        }
+
+        if (cx !== 0 || cy !== 0) {
+          components.push(`rotate(${newTransform.rotate} ${cx} ${cy})`);
+        } else {
+          components.push(`rotate(${newTransform.rotate})`);
+        }
       }
 
       if (newTransform.scale !== 1) {
@@ -393,7 +440,15 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
             </div>
             <div className="flex gap-1">
               <Button size="sm" variant="ghost" className="h-7 text-[10px] text-white/30 px-3 rounded-full" onClick={handleDiscard}>Discard</Button>
-              <Button size="sm" variant="vibrant" className="h-7 text-[10px] px-5 font-bold rounded-full" onClick={handleApply}>Apply</Button>
+              <Button 
+                size="sm" 
+                variant="vibrant" 
+                className="h-7 text-[10px] px-5 font-bold rounded-full" 
+                onClick={handleApply}
+                disabled={!validateSvgId(localElement.id || "").valid}
+              >
+                Apply
+              </Button>
             </div>
           </div>
         )}

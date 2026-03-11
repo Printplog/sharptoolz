@@ -14,6 +14,16 @@ import SvgUpload from "./sections/SvgUpload";
 import SettingsDialog from "./sections/SettingsDialog";
 import DocsPanel from "./DocsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Tutorial, Font, SvgPatch, FormField } from "@/types";
@@ -78,8 +88,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     redo,
     deleteElement,
     duplicateElement,
-    originalSvg
+    originalSvg,
+    workingSvg,
+    draftElement,
+    setDraftElement
   } = useSvgStore();
+
+  const [activeTab, setActiveTab] = useState("layers");
 
   const elements = useMemo(() => elementOrder.map(id => elementsMap[id]), [elementOrder, elementsMap]);
   const selectedElementIndex = useMemo(() =>
@@ -97,19 +112,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [keywordsTags, setKeywordsTags] = useState<string[]>(Array.isArray(keywords) ? keywords : []);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
-  const [draftElement, setDraftElement] = useState<SvgElement | null>(null);
   const [isReplaced, setIsReplaced] = useState(false);
   const [freshSvgContent, setFreshSvgContent] = useState<string | null>(null);
+  const [isEditorDirty, setIsEditorDirty] = useState(false);
 
-  // Layout State
-  const [activeTab, setActiveTab] = useState("layers");
-
-  // Auto-switch to inspector when element is selected
-  useEffect(() => {
-    if (selectedElementId) {
-      setActiveTab("inspector");
-    }
-  }, [selectedElementId]);
+  // Navigation Intercept State
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<{ type: 'tab', target: string } | { type: 'element', target: number | null } | null>(null);
 
   // Fetch tools
   const { data: tools = [] } = useQuery({
@@ -145,20 +154,33 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     setSelectedFontIds(initialFonts.map((f) => f.id));
   }, [initialFonts]);
 
+  // Prevent accidental page reload/navigation when there are unsaved element changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isEditorDirty) {
+        e.preventDefault();
+        e.returnValue = "You have unapplied changes to an element. Are you sure you want to leave?";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isEditorDirty]);
+
   // Keep a ref so the svgRaw effect can read current selection without adding it as a dep
   const selectedElementIdRef = useRef<string | null>(null);
   useEffect(() => { selectedElementIdRef.current = selectedElementId ?? null; });
 
   // Sync SVG with prop — re-select the previously focused element after the store resets
   useEffect(() => {
-    if (svgRaw) {
+    if (svgRaw && !originalSvg) {
       const preservedId = selectedElementIdRef.current;
       setInitialSvg(svgRaw);
       if (preservedId) {
         requestAnimationFrame(() => selectElement(preservedId));
       }
     }
-  }, [svgRaw, setInitialSvg, selectElement]);
+  }, [svgRaw, setInitialSvg, selectElement, originalSvg]);
 
   useEffect(() => { setName(templateName); }, [templateName]);
   useEffect(() => { setBannerImage(banner); }, [banner]);
@@ -267,22 +289,66 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   };
 
   const handleElementSelect = useCallback((index: number | null) => {
-    if (index === null) {
-      selectElement(null);
+    // If selecting a DIFFERENT element while one is locally dirty, intercept
+    if (isEditorDirty && index !== selectedElementIndex) {
+      setPendingNavigation({ type: 'element', target: index });
+      setShowUnsavedDialog(true);
       return;
     }
+
+    if (index === null) {
+      selectElement(null);
+      setDraftElement(null);
+      return;
+    }
+
     const element = elements[index];
     if (element) {
       const id = element.internalId;
+      
+      // If we are selecting a DIFFERENT element, we clear the draft.
+      // If it's the SAME element, we MUST preserve the draft!
+      if (index !== selectedElementIndex) {
+        setDraftElement(null);
+      }
+      
       selectElement(id || null);
-      setDraftElement(null);
+      
+      // Explicitly switch to inspector when an element is selected
+      // This provides the "auto-open" behavior the user expects on selection,
+      // but without the background effect that was locking the tabs.
+      setActiveTab("inspector");
 
       if (onElementSelect) {
         const elementType = isTextElement(element) ? 'text' : isImageElement(element) ? 'image' : element.tag;
         onElementSelect(elementType, element.id || undefined);
       }
     }
-  }, [elements, selectElement, onElementSelect]);
+  }, [elements, selectElement, onElementSelect, isEditorDirty, selectedElementIndex, isTextElement, isImageElement, setDraftElement]);
+
+  const handleTabChange = useCallback((newTab: string) => {
+    // We now allow tab switching without warning, even if editor is dirty
+    // because the draft is persisted in the store!
+    setActiveTab(newTab);
+  }, []);
+
+  const confirmNavigation = useCallback(() => {
+    const action = pendingNavigation;
+    setPendingNavigation(null);
+    setShowUnsavedDialog(false);
+    setIsEditorDirty(false); // Force clear dirty state
+    
+    if (!action) return;
+
+    // We must execute the pending navigation *after* clearing the dirt and closing dialog
+    requestAnimationFrame(() => {
+      if (action.type === 'tab') {
+        setActiveTab(action.target);
+      } else if (action.type === 'element') {
+        handleElementSelect(action.target);
+      }
+    });
+  }, [pendingNavigation, handleElementSelect]);
 
   // Navigate to prev/next element from the inspector tab
   const handleNavigate = useCallback((direction: 'prev' | 'next') => {
@@ -329,7 +395,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
   const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
-  const workingSvg = useSvgStore(state => state.workingSvg);
+  // Working SVG is already destructured from useSvgStore at line 70
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
@@ -449,7 +515,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
         {/* Right Side: Tabbed Toolbox */}
         <aside className="w-[420px] shrink-0 flex flex-col overflow-hidden bg-white/5 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
             <div className="px-5 pt-5 pb-0">
               <TabsList className="w-full bg-black/40 border border-white/5 h-11 p-1 rounded-xl">
                 <TabsTrigger value="layers" className="flex-1 rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
@@ -523,6 +589,8 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
                       isTextElement={isTextElement}
                       isImageElement={isImageElement}
                       allElements={elements}
+                      onDirtyChange={(dirty) => setIsEditorDirty(dirty)}
+                      onDraftReset={() => setDraftElement(null)}
                     />
                   </>
                 ) : (
@@ -556,6 +624,29 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         templateName={name}
         fonts={fonts.filter(f => selectedFontIds.includes(f.id))}
       />
+
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent className="bg-[#111] border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Unapplied Changes</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              You have unapplied changes to the currently selected element. 
+              If you leave this element now, your draft changes will be discarded.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white/5 text-white hover:bg-white/10 hover:text-white border-0">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmNavigation}
+              className="bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 border-0"
+            >
+              Discard Changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

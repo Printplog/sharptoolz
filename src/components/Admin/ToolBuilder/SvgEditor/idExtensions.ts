@@ -9,6 +9,7 @@ export interface ExtensionDefinition {
   valuePlaceholder?: string; // Placeholder for the value input
   allowedAfter?: string[]; // Which field types this can come after
   mustBeLast?: boolean; // If true, this must be the last extension
+  isFieldType?: boolean; // If true, this is a field type (can only have one)
 }
 
 // Field types that must come immediately after the base ID (first ".")
@@ -89,6 +90,13 @@ export const FIELD_TYPES: ExtensionDefinition[] = [
     helper: "Creates a signature field",
   },
   {
+    key: "select",
+    label: "Select Option",
+    helper: "Creates a dropdown option (e.g., select_USA)",
+    requiresValue: true,
+    valuePlaceholder: "Enter option value",
+  },
+  {
     key: "depends",
     label: "Depends On",
     helper:
@@ -96,7 +104,7 @@ export const FIELD_TYPES: ExtensionDefinition[] = [
     requiresValue: true,
     valuePlaceholder: "Enter field name (e.g., Country or Country[w1])",
   },
-];
+].map(ft => ({ ...ft, isFieldType: true }));
 
 // Extensions that can come after field types
 export const EXTENSIONS: ExtensionDefinition[] = [
@@ -106,7 +114,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     helper: "Sets maximum character/number limit (e.g., max_50)",
     requiresValue: true,
     valuePlaceholder: "Enter number (e.g., 50)",
-    allowedAfter: ["text", "textarea", "gen", "number", "range"],
+    allowedAfter: ["text", "textarea", "gen", "number", "range", "min"],
   },
   {
     key: "min",
@@ -114,7 +122,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     helper: "Sets minimum character/number limit (e.g., min_5)",
     requiresValue: true,
     valuePlaceholder: "Enter number (e.g., 5)",
-    allowedAfter: ["text", "textarea", "gen", "number", "range"],
+    allowedAfter: ["text", "textarea", "gen", "number", "range", "max"],
   },
   {
     key: "editable",
@@ -136,6 +144,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "file",
       "status",
       "sign",
+      "select",
     ],
   },
   {
@@ -162,6 +171,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "file",
       "status",
       "sign",
+      "select",
       "editable",
       "max",
       "tracking_id",
@@ -176,7 +186,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     key: "tracking_id",
     label: "Tracking ID",
     helper: "Marks this field as the main tracking ID",
-    allowedAfter: ["gen", "max", "min"],
+    allowedAfter: ["gen", "max", "min", "text", "number"],
   },
   {
     key: "link",
@@ -224,21 +234,9 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     label: "Hide Checked",
     helper: "Hide field when checked (visible by default)",
     allowedAfter: [
-      "text",
-      "textarea",
-      "gen",
-      "email",
-      "number",
-      "date",
-      "checkbox",
-      "upload",
-      "tel",
-      "password",
-      "range",
-      "color",
-      "file",
-      "status",
-      "sign",
+      "text", "textarea", "gen", "email", "number", "date", "checkbox",
+      "upload", "tel", "password", "range", "color", "file", "status", "sign",
+      "editable", "max", "min", "tracking_id", "link", "date_format", "gen_rule"
     ],
   },
   {
@@ -246,21 +244,9 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     label: "Hide Unchecked",
     helper: "Hide field when unchecked (hidden by default)",
     allowedAfter: [
-      "text",
-      "textarea",
-      "gen",
-      "email",
-      "number",
-      "date",
-      "checkbox",
-      "upload",
-      "tel",
-      "password",
-      "range",
-      "color",
-      "file",
-      "status",
-      "sign",
+      "text", "textarea", "gen", "email", "number", "date", "checkbox",
+      "upload", "tel", "password", "range", "color", "file", "status", "sign",
+      "editable", "max", "min", "tracking_id", "link", "date_format", "gen_rule"
     ],
   },
 ];

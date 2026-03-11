@@ -41,7 +41,7 @@ export default function IdEditor({
     validation,
   } = useIdEditor(value, onChange);
 
-  const suggestions = useSuggestions(internalValue, isFocused);
+  const suggestions = useSuggestions(internalValue, isFocused, allElements);
 
   useEffect(() => {
     setInternalValue(value || "");

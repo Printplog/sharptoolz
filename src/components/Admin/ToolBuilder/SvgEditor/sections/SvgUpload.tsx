@@ -8,7 +8,7 @@
  *    is also updated by rAF (reads getBoundingClientRect each frame while
  *    something is selected). Zero React re-renders during any gesture.
  *  • React state is only updated for: tool label, zoom display label (~100ms
- *    throttle), and baseSvg string (2 s idle guard).
+ *    throttle).
  *  • Inertia: velocity is sampled from the last two pointer-move events and
  *    decays exponentially after pointer-up.
  *  • Zoom is exponential (feels natural) and always centred on the cursor.
@@ -20,6 +20,7 @@ import { ZoomIn, ZoomOut, Maximize2, MousePointer, Hand } from "lucide-react";
 import { useSvgLiveUpdate } from "../hooks/useSvgLiveUpdate";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import { sanitizeSvgGradients, svgNamespace } from "@/lib/utils/sanitizeSvgGradients";
+
 
 
 // ─── tuning ───────────────────────────────────────────────────────────────────
@@ -95,12 +96,6 @@ export default function SvgUpload({
   const [tool, setTool] = useState<ToolMode>("select");
   const [zoomLabel, setZoomLabel] = useState("100%");
 
-
-
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // Core: write viewport → DOM (one write per rAF)
-  // ══════════════════════════════════════════════════════════════════════════
   const flushVP = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -126,49 +121,57 @@ export default function SvgUpload({
   // ══════════════════════════════════════════════════════════════════════════
   // Selection overlay — pure DOM rAF loop, zero React state on hot path
   // ══════════════════════════════════════════════════════════════════════════
-  // Store activeElementId in a ref so the rAF loop always sees latest value
   const activeIdRef = useRef(activeElementId);
   useEffect(() => { activeIdRef.current = activeElementId; }, [activeElementId]);
 
-  const startSelectionLoop = useCallback(() => {
+  const startOverlayLoop = useCallback(() => {
     cancelAnimationFrame(selRaf.current);
     const tick = () => {
-      const box = selBoxRef.current;
       const wrapper = wrapperRef.current;
-      const id = activeIdRef.current;
-      if (!box || !wrapper || !id) {
-        if (box) box.style.display = "none";
-        return;
+      if (!wrapper) return;
+
+      const selBox = selBoxRef.current;
+      const selId = activeIdRef.current;
+
+      if (selBox && selId) {
+        const node = containerRef.current?.querySelector<Element>(`[data-internal-id="${selId}"]`);
+        if (node) {
+          const er = node.getBoundingClientRect();
+          const wr = wrapper.getBoundingClientRect();
+          selBox.style.display = "block";
+          selBox.style.top = `${er.top - wr.top}px`;
+          selBox.style.left = `${er.left - wr.left}px`;
+          selBox.style.width = `${er.width}px`;
+          selBox.style.height = `${er.height}px`;
+          if (selLabelRef.current) {
+            selLabelRef.current.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="font-black">${selId}</span>
+                <span class="opacity-40 font-mono text-[9px]">${Math.round(er.width)} × ${Math.round(er.height)}</span>
+              </div>
+            `;
+          }
+        } else {
+          selBox.style.display = "none";
+        }
+      } else if (selBox) {
+        selBox.style.display = "none";
       }
-      const node = containerRef.current?.querySelector<Element>(`[data-internal-id="${id}"]`);
-      if (!node) { box.style.display = "none"; return; }
-
-      const er = node.getBoundingClientRect();
-      const wr = wrapper.getBoundingClientRect();
-
-      box.style.display = "block";
-      box.style.top = `${er.top - wr.top}px`;
-      box.style.left = `${er.left - wr.left}px`;
-      box.style.width = `${er.width}px`;
-      box.style.height = `${er.height}px`;
-
-      if (selLabelRef.current) selLabelRef.current.textContent = id;
 
       selRaf.current = requestAnimationFrame(tick);
     };
     selRaf.current = requestAnimationFrame(tick);
   }, []);
 
-  const stopSelectionLoop = useCallback(() => {
+  const stopOverlayLoop = useCallback(() => {
     cancelAnimationFrame(selRaf.current);
     if (selBoxRef.current) selBoxRef.current.style.display = "none";
   }, []);
 
   useEffect(() => {
-    if (activeElementId) startSelectionLoop();
-    else stopSelectionLoop();
-    return () => cancelAnimationFrame(selRaf.current);
-  }, [activeElementId, startSelectionLoop, stopSelectionLoop]);
+    startOverlayLoop();
+    return stopOverlayLoop;
+  }, [startOverlayLoop, stopOverlayLoop]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // Inertia
@@ -246,24 +249,22 @@ export default function SvgUpload({
     const wrap = wrapperRef.current;
     const fitZ = Math.min((wrap.clientWidth - pad) / svgW, (wrap.clientHeight - pad) / svgH, 2);
 
-    // Removed hard reset: vp.current = { x: 0, y: 0, z: 1 };
-    // This allows animateZoom to work from the current viewport state smoothly.
     animateZoom(fitZ, 0, 0);
   }, [animateZoom]);
 
   const hasFittedForId = useRef<string | null>(null);
   useEffect(() => {
     if (!currentSvg) return;
-    const structureId = elements.length + (elements[0]?.internalId || ""); // unique enough to detect new template vs edits
+    const structureId = elements.length + (elements[0]?.internalId || "");
     if (hasFittedForId.current !== structureId) {
-      const t = setTimeout(fitToView, 250); // increased for smoother initial load
+      const t = setTimeout(fitToView, 250);
       hasFittedForId.current = structureId;
       return () => clearTimeout(t);
     }
   }, [currentSvg, elements.length, fitToView]);
 
   // ══════════════════════════════════════════════════════════════════════════
-  // Wheel — non-passive so we can preventDefault (kills browser page-zoom)
+  // Wheel — non-passive so we can preventDefault
   // ══════════════════════════════════════════════════════════════════════════
   useEffect(() => {
     const el = canvasRef.current;
@@ -297,7 +298,22 @@ export default function SvgUpload({
     stopInertia();
 
     const target = (e.target as HTMLElement).closest("[data-internal-id]");
-    const targetId = target?.getAttribute("data-internal-id");
+    let targetId = target?.getAttribute("data-internal-id");
+
+    // Ctrl+Click Select Through
+    if (e.ctrlKey || e.metaKey) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect) {
+        const x = e.clientX;
+        const y = e.clientY;
+        const elementsAtPoint = document.elementsFromPoint(x, y);
+        const svgElementUnder = elementsAtPoint.find(el => el.hasAttribute("data-internal-id") && el !== target);
+        if (svgElementUnder) {
+           targetId = svgElementUnder.getAttribute("data-internal-id");
+        }
+      }
+    }
+
     const isHand = tool === "hand" || spaceDown.current || e.button === 1;
 
     if (!isHand && targetId && e.button === 0) {
@@ -312,10 +328,9 @@ export default function SvgUpload({
       lastPtr.current = { x: e.clientX, y: e.clientY, t: performance.now() };
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     }
-  }, [currentSvg, tool, activeElementId, elements, onSelectElement, stopInertia]);
+  }, [currentSvg, tool, activeElementId, onSelectElement, stopInertia]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    // Element moving disabled per user request
     if (isPanning.current && panStart.current) {
       const dx = e.clientX - panStart.current.mx;
       const dy = e.clientY - panStart.current.my;
@@ -329,7 +344,9 @@ export default function SvgUpload({
       lastPtr.current = { x: e.clientX, y: e.clientY, t: now };
       vp.current.x = panStart.current.vx + dx;
       vp.current.y = panStart.current.vy + dy;
-      flushVP();   // direct — already inside pointer-event cadence
+      flushVP();
+    } else {
+      // Do nothing for now
     }
   }, [flushVP]);
 
@@ -356,16 +373,32 @@ export default function SvgUpload({
     const down = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.code === "Space" && !e.repeat) { spaceDown.current = true; setTool("hand"); return; }
+      if (e.shiftKey) {
+        if (e.key === "1") animateZoom(1, 0, 0);
+        if (e.key === "2" && activeIdRef.current) {
+          const node = containerRef.current?.querySelector(`[data-internal-id="${CSS.escape(activeIdRef.current)}"]`);
+          if (node) {
+            const er = node.getBoundingClientRect();
+            const wr = wrapperRef.current!.getBoundingClientRect();
+            const fitZ = Math.min((wr.width - 100) / er.width, (wr.height - 100) / er.height, 4);
+            animateZoom(fitZ, er.left - wr.left + er.width / 2 - wr.width / 2, er.top - wr.top + er.height / 2 - wr.height / 2);
+          }
+        }
+        if (e.key === "0") fitToView();
+        return;
+      }
       if (!e.ctrlKey && !e.metaKey) {
         if (e.key === "h" || e.key === "H") setTool("hand");
         if (e.key === "v" || e.key === "V") setTool("select");
         return;
       }
-      e.preventDefault();
-      if (e.key === "=" || e.key === "+") animateZoom(snapZoom(vp.current.z, "in"), 0, 0);
-      if (e.key === "-") animateZoom(snapZoom(vp.current.z, "out"), 0, 0);
-      if (e.key === "0") fitToView();
-      if (e.key === "1") animateZoom(1, 0, 0);
+      if (e.key === "=" || e.key === "+" || e.key === "-" || e.key === "0" || e.key === "1") {
+        e.preventDefault();
+        if (e.key === "=" || e.key === "+") animateZoom(snapZoom(vp.current.z, "in"), 0, 0);
+        if (e.key === "-") animateZoom(snapZoom(vp.current.z, "out"), 0, 0);
+        if (e.key === "0") fitToView();
+        if (e.key === "1") animateZoom(1, 0, 0);
+      }
     };
     const up = (e: KeyboardEvent) => {
       if (e.code === "Space") { spaceDown.current = false; setTool("select"); }
@@ -386,18 +419,15 @@ export default function SvgUpload({
   const prevKey = useRef(structuralKey);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // sanitize() is a plain function call — no useCallback needed, it's pure
   const sanitize = (svg: string) => sanitizeSvgGradients(svg, svgNamespace(svg));
 
   useEffect(() => {
     if (!currentSvg) return;
-    // Always re-sanitize when currentSvg changes (structural or content)
     if (structuralKey !== prevKey.current) {
       setBaseSvg(sanitize(currentSvg));
       prevKey.current = structuralKey;
       if (syncTimer.current) clearTimeout(syncTimer.current);
     } else {
-      // Attribute-only change: debounce 2s to avoid interrupting live DOM edits
       if (syncTimer.current) clearTimeout(syncTimer.current);
       syncTimer.current = setTimeout(() => setBaseSvg(sanitize(currentSvg)), 2000);
     }
@@ -407,7 +437,12 @@ export default function SvgUpload({
   // ══════════════════════════════════════════════════════════════════════════
   // Live DOM surgical updates
   // ══════════════════════════════════════════════════════════════════════════
-  useSvgLiveUpdate(containerRef as React.RefObject<HTMLDivElement>, elements, activeElementId, draftElement);
+  useSvgLiveUpdate(
+    containerRef as React.RefObject<HTMLDivElement>, 
+    elements, 
+    activeElementId, 
+    draftElement
+  );
 
   // ══════════════════════════════════════════════════════════════════════════
   // Cleanup
@@ -482,10 +517,8 @@ export default function SvgUpload({
           }}
         />
 
-        {/* Dot grid — CSS only, re-paints at label throttle rate */}
         <DotGrid vpRef={vp} zoomLabel={zoomLabel} />
 
-        {/* Pointer surface */}
         <div
           ref={canvasRef}
           className={`absolute inset-0 ${cursorClass}`}
@@ -498,23 +531,13 @@ export default function SvgUpload({
           {currentSvg ? (
             <div className="w-full h-full flex items-center justify-center pointer-events-none">
 
-              {/* Transform target — written only by rAF */}
               <div
                 ref={containerRef}
                 style={{
                   transform: `translate(${vp.current.x}px,${vp.current.y}px) scale(${vp.current.z})`,
                   transformOrigin: "center center",
-                  // NOTE: NO willChange:"transform" here.
-                  // willChange promotes this element to its own GPU compositing layer,
-                  // which breaks transparency in Photoshop-exported SVGs that use
-                  // embedded <image> PNG layers with alpha. Those images composite
-                  // against the layer background (implicit black) instead of the
-                  // real page background, causing dark halos / banding on transparent areas.
-                  // We get smooth transforms without it — rAF writes style.transform directly.
                 }}
                 className="pointer-events-none"
-              // No position:relative, no isolation, no overflow:hidden — any of these
-              // can accidentally create a stacking context that traps alpha compositing.
               >
                 <div
                   className="[&_svg]:block [&_svg]:max-w-none [&_svg]:max-h-none pointer-events-auto"
@@ -522,14 +545,7 @@ export default function SvgUpload({
                 />
               </div>
 
-              {/*
-               * Selection overlay — moved OUTSIDE the transform div.
-               * Position is written every rAF frame by startSelectionLoop().
-               * No division by z is needed anymore; positions are in screen space
-               * relative to the wrapper.
-               */}
               <div ref={selBoxRef} className="absolute pointer-events-none z-50 border border-dashed border-primary/80 bg-primary/[0.03]" style={{ display: "none" }}>
-                {/* 8 handles — now consistent screen-space size */}
                 {[
                   "top-0 left-0 -translate-x-1/2 -translate-y-1/2",
                   "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
@@ -544,7 +560,7 @@ export default function SvgUpload({
                 ))}
                 <div
                   ref={selLabelRef}
-                  className="absolute -top-7 left-0 bg-primary text-black text-[11px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tight whitespace-nowrap shadow-md"
+                  className="absolute -top-7 left-0 bg-primary text-black text-[11px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tight whitespace-nowrap shadow-md z-10"
                 />
               </div>
 
@@ -576,7 +592,6 @@ export default function SvgUpload({
 // ─── sub-components ───────────────────────────────────────────────────────────
 
 function PanCoords({ vpRef, zoomLabel }: { vpRef: React.RefObject<VP>; zoomLabel: string }) {
-  // zoomLabel is a proxy re-render trigger (~100ms cadence)
   void zoomLabel;
   const x = Math.round(vpRef.current?.x ?? 0);
   const y = Math.round(vpRef.current?.y ?? 0);

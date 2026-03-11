@@ -18,6 +18,8 @@ interface SvgStore {
     elements: Record<string, SvgElement>;
     elementOrder: string[];
     selectedElementId: string | null;
+    hoveredElementId: string | null;
+    draftElement: SvgElement | null;
     commitTimeout: ReturnType<typeof setTimeout> | null;
 
     // Undo/Redo
@@ -29,6 +31,8 @@ interface SvgStore {
     updateElement: (id: string, updates: Partial<SvgElement>, undoable?: boolean) => void;
     commitChanges: (immediate?: boolean) => void; // Bake elements into workingSvg
     selectElement: (id: string | null) => void;
+    setDraftElement: (element: SvgElement | null) => void;
+    setHoveredElementId: (id: string | null) => void;
     reorderElements: (newOrder: string[], undoable?: boolean) => void;
 
     // History Actions
@@ -53,6 +57,8 @@ export const useSvgStore = create<SvgStore>()(
         elements: {},
         elementOrder: [],
         selectedElementId: null,
+        hoveredElementId: null,
+        draftElement: null,
         commitTimeout: null,
         history: [],
         historyIndex: -1,
@@ -76,6 +82,15 @@ export const useSvgStore = create<SvgStore>()(
                 if (nonEditableTags.includes(tag)) return;
 
                 const id = domEl.getAttribute("id");
+                
+                // OPTIMIZATION for >20MB SVGs:
+                // Only track elements that are interesting. An element is interesting if:
+                // 1. It has an ID
+                // 2. It is a text or image node
+                const isInteresting = !!id || ['text', 'image', 'foreignobject'].includes(tag);
+                
+                if (!isInteresting) return;
+
                 const internalIdAttr = domEl.getAttribute("data-internal-id");
                 const baseId = id || internalIdAttr || `el-${tag}`;
                 idCount[baseId] = (idCount[baseId] || 0) + 1;
@@ -128,7 +143,8 @@ export const useSvgStore = create<SvgStore>()(
                 elementOrder: order,
                 history: [],
                 historyIndex: -1,
-                selectedElementId: null
+                selectedElementId: null,
+                draftElement: null
             });
         },
 
@@ -210,6 +226,8 @@ export const useSvgStore = create<SvgStore>()(
         },
 
         selectElement: (id) => set({ selectedElementId: id }),
+        setDraftElement: (element) => set({ draftElement: element }),
+        setHoveredElementId: (id) => set({ hoveredElementId: id }),
 
         reorderElements: (newOrder, undoable = true) => {
             const { elementOrder, history, historyIndex } = get();
@@ -297,7 +315,7 @@ export const useSvgStore = create<SvgStore>()(
             delete newElements[id];
             const newOrder = elementOrder.filter(orderId => orderId !== id);
 
-            const newState: Partial<SvgStore> = { elements: newElements, elementOrder: newOrder, selectedElementId: null };
+            const newState: Partial<SvgStore> = { elements: newElements, elementOrder: newOrder, selectedElementId: null, draftElement: null };
 
             if (undoable) {
                 const patches: SvgPatch[] = [{
@@ -338,7 +356,7 @@ export const useSvgStore = create<SvgStore>()(
             const newOrder = [...elementOrder];
             newOrder.splice(index + 1, 0, newId);
 
-            const newState: Partial<SvgStore> = { elements: newElements, elementOrder: newOrder, selectedElementId: newId };
+            const newState: Partial<SvgStore> = { elements: newElements, elementOrder: newOrder, selectedElementId: newId, draftElement: null };
 
             if (undoable) {
                 const patches: SvgPatch[] = [{
@@ -362,7 +380,8 @@ export const useSvgStore = create<SvgStore>()(
             elementOrder: [],
             selectedElementId: null,
             history: [],
-            historyIndex: -1
+            historyIndex: -1,
+            draftElement: null
         }),
 
         getOrderedElements: () => {

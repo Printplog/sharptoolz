@@ -5,6 +5,7 @@ import {
   EXTENSIONS,
   parseId
 } from '../idExtensions';
+import { validateSvgId } from '@/lib/utils/svgIdValidator';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -24,9 +25,15 @@ export function useIdEditor(
   const editorRef = useRef<HTMLDivElement>(null);
 
   const validate = useCallback((val: string): ValidationResult => {
+    // 1. Run the new DSL validator
+    const dslResult = validateSvgId(val);
+    if (!dslResult.valid) {
+      return { isValid: false, error: dslResult.error };
+    }
+
     const { parts } = parseId(val);
 
-    // Check for duplicate field types
+    // 2. Check for duplicate field types (logic from idExtensions)
     const presentFieldTypes = parts.filter(p => FIELD_TYPES.some(ft => ft.key === p || p.startsWith(ft.key + "_")));
     if (presentFieldTypes.length > 1) {
       return {
@@ -35,7 +42,7 @@ export function useIdEditor(
       };
     }
 
-    // Check for duplicate extensions
+    // 3. Check for duplicate extensions
     const presentExtensions = parts.map(p => p.split('_')[0]).filter(p => EXTENSIONS.some(ext => ext.key === p));
     const duplicates = presentExtensions.filter((item, index) => presentExtensions.indexOf(item) !== index);
     if (duplicates.length > 0) {
@@ -61,7 +68,16 @@ export function useIdEditor(
         : "";
 
       const shouldReplacePartial = !hasTrailingDot && currentPartial &&
-        extension.key.toLowerCase().startsWith(currentPartial.toLowerCase());
+        (extension as any).key.toLowerCase().startsWith(currentPartial.toLowerCase());
+
+      // Special handling for Base ID suggestions (which are not extensions yet)
+      if ((extension as any).isBaseId) {
+          const newValue = `${(extension as any).key}.`;
+          setInternalValue(newValue);
+          setValidation(validate(newValue));
+          onChange(newValue);
+          return;
+      }
 
       if (extension.requiresValue) {
         if (shouldReplacePartial && currentParts.length > 0) {
@@ -79,28 +95,31 @@ export function useIdEditor(
       }
 
       let newValue: string;
-      const isEmptyParts = currentParts.length === 1 && currentParts[0] === "";
+      const newParts = [...currentParts].filter(p => p !== "");
+      const isFieldType = (extension as any).isFieldType;
+      
+      const existingIndex = newParts.findIndex(p => 
+        p === extension.key || p.startsWith(extension.key + "_")
+      );
 
-      if (currentParts.length === 0 || isEmptyParts) {
-        if (hasTrailingDot || isEmptyParts) {
-          newValue = `${currentBase}${extension.key}`;
+      if (shouldReplacePartial && newParts.length > 0) {
+        newParts[newParts.length - 1] = extension.key;
+      } else if (existingIndex !== -1) {
+        newParts[existingIndex] = extension.key;
+      } else if (isFieldType) {
+        const firstPartIsFieldType = newParts.length > 0 && FIELD_TYPES.some(ft => 
+          newParts[0].startsWith(ft.key + "_") || newParts[0] === ft.key
+        );
+        if (firstPartIsFieldType) {
+          newParts[0] = extension.key;
         } else {
-          const baseEndsWithDot = currentBase.endsWith(".");
-          newValue = baseEndsWithDot ? `${currentBase}${extension.key}` : `${currentBase}.${extension.key}`;
+          newParts.unshift(extension.key);
         }
       } else {
-        const newParts = [...currentParts];
-        const lastPart = newParts[newParts.length - 1];
-
-        if (shouldReplacePartial || (lastPart && !FIELD_TYPES.some(ft => ft.key === lastPart) &&
-          !EXTENSIONS.some(ext => ext.key === lastPart || lastPart.startsWith(ext.key + "_")))) {
-          newParts[newParts.length - 1] = extension.key;
-        } else {
-          newParts.push(extension.key);
-        }
-
-        newValue = `${currentBase}.${newParts.join(".")}`;
+        newParts.push(extension.key);
       }
+
+      newValue = `${currentBase}.${newParts.join(".")}`;
 
       setInternalValue(newValue);
       setValidation(validate(newValue));
@@ -126,22 +145,29 @@ export function useIdEditor(
     const { baseId: currentBase, parts: currentParts } = parseId(internalValue);
     const sanitizedValue = value.trim().replace(/\s+/g, "_");
 
-    let newValue: string;
+    const newParts = [...currentParts].filter(p => p !== "");
+    const isFieldType = (pendingExtension as any).isFieldType;
 
-    if (currentParts.length === 0) {
-      newValue = `${currentBase}.${pendingExtension.key}_${sanitizedValue}`;
-    } else {
-      const newParts = [...currentParts];
-      const lastPart = newParts[newParts.length - 1];
+    const existingIndex = newParts.findIndex(p => 
+      p === pendingExtension.key || p.startsWith(pendingExtension.key + "_")
+    );
 
-      if (lastPart && lastPart.startsWith(pendingExtension.key)) {
-        newParts[newParts.length - 1] = `${pendingExtension.key}_${sanitizedValue}`;
+    if (existingIndex !== -1) {
+      newParts[existingIndex] = `${pendingExtension.key}_${sanitizedValue}`;
+    } else if (isFieldType) {
+      const firstPartIsFieldType = newParts.length > 0 && FIELD_TYPES.some(ft => 
+        newParts[0].startsWith(ft.key + "_") || newParts[0] === ft.key
+      );
+      if (firstPartIsFieldType) {
+        newParts[0] = `${pendingExtension.key}_${sanitizedValue}`;
       } else {
-        newParts.push(`${pendingExtension.key}_${sanitizedValue}`);
+        newParts.unshift(`${pendingExtension.key}_${sanitizedValue}`);
       }
-
-      newValue = `${currentBase}.${newParts.join(".")}`;
+    } else {
+      newParts.push(`${pendingExtension.key}_${sanitizedValue}`);
     }
+
+    const newValue = `${currentBase}.${newParts.join(".")}`;
 
     setInternalValue(newValue);
     setValidation(validate(newValue));

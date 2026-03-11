@@ -110,6 +110,25 @@ function processGenerationPattern(pattern: string, allFields?: Record<string, st
     }
   }
 
+  // Current date: (date[YYYY-MM-DD])
+  if (pattern.startsWith('date[') && pattern.endsWith(']')) {
+    const format = pattern.match(/date\[(.+)\]/)?.[1] || 'YYYY-MM-DD';
+    return generateDate(format);
+  }
+
+  // Environment/Context Variables: (env_VAR)
+  if (pattern.startsWith('env_')) {
+    const varName = pattern.replace('env_', '');
+    // In a real app, this would come from a context or global config.
+    // For now, support some placeholders.
+    const ENVS: Record<string, string> = {
+      'PLATFORM': 'SharpToolz',
+      'YEAR': new Date().getFullYear().toString(),
+      'USER_ID': 'U-' + generateRandomNumbers(6)
+    };
+    return ENVS[varName.toUpperCase()] || '';
+  }
+
   // Random both (numbers + letters): rb[6] with case option
   // This is handled by combining rn and rc/ru/rl patterns
 
@@ -142,6 +161,24 @@ function generateRandomNumbers(count: number): string {
     result += Math.floor(Math.random() * 10);
   }
   return result;
+}
+
+function generateDate(format: string): string {
+  const now = new Date();
+  const YYYY = now.getFullYear().toString();
+  const MM = String(now.getMonth() + 1).padStart(2, '0');
+  const DD = String(now.getDate()).padStart(2, '0');
+  const HH = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+
+  return format
+    .replace('YYYY', YYYY)
+    .replace('MM', MM)
+    .replace('DD', DD)
+    .replace('HH', HH)
+    .replace('mm', min)
+    .replace('ss', ss);
 }
 
 function generateRandomChars(count: number, kind: 'rc' | 'ru' | 'rl' = 'rc'): string {

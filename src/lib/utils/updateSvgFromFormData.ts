@@ -218,8 +218,6 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
               if (isNaN(rotation)) break; // Skip invalid
 
               // Snapshot the *original template* transform once and cache it.
-              // On every subsequent call we restore from the snapshot and apply
-              // exactly one user-rotation on top — no stacking.
               if (!el.hasAttribute("data-base-transform")) {
                 el.setAttribute("data-base-transform", el.getAttribute("transform") || "");
               }
@@ -227,9 +225,15 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
               let cx = 0, cy = 0;
               try {
-                const bbox = (el as any).getBBox();
-                cx = bbox.x + bbox.width / 2;
-                cy = bbox.y + bbox.height / 2;
+                // If it's a text element, we can use its x/y as pivot if width/height are fuzzy
+                if (el.tagName.toLowerCase() === 'text' || el.tagName.toLowerCase() === 'tspan') {
+                   cx = parseFloat(el.getAttribute("x") || "0");
+                   cy = parseFloat(el.getAttribute("y") || "0");
+                } else {
+                   const bbox = (el as any).getBBox();
+                   cx = bbox.x + bbox.width / 2;
+                   cy = bbox.y + bbox.height / 2;
+                }
               } catch {
                 const x = parseFloat(el.getAttribute("x") || "0");
                 const y = parseFloat(el.getAttribute("y") || "0");
@@ -333,6 +337,25 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
               applyWrappedText(el, finalLines, fontSize, fontFamily, doc);
             } else {
               el.textContent = stringValue;
+            }
+
+            // Apply rotation to text/other fields
+            let rotationValue = field.rotation;
+            if (rotationValue !== undefined && rotationValue !== null) {
+              const rotation = parseFloat(String(rotationValue));
+              if (!isNaN(rotation)) {
+                if (!el.hasAttribute("data-base-transform")) {
+                  el.setAttribute("data-base-transform", el.getAttribute("transform") || "");
+                }
+                const baseTransform = el.getAttribute("data-base-transform") || "";
+                
+                const cx = parseFloat(el.getAttribute("x") || "0");
+                const cy = parseFloat(el.getAttribute("y") || "0");
+                
+                const newRotation = `rotate(${rotation}, ${cx}, ${cy})`;
+                const updatedTransform = baseTransform ? `${baseTransform} ${newRotation}` : newRotation;
+                el.setAttribute("transform", updatedTransform);
+              }
             }
           }
         }

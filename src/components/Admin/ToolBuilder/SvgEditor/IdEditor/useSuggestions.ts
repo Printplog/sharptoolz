@@ -1,22 +1,47 @@
 import { useMemo } from "react";
 import { parseId, FIELD_TYPES, EXTENSIONS, type ExtensionDefinition } from "../idExtensions";
+import type { SvgElement } from "@/lib/utils/parseSvgElements";
 
-export function useSuggestions(internalValue: string, isFocused: boolean) {
+export function useSuggestions(internalValue: string, isFocused: boolean, allElements: SvgElement[] = []) {
   return useMemo(() => {
     if (!isFocused) return [];
 
     const { baseId: currentBase, parts: currentParts } = parseId(internalValue);
 
-    // If no base ID yet, no suggestions
-    if (!currentBase) {
-      return [];
-    }
+    // Scoring function for fuzzy-ish matching
+    const getScore = (key: string, partial: string) => {
+      if (!partial) return 1;
+      const k = key.toLowerCase();
+      const p = partial.toLowerCase();
+      if (k === p) return 100;
+      if (k.startsWith(p)) return 50;
+      if (k.includes(p)) return 10;
+      return 0;
+    };
 
-    // VS Code-style: if we have no dot, we might be typing the field type immediately after baseID
-    // But usually baseID is followed by a dot.
-    // If there's no dot at all, we don't suggest yet because they might still be typing the base ID.
-    if (internalValue.indexOf(".") === -1) {
-      return [];
+    // If no base ID yet, or user is at the start, suggest base IDs from other elements
+    if (!currentBase || internalValue.indexOf(".") === -1) {
+      const baseIds = new Set<string>();
+      allElements.forEach(el => {
+        if (el.id) {
+          const firstDotIndex = el.id.indexOf(".");
+          const bId = firstDotIndex > 0 ? el.id.substring(0, firstDotIndex) : el.id;
+          if (bId) baseIds.add(bId);
+        }
+      });
+
+      const uniqueBaseIds = Array.from(baseIds).sort();
+      const partial = internalValue.trim();
+
+      if (!partial) {
+        return uniqueBaseIds.map(id => ({ key: id, label: id, helper: "Existing Base ID", isBaseId: true } as any));
+      }
+
+      return uniqueBaseIds
+        .map(id => ({ item: { key: id, label: id, helper: "Existing Base ID", isBaseId: true } as any, score: getScore(id, partial) }))
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(x => x.item);
     }
 
     const lastDotIndex = internalValue.lastIndexOf(".");
@@ -29,17 +54,6 @@ export function useSuggestions(internalValue: string, isFocused: boolean) {
     const hasFieldType = FIELD_TYPES.some(ft =>
       currentParts.some(p => p === ft.key)
     );
-
-    // Scoring function for fuzzy-ish matching
-    const getScore = (key: string, partial: string) => {
-      if (!partial) return 1;
-      const k = key.toLowerCase();
-      const p = partial.toLowerCase();
-      if (k === p) return 100;
-      if (k.startsWith(p)) return 50;
-      if (k.includes(p)) return 10;
-      return 0;
-    };
 
     if (!hasFieldType) {
       // Still need a field type
@@ -108,6 +122,6 @@ export function useSuggestions(internalValue: string, isFocused: boolean) {
       .sort((a, b) => b.score - a.score)
       .map(x => x.item);
 
-  }, [internalValue, isFocused]);
+  }, [internalValue, isFocused, allElements]);
 }
 

@@ -43,9 +43,10 @@ export function sanitizeSvgGradients(svgString: string, namespace: string): stri
 
     const idMap = new Map<string, string>();
 
+    const REFERENCEABLE_TAGS = Array.from(REFERENCEABLE).join(", ");
+
     // ── 1. Namespace all referenceable IDs ──────────────────────────────────
-    doc.querySelectorAll("*").forEach((el) => {
-        if (!REFERENCEABLE.has(el.tagName.toLowerCase())) return;
+    doc.querySelectorAll(REFERENCEABLE_TAGS).forEach((el) => {
         const origId = el.getAttribute("id");
         if (!origId) return;
         const newId = `ns-${namespace}-${origId}`;
@@ -60,7 +61,9 @@ export function sanitizeSvgGradients(svgString: string, namespace: string): stri
         "marker-start", "marker-mid", "marker-end",
     ];
 
-    doc.querySelectorAll("*").forEach((el) => {
+    const ATTR_SELECTORS = URL_ATTRS.map(a => `[${a}]`).join(", ") + ", [style], [href], [*|href]";
+
+    doc.querySelectorAll(ATTR_SELECTORS).forEach((el) => {
         URL_ATTRS.forEach((attr) => {
             const val = el.getAttribute(attr);
             if (!val) return;
@@ -259,7 +262,8 @@ export function sanitizeSvgGradients(svgString: string, namespace: string): stri
         });
 
         // Apply dither filter to elements referencing those gradient IDs
-        doc.querySelectorAll("*").forEach((el) => {
+        const ATTR_SELECTORS = ["[fill]", "[style]"].join(", ");
+        doc.querySelectorAll(ATTR_SELECTORS).forEach((el) => {
             const fill = el.getAttribute("fill") ?? "";
             const style = el.getAttribute("style") ?? "";
             const fillUrl =
