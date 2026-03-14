@@ -111,7 +111,7 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     // @ts-ignore
     if (e.target.dataset.handle) return;
     const { bounds } = getScaledRect();
@@ -129,10 +129,9 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
       hasUserInteracted.current = true;
       setSelection({ x, y, w: 0, h: 0 });
     }
-    e.preventDefault();
   };
 
-  const handleHandleMouseDown = (e: React.MouseEvent, handle: string) => {
+  const handleHandlePointerDown = (e: React.PointerEvent, handle: string) => {
     e.stopPropagation();
     if (!selection) return;
     startRef.current = {
@@ -144,11 +143,10 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
     };
     setResizing(handle);
     hasUserInteracted.current = true;
-    e.preventDefault();
   };
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
       const { bounds } = getScaledRect();
       if (!bounds.width) return;
       const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
@@ -202,7 +200,7 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
     [moving, dragging, resizing, getScaledRect]
   );
 
-  const handleMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     setDragging(false);
     setResizing(null);
     setMoving(false);
@@ -210,17 +208,17 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
 
   useEffect(() => {
     if (dragging || resizing || moving) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
     } else {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     }
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [dragging, resizing, moving, handleMouseMove, handleMouseUp]);
+  }, [dragging, resizing, moving, handlePointerMove, handlePointerUp]);
 
   useImperativeHandle(ref, () => ({
     crop: () => {
@@ -306,10 +304,9 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
         lineHeight: 0,
         maxWidth: "100%",
         borderRadius: 8,
-        overflow: "hidden",
         boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
       }}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
     >
       <img
         ref={imgRef}
@@ -321,6 +318,7 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
           width: "auto",
           height: "auto",
           display: "block",
+          borderRadius: 8,
         }}
         onLoad={handleImageLoad}
         draggable={false}
@@ -374,7 +372,7 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
             {handles.map((h) => (
               <div
                 key={h}
-                onMouseDown={(e) => handleHandleMouseDown(e, h)}
+                onPointerDown={(e) => handleHandlePointerDown(e, h)}
                 style={getHandleStyle(h)}
                 data-handle="true"
               />

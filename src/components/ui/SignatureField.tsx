@@ -1,12 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { Button } from './button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
-import { Upload, Pen, Type, RotateCcw, Check, X, Download } from 'lucide-react';
+import { Upload, Pen, RotateCcw, X, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import SignatureCanvas from 'react-signature-canvas';
-import { LazyImage } from '@/components/LazyImage';
 import { getSvgElementDimensions } from "@/lib/utils/svgDimensions";
+import { useDropzone } from "react-dropzone";
+import { Slider } from './slider';
 
 interface SignatureFieldProps {
   fieldId: string;
@@ -108,27 +109,42 @@ export default function SignatureField({
     return () => clearTimeout(timeout);
   }, [svgElementId, width, height]);
 
-  const canvasWidth = dimensions?.width || width;
-  const canvasHeight = dimensions?.height || height;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'upload' | 'draw' | 'preset'>('draw');
   //   const [isProcessing, setIsProcessing] = useState(false);
 
+  const [strokeWidth, setStrokeWidth] = useState([2]);
+  const [internalCanvasSize, setInternalCanvasSize] = useState({ width: 400, height: 150 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasHeight = dimensions?.height || 150;
   const signatureRef = useRef<SignatureCanvas>(null);
-  const hiddenInputRef = useRef<HTMLInputElement>(null);
 
-  const handleUploadSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        onSignatureSelect(fieldId, dataUrl);
-        setIsDialogOpen(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // Sync internal canvas resolution with rendered screen size to fix coordinate mismatch
+  // useLayoutEffect ensures the canvas is resized before the browser paints
+  useLayoutEffect(() => {
+    if (!containerRef.current || activeTab !== 'draw' || !isDialogOpen) return;
+
+    const updateSize = () => {
+      if (containerRef.current) {
+        const { clientWidth, clientHeight } = containerRef.current;
+        // Only update if dimensions actually changed to avoid unnecessary clears
+        setInternalCanvasSize(prev => {
+          if (prev.width === clientWidth && prev.height === clientHeight) return prev;
+          return { width: clientWidth, height: clientHeight };
+        });
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      // Use requestAnimationFrame to ensure we're syncing with the browser's render cycle
+      window.requestAnimationFrame(updateSize);
+    });
+    
+    resizeObserver.observe(containerRef.current);
+    updateSize();
+
+    return () => resizeObserver.disconnect();
+  }, [activeTab, isDialogOpen]);
 
   const handleDrawSignature = () => {
     if (signatureRef.current) {
@@ -166,9 +182,6 @@ export default function SignatureField({
 
   const handleRemoveSignature = () => {
     onSignatureSelect(fieldId, '');
-    if (hiddenInputRef.current) {
-      hiddenInputRef.current.value = '';
-    }
   };
 
   const handleDownloadSignature = () => {
@@ -180,27 +193,39 @@ export default function SignatureField({
     }
   };
 
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        onSignatureSelect(fieldId, dataUrl);
+        setIsDialogOpen(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, [fieldId, onSignatureSelect]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { "image/*": [] },
+    disabled: disabled,
+    multiple: false,
+  });
+
   return (
     <div className={cn("space-y-2 w-full", className)}>
-      <label htmlFor={fieldId} className="text-sm font-medium text-white">
-        {fieldName}
-      </label>
-
-      {/* Hidden file input */}
-      <input
-        ref={hiddenInputRef}
-        id={fieldId}
-        type="file"
-        accept="image/*"
-        onChange={handleUploadSignature}
-        className="hidden"
-      />
+      {fieldName && (
+        <label htmlFor={fieldId} className="text-sm font-medium text-white/90">
+          {fieldName}
+        </label>
+      )}
 
       <div className="relative">
         <div
-          className={`block w-full h-40 border-2 border-dashed rounded-lg transition-colors overflow-hidden ${disabled
+          className={`block w-full h-40 border-2 border-dashed rounded-lg transition-all duration-300 overflow-hidden group ${disabled
             ? "border-white/10 bg-white/5 cursor-not-allowed opacity-50"
-            : "border-white/20 cursor-pointer hover:border-white/40"
+            : "border-white/20 cursor-pointer hover:border-white/40 hover:bg-white/5"
             }`}
           onClick={() => {
             if (!disabled) {
@@ -209,29 +234,29 @@ export default function SignatureField({
           }}
         >
           {currentValue ? (
-            <div className="relative w-full h-full group">
-              <div className="w-full h-full overflow-auto">
+            <div className="relative w-full h-full">
+              <div className="w-full h-full flex items-center justify-center p-4">
                 <img
                   src={currentValue}
                   alt={`${fieldName} signature`}
-                  className="w-full max-w-none h-auto object-contain min-h-full"
+                  className="max-w-full max-h-full object-contain filter brightness-110"
                 />
               </div>
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                <div className="text-center text-white">
-                  <div className="text-sm font-medium">Click to change signature</div>
-                  <div className="text-xs opacity-80">Draw or upload a new signature</div>
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                <div className="text-center transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                  <div className="text-sm font-bold text-white uppercase tracking-tighter">Change Signature</div>
+                  <div className="text-[10px] text-white/60 font-medium mt-1">Draw or upload a new one</div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-white/60 hover:text-white/80 transition-colors">
+            <div className="flex flex-col items-center justify-center h-full text-white/60 hover:text-white/80 transition-all duration-300">
               <div className="w-12 h-12 border-2 border-dashed border-current rounded-full flex items-center justify-center mb-3">
                 <Pen className="w-6 h-6" />
               </div>
               <div className="text-center">
-                <div className="text-sm font-medium">Click to add signature</div>
-                <div className="text-xs opacity-80">Draw or upload a signature</div>
+                <div className="text-sm font-medium">{isDialogOpen ? "Opening..." : "Add Signature"}</div>
+                <div className="text-xs opacity-80 mt-1">Tap to draw or upload</div>
               </div>
             </div>
           )}
@@ -263,8 +288,7 @@ export default function SignatureField({
               className="bg-blue-500/20 border-blue-500/30 text-blue-400 hover:bg-blue-500/30"
               disabled={disabled}
             >
-              <Download className="h-3.5 w-3.5 mr-1.5" />
-              Download
+              <Download className="h-3.5 w-3.5" />
             </Button>
             <Button
               type="button"
@@ -277,153 +301,161 @@ export default function SignatureField({
               className="bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30"
               disabled={disabled}
             >
-              <X className="h-3.5 w-3.5 mr-1.5" />
-              Remove
+              <X className="h-3.5 w-3.5" />
             </Button>
           </div>
         )}
       </div>
 
-      {/* Signature Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto  ">
-          <DialogHeader>
-            <DialogTitle className="text-white">Add {fieldName}</DialogTitle>
-          </DialogHeader>
-
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'draw' | 'upload' | 'preset')}>
-            <TabsList className="grid w-full grid-cols-3 bg-white/10">
-              <TabsTrigger value="draw" className="text-white data-[state=active]:bg-white/20">
-                <Pen className="w-4 h-4 mr-2" />
-                Draw
-              </TabsTrigger>
-              <TabsTrigger value="upload" className="text-white data-[state=active]:bg-white/20">
-                <Upload className="w-4 h-4 mr-2" />
-                Upload
-              </TabsTrigger>
-              <TabsTrigger value="preset" className="text-white data-[state=active]:bg-white/20">
-                <Type className="w-4 h-4 mr-2" />
-                Preset
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Draw Signature Tab */}
-            <TabsContent value="draw" className="space-y-4">
-              <div className="flex justify-center">
-                <div className="border border-white/20 rounded-lg overflow-hidden bg-white">
-                  <div style={{ position: 'relative' }}>
-                    <SignatureCanvas
-                      ref={signatureRef}
-                      canvasProps={{
-                        width: canvasWidth,
-                        height: canvasHeight,
-                        className: 'signature-canvas',
-                        style: { backgroundColor }
-                      }}
-                      penColor={penColor}
-                      minWidth={1}
-                      maxWidth={3}
-                      velocityFilterWeight={0.7}
-                    />
-                    {disabled && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: 'transparent',
-                        cursor: 'not-allowed',
-                        zIndex: 10
-                      }} />
-                    )}
-                  </div>
+        <DialogContent className="max-w-lg bg-[#0a0a0c] border-white/10 p-0 overflow-hidden shadow-2xl rounded-2xl">
+          <div className="p-4 pb-0">
+            <DialogHeader className="mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Pen className="w-4 h-4 text-primary" />
                 </div>
+                <DialogTitle className="text-sm font-bold uppercase tracking-tight text-white/90">
+                  Add {fieldName}
+                </DialogTitle>
               </div>
+            </DialogHeader>
 
-              <div className="flex justify-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClearSignature}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  disabled={disabled}
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Clear
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleDrawSignature}
-                  className="bg-primary text-black hover:bg-primary/90"
-                  disabled={disabled}
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Use Signature
-                </Button>
-              </div>
-            </TabsContent>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'draw' | 'upload' | 'preset')} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-black/40 border border-white/5 h-9 p-0.5 rounded-lg mb-4">
+                <TabsTrigger value="draw" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
+                  Draw
+                </TabsTrigger>
+                <TabsTrigger value="upload" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
+                  Upload
+                </TabsTrigger>
+                <TabsTrigger value="preset" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
+                  Preset
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Upload Signature Tab */}
-            <TabsContent value="upload" className="space-y-4">
-              <div className="text-center">
-                <p className="text-white mb-4">Upload a signature image file</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => hiddenInputRef.current?.click()}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  disabled={disabled}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Choose File
-                </Button>
-              </div>
-            </TabsContent>
-
-            {/* Preset Signature Tab */}
-            <TabsContent value="preset" className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                {PRESET_SIGNATURES.map((preset) => (
-                  <div
-                    key={preset.id}
-                    className={`flex items-center gap-4 p-4 border border-white/20 rounded-lg bg-white/5 transition-colors ${disabled
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-white/10 cursor-pointer"
-                      }`}
-                    onClick={disabled ? undefined : () => handlePresetSignature(preset)}
-                  >
-                    <LazyImage
-                      src={preset.data}
-                      alt={preset.name}
-                      className="w-20 h-8 object-contain bg-white rounded border"
-                      placeholderColor="#ffffff"
-                    />
-                    <span className="text-white flex-1">{preset.name}</span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="bg-primary text-black hover:bg-primary/90"
-                      disabled={disabled}
+              <div className="min-h-[220px] flex flex-col items-center justify-center">
+                {/* Draw Signature Tab */}
+                <TabsContent value="draw" className="w-full space-y-3 m-0 animate-in fade-in duration-300">
+                  <div className="flex flex-col items-center w-full">
+                    <div 
+                      ref={containerRef}
+                      className="w-full border border-white/10 rounded-xl overflow-hidden bg-white shadow-xl flex items-center justify-center p-0"
+                      style={{ height: canvasHeight }}
                     >
-                      Use
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
+                      <SignatureCanvas
+                        ref={signatureRef}
+                        canvasProps={{
+                          width: internalCanvasSize.width,
+                          height: internalCanvasSize.height,
+                          className: 'signature-canvas', // REMOVED w-full h-full to prevent coordinate mismatch
+                          style: { backgroundColor, display: 'block' }
+                        }}
+                        penColor={penColor}
+                        minWidth={strokeWidth[0] - 0.5}
+                        maxWidth={strokeWidth[0] + 0.5}
+                        velocityFilterWeight={0.7}
+                      />
+                    </div>
+                    
+                    <div className="w-full max-w-[400px] mt-4 space-y-3">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Pen Size</span>
+                        <span className="text-[9px] font-bold text-primary uppercase">{strokeWidth[0]}px</span>
+                      </div>
+                      <Slider 
+                        value={strokeWidth} 
+                        onValueChange={setStrokeWidth} 
+                        min={0.5} 
+                        max={4} 
+                        step={0.5}
+                        className="w-full"
+                      />
+                    </div>
 
-          <DialogFooter>
+                    <div className="mt-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearSignature}
+                        className="h-8 text-[9px] font-bold uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 rounded-lg"
+                        disabled={disabled}
+                      >
+                        <RotateCcw className="w-3 h-3 mr-2" />
+                        Clear Canvas
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* Upload Signature Tab */}
+                <TabsContent value="upload" className="w-full m-0 animate-in fade-in duration-300">
+                  <div 
+                    {...getRootProps()} 
+                    className={cn(
+                      "w-full h-40 border-2 border-dashed rounded-xl transition-all flex flex-col items-center justify-center gap-2 cursor-pointer overflow-hidden group",
+                      isDragActive ? "border-primary bg-primary/5" : "border-white/10 bg-white/5 hover:border-white/20"
+                    )}
+                  >
+                    <input {...getInputProps()} />
+                    <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center transition-all group-hover:scale-105">
+                      <Upload className={cn("w-4 h-4 transition-colors", isDragActive ? "text-primary" : "text-white/40")} />
+                    </div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-white/60">
+                      {isDragActive ? "Drop here" : "Choose File"}
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* Preset Signature Tab */}
+                <TabsContent value="preset" className="w-full m-0 animate-in fade-in duration-300">
+                  <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                    {PRESET_SIGNATURES.map((preset) => (
+                      <div
+                        key={preset.id}
+                        className={cn(
+                          "group h-14 rounded-lg border border-white/5 bg-white hover:border-primary transition-all p-1 flex items-center justify-center shadow-sm",
+                          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                        )}
+                        onClick={disabled ? undefined : () => handlePresetSignature(preset)}
+                      >
+                        <img
+                          src={preset.data}
+                          alt={preset.name}
+                          className="max-h-[80%] max-w-[80%] object-contain transition-transform group-hover:scale-110"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
+
+          <div className="p-3 bg-white/5 border-t border-white/10 flex items-center justify-end gap-2">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
+              size="sm"
               onClick={() => setIsDialogOpen(false)}
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              className="h-8 text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white"
             >
               Cancel
             </Button>
-          </DialogFooter>
+            
+            {activeTab === 'draw' && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleDrawSignature}
+                className="bg-primary text-black font-bold uppercase tracking-widest text-[9px] rounded-lg h-8 px-5"
+                disabled={disabled}
+              >
+                Done
+              </Button>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

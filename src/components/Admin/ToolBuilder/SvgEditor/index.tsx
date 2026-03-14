@@ -120,7 +120,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
   // Navigation Intercept State
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<{ type: 'tab', target: string } | { type: 'element', target: number | null } | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<{ target: number | null } | null>(null);
 
   // Fetch tools
   const { data: tools = [] } = useQuery({
@@ -290,10 +290,10 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     reader.readAsText(file);
   };
 
-  const handleElementSelect = useCallback((index: number | null) => {
+  const handleElementSelect = useCallback((index: number | null, force = false) => {
     // If selecting a DIFFERENT element while one is locally dirty, intercept
-    if (isEditorDirty && index !== selectedElementIndex) {
-      setPendingNavigation({ type: 'element', target: index });
+    if (!force && isEditorDirty && index !== selectedElementIndex) {
+      setPendingNavigation({ target: index });
       setShowUnsavedDialog(true);
       return;
     }
@@ -342,14 +342,8 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     
     if (!action) return;
 
-    // We must execute the pending navigation *after* clearing the dirt and closing dialog
-    requestAnimationFrame(() => {
-      if (action.type === 'tab') {
-        setActiveTab(action.target);
-      } else if (action.type === 'element') {
-        handleElementSelect(action.target);
-      }
-    });
+    // Use force=true to bypass the dirty check we just confirmed to skip
+    handleElementSelect(action.target, true);
   }, [pendingNavigation, handleElementSelect]);
 
   // Navigate to prev/next element from the inspector tab

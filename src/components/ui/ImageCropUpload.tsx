@@ -6,8 +6,9 @@ import { Dialog as ShadcnDialog, DialogContent as ShadcnDialogContent } from "@/
 import { Upload, Check, Loader2, Sparkles, Eye, RefreshCcw } from "lucide-react";
 import { annotationDetector } from "@/lib/utils/annotationDetector";
 import useToolStore from "@/store/formStore";
-import { removeBackground } from "@imgly/background-removal";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { removeBackground } from "@/api/apiEndpoints";
 import { LazyImage } from "@/components/LazyImage";
 import ImageCropper, { type ImageCropperRef } from "./ImageCropper";
 
@@ -114,31 +115,31 @@ export default function ImageCropUpload({
     analyze();
   }, [svgElementId, svgRaw]);
 
-  const handleMagicMask = async () => {
-    if (!image) return;
-    setIsRemovingBackground(true);
-    setBgProgress(0);
-    try {
-      const result = await removeBackground(image, {
-        model: 'isnet_fp16', // Balance between speed and quality
-        progress: (_, current, total) => {
-          setBgProgress(Math.round((current / total) * 100));
-        }
-      });
-      const blob = result as Blob;
-      const dataUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-      setBgRemovedImage(dataUrl);
+  const bgRemovalMutation = useMutation({
+    mutationFn: (imageData: string | File) => removeBackground(imageData),
+    onMutate: () => {
+      setBgProgress(10);
+      setIsRemovingBackground(true);
+    },
+    onSuccess: (data) => {
+      setBgProgress(100);
+      setBgRemovedImage(data.image);
       toast.success("Background removed ✨", { id: 'bg-remove-status' });
-    } catch (e) {
-      toast.error("Background removal failed");
+    },
+    onError: (e: any) => {
+      const errorMsg = e.response?.data?.error || e.message || "Background removal failed";
+      toast.error(errorMsg);
       console.error(e);
-    } finally {
+      setBgProgress(0);
+    },
+    onSettled: () => {
       setIsRemovingBackground(false);
     }
+  });
+
+  const handleMagicMask = async () => {
+    if (!image) return;
+    bgRemovalMutation.mutate(image);
   };
 
   const handleApplyCrop = async (croppedDataUrl: string) => {
@@ -305,11 +306,11 @@ export default function ImageCropUpload({
             <div className="flex-1 relative flex flex-col min-h-0">
               <div className="flex-1 flex flex-col items-center justify-center p-1 min-h-0">
                 <div className="w-full h-full flex flex-col items-center justify-center relative min-h-0">
-                  <div className="flex-1 bg-black/40 border border-white/5 rounded-2xl p-0 flex items-center justify-center relative overflow-hidden group shadow-[0_0_50px_rgba(0,0,0,0.5)] min-h-0 w-full max-w-6xl">
+                  <div className="flex-1 bg-black/40 border border-white/5 rounded-2xl p-0 flex items-center justify-center relative group shadow-[0_0_50px_rgba(0,0,0,0.5)] min-h-0 w-full max-w-6xl">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,79,24,0.05)_0%,transparent_70%)] pointer-events-none" />
-                    <div className="relative h-full w-full flex items-center justify-center overflow-hidden min-h-0">
+                    <div className="relative h-full w-full flex items-center justify-center min-h-0">
                       {phase === 'editing' || phase === 'processing' ? (
-                        <div className="relative w-full h-full flex flex-col items-center justify-center p-2 md:p-8 overflow-hidden min-h-0">
+                        <div className="relative w-full h-full flex flex-col items-center justify-center p-2 md:p-8 min-h-0">
                           {/* Grid background moved here */}
                           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-size-[32px_32px] pointer-events-none" />
                           

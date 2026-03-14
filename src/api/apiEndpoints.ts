@@ -245,9 +245,13 @@ export const deleteTool = async (id: string): Promise<unknown> => {
   return res.data;
 };
 
-export const removeBackground = async (imageFile: File): Promise<{ success: boolean; image: string; message: string }> => {
+export const removeBackground = async (image: File | string): Promise<{ success: boolean; image: string; message: string }> => {
+  if (typeof image === 'string') {
+    const res = await apiClient.post('/remove-background/', { image });
+    return res.data;
+  }
   const formData = new FormData();
-  formData.append('image', imageFile);
+  formData.append('image', image);
 
   const res = await apiClient.post('/remove-background/', formData, {
     headers: {
