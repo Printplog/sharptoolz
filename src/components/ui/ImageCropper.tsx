@@ -114,6 +114,11 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
   const handlePointerDown = (e: React.PointerEvent) => {
     // @ts-ignore
     if (e.target.dataset.handle) return;
+    
+    // Capture pointer to ensure dragging continues even if finger slides off the target
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+
     const { bounds } = getScaledRect();
     const x = (e.clientX - bounds.left) / bounds.width;
     const y = (e.clientY - bounds.top) / bounds.height;
@@ -134,6 +139,11 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
   const handleHandlePointerDown = (e: React.PointerEvent, handle: string) => {
     e.stopPropagation();
     if (!selection) return;
+    
+    // Capture pointer for the handle specifically
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+
     startRef.current = {
       x: 0,
       y: 0,
@@ -255,16 +265,21 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
 
   const getHandleStyle = (h: string): React.CSSProperties => {
     const isCorner = h.length === 2;
-    const size = isCorner ? 10 : 8;
-    const offset = isCorner ? -5 : -4;
+    const size = 10;
+    // Visual size is 10x10, but hit area is much larger due to transparent border
+    const hitAreaSize = 24; // Larger hit area for mobile
+    const visualOffset = -5;
+    const hitOffset = -12; // -(hitAreaSize / 2)
 
     const base: React.CSSProperties = {
       position: "absolute",
       width: size,
       height: size,
       background: "#fff",
-      border: "1.5px solid rgba(255,255,255,0.9)",
-      borderRadius: isCorner ? 2 : "50%",
+      // Enlarge the hit area using a thick transparent border
+      border: "7px solid transparent", 
+      backgroundClip: "padding-box", // Keep background inside the 10x10 area
+      borderRadius: isCorner ? "2px" : "50%",
       zIndex: 50,
       cursor:
         h === "t" || h === "b" ? "ns-resize"
@@ -272,23 +287,24 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
         : h === "tl" || h === "br" ? "nwse-resize"
         : "nesw-resize",
       boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
+      outline: "1px solid rgba(255,255,255,0.9)", // Restoring the visual border effect
     };
 
     if (isCorner) {
       return {
         ...base,
-        top: h.includes("t") ? offset : "auto",
-        bottom: h.includes("b") ? offset : "auto",
-        left: h.includes("l") ? offset : "auto",
-        right: h.includes("r") ? offset : "auto",
+        top: h.includes("t") ? hitOffset : "auto",
+        bottom: h.includes("b") ? hitOffset : "auto",
+        left: h.includes("l") ? hitOffset : "auto",
+        right: h.includes("r") ? hitOffset : "auto",
       };
     } else {
       return {
         ...base,
-        top: h === "t" ? offset : h === "b" ? "auto" : "calc(50% - 4px)",
-        bottom: h === "b" ? offset : "auto",
-        left: h === "l" ? offset : h === "r" ? "auto" : "calc(50% - 4px)",
-        right: h === "r" ? offset : "auto",
+        top: h === "t" ? hitOffset : h === "b" ? "auto" : "calc(50% - 12px)",
+        bottom: h === "b" ? hitOffset : "auto",
+        left: h === "l" ? hitOffset : h === "r" ? "auto" : "calc(50% - 12px)",
+        right: h === "r" ? hitOffset : "auto",
       };
     }
   };
