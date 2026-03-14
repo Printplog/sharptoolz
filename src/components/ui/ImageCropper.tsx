@@ -267,8 +267,6 @@ const ImageCropper = forwardRef<ImageCropperRef, ImageCropperProps>(({ image, on
     const isCorner = h.length === 2;
     const size = 10;
     // Visual size is 10x10, but hit area is much larger due to transparent border
-    const hitAreaSize = 24; // Larger hit area for mobile
-    const visualOffset = -5;
     const hitOffset = -12; // -(hitAreaSize / 2)
 
     const base: React.CSSProperties = {
