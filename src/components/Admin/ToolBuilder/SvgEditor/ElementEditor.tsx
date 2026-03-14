@@ -102,7 +102,7 @@ const VariableDropdown = ({
         </div>
 
         <DropdownMenuSeparator className="bg-white/5 mx-1" />
-        <div className="p-3 space-y-3 bg-white/[0.02]">
+        <div className="p-3 space-y-3 bg-white/2">
           <Label className="text-[10px] text-white/50 block">Save current: <span className="text-white font-mono">{currentValue}</span></Label>
           <div className="flex gap-2">
             <Input
@@ -202,7 +202,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const currentTransform = getTransform();
 
-    const handleLocalUpdate = (updates: Partial<SvgElement>, _undoable = false) => {
+    const handleLocalUpdate = (updates: Partial<SvgElement>) => {
       const updated = {
         ...localElement,
         ...updates,
@@ -379,32 +379,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       }
 
       if (newTransform.rotate !== 0) {
-        // Use a proper pivot point for rotation to prevent elements from "flying away"
-        let cx = 0;
-        let cy = 0;
-
-        if (isTextElement(localElement)) {
-          // For text, the pivot should be its anchor (x, y)
-          cx = parseFloat(localElement.attributes.x || "0");
-          cy = parseFloat(localElement.attributes.y || "0");
-        } else {
-          // For other elements (like images), use the center if possible
-          const x = parseFloat(localElement.attributes.x || "0");
-          const y = parseFloat(localElement.attributes.y || "0");
-          const w = parseFloat(localElement.attributes.width || "0");
-          const h = parseFloat(localElement.attributes.height || "0");
-          
-          if (!isNaN(x) && !isNaN(y) && !isNaN(w) && !isNaN(h)) {
-            cx = x + w / 2;
-            cy = y + h / 2;
-          }
-        }
-
-        if (cx !== 0 || cy !== 0) {
-          components.push(`rotate(${newTransform.rotate} ${cx} ${cy})`);
-        } else {
-          components.push(`rotate(${newTransform.rotate})`);
-        }
+        // We use a simple rotate(angle) here because we complement it with
+        // transform-origin: center in the CSS style. This provides the best
+        // "rotate itself" (spin-in-place) behavior for interactive editing.
+        components.push(`rotate(${newTransform.rotate})`);
       }
 
       if (newTransform.scale !== 1) {
@@ -532,7 +510,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
         {!isGenField && (
           <CollapsiblePanel id={`transform-${index}`} title="Transformations" defaultOpen={false}>
-            <div className="space-y-6 bg-white/[0.03] p-4 rounded-xl border border-white/5">
+            <div className="space-y-6 bg-white/3 p-4 rounded-xl border border-white/5">
               {[
                 { key: 'rotate', label: 'Rotate' },
                 { key: 'translateX', label: 'Pos X' },

@@ -7,7 +7,9 @@ export interface SvgPatch {
     id: string;
     attribute: string;
     subKey?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     oldValue: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     newValue: any;
 }
 
@@ -254,10 +256,12 @@ export const useSvgStore = create<SvgStore>()(
                     if (patch.attribute === 'reorder') {
                         newOrder = patch.oldValue as string[];
                     } else if (patch.attribute === 'delete') {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const { id, element, orderIndex } = patch.oldValue as any;
                         newElements[id] = element;
                         newOrder.splice(orderIndex, 0, id);
                     } else if (patch.attribute === 'add') {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const { id } = patch.newValue as any;
                         delete newElements[id];
                         newOrder = newOrder.filter(oid => oid !== id);
@@ -286,10 +290,12 @@ export const useSvgStore = create<SvgStore>()(
                     if (patch.attribute === 'reorder') {
                         newOrder = patch.newValue as string[];
                     } else if (patch.attribute === 'add') {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const { id, element, orderIndex } = patch.newValue as any;
                         newElements[id] = element;
                         newOrder.splice(orderIndex, 0, id);
                     } else if (patch.attribute === 'delete') {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const { id } = patch.oldValue as any;
                         delete newElements[id];
                         newOrder = newOrder.filter(oid => oid !== id);

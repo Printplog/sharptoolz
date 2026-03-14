@@ -37,14 +37,91 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
       } catch { /* ignore invalid selectors */ }
     });
 
+    // 3. Fallback: Prefix matching for DSL-augmented IDs
+    // We match [id^="baseId."] to find elements with extensions (e.g. Field.text.track_123)
+    // but we EXCLUDE helper elements like .error or .helper to prevent accidental transforms.
+    if (results.length === 0) {
+      const prefixSelector = `[id^="${CSS.escape(id)}."]`;
+      try {
+        const items = Array.from(doc.querySelectorAll(prefixSelector)).filter(el => {
+          const elId = el.getAttribute("id") || "";
+          return !elId.endsWith(".error") && !elId.endsWith(".helper") && !elId.includes(".error.") && !elId.includes(".helper.");
+        });
+        results.push(...items);
+      } catch { /* ignore */ }
+    }
+
     // Filter duplicates and return as SVGElement array
     return Array.from(new Set(results)) as SVGElement[];
   };
 
+  /*
+   * Helper to consolidate transforms from both 'style' and 'transform' attribute.
+   */
+  const getElementCenter = (el: SVGElement) => {
+    // 1. Try to extract existing pivot from the transform attribute as ground truth
+    const transform = el.getAttribute("transform") || "";
+    // Matches rotate(angle) or rotate(angle, cx, cy) or rotate(angle cx cy) with optional commas
+    const rotateMatch = transform.match(/rotate\s*\(\s*(-?[\d.]+)\s*(?:[ ,]\s*(-?[\d.]+)\s*[ ,]\s*(-?[\d.]+)\s*)?\)/);
+    
+    if (rotateMatch && rotateMatch[2] && rotateMatch[3]) {
+      const cx = parseFloat(rotateMatch[2]);
+      const cy = parseFloat(rotateMatch[3]);
+      if (!isNaN(cx) && !isNaN(cy)) return { cx, cy };
+    }
+
+    // 2. Element Specific Coordinates
+    const tagName = el.tagName.toLowerCase();
+    
+    // Circle/Ellipse use cx/cy directly
+    if (tagName === 'circle' || tagName === 'ellipse') {
+       const cx = parseFloat(el.getAttribute("cx") || "0");
+       const cy = parseFloat(el.getAttribute("cy") || "0");
+       if (!isNaN(cx) && !isNaN(cy)) return { cx, cy };
+    }
+
+    // 3. Fallback: Calculate from dimensions (checking both attributes and style)
+    const xAttr = el.getAttribute("x") || el.getAttribute("cx") || "0";
+    const yAttr = el.getAttribute("y") || el.getAttribute("cy") || "0";
+    let wAttr = el.getAttribute("width") || "";
+    let hAttr = el.getAttribute("height") || "";
+
+    // If attributes are missing or zero, try reading from style
+    if (!wAttr || parseFloat(wAttr) <= 0) {
+      const styleW = el.style.width || (el.getAttribute("style") || "").match(/width:\s*([\d.]+)px/)?.[1];
+      if (styleW) wAttr = styleW;
+    }
+    if (!hAttr || parseFloat(hAttr) <= 0) {
+      const styleH = el.style.height || (el.getAttribute("style") || "").match(/height:\s*([\d.]+)px/)?.[1];
+      if (styleH) hAttr = styleH;
+    }
+
+    const x = parseFloat(xAttr);
+    const y = parseFloat(yAttr);
+    const w = parseFloat(wAttr);
+    const h = parseFloat(hAttr);
+
+    if (!isNaN(x) && !isNaN(y) && !isNaN(w) && !isNaN(h) && w > 0 && h > 0) {
+      return { cx: x + w / 2, cy: y + h / 2 };
+    }
+
+    // 4. For text elements, pivot is often (x, y)
+    if (tagName === 'text' && !isNaN(x) && !isNaN(y)) {
+      return { cx: x, cy: y };
+    }
+
+    // 5. Hard Fallback: Check for existing translation in transform
+    const translateMatch = transform.match(/translate\(\s*(-?[\d.]+)\s*[ ,]\s*(-?[\d.]+)\s*\)/);
+    if (translateMatch) {
+       return { cx: parseFloat(translateMatch[1]), cy: parseFloat(translateMatch[2]) };
+    }
+
+    // 6. Last resort: use x,y as pivot or (0,0)
+    return { cx: isNaN(x) ? 0 : x, cy: isNaN(y) ? 0 : y };
+  };
+
   /**
    * Helper to consolidate transforms from both 'style' and 'transform' attribute.
-   * Canvg and some other SVG post-processors have trouble with CSS transforms
-   * or conflicting attributes. This ensures everything is in the 'transform' attribute.
    */
   const normalizeTransform = (el: SVGElement) => {
     const styleTransform = el.style.transform;
@@ -52,50 +129,42 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
     if (!styleTransform) return;
 
-    // Get element dimensions for center calculation if needed
-    const x = parseFloat(el.getAttribute("x") || "0");
-    const y = parseFloat(el.getAttribute("y") || "0");
-    const w = parseFloat(el.getAttribute("width") || "0");
-    const h = parseFloat(el.getAttribute("height") || "0");
+    const { cx, cy } = getElementCenter(el);
+    const canComputeCenter = cx !== 0 || cy !== 0;
 
-    // Skip if can't compute valid center (protects images)
-    if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h) || w <= 0 || h <= 0) {
-      el.style.transform = "";  // Just clear invalid style
-      return;
-    }
-
-    const hasDimensions = el.hasAttribute("width") && el.hasAttribute("height");
-    const cx = x + w / 2;
-    const cy = y + h / 2;
-
-    // Convert CSS transforms to SVG attribute format
-    // 1. Convert translate(Xpx, Ypx) to translate(X, Y)
+    // Only proceed with normalization if we have a solid center or it's a simple translate
+    // Otherwise, we risk injecting (0,0) which causes the "flying away" bug
     let normalized = styleTransform
       .replace(/translate\(([^,)]+)px\s*,\s*([^,)]+)px\)/g, 'translate($1, $2)')
       .replace(/translate\(([^,)]+)px\)/g, 'translate($1)');
 
     // 2. Convert rotate(Xdeg) to rotate(X, cx, cy)
-    // SVG attributes MUST NOT have 'deg' units. We strip them and inject center if possible.
     normalized = normalized.replace(/rotate\(([^)]+)\)/g, (_fullMatch, p1) => {
-      const parts = p1.split(',');
-      const angle = parts[0].replace('deg', '').trim();
+      const angle = p1.replace('deg', '').trim();
+      const parts = p1.split(/[ ,]+/);
 
-      if (parts.length === 1 && hasDimensions) {
+      if (parts.length === 1 && canComputeCenter) {
         return `rotate(${angle}, ${cx}, ${cy})`;
       }
-      // If it already has parameters or we can't calculate a center, 
-      // just ensure it's a valid SVG rotate (no units)
-      return `rotate(${angle}${parts.length > 1 ? ',' + parts.slice(1).join(',') : ''})`;
+      
+      // If we can't compute center and it's a naked rotate(angle), 
+      // check if style has transform-origin: center. 
+      // If it does, we should PROBABLY not normalize yet or use a better strategy.
+      // For now, return valid SVG rotation
+      return `rotate(${angle}${parts.length > 2 ? ',' + parts.slice(1).join(',') : ''})`;
     });
 
     // Merge them: style usually overrides attribute in browser
     const combined = `${attrTransform} ${normalized}`.trim();
     el.setAttribute("transform", combined);
 
-    // Clear styles to prevent double application, but only the transform ones
-    el.style.transform = "";
-    el.style.transformOrigin = "";
-    el.style.transformBox = "";
+    // CLEAR styles only if we successfully normalized with a pivot
+    // If cx/cy are 0, we leave the styles so the browser can handle it with transform-origin: center
+    if (canComputeCenter || !styleTransform.includes("rotate")) {
+        el.style.transform = "";
+        el.style.transformOrigin = "";
+        el.style.transformBox = "";
+    }
   };
 
   fields.forEach((field) => {
@@ -173,10 +242,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
 
       targets.forEach(el => {
         // Consolidate any existing transforms (from style or attribute) before applying new ones
-        // ONLY normalize non-image elements (images rely on x/y/w/h positioning)
-        if (el.tagName.toLowerCase() !== 'image') {
-          normalizeTransform(el);
-        }
+        normalizeTransform(el);
 
         switch (field.type) {
           case "sign":
@@ -190,11 +256,11 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
             if (value && value.trim() !== "") {
               el.setAttribute("href", value);
               el.setAttributeNS(hrefNS, "href", value);
-              // Preserve the original preserveAspectRatio if set by template designer.
-              // Only fall back to "xMidYMid meet" (fit box) if no value is present.
-              if (!el.getAttribute("preserveAspectRatio")) {
-                el.setAttribute("preserveAspectRatio", "xMidYMid meet");
-              }
+              el.setAttribute("preserveAspectRatio", "none");
+              
+              // Set style-based properties for browser-side redundancy and stable rotation pivot
+              (el as SVGElement).style.transformBox = "fill-box";
+              (el as SVGElement).style.transformOrigin = "center";
             }
 
             // Apply user-controlled rotation ON TOP of the original template rotation.
@@ -223,30 +289,16 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
               }
               const baseTransform = el.getAttribute("data-base-transform") || "";
 
-              let cx = 0, cy = 0;
-              try {
-                // If it's a text element, we can use its x/y as pivot if width/height are fuzzy
-                if (el.tagName.toLowerCase() === 'text' || el.tagName.toLowerCase() === 'tspan') {
-                   cx = parseFloat(el.getAttribute("x") || "0");
-                   cy = parseFloat(el.getAttribute("y") || "0");
-                } else {
-                   const bbox = (el as any).getBBox();
-                   cx = bbox.x + bbox.width / 2;
-                   cy = bbox.y + bbox.height / 2;
-                }
-              } catch {
-                const x = parseFloat(el.getAttribute("x") || "0");
-                const y = parseFloat(el.getAttribute("y") || "0");
-                const w = parseFloat(el.getAttribute("width") || "0");
-                const h = parseFloat(el.getAttribute("height") || "0");
-                cx = x + w / 2;
-                cy = y + h / 2;
-              }
-
-              // Build final transform: base (from template) + exactly one user rotation
+              // Build final transform: base template (with any existing rotations removed to prevent stacking) + exactly one NEW user rotation
+              const { cx, cy } = getElementCenter(el);
+              const baseWithoutRotation = baseTransform.replace(/rotate\s*\([^)]*\)/g, '').trim();
               const newRotation = `rotate(${rotation}, ${cx}, ${cy})`;
-              const updatedTransform = baseTransform ? `${baseTransform} ${newRotation}` : newRotation;
+              const updatedTransform = baseWithoutRotation ? `${baseWithoutRotation} ${newRotation}` : newRotation;
               el.setAttribute("transform", updatedTransform);
+              
+              // Always ensure stable pivot styles are present for active fields
+              (el as SVGElement).style.transformBox = "fill-box";
+              (el as SVGElement).style.transformOrigin = "center";
             }
             break;
           }
@@ -340,7 +392,7 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
             }
 
             // Apply rotation to text/other fields
-            let rotationValue = field.rotation;
+            const rotationValue = field.rotation;
             if (rotationValue !== undefined && rotationValue !== null) {
               const rotation = parseFloat(String(rotationValue));
               if (!isNaN(rotation)) {

@@ -61,7 +61,7 @@ export function validateSvgId(id: string): ValidationResult {
     let isWhitelisted = false;
 
     // A. Check Field Types
-    const fieldType = FIELD_TYPES.find(ft => ft.key === partBase);
+    const fieldType = FIELD_TYPES.find(ft => ft.key.toLowerCase() === partBase.toLowerCase());
     if (fieldType) {
       isWhitelisted = true;
       typeCount++;
@@ -73,7 +73,7 @@ export function validateSvgId(id: string): ValidationResult {
     }
 
     // B. Check Extensions
-    const extension = EXTENSIONS.find(ext => ext.key === partBase);
+    const extension = EXTENSIONS.find(ext => ext.key.toLowerCase() === partBase.toLowerCase());
     if (extension) {
       isWhitelisted = true;
 

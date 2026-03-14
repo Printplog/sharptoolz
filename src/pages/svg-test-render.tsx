@@ -191,7 +191,7 @@ export default function SvgTestRender() {
                         {activeMode === 'inline-raw' && (
                             <div
                                 style={{ maxWidth: '100%' }}
-                                // eslint-disable-next-line react/no-danger
+                                
                                 dangerouslySetInnerHTML={{ __html: svgText }}
                             />
                         )}
@@ -199,7 +199,7 @@ export default function SvgTestRender() {
                         {activeMode === 'inline-sanitized' && (
                             <div
                                 style={{ maxWidth: '100%' }}
-                                // eslint-disable-next-line react/no-danger
+                                
                                 dangerouslySetInnerHTML={{ __html: sanitizedSvg }}
                             />
                         )}
@@ -244,11 +244,11 @@ export default function SvgTestRender() {
                                                 </object>
                                             )}
                                             {m.key === 'inline-raw' && (
-                                                // eslint-disable-next-line react/no-danger
+                                                
                                                 <div style={{ maxWidth: '100%' }} dangerouslySetInnerHTML={{ __html: svgText }} />
                                             )}
                                             {m.key === 'inline-sanitized' && (
-                                                // eslint-disable-next-line react/no-danger
+                                                
                                                 <div style={{ maxWidth: '100%' }} dangerouslySetInnerHTML={{ __html: sanitizedSvg }} />
                                             )}
                                         </div>

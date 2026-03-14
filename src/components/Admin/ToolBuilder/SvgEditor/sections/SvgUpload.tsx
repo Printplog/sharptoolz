@@ -14,7 +14,7 @@
  *  • Zoom is exponential (feels natural) and always centred on the cursor.
  */
 
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut, Maximize2, MousePointer, Hand } from "lucide-react";
 import { useSvgLiveUpdate } from "../hooks/useSvgLiveUpdate";
@@ -54,10 +54,14 @@ interface Props {
   draftElement?: SvgElement | null;
 }
 
-export default function SvgUpload({
+export interface SvgUploadRef {
+  fitToView: () => void;
+}
+
+const SvgUpload = forwardRef<SvgUploadRef, Props>(({
   currentSvg, onSvgUpload, onSelectElement,
   elements = [], activeElementId, draftElement,
-}: Props) {
+}, ref) => {
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -262,6 +266,11 @@ export default function SvgUpload({
       return () => clearTimeout(t);
     }
   }, [currentSvg, elements.length, fitToView]);
+
+  useImperativeHandle(ref, () => ({
+    fitToView
+  }), [fitToView]);
+
 
   // ══════════════════════════════════════════════════════════════════════════
   // Wheel — non-passive so we can preventDefault
@@ -587,7 +596,9 @@ export default function SvgUpload({
 
     </div>
   );
-}
+});
+
+export default SvgUpload;
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 

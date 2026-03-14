@@ -68,10 +68,13 @@ export function useIdEditor(
         : "";
 
       const shouldReplacePartial = !hasTrailingDot && currentPartial &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (extension as any).key.toLowerCase().startsWith(currentPartial.toLowerCase());
 
       // Special handling for Base ID suggestions (which are not extensions yet)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((extension as any).isBaseId) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const newValue = `${(extension as any).key}.`;
           setInternalValue(newValue);
           setValidation(validate(newValue));
@@ -96,6 +99,7 @@ export function useIdEditor(
 
       let newValue: string;
       const newParts = [...currentParts].filter(p => p !== "");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const isFieldType = (extension as any).isFieldType;
       
       const existingIndex = newParts.findIndex(p => 
@@ -146,6 +150,7 @@ export function useIdEditor(
     const sanitizedValue = value.trim().replace(/\s+/g, "_");
 
     const newParts = [...currentParts].filter(p => p !== "");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isFieldType = (pendingExtension as any).isFieldType;
 
     const existingIndex = newParts.findIndex(p => 

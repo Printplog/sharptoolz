@@ -133,11 +133,11 @@ export default function AdminSvgTestRender() {
                                 </object>
                             )}
                             {activeMode === 'inline-raw' && (
-                                // eslint-disable-next-line react/no-danger
+                                
                                 <div className="max-w-full [&_svg]:max-w-full [&_svg]:h-auto" dangerouslySetInnerHTML={{ __html: svgText }} />
                             )}
                             {activeMode === 'inline-sanitized' && (
-                                // eslint-disable-next-line react/no-danger
+                                
                                 <div
                                     className="max-w-full [&_svg]:max-w-full [&_svg]:h-auto"
                                     style={{
@@ -170,11 +170,11 @@ export default function AdminSvgTestRender() {
                                                 </object>
                                             )}
                                             {m.key === 'inline-raw' && (
-                                                // eslint-disable-next-line react/no-danger
+                                                
                                                 <div className="max-w-full [&_svg]:max-w-full [&_svg]:h-auto" dangerouslySetInnerHTML={{ __html: svgText }} />
                                             )}
                                             {m.key === 'inline-sanitized' && (
-                                                // eslint-disable-next-line react/no-danger
+                                                
                                                 <div
                                                     className="max-w-full [&_svg]:max-w-full [&_svg]:h-auto"
                                                     style={{

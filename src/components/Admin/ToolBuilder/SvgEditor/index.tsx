@@ -116,6 +116,8 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [freshSvgContent, setFreshSvgContent] = useState<string | null>(null);
   const [isEditorDirty, setIsEditorDirty] = useState(false);
 
+  const svgUploadRef = useRef<import("./sections/SvgUpload").SvgUploadRef>(null);
+
   // Navigation Intercept State
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<{ type: 'tab', target: string } | { type: 'element', target: number | null } | null>(null);
@@ -500,6 +502,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
           <div className="h-full w-full">
             <SvgUpload
+              ref={svgUploadRef}
               currentSvg={workingSvg}
               onSvgUpload={handleSvgUpload}
               onSelectElement={(id) => {

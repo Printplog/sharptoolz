@@ -34,10 +34,12 @@ export function useSuggestions(internalValue: string, isFocused: boolean, allEle
       const partial = internalValue.trim();
 
       if (!partial) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return uniqueBaseIds.map(id => ({ key: id, label: id, helper: "Existing Base ID", isBaseId: true } as any));
       }
 
       return uniqueBaseIds
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map(id => ({ item: { key: id, label: id, helper: "Existing Base ID", isBaseId: true } as any, score: getScore(id, partial) }))
         .filter(x => x.score > 0)
         .sort((a, b) => b.score - a.score)
