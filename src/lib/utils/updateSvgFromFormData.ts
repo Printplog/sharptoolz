@@ -2,11 +2,20 @@ import { extractFromDependency } from "./fieldExtractor";
 import { applyWrappedText, getSvgElementStyle } from "./textWrapping";
 import type { FormField } from "@/types";
 
-export default function updateSvgFromFormData(svgRaw: string, fields: FormField[]): string {
-  if (!svgRaw) return "";
+export default function updateSvgFromFormData(svgSource: string, fields: FormField[]): string;
+export default function updateSvgFromFormData(svgSource: Document, fields: FormField[]): Document;
+export default function updateSvgFromFormData(svgSource: string | Document, fields: FormField[]): string | Document {
+  if (!svgSource) return "";
 
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(svgRaw, "image/svg+xml");
+  let doc: Document;
+  const isDocument = svgSource instanceof Document;
+
+  if (isDocument) {
+    doc = svgSource;
+  } else {
+    const parser = new DOMParser();
+    doc = parser.parseFromString(svgSource as string, "image/svg+xml");
+  }
 
   // Pre-calculate field map for quick lookup (needed for dependency inheritance)
   const fieldsMap = new Map<string, FormField>();
@@ -415,5 +424,6 @@ export default function updateSvgFromFormData(svgRaw: string, fields: FormField[
     }
   });
 
+  if (isDocument) return doc;
   return new XMLSerializer().serializeToString(doc);
 }

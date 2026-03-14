@@ -23,15 +23,17 @@ const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
     }
 };
 
+export async function injectImagesIntoSVG(svgSource: string, baseUrl?: string): Promise<string>;
+export async function injectImagesIntoSVG(svgSource: Document, baseUrl?: string): Promise<Document>;
 export async function injectImagesIntoSVG(
-    svgContent: string,
+    svgSource: string | Document,
     baseUrl?: string
-): Promise<string> {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgContent, "image/svg+xml");
+): Promise<string | Document> {
+    const isDocument = svgSource instanceof Document;
+    const doc = isDocument ? (svgSource as Document) : new DOMParser().parseFromString(svgSource as string, "image/svg+xml");
     const images = Array.from(doc.querySelectorAll("image"));
 
-    if (images.length === 0) return svgContent;
+    if (images.length === 0) return svgSource;
 
     const hrefNS = "http://www.w3.org/1999/xlink";
 
@@ -53,5 +55,6 @@ export async function injectImagesIntoSVG(
         }
     }
 
+    if (isDocument) return doc;
     return new XMLSerializer().serializeToString(doc);
 }
