@@ -219,9 +219,18 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
     const initializedFields = data.form_fields?.map((field: FormField) => {
       let currentValue = field.currentValue ?? field.defaultValue ?? "";
 
+      // SPECIAL CASE: Select fields must have a valid option value
+      if (field.options && field.options.length > 0 && !currentValue) {
+        currentValue = field.options[0].value;
+      }
+
       // Apply startValues (duplicated data) if present
       if (startValues && startValues[field.id] !== undefined) {
         currentValue = startValues[field.id] as string | number | boolean;
+      }
+
+      if (field.type === "select") {
+        console.log(`[Select-Init] Field ${field.id}: incomingCurrentValue='${field.currentValue}', incomingDefaultValue='${field.defaultValue}', resultCurrentValue='${currentValue}'`);
       }
 
       return {
@@ -254,7 +263,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
 
     const fieldsToUse = fields.length > 0 ? fields : (pendingFieldsRef.current || []);
     const parsedElements = parseSvgElements(svgContent);
-    const validTypes = ['text', 'textarea', 'email', 'tel', 'url', 'number', 'select'];
+    const validTypes = ['text', 'textarea', 'email', 'tel', 'url', 'number'];
 
     let hasUpdates = false;
     const populatedFields = fieldsToUse.map(field => {

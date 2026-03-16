@@ -21,15 +21,17 @@ export default function ValueInputDialog({
 
   useEffect(() => {
     // For depends, extract base IDs from all elements
+    // We include both dot-separated base IDs and raw IDs for elements without dots
     if (extension.key === "depends" && allElements.length > 0) {
       const baseIds = new Set<string>();
       allElements.forEach(el => {
-        if (el.id) {
-          const firstDotIndex = el.id.indexOf(".");
-          if (firstDotIndex > 0) {
-            const baseId = el.id.substring(0, firstDotIndex);
-            baseIds.add(baseId);
-          }
+        const fullId = el.id || el.attributes.id || "";
+        if (fullId) {
+          const firstDotIndex = fullId.indexOf(".");
+          // If ID has a dot (e.g. Field.text), use the base. 
+          // Otherwise use the whole ID (e.g. MyTable)
+          const baseId = firstDotIndex > 0 ? fullId.substring(0, firstDotIndex) : fullId;
+          baseIds.add(baseId);
         }
       });
       setBaseIdSuggestions(Array.from(baseIds).sort());

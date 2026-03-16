@@ -93,6 +93,13 @@ export default function IdEditor({
 
   return (
     <div className="relative space-y-2">
+      {!validation.isValid && validation.error && (
+        <div className="text-[10px] text-red-400 font-medium px-1 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="w-1 h-1 rounded-full bg-red-400" />
+          {validation.error}
+        </div>
+      )}
+
       <EditableInput
         ref={editorRef}
         value={internalValue}
@@ -105,13 +112,6 @@ export default function IdEditor({
         placeholder={placeholder}
         className={className}
       />
-
-      {!validation.isValid && validation.error && (
-        <div className="text-[10px] text-red-400 font-medium px-1 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-          <div className="w-1 h-1 rounded-full bg-red-400" />
-          {validation.error}
-        </div>
-      )}
 
       {/* Value input dialog for extensions that require values */}
       {showValueInput && pendingExtension && (

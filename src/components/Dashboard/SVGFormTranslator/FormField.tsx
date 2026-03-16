@@ -444,7 +444,11 @@ const FormFieldComponent: React.FC<{
                 />
               )}
             </label>
-            <Select defaultValue={value as string} value={value as string} onValueChange={handleChange} disabled={isFieldDisabled}>
+            <Select 
+              value={value !== undefined && value !== null ? String(value) : ""} 
+              onValueChange={handleChange} 
+              disabled={isFieldDisabled}
+            >
               <SelectTrigger className="bg-white/10 border-white/20 text-white w-full">
                 <SelectValue placeholder={`Select ${field.name}`} />
               </SelectTrigger>

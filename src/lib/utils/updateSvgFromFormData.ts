@@ -212,215 +212,174 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
       value = String(field.currentValue ?? "");
     }
 
-    // Handle select fields (options)
+    // Handle select fields (options) - Toggle visibility based on selected option
+    if (field.type === "select") {
+      console.log(`[Select-Update] Field ${field.id}: currentValue='${field.currentValue}', optionsCount=${field.options?.length}`);
+    }
     if (field.options && field.options.length > 0) {
-      // Hide all options first
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       field.options.forEach((opt: any) => {
         if (opt.svgElementId) {
           const optEls = findElements(opt.svgElementId);
           optEls.forEach(optEl => {
-            // Use SVG attributes that will be preserved in serialization
             optEl.setAttribute("opacity", "0");
             optEl.setAttribute("visibility", "hidden");
-            // Remove any existing display style and set it as an attribute
             optEl.removeAttribute("style");
             optEl.setAttribute("display", "none");
           });
         }
       });
 
-      // Show only the selected option
       const selectedOption = field.options.find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (opt: any) => String(opt.value) === String(field.currentValue)
       );
       if (selectedOption?.svgElementId) {
         const selectedEls = findElements(selectedOption.svgElementId);
         selectedEls.forEach(selectedEl => {
-          // Use SVG attributes that will be preserved in serialization
           selectedEl.setAttribute("opacity", "1");
           selectedEl.setAttribute("visibility", "visible");
-          // Remove display attribute to show the element
           selectedEl.removeAttribute("display");
         });
       }
-    } else {
-      // Handle other field types
-      if (targets.length === 0) return;
+    }
 
+    // Handle standard element updates (Text, Images, etc.)
+    if (targets.length > 0) {
       targets.forEach(el => {
         // Consolidate any existing transforms (from style or attribute) before applying new ones
         normalizeTransform(el);
 
-        switch (field.type) {
-          case "sign":
-          case "upload":
-          case "file": {
-            const hrefNS = "http://www.w3.org/1999/xlink";
-            // Only update href if there's a value, otherwise preserve original.
-            // IMPORTANT: We do NOT override x, y, width, height, transform, or
-            // preserveAspectRatio — those come from the original SVG template placeholder
-            // and define exactly where/how the image is placed/sized.
-            if (value && value.trim() !== "") {
-              el.setAttribute("href", value);
-              el.setAttributeNS(hrefNS, "href", value);
-              el.setAttribute("preserveAspectRatio", "none");
-              
-              // Set style-based properties for browser-side redundancy and stable rotation pivot
-              (el as SVGElement).style.transformBox = "fill-box";
-              (el as SVGElement).style.transformOrigin = "center";
-            }
+        const tagName = el.tagName.toLowerCase();
+        const fieldType = (field.type || "text").toLowerCase();
+        const isImageTag = tagName === 'image' || tagName === 'use';
+        const isImageField = fieldType === "upload" || fieldType === "file" || fieldType === "sign";
+        // Support .depends both as a type and as an extension in the ID for backward compatibility
+        const isDependsField = fieldType === "depends" || field.id.includes('.depends');
+        
+        // Final sanity check: if the value is definitely an image data URL, we should allow updating image tags
+        const isImageValue = typeof value === 'string' && (value.startsWith('data:image/') || value.startsWith('blob:') || value.includes('base64'));
 
-            // Apply user-controlled rotation ON TOP of the original template rotation.
-            // IMPORTANT: We save the original (template) transform the first time we
-            // encounter this element so that repeated calls to updateSvgFromFormData
-            // (e.g. every live-preview refresh) don't keep stacking rotate() calls.
-            let rotationValue = field.rotation;
+        // For select fields, use the label/displayText if targeting a text element,
+        // or the raw value if targeting an image element.
+        let finalValue = value;
+        if (field.options && field.options.length > 0 && (tagName === 'text' || tagName === 'tspan')) {
+          const selected = field.options.find(
+            (opt: any) => String(opt.value) === String(field.currentValue)
+          );
+          finalValue = selected?.displayText ?? selected?.label ?? value;
+        }
 
-            // Inheritance: if this field has no rotation of its own but depends on
-            // another image field, inherit that field's rotation (e.g. ghost overlays).
-            if ((rotationValue === undefined || rotationValue === null) && field.dependsOn) {
-              const baseParentId = field.dependsOn.split('[')[0];
-              const parentField = fieldsMap.get(baseParentId);
-              if (parentField?.rotation !== undefined && parentField?.rotation !== null) {
-                rotationValue = parentField.rotation;
-              }
-            }
+        // 1. IMAGE-LIKE TAGS: <image> or <use>
+        if (isImageTag) {
+          // Only allow image updates if the field is an image field, a dependency field,
+          // or if the value itself clearly looks like an image (backward compatibility).
+          if (!isImageField && !isDependsField && !isImageValue) return;
 
-            if (rotationValue !== undefined && rotationValue !== null) {
-              const rotation = parseFloat(String(rotationValue));
-              if (isNaN(rotation)) break; // Skip invalid
-
-              // Snapshot the *original template* transform once and cache it.
-              if (!el.hasAttribute("data-base-transform")) {
-                el.setAttribute("data-base-transform", el.getAttribute("transform") || "");
-              }
-              const baseTransform = el.getAttribute("data-base-transform") || "";
-
-              // Build final transform: base template (with any existing rotations removed to prevent stacking) + exactly one NEW user rotation
-              const { cx, cy } = getElementCenter(el);
-              const baseWithoutRotation = baseTransform.replace(/rotate\s*\([^)]*\)/g, '').trim();
-              const newRotation = `rotate(${rotation}, ${cx}, ${cy})`;
-              const updatedTransform = baseWithoutRotation ? `${baseWithoutRotation} ${newRotation}` : newRotation;
-              el.setAttribute("transform", updatedTransform);
-              
-              // Always ensure stable pivot styles are present for active fields
-              (el as SVGElement).style.transformBox = "fill-box";
-              (el as SVGElement).style.transformOrigin = "center";
-            }
-            break;
-          }
-
-          case "hide": {
-            // Toggle visibility based on checkbox state
-            // When checked (true), SHOW the overlay element; when unchecked (false), HIDE it
-            // This is reversed from normal hide behavior because these elements are overlays
-            // Determine visibility based on the value
-            let isVisible = false;
-
-            if (typeof value === 'boolean') {
-              isVisible = value;
-            } else if (typeof value === 'string') {
-              const valueStr = value.toLowerCase();
-              isVisible = valueStr === "true" || valueStr === "1";
-            }
-
-            el.setAttribute("opacity", isVisible ? "1" : "0");
-            el.setAttribute("visibility", isVisible ? "visible" : "hidden");
-            if (isVisible) {
-              el.removeAttribute("display");
-            } else {
-              el.setAttribute("display", "none");
-            }
-            break;
-          }
-          default: {
-            const stringValue = value === null || value === undefined ? "" : String(value);
-            const shouldSkipUpdate = !field.touched && stringValue === "";
-            if (shouldSkipUpdate) {
-              return;
-            }
-
-            const maxWidth = parseFloat(field.attributes?.['data-max-width'] || '0');
-
-            // Use improved font style detection that checks attributes, inline styles, and class definitions
-            const { fontSize, fontFamily } = getSvgElementStyle(el, doc);
-
-            // Check if we need special handling: manual newlines OR max width wrapping
-            if (el.tagName.toLowerCase() === 'text' && (stringValue.includes('\n') || maxWidth > 0)) {
-              // Split by line breaks to respect user's intentional newlines (from SeamlessEditor)
-              const userLines = stringValue.split('\n');
-              let finalLines: string[] = [];
-
-              // Helper for measuring text width (canvas or heuristic)
-              const getWidth = (str: string) => {
-                // Try to use canvas if available in this context
-                if (typeof document !== 'undefined') {
-                  const canvas = document.createElement('canvas');
-                  const ctx = canvas.getContext('2d');
-                  if (ctx) {
-                    ctx.font = `${fontSize}px ${fontFamily}`; // Use actual font family
-                    return ctx.measureText(str).width;
-                  }
-                }
-                // Fallback
-                return str.length * fontSize * 0.6;
-              };
-
-              for (const line of userLines) {
-                // If max width is set, wrap this line further
-                if (maxWidth > 0 && line.trim() !== "") {
-                  const words = line.split(/\s+/);
-                  let currentLine = "";
-
-                  for (const word of words) {
-                    const testLine = currentLine ? `${currentLine} ${word}` : word;
-                    if (getWidth(testLine) > maxWidth && currentLine !== "") {
-                      finalLines.push(currentLine);
-                      currentLine = word;
-                    } else {
-                      currentLine = testLine;
-                    }
-                  }
-                  if (currentLine) finalLines.push(currentLine);
-                } else {
-                  // No wrapping, just keep the line (even if empty, to preserve spacing)
-                  finalLines.push(line);
-                }
-              }
-
-              // If the resulting lines are empty (e.g. empty input), ensure at least one empty line to clear
-              if (finalLines.length === 0) finalLines = [""];
-
-              // Render using shared logic (font-aware spacing)
-              // Pass 'fontFamily' and 'doc' since we are using a DOMParser document
-              applyWrappedText(el, finalLines, fontSize, fontFamily, doc);
-            } else {
-              el.textContent = stringValue;
-            }
-
-            // Apply rotation to text/other fields
-            const rotationValue = field.rotation;
-            if (rotationValue !== undefined && rotationValue !== null) {
-              const rotation = parseFloat(String(rotationValue));
-              if (!isNaN(rotation)) {
-                if (!el.hasAttribute("data-base-transform")) {
-                  el.setAttribute("data-base-transform", el.getAttribute("transform") || "");
-                }
-                const baseTransform = el.getAttribute("data-base-transform") || "";
-                
-                const cx = parseFloat(el.getAttribute("x") || "0");
-                const cy = parseFloat(el.getAttribute("y") || "0");
-                
-                const newRotation = `rotate(${rotation}, ${cx}, ${cy})`;
-                const updatedTransform = baseTransform ? `${baseTransform} ${newRotation}` : newRotation;
-                el.setAttribute("transform", updatedTransform);
-              }
-            }
+          const hrefNS = "http://www.w3.org/1999/xlink";
+          
+          if (finalValue && finalValue.trim() !== "") {
+            el.setAttribute("href", finalValue);
+            el.setAttributeNS(hrefNS, "href", finalValue);
+            el.setAttribute("preserveAspectRatio", "none");
+            
+            (el as SVGElement).style.transformBox = "fill-box";
+            (el as SVGElement).style.transformOrigin = "center";
           }
         }
-      }); // end targets.forEach
+        // 2. VISIBILITY SPECIAL CASES
+        else if (fieldType === "hide" || fieldType === "status") {
+          let isVisible = false;
+          if (typeof value === 'boolean') {
+            isVisible = value;
+          } else if (typeof value === 'string') {
+            const valueStr = value.toLowerCase();
+            isVisible = valueStr === "true" || valueStr === "1";
+          }
+
+          el.setAttribute("opacity", isVisible ? "1" : "0");
+          el.setAttribute("visibility", isVisible ? "visible" : "hidden");
+          if (isVisible) {
+            el.removeAttribute("display");
+          } else {
+            el.setAttribute("display", "none");
+          }
+        }
+        // 3. TEXT-LIKE TAGS: <text>, <tspan>, etc.
+        else {
+          // If the field is an image field but the tag is NOT an image, skip to avoid corruption
+          if (isImageField) return;
+
+          const stringValue = value === null || value === undefined ? "" : String(value);
+          const shouldSkipUpdate = !field.touched && stringValue === "";
+          if (shouldSkipUpdate) return;
+
+          const maxWidth = parseFloat(field.attributes?.['data-max-width'] || '0');
+          const { fontSize, fontFamily } = getSvgElementStyle(el, doc);
+
+          if (tagName === 'text' && (stringValue.includes('\n') || maxWidth > 0)) {
+            const userLines = stringValue.split('\n');
+            let finalLines: string[] = [];
+
+            const getWidth = (str: string) => {
+              if (typeof document !== 'undefined') {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  ctx.font = `${fontSize}px ${fontFamily}`;
+                  return ctx.measureText(str).width;
+                }
+              }
+              return str.length * fontSize * 0.6;
+            };
+
+            for (const line of userLines) {
+              if (maxWidth > 0 && line.trim() !== "") {
+                const words = line.split(/\s+/);
+                let currentLine = "";
+                for (const word of words) {
+                  const testLine = currentLine ? `${currentLine} ${word}` : word;
+                  if (getWidth(testLine) > maxWidth && currentLine !== "") {
+                    finalLines.push(currentLine);
+                    currentLine = word;
+                  } else {
+                    currentLine = testLine;
+                  }
+                }
+                if (currentLine) finalLines.push(currentLine);
+              } else {
+                finalLines.push(line);
+              }
+            }
+            if (finalLines.length === 0) finalLines = [""];
+            applyWrappedText(el, finalLines, fontSize, fontFamily, doc);
+          } else {
+            el.textContent = stringValue;
+          }
+        }
+
+        // 4. UNIVERSAL TRANSFORMATIONS (Rotation)
+        // Inheritance logic (sync with backend)
+        let rotationValue = field.rotation;
+        if ((rotationValue === undefined || rotationValue === null) && field.dependsOn) {
+          const baseParentId = field.dependsOn.split('[')[0];
+          const parentField = fieldsMap.get(baseParentId);
+          if (parentField?.rotation !== undefined) {
+             rotationValue = parentField.rotation;
+          }
+        }
+
+        const rotation = rotationValue !== undefined && rotationValue !== null ? Number(rotationValue) : 0;
+        if (rotation !== 0 || el.hasAttribute("data-base-transform")) {
+          if (!el.hasAttribute("data-base-transform")) {
+            el.setAttribute("data-base-transform", el.getAttribute("transform") || "");
+          }
+          const baseTransform = el.getAttribute("data-base-transform") || "";
+          const { cx, cy } = getElementCenter(el);
+          const baseWithoutRotation = baseTransform.replace(/rotate\s*\([^)]*\)/g, '').trim();
+          const newRotation = `rotate(${rotation}, ${cx}, ${cy})`;
+          const updatedTransform = baseWithoutRotation ? `${baseWithoutRotation} ${newRotation}` : newRotation;
+          el.setAttribute("transform", updatedTransform);
+        }
+      });
     }
   });
 

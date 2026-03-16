@@ -145,6 +145,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "status",
       "sign",
       "select",
+      "depends",
     ],
   },
   {
@@ -180,6 +181,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "gen_rule",
       "grayscale",
       "hide",
+      "depends",
     ],
   },
   {
