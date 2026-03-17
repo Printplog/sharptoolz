@@ -6,10 +6,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Search } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 
 export default function ToolTemplates() {
   const { id } = useParams<{ id: string }>();
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Debounced search handler (300ms delay)
+  const handleSearchChange = useDebouncedCallback((value: string) => {
+    setSearchQuery(value);
+  }, 300);
 
   // Fetch tool data
   const { data: tool, isLoading: toolLoading } = useQuery<Tool>({
@@ -90,13 +96,16 @@ export default function ToolTemplates() {
           <input
             type="text"
             placeholder="Search templates..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            defaultValue={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                setSearchQuery("");
+                handleSearchChange("");
+              }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
             >
               ✕

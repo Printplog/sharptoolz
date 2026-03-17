@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { type SvgElement } from '@/lib/utils/parseSvgElements';
 import { regenerateSvg } from '@/components/Admin/ToolBuilder/SvgEditor/utils/regenerateSvg';
+import { getAdaptiveDebounce } from '@/lib/utils/deviceDetection';
 
 export interface SvgPatch {
     id: string;
@@ -222,7 +223,9 @@ export const useSvgStore = create<SvgStore>()(
             if (immediate) {
                 run();
             } else {
-                const timeout = setTimeout(run, 1000); // 1000ms debounce for workingSvg (High-Performance mode)
+                // Adaptive debounce: 1000ms on high-end, 2000ms on low-end devices
+                const debounceMs = getAdaptiveDebounce(1000, 2000);
+                const timeout = setTimeout(run, debounceMs);
                 set({ commitTimeout: timeout });
             }
         },

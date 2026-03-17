@@ -157,6 +157,20 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const imageMap = useRef<Record<string, string>>({});
 
+    // Cleanup Blob URLs on unmount to prevent memory leaks
+    useEffect(() => {
+      return () => {
+        Object.keys(imageMap.current).forEach((blobUrl) => {
+          try {
+            URL.revokeObjectURL(blobUrl);
+          } catch (e) {
+            console.warn('Failed to revoke Blob URL:', blobUrl);
+          }
+        });
+        imageMap.current = {};
+      };
+    }, []);
+
     // Use a ref to track the last committed internalId to detect selection changes accurately
     const prevId = useRef<string | null>(element.internalId || null);
 

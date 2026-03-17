@@ -30,6 +30,7 @@ import type { Tutorial, Font, SvgPatch, FormField } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
 import { regenerateSvg } from "./utils/regenerateSvg";
 import { useSvgStore } from "@/store/useSvgStore";
+import { getAdaptiveStaleTime } from "@/lib/utils/deviceDetection";
 
 interface SvgEditorProps {
   svgRaw: string;
@@ -122,16 +123,18 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<{ target: number | null } | null>(null);
 
-  // Fetch tools
+  // Fetch tools with adaptive caching
   const { data: tools = [] } = useQuery({
     queryKey: ["tools"],
     queryFn: getTools,
+    staleTime: getAdaptiveStaleTime(5 * 60 * 1000), // 5min on high-end, 10min on low-end
   });
 
-  // Fetch fonts
+  // Fetch fonts with adaptive caching
   const { data: fonts = [] } = useQuery<Font[]>({
     queryKey: ["fonts"],
     queryFn: getFonts,
+    staleTime: getAdaptiveStaleTime(5 * 60 * 1000), // 5min on high-end, 10min on low-end
   });
 
   const queryClient = useQueryClient();
