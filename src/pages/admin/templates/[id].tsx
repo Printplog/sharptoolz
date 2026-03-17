@@ -2,12 +2,12 @@ import { getTemplateForAdmin, updateTemplateForAdmin, getTemplateSvgForAdmin } f
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import errorMessage from '@/lib/utils/errorMessage';
 import type { Template, TemplateUpdatePayload } from '@/types';
+import type { ApiError } from '@/lib/utils/errorMessage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import { useRef, useState, useEffect } from 'react';
-import { Save, Eye } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSvgPatch } from '@/hooks/useSvgPatch';
 import type { SvgPatch } from '@/types';
@@ -196,6 +196,12 @@ export default function SvgTemplateEditor() {
     },
     onError: (error: Error) => {
       console.error('Save template error:', error);
+      // Log full error response for debugging
+      if ('response' in error) {
+        const apiError = error as ApiError;
+        console.error('Error response:', apiError.response);
+        console.error('Error data:', apiError.response?.data);
+      }
       toast.error(errorMessage(error));
     }
   });
@@ -281,36 +287,7 @@ export default function SvgTemplateEditor() {
   return (
     <>
       <div className="container mx-auto relative">
-        {/* Floating Action Buttons */}
-        <div className="hidden md:flex fixed bottom-8 right-8 z-50 gap-3">
-          {/* Floating Save Button */}
-          <button
-            onClick={() => {
-              if (svgEditorRef.current?.handleSave) {
-                svgEditorRef.current.handleSave();
-              }
-            }}
-            disabled={saveMutation.isPending || isFetchingSvg || !svgContent}
-            className="bg-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-          >
-            <Save className="h-5 w-5 group-hover:rotate-12 transition-all duration-500" />
-            <span>{saveMutation.isPending ? "Saving..." : "Save Template"}</span>
-          </button>
-
-          {/* Floating Preview Button */}
-          <button
-            onClick={() => {
-              if (svgEditorRef.current?.openPreview) {
-                svgEditorRef.current.openPreview();
-              }
-            }}
-            disabled={isFetchingSvg || !svgContent}
-            className="bg-lime-600 border-3 border-primary text-background px-6 py-3 font-bold rounded-full shadow-xl shadow-white/10 cursor-pointer group hover:scale-[1.05] transition-all duration-500 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-          >
-            <Eye className="h-5 w-5 group-hover:translate-x-[2px] transition-all duration-500" />
-            <span>Preview</span>
-          </button>
-        </div>
+        {/* Floating Action Buttons - Removed */}
 
         <div className="w-full">
           <SvgEditor

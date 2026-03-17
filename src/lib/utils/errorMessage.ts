@@ -1,4 +1,4 @@
-interface ApiError extends Error {
+export interface ApiError extends Error {
   response?: {
     data:
     | {
@@ -9,10 +9,11 @@ interface ApiError extends Error {
       username?: string;
       password?: string;
       tracking_id?: string;
+      non_field_errors?: string[];
     }
     | string
     | string[]
-    | Record<string, string[]>;
+    | Record<string, string[] | string>;
   };
 }
 
@@ -29,6 +30,12 @@ export default function errorMessage(error: ApiError): string {
     // If it's a validation error with multiple fields, show them better
     const entries = Object.entries(data);
     if (entries.length > 0) {
+      // Check for non_field_errors first (general validation errors)
+      const nonFieldErrors = (data as Record<string, string[]>).non_field_errors;
+      if (nonFieldErrors && Array.isArray(nonFieldErrors)) {
+        return nonFieldErrors[0];
+      }
+
       const [key, val] = entries[0];
       if (Array.isArray(val)) return `${key}: ${val[0]}`;
       if (typeof val === 'string') return `${key}: ${val}`;
@@ -46,5 +53,5 @@ export default function errorMessage(error: ApiError): string {
     );
   }
 
-  return error.message;
+  return error.message || "An unexpected error occurred";
 }

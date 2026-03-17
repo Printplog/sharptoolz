@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import ElementNavigation from "./ElementNavigation";
 import ElementEditor from "./ElementEditor";
-import FloatingScrollButton from "./FloatingScrollButton";
 import PreviewDialog from "./PreviewDialog";
 import SvgUpload from "./sections/SvgUpload";
 import SettingsDialog from "./sections/SettingsDialog";
@@ -111,7 +110,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [tutorialUrlState, setTutorialUrlState] = useState<string>(tutorial?.url || "");
   const [tutorialTitleState, setTutorialTitleState] = useState<string>(tutorial?.title || "");
   const [keywordsTags, setKeywordsTags] = useState<string[]>(Array.isArray(keywords) ? keywords : []);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  // const [showScrollTop, setShowScrollTop] = useState(false); // Removed - scroll button disabled
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [isReplaced, setIsReplaced] = useState(false);
   const [freshSvgContent, setFreshSvgContent] = useState<string | null>(null);
@@ -228,11 +227,12 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   }, [undo, redo, deleteElement, duplicateElement, selectedElementId]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Scroll button disabled - removed scroll listener
+    // const handleScroll = () => {
+    //   setShowScrollTop(window.scrollY > 300);
+    // };
+    // window.addEventListener('scroll', handleScroll);
+    // return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const updateElement = useCallback((index: number, updates: Partial<SvgElement>, undoable = true) => {
@@ -310,15 +310,15 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     const element = elements[index];
     if (element) {
       const id = element.internalId;
-      
+
       // If we are selecting a DIFFERENT element, we clear the draft.
       // If it's the SAME element, we MUST preserve the draft!
       if (index !== selectedElementIndex) {
         setDraftElement(null);
       }
-      
+
       selectElement(id || null);
-      
+
       // Explicitly switch to inspector when an element is selected
       // This provides the "auto-open" behavior the user expects on selection,
       // but without the background effect that was locking the tabs.
@@ -342,7 +342,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     setPendingNavigation(null);
     setShowUnsavedDialog(false);
     setIsEditorDirty(false); // Force clear dirty state
-    
+
     if (!action) return;
 
     // Use force=true to bypass the dirty check we just confirmed to skip
@@ -392,7 +392,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     useSvgStore.getState().reorderElements(newOrder);
   }, [elements, onPatchUpdate]);
 
-  const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
+  // const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []); // Removed - scroll button disabled
 
   // Working SVG is already destructured from useSvgStore at line 70
 
@@ -615,7 +615,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         </aside>
       </div>
 
-      <FloatingScrollButton show={showScrollTop} onClick={scrollToTop} />
+      {/* Scroll to top button removed */}
       <PreviewDialog
         open={showPreviewDialog}
         onOpenChange={setShowPreviewDialog}
@@ -630,7 +630,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Unapplied Changes</AlertDialogTitle>
             <AlertDialogDescription className="text-white/60">
-              You have unapplied changes to the currently selected element. 
+              You have unapplied changes to the currently selected element.
               If you leave this element now, your draft changes will be discarded.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -638,7 +638,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
             <AlertDialogCancel className="bg-white/5 text-white hover:bg-white/10 hover:text-white border-0">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={confirmNavigation}
               className="bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 border-0"
             >

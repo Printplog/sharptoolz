@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { svgEditorDocs } from "@/docs/svgEditorDocs";
 import type { DocSection } from "@/types";
+import { toast } from "sonner";
+import { Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useHeight } from "@/hooks/useHeight";
@@ -100,18 +102,38 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
       .filter(Boolean) as DocSection[];
   }
 
-  // Render a code example
-  const renderCodeExample = (example: NonNullable<DocSection['codeExamples']>[0]) => (
-    <div className="my-2 bg-black/30 rounded-md overflow-hidden">
-      <div className="bg-black/50 px-3 py-1 text-xs font-medium">{example.title}</div>
-      <div className="p-3 font-mono text-sm overflow-x-auto">
-        <code className="text-primary whitespace-pre">{example.code}</code>
+  // Render a code example with copy button
+  const renderCodeExample = (example: NonNullable<DocSection['codeExamples']>[0]) => {
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(example.code);
+        toast.success('Copied to clipboard!');
+      } catch (err) {
+        toast.error('Failed to copy');
+      }
+    };
+
+    return (
+      <div className="my-2 bg-black/30 rounded-md overflow-hidden group">
+        <div className="bg-black/50 px-3 py-1 text-xs font-medium flex items-center justify-between">
+          <span>{example.title}</span>
+          <button
+            onClick={handleCopy}
+            className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white/60 hover:text-white"
+            title="Copy code"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <div className="p-3 font-mono text-sm overflow-x-auto">
+          <code className="text-primary whitespace-pre">{example.code}</code>
+        </div>
+        {example.description && (
+          <div className="px-3 pb-2 text-xs text-white/70">{example.description}</div>
+        )}
       </div>
-      {example.description && (
-        <div className="px-3 pb-2 text-xs text-white/70">{example.description}</div>
-      )}
-    </div>
-  );
+    );
+  };
 
   // Recursive function to render sections and subsections
   const renderSection = (section: DocSection, depth = 0) => {
