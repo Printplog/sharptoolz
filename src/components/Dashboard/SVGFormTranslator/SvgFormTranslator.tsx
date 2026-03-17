@@ -23,6 +23,7 @@ import PreviewSkeleton from "./PreviewSkeleton";
 import parseSvgElements from "@/lib/utils/parseSvgElements";
 import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import { toast } from "sonner";
+import { getAdaptiveDebounce } from "@/lib/utils/deviceDetection";
 
 // Component to render action buttons by cloning and connecting to FormPanel buttons
 function ActionButtonsRenderer() {
@@ -294,10 +295,12 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   }, [svgContent, isSvgFetching, data, isPurchased]);
 
   // DEBOUNCE EFFECT: Updates debouncedFields when users stop typing
+  // Adaptive debounce: 250ms on high-end, 500ms on low-end devices
   useEffect(() => {
+    const debounceMs = getAdaptiveDebounce(250, 500);
     const handler = setTimeout(() => {
       setDebouncedFields(fields);
-    }, 250); // 250ms debounce for preview logic
+    }, debounceMs);
 
     return () => clearTimeout(handler);
   }, [fields]);
