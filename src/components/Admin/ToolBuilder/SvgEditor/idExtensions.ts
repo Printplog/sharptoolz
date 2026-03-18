@@ -312,22 +312,40 @@ export function getAllowedExtensionsAfter(
   return allowed;
 }
 
-// Helper function to parse ID into parts
-export function parseId(id: string): { baseId: string; parts: string[] } {
+// Helper function to parse ID into parts, robust against quoted links
+export function parseId(id: string): { baseId: string; parts: string[]; url?: string } {
   if (!id) {
     return { baseId: "", parts: [] };
   }
 
-  const firstDotIndex = id.indexOf(".");
-  if (firstDotIndex === -1) {
-    return { baseId: id, parts: [] };
+  // 1. Extract link URL first to avoid splitting dots inside the URL
+  let cleanId = id;
+  let url: string | undefined;
+
+  if (id.includes(".link_\"")) {
+    const linkIndex = id.indexOf(".link_\"");
+    const urlStart = linkIndex + 7;
+    const urlEnd = id.indexOf("\"", urlStart);
+    if (urlEnd !== -1) {
+      url = id.substring(urlStart, urlEnd);
+      cleanId = id.substring(0, linkIndex) + id.substring(urlEnd + 1);
+    }
+  } else if (id.includes(".link_")) {
+    const linkIndex = id.indexOf(".link_");
+    url = id.substring(linkIndex + 6);
+    cleanId = id.substring(0, linkIndex);
   }
 
-  const baseId = id.substring(0, firstDotIndex);
-  const rest = id.substring(firstDotIndex + 1);
-  const parts = rest.split(".");
+  const firstDotIndex = cleanId.indexOf(".");
+  if (firstDotIndex === -1) {
+    return { baseId: cleanId, parts: [], url };
+  }
 
-  return { baseId, parts };
+  const baseId = cleanId.substring(0, firstDotIndex);
+  const rest = cleanId.substring(firstDotIndex + 1);
+  const parts = rest.split(".").filter(p => p !== "");
+
+  return { baseId, parts, url };
 }
 
 // Helper function to get suggestions based on current ID state

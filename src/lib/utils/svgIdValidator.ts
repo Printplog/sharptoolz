@@ -25,7 +25,19 @@ export function validateSvgId(id: string): ValidationResult {
   // Extract link URL before splitting (URLs contain dots and special chars)
   let cleanId = id;
   let hasLinkWithUrl = false;
-  if (id.includes(".link_")) {
+  
+  if (id.includes(".link_\"")) {
+    const linkIndex = id.indexOf(".link_\"");
+    const urlStart = linkIndex + 7; // len(".link_\"")
+    const urlEnd = id.indexOf("\"", urlStart);
+    
+    if (urlEnd !== -1) {
+      const linkValue = id.substring(urlStart, urlEnd);
+      hasLinkWithUrl = linkValue.length > 0;
+      // Remove the link portion .link_"URL"
+      cleanId = id.substring(0, linkIndex) + id.substring(urlEnd + 1);
+    }
+  } else if (id.includes(".link_")) {
     const linkIndex = id.indexOf(".link_");
     const linkValue = id.substring(linkIndex + 6); // URL after '.link_'
     hasLinkWithUrl = linkValue.length > 0; // Must have URL after .link_

@@ -12,8 +12,12 @@ import {
     BadgeCheck,
     FlaskConical,
     User,
+    DollarSign,
+    TrendingUp,
+    Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 
 type AdminDoc = {
     id: string;
@@ -30,6 +34,12 @@ type AdminDocsResponse = {
     count: number;
     total_pages: number;
     current_page: number;
+    stats: {
+        total_purchases: number;
+        total_revenue: number;
+        popular_template: string;
+        recent_count: number;
+    };
 };
 
 export default function AdminDocumentsPage() {
@@ -48,6 +58,50 @@ export default function AdminDocumentsPage() {
     const docs = data?.results ?? [];
     const totalPages = data?.total_pages ?? 1;
     const totalCount = data?.count ?? 0;
+    const stats = data?.stats;
+
+    const statsCards: StatData[] = [
+        {
+            title: 'Total Purchases',
+            value: stats?.total_purchases.toLocaleString() ?? '0',
+            label: 'All time',
+            icon: FileText,
+            gradient: 'from-primary/20 to-primary/5',
+            borderColor: 'border-primary/20',
+            iconBg: 'bg-primary/10',
+            iconColor: 'text-primary',
+        },
+        {
+            title: 'Total Revenue',
+            value: `$${stats?.total_revenue.toLocaleString('en-US', { minimumFractionDigits: 2 }) ?? '0.00'}`,
+            label: 'From paid templates',
+            icon: DollarSign,
+            gradient: 'from-green-500/20 to-green-600/5',
+            borderColor: 'border-green-500/20',
+            iconBg: 'bg-green-500/10',
+            iconColor: 'text-green-500',
+        },
+        {
+            title: 'Popular Template',
+            value: stats?.popular_template ?? 'N/A',
+            label: 'Most purchased',
+            icon: TrendingUp,
+            gradient: 'from-purple-500/20 to-purple-600/5',
+            borderColor: 'border-purple-500/20',
+            iconBg: 'bg-purple-500/10',
+            iconColor: 'text-purple-500',
+        },
+        {
+            title: 'Recent Activity',
+            value: stats?.recent_count.toLocaleString() ?? '0',
+            label: 'Last 7 days',
+            icon: Clock,
+            gradient: 'from-blue-500/20 to-blue-600/5',
+            borderColor: 'border-blue-500/20',
+            iconBg: 'bg-blue-500/10',
+            iconColor: 'text-blue-500',
+        },
+    ];
 
     const handleSearch = () => {
         setPage(1);
@@ -67,6 +121,9 @@ export default function AdminDocumentsPage() {
                 </h1>
                 <p className="text-white/40 text-sm mt-1">Manage all user-purchased templates</p>
             </div>
+
+            {/* Stats Cards */}
+            <StatsCards stats={statsCards} isLoading={isLoading} />
 
             {/* Search & Info Bar */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-md">

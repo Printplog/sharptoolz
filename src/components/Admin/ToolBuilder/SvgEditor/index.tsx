@@ -1,6 +1,7 @@
 // Main SvgEditor component
 import React, { useEffect, useState, useRef, useCallback, forwardRef, useImperativeHandle, useMemo } from "react";
-import { type SvgElement } from "@/lib/utils/parseSvgElements";
+import parseSvgElements, { type SvgElement } from "@/lib/utils/parseSvgElements";
+import { validateSvgId } from "@/lib/utils/svgIdValidator";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getTools, getFonts, addFont } from "@/api/apiEndpoints";
@@ -245,54 +246,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     updateElementInStore(internalId, updates, undoable);
   }, [elements, updateElementInStore]);
 
-  const handleSave = useCallback(() => {
-    if (!onSave) return;
-    onSave({
-      name: name.trim(),
-      svg: isReplaced && freshSvgContent ? freshSvgContent : "",
-      banner: bannerFile,
-      hot: isHot,
-      isActive: isActiveState,
-      tool: selectedTool && selectedTool !== "" ? selectedTool : undefined,
-      tutorialUrl: tutorialUrlState.trim() || undefined,
-      tutorialTitle: tutorialTitleState.trim() || undefined,
-      keywords: keywordsTags,
-      fontIds: selectedFontIds.length > 0 ? selectedFontIds : undefined
-    });
-    // Reset replaced state after successful notification to parent
-    // (Actual reset should happen in parent's success handler, but this helps local UI)
-  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, isReplaced, freshSvgContent]);
-
-  useImperativeHandle(ref, () => ({
-    handleSave,
-    name,
-    openPreview: () => setShowPreviewDialog(true)
-  }), [handleSave, name]);
-
-  const handleBannerUpload = (file: File) => {
-    setBannerFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => setBannerImage(e.target?.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  const handleSvgUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = (e.target?.result as string) ?? "";
-      if (!content.trim().startsWith("<svg")) {
-        toast.error("Invalid SVG file");
-        return;
-      }
-      setInitialSvg(content);
-      setIsReplaced(true);
-      setFreshSvgContent(content);
-      if (onSvgReplace) onSvgReplace(content);
-      toast.success("SVG uploaded successfully");
-    };
-    reader.readAsText(file);
-  };
-
   const handleElementSelect = useCallback((index: number | null, force = false) => {
     // If selecting a DIFFERENT element while one is locally dirty, intercept
     if (!force && isEditorDirty && index !== selectedElementIndex) {
@@ -320,8 +273,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       selectElement(id || null);
 
       // Explicitly switch to inspector when an element is selected
-      // This provides the "auto-open" behavior the user expects on selection,
-      // but without the background effect that was locking the tabs.
       setActiveTab("inspector");
 
       if (onElementSelect) {
@@ -330,6 +281,91 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       }
     }
   }, [elements, selectElement, onElementSelect, isEditorDirty, selectedElementIndex, isTextElement, isImageElement, setDraftElement]);
+
+  const handleSave = useCallback(() => {
+    if (!onSave) return;
+    
+    // STRICT VALIDATION: Block save if any element has an invalid field ID
+    const invalidElements = elements.filter(el => {
+      const id = el.id || el.originalId;
+      if (id && id.includes(".")) {
+        return !validateSvgId(id).valid;
+      }
+      return false;
+    });
+
+    if (invalidElements.length > 0) {
+      const firstInvalid = invalidElements[0];
+      const id = firstInvalid.id || firstInvalid.originalId;
+      toast.error(`Cannot save: Invalid field syntax in "${id}". Please fix it in the inspector.`);
+      
+      // Auto-select the first invalid element to help the user
+      const idx = elements.findIndex(el => el.internalId === firstInvalid.internalId);
+      if (idx !== -1) handleElementSelect(idx);
+      return;
+    }
+
+    onSave({
+      name: name.trim(),
+      svg: isReplaced && freshSvgContent ? freshSvgContent : "",
+      banner: bannerFile,
+      hot: isHot,
+      isActive: isActiveState,
+      tool: selectedTool && selectedTool !== "" ? selectedTool : undefined,
+      tutorialUrl: tutorialUrlState.trim() || undefined,
+      tutorialTitle: tutorialTitleState.trim() || undefined,
+      keywords: keywordsTags,
+      fontIds: selectedFontIds.length > 0 ? selectedFontIds : undefined
+    });
+  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, isReplaced, freshSvgContent, elements, handleElementSelect]);
+
+  useImperativeHandle(ref, () => ({
+    handleSave,
+    name,
+    openPreview: () => setShowPreviewDialog(true)
+  }), [handleSave, name]);
+
+  const handleBannerUpload = (file: File) => {
+    setBannerFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => setBannerImage(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+  const handleSvgUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = (e.target?.result as string) ?? "";
+      if (!content.trim().startsWith("<svg")) {
+        toast.error("Invalid SVG file");
+        return;
+      }
+
+      // Pre-validate all IDs/data-names that look like fields (WARN ONLY)
+      try {
+        const elements = parseSvgElements(content);
+        const invalidIds: string[] = [];
+        for (const el of elements) {
+          const name = el.attributes["data-name"] || el.originalId;
+          if (name && name.includes(".") && !validateSvgId(name).valid) {
+            invalidIds.push(name);
+          }
+        }
+        
+        if (invalidIds.length > 0) {
+          toast.warning(`SVG uploaded, but ${invalidIds.length} elements have invalid ID syntax. Please fix them before saving.`);
+        }
+      } catch (err) {
+        console.error("Failed to pre-validate SVG:", err);
+      }
+
+      setInitialSvg(content);
+      setIsReplaced(true);
+      setFreshSvgContent(content);
+      if (onSvgReplace) onSvgReplace(content);
+      toast.success("SVG uploaded successfully");
+    };
+    reader.readAsText(file);
+  };
 
   const handleTabChange = useCallback((newTab: string) => {
     // We now allow tab switching without warning, even if editor is dirty

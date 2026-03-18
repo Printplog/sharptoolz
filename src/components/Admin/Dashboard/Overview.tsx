@@ -1,8 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Wallet, Users, Download } from "lucide-react";
 import type { AdminOverview } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { isAdmin as checkAdmin, isAdminOrStaff } from "@/lib/constants/roles";
 
@@ -17,92 +15,89 @@ export default function Overview({ data, isLoading }: OverviewProps) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          "bg-primary/5",
-          "bg-green-500/5",
-          "bg-blue-500/5",
-          "bg-purple-500/5",
-        ].map((bg, i) => (
-          <Card key={i} className={cn("border-white/10 backdrop-blur-sm", bg)}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <Skeleton className="h-4 w-24 bg-white/10" />
-              <Skeleton className="h-9 w-9 rounded-full bg-white/10" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16 bg-white/10" />
-            </CardContent>
-          </Card>
+          { gradient: "from-primary/20 to-primary/5", border: "border-primary/20" },
+          { gradient: "from-blue-500/20 to-blue-600/5", border: "border-blue-500/20" },
+          { gradient: "from-purple-500/20 to-purple-600/5", border: "border-purple-500/20" },
+          { gradient: "from-green-500/20 to-green-600/5", border: "border-green-500/20" },
+        ].map((style, i) => (
+          <div key={i} className={`bg-gradient-to-br ${style.gradient} ${style.border} border rounded-2xl p-6 backdrop-blur-md`}>
+            <Skeleton className="h-10 w-10 rounded-lg bg-white/10 mb-4" />
+            <Skeleton className="h-3 w-24 rounded-full bg-white/10 mb-2" />
+            <Skeleton className="h-8 w-32 rounded-xl bg-white/10" />
+          </div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className={cn("grid gap-4", isAdmin ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {/* Total Documents - Visible to Everyone */}
-      <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 backdrop-blur-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">
-            Total Documents
-          </CardTitle>
-          <div className="p-2 rounded-full bg-primary/20 text-primary">
+      <div className="bg-gradient-to-br from-primary/20 to-primary/5 border-primary/20 border rounded-2xl p-6 backdrop-blur-md hover:border-white/20 transition-all duration-300">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 rounded-lg bg-primary/10 text-primary">
             <FileText className="h-5 w-5" />
           </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">{data?.total_purchased_docs || 0}</p>
-        </CardContent>
-      </Card>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-1">
+            Total Documents
+          </p>
+          <p className="text-2xl font-black text-white">{data?.total_purchased_docs || 0}</p>
+          <p className="text-xs text-white/40 mt-1">Architectural tools</p>
+        </div>
+      </div>
 
       {/* Active Users - Visible to Admin & Staff */}
       {isAdminOrStaff(user?.role) && (
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <div className="p-2 rounded-full bg-blue-500/20 text-blue-500">
+        <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/5 border-blue-500/20 border rounded-2xl p-6 backdrop-blur-md hover:border-white/20 transition-all duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-blue-500/10 text-blue-500">
               <Users className="h-5 w-5" />
             </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{data?.total_users || 0}</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-1">Active Users</p>
+            <p className="text-2xl font-black text-white">{data?.total_users || 0}</p>
+            <p className="text-xs text-white/40 mt-1">Total user accounts</p>
+          </div>
+        </div>
       )}
 
       {/* Downloads - Visible to Admin & Staff */}
       {isAdminOrStaff(user?.role) && (
-        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Downloads</CardTitle>
-            <div className="p-2 rounded-full bg-purple-500/20 text-purple-500">
+        <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/5 border-purple-500/20 border rounded-2xl p-6 backdrop-blur-md hover:border-white/20 transition-all duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-purple-500/10 text-purple-500">
               <Download className="h-5 w-5" />
             </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{data?.total_downloads || 0}</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-1">Downloads</p>
+            <p className="text-2xl font-black text-white">{data?.total_downloads || 0}</p>
+            <p className="text-xs text-white/40 mt-1">Total downloads</p>
+          </div>
+        </div>
       )}
 
       {/* Restricted Cards - Admin Only */}
       {isAdmin && (
-        <>
-          {/* Wallet Balance */}
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/10 backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Wallet Balance
-              </CardTitle>
-              <div className="p-2 rounded-full bg-green-500/20 text-green-500">
-                <Wallet className="h-5 w-5" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">${data?.total_wallet_balance || '0.00'}</p>
-            </CardContent>
-          </Card>
-        </>
+        <div className="bg-gradient-to-br from-green-500/20 to-green-600/5 border-green-500/20 border rounded-2xl p-6 backdrop-blur-md hover:border-white/20 transition-all duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 rounded-lg bg-green-500/10 text-green-500">
+              <Wallet className="h-5 w-5" />
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-1">
+              Wallet Balance
+            </p>
+            <p className="text-2xl font-black text-white">${data?.total_wallet_balance || '0.00'}</p>
+            <p className="text-xs text-white/40 mt-1">Total user funds</p>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -770,29 +770,93 @@ export const svgEditorDocs: DocSection[] = [
       {
         id: "myflightlookup",
         title: "MyFlightLookup",
-        content: "MyFlightLookup is our flight tracking website. It supports one-way, two-way, and three-way flight itineraries. Use these extensions to map SVG fields to the flight tracking display. ⚠️ IMPORTANT: .track_ extensions must be the LAST extension in the ID chain.",
+        content: "MyFlightLookup is our flight tracking website. It supports one-way, two-way, and three-way flight itineraries with a leg-based structure. Use these extensions to map SVG fields to the flight tracking display. ⚠️ IMPORTANT: .track_ extensions must be the LAST extension in the ID chain.",
         codeExamples: [
           { title: "Booking Reference with Link", code: "Booking_Ref.gen.max_8.tracking_id.link_https://myflightlookup.com", description: "Main booking reference with link to MyFlightLookup (no .track_ extension needed)" },
-          { title: "Passenger Name", code: "Passenger_Name_name.text.track_name", description: "Passenger name (.track_name must be last)" },
-          { title: "Passenger Email", code: "Passenger_Email_desc.email.track_email", description: "Passenger email address (.track_email must be last)" },
-          { title: "Flight Number", code: "Flight_No.text.track_flight", description: "Flight number/identifier (.track_flight must be last)" },
+          { title: "Passenger Name", code: "Passenger_Name.text.track_name", description: "Passenger name (.track_name must be last)" },
+          { title: "Passenger Email", code: "Passenger_Email.email.track_email", description: "Passenger email address (.track_email must be last)" },
+          { title: "Flight Number (General)", code: "Flight_No.text.track_flight", description: "General flight number (fallback if no per-leg flight numbers)" },
           { title: "Status", code: "Status.text.track_status", description: "Booking status (.track_status must be last)" },
-          { title: "Booking Date", code: "BookingDate.date.track_date", description: "Date of booking (.track_date must be last)" },
-          { title: "Flight Leg 1 - Origin City", code: "Flight_Departure_Location.text.track_origin1", description: "Departure city for the first leg" },
-          { title: "Flight Leg 1 - Dep Date/Time", code: "Flight_Departure_Date_and_Time.text.track_origin1_departure_date", description: "Date/Time the flight leaves the origin city" },
-          { title: "Flight Leg 1 - Destination City", code: "Flight_Arrival_Location.text.track_destination1", description: "Arrival city for the first leg" },
-          { title: "Flight Leg 1 - Arr Date/Time", code: "Flight_Arrival_Date_and_Time.text.track_destination1_arrival_date", description: "Date/Time the flight arrives at the destination city" },
-          { title: "Flight Leg 2 - Origin City", code: "Flight_Departure_Location_2.text.track_origin2", description: "Departure city for second leg (e.g. for Return or Stop Over flights)" },
-          { title: "Flight Leg 2 - Dep Date/Time", code: "Flight_Departure_Date_and_Time_2.text.track_origin2_departure_date", description: "Departure date/time for the second flight leg" },
-          { title: "Flight Leg 2 - Destination City", code: "Flight_Arrival_Location_2.text.track_destination2", description: "Arrival city for second leg" },
-          { title: "Flight Leg 2 - Arr Date/Time", code: "Flight_Arrival_Date_and_Time_2.text.track_destination2_arrival_date", description: "Arrival date/time for the second flight leg" },
+          { title: "Booking Date", code: "Booking_Date.text.track_date", description: "Date of booking (.track_date must be last)" },
+          { title: "Gate Number", code: "Gate.text.track_gate", description: "Departure gate number (.track_gate must be last)" },
+          { title: "Flight Class", code: "Class.select_Economy.track_class", description: "Cabin class selection (e.g., Economy, Business) (.track_class must be on ONE option)" },
+          { title: "Seat Number", code: "Seat.text.track_seat", description: "Passenger seat number (.track_seat must be last)" },
           { title: "Explicit Flight Type", code: "FlightType.text.track_flight_type", description: "Explicitly set title like 'PRIVATE CHARTER' (Overrides auto-detection)" },
           { title: "Airline Selection", code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline", description: "Airline selection dropdown (.track_airline must be on ONE option only)" },
-          { title: "Static Flight Number", code: "FlightNumber.text.track_flight", description: "General flight number (fallback for all legs)" },
-          { title: "Gate Number", code: "Gate.text.track_gate", description: "Departure gate number (.track_gate must be last)" },
-          { title: "Flight Class", code: "Class.text.track_class", description: "Cabin class (e.g., Economy, Business) (.track_class must be last)" },
-          { title: "Seat Number", code: "Seat.text.track_seat", description: "Passenger seat number (.track_seat must be last)" },
-          { title: "Error Message", code: "Error.text.track_error_message", description: "Internal error/status message (.track_error_message must be last)" }
+          { title: "Error Message", code: "Error.text.track_error_message", description: "Internal error/status message (.track_error_message must be last)" },
+          { title: "Leg 1 - Origin", code: "Departure_Location.text.track_leg1_origin", description: "First leg departure city/airport (e.g., 'London Heathrow (LHR)')" },
+          { title: "Leg 1 - Departure DateTime", code: "Departure_Date_and_Time.text.track_leg1_origin_departure_datetime", description: "First leg departure date+time (e.g., '4 Jun 2025, 08:25')" },
+          { title: "Leg 1 - Stopover 1", code: "First_StopOver_Location.text.track_leg1_stopover1", description: "First stopover/layover within leg 1 (e.g., 'Logan Airport (BOS)')" },
+          { title: "Leg 1 - Stopover 1 DateTime", code: "First_StopOver_Date_and_Time.text.track_leg1_stopover1_datetime", description: "Stopover datetime (e.g., '4 Jun 2025, 10:56pm')" },
+          { title: "Leg 1 - Flight Number", code: "Flight_No.text.track_leg1_flight_no", description: "Flight number specific to leg 1 (e.g., 'B61621')" },
+          { title: "Leg 2 - Stopover 1", code: "Second_StopOver_Location.text.track_leg2_stopover1", description: "First stopover within leg 2 (e.g., 'Logan Airport (BOS)')" },
+          { title: "Leg 2 - Stopover 1 DateTime", code: "Second_StopOver_Date_and_Time.text.track_leg2_stopover1_datetime", description: "Leg 2 stopover1 datetime (e.g., '4 Jun 2025, 16:19')" },
+          { title: "Leg 2 - Stopover 2", code: "Third_StopOver_Location.text.track_leg2_stopover2", description: "Second stopover within leg 2 (e.g., 'Buffalo Niagara Intl Airport (BUF)')" },
+          { title: "Leg 2 - Stopover 2 DateTime", code: "Third_StopOver_Date_and_Time.text.track_leg2_stopover2_datetime", description: "Leg 2 stopover2 datetime (e.g., '4 Jun 2025, 17:55')" },
+          { title: "Leg 2 - Flight Number", code: "Leg2_Flight_No.text.track_leg2_flight_no", description: "Flight number specific to leg 2 (e.g., 'B61115')" },
+          { title: "Leg 3 - Stopover 1", code: "Fourt_StopOver_Location.text.track_leg3_stopover1", description: "Stopover within leg 3 (e.g., 'Logan Airport (BOS)')" },
+          { title: "Leg 3 - Stopover 1 DateTime", code: "Fourt_StopOver_Date_and_Time.text.track_leg3_stopover1_datetime", description: "Leg 3 stopover datetime (e.g., '25 Jun 2025, 16:10')" },
+          { title: "Leg 3 - Flight Number", code: "Leg3_Flight_No.text.track_leg3_flight_no", description: "Flight number specific to leg 3 (e.g., 'B61620')" },
+          { title: "Leg 3 - Destination", code: "Arrival_Location.text.track_leg3_destination", description: "Third leg final arrival city (e.g., 'London Heathrow (LHR)')" },
+          { title: "Leg 3 - Arrival DateTime", code: "Arrival_Date_and_Time.text.track_leg3_destination_arrival_datetime", description: "Third leg final arrival date+time (e.g., '26 Jun 2025, 06:30')" },
+        ],
+        subsections: [
+          {
+            id: "leg-based-structure",
+            title: "Leg-Based Field Structure",
+            content: "For multi-leg flights (stopovers, return flights, 3-way tickets), use the leg-based field naming convention. Each leg has optional stopovers and a final destination.",
+            codeExamples: [
+              {
+                title: "Leg 1 - With Stopover (Real Example)",
+                code: "Departure_Location.text.track_leg1_origin\nDeparture_Date_and_Time.text.track_leg1_origin_departure_datetime\nFirst_StopOver_Location.text.track_leg1_stopover1\nFirst_StopOver_Date_and_Time.text.track_leg1_stopover1_datetime\nFlight_No.text.track_leg1_flight_no",
+                description: "Leg 1: London (LHR) → Stopover at Boston (BOS)"
+              },
+              {
+                title: "Leg 2 - With 2 Stopovers (Real Example)",
+                code: "Second_StopOver_Location.text.track_leg2_stopover1\nSecond_StopOver_Date_and_Time.text.track_leg2_stopover1_datetime\nThird_StopOver_Location.text.track_leg2_stopover2\nThird_StopOver_Date_and_Time.text.track_leg2_stopover2_datetime\nLeg2_Flight_No.text.track_leg2_flight_no",
+                description: "Leg 2: Boston (BOS) stopover1 → Buffalo (BUF) stopover2"
+              },
+              {
+                title: "Leg 3 - Stopover to Destination (Real Example)",
+                code: "Fourt_StopOver_Location.text.track_leg3_stopover1\nFourt_StopOver_Date_and_Time.text.track_leg3_stopover1_datetime\nArrival_Location.text.track_leg3_destination\nArrival_Date_and_Time.text.track_leg3_destination_arrival_datetime\nLeg3_Flight_No.text.track_leg3_flight_no",
+                description: "Leg 3: Boston (BOS) stopover → Final destination London (LHR)"
+              }
+            ]
+          },
+          {
+            id: "stopovers",
+            title: "Stopovers Within Legs",
+            content: "Stopovers (layovers) are intermediate stops WITHIN a leg. Use .track_leg{N}_stopover{N} and .track_leg{N}_stopover{N}_datetime fields. ⚠️ IMPORTANT: Element IDs with 'StopOver' MUST use .track_leg{N}_stopover{N} keywords, NEVER .origin or .destination.",
+            codeExamples: [
+              {
+                title: "Leg 1 with Stopover 1 (Real Example)",
+                code: "First_StopOver_Location.text.track_leg1_stopover1\nFirst_StopOver_Date_and_Time.text.track_leg1_stopover1_datetime",
+                description: "First stopover at Boston (BOS) within leg 1"
+              },
+              {
+                title: "Leg 2 with Stopover 1 & 2 (Real Example)",
+                code: "Second_StopOver_Location.text.track_leg2_stopover1\nSecond_StopOver_Date_and_Time.text.track_leg2_stopover1_datetime\nThird_StopOver_Location.text.track_leg2_stopover2\nThird_StopOver_Date_and_Time.text.track_leg2_stopover2_datetime",
+                description: "Leg 2 has TWO stopovers: Boston (BOS) then Buffalo (BUF)"
+              },
+              {
+                title: "Leg 3 with Stopover 1 (Real Example)",
+                code: "Fourt_StopOver_Location.text.track_leg3_stopover1\nFourt_StopOver_Date_and_Time.text.track_leg3_stopover1_datetime",
+                description: "Fourth stopover at Boston (BOS) within leg 3 before final destination"
+              }
+            ]
+          },
+          {
+            id: "route-summary",
+            title: "Route Summary Display",
+            content: "The flight tracker automatically generates a route summary showing the journey from first origin to last destination. Stopovers are displayed within their respective legs.",
+            codeExamples: [
+              {
+                title: "3-Way Ticket Route (Real Example)",
+                code: "Auto-generated: London Heathrow (LHR) → Boston (BOS) → Buffalo (BUF) → London Heathrow (LHR)",
+                description: "Complete journey: Leg 1 (LHR→BOS), Leg 2 (BOS→BUF), Leg 3 (BOS→LHR)"
+              }
+            ]
+          }
         ]
       }
     ]

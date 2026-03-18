@@ -139,7 +139,7 @@ const FormPanel = React.memo(function FormPanel({
 
   // Memoize filtered fields to avoid re-filtering on every render
   const statusFields = useMemo(
-    () => fields?.filter((field) => field.type === "status") ?? [],
+    () => fields?.filter((field) => field.type === "status" && !field.dependsOn) ?? [],
     [fields]
   );
 
@@ -150,7 +150,9 @@ const FormPanel = React.memo(function FormPanel({
           field.type !== "status" &&
           // Hide .gen fields that are in AUTO mode — they are auto-generated before save
           // and should not appear in the form. Non-AUTO gen fields show with a Regenerate button.
-          !field.generationRule?.startsWith("AUTO:")
+          !field.generationRule?.startsWith("AUTO:") &&
+          // Hide fields that have dependsOn - they are auto-populated from other fields
+          !field.dependsOn
       ) ?? [],
     [fields]
   );

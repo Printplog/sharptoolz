@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -10,6 +11,8 @@ import {
   LineChart,
   ShieldAlert,
   FileText,
+  Wallet,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -22,6 +25,12 @@ export default function Sidebar() {
   const { pathname } = useLocation();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+
+  const toggleMenu = (menu: string) => {
+    setExpandedMenus((prev: Record<string, boolean>) => ({ ...prev, [menu]: !prev[menu] }));
+  };
 
   const handlePrefetch = (to: string) => {
     switch (to) {
@@ -82,6 +91,15 @@ export default function Sidebar() {
       to: "/admin/users",
     },
     {
+      icon: <Wallet className="h-4 w-4" />,
+      label: "Wallet",
+      to: "/admin/wallet",
+      submenu: [
+        { label: "Wallets", to: "/admin/wallet" },
+        { label: "Transactions", to: "/admin/wallet/transactions" },
+      ],
+    },
+    {
       icon: <Settings className="h-4 w-4" />,
       label: "Settings",
       to: "/admin/settings",
@@ -140,22 +158,65 @@ export default function Sidebar() {
 
           return (
             <div key={item.to}>
-              <Link
-                to={item.to}
-                onMouseEnter={() => handlePrefetch(item.to)}
-              >
-                <button
-                  className={cn(
-                    "w-full justify-start transition-colors py-2 px-6 flex items-center text-sm",
-                    isActive
-                      ? "bg-primary/10 text-primary hover:bg-primary/10 border-r-2 border-primary"
-                      : "text-white/60 hover:bg-white/5 hover:text-white"
+              {item.submenu ? (
+                <>
+                  <button
+                    onClick={() => toggleMenu(item.to)}
+                    className={cn(
+                      "w-full justify-between transition-colors py-2 px-6 flex items-center text-sm",
+                      pathname.startsWith(item.to)
+                        ? "bg-primary/10 text-primary hover:bg-primary/10"
+                        : "text-white/60 hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    <div className="flex items-center">
+                      {item.icon}
+                      <span className="ml-2">{item.label}</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "w-4 h-4 transition-transform",
+                        expandedMenus[item.to] && "rotate-180"
+                      )}
+                    />
+                  </button>
+                  {expandedMenus[item.to] && (
+                    <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-white/10 pl-4">
+                      {item.submenu.map((subitem) => (
+                        <Link key={subitem.to} to={subitem.to}>
+                          <button
+                            className={cn(
+                              "w-full justify-start transition-colors py-1.5 px-4 flex items-center text-xs",
+                              pathname === subitem.to
+                                ? "text-primary"
+                                : "text-white/60 hover:text-white"
+                            )}
+                          >
+                            {subitem.label}
+                          </button>
+                        </Link>
+                      ))}
+                    </div>
                   )}
+                </>
+              ) : (
+                <Link
+                  to={item.to}
+                  onMouseEnter={() => handlePrefetch(item.to)}
                 >
-                  {item.icon}
-                  <span className="ml-2">{item.label}</span>
-                </button>
-              </Link>
+                  <button
+                    className={cn(
+                      "w-full justify-start transition-colors py-2 px-6 flex items-center text-sm",
+                      isActive
+                        ? "bg-primary/10 text-primary hover:bg-primary/10 border-r-2 border-primary"
+                        : "text-white/60 hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    {item.icon}
+                    <span className="ml-2">{item.label}</span>
+                  </button>
+                </Link>
+              )}
             </div>
           );
         })}
