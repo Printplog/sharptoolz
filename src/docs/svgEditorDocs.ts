@@ -166,7 +166,7 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "grayscale-extension",
     title: ".grayscale Extension",
-    content: "Applies automatic grayscale conversion to uploaded images. Works with both .upload and .file fields so final renders match grayscale requirements without extra user actions.",
+    content: "Applies automatic grayscale conversion to uploaded images. Works with both .upload and .file fields so final renders match grayscale requirements without extra user actions. Can also be combined with .depends to apply grayscale when copying images from other fields.",
     codeExamples: [
       {
         title: "Full Grayscale",
@@ -177,6 +177,16 @@ export const svgEditorDocs: DocSection[] = [
         title: "Partial Grayscale",
         code: "Receipt_Image.file.grayscale_65",
         description: "Applies 65% grayscale so some color detail remains"
+      },
+      {
+        title: "Grayscale with Dependency",
+        code: "Photo.upload\nPhoto_Copy.depends_Photo.grayscale",
+        description: "Photo_Copy automatically copies the image from Photo and applies 100% grayscale. Note: .depends must come first (after base ID), then .grayscale"
+      },
+      {
+        title: "Partial Grayscale with Dependency",
+        code: "Logo.upload\nLogo_Dark.depends_Logo.grayscale_80",
+        description: "Logo_Dark copies from Logo and applies 80% grayscale"
       }
     ]
   },
@@ -459,8 +469,8 @@ export const svgEditorDocs: DocSection[] = [
   },
   {
     id: "dependencies",
-    title: ".depends_ Extension",
-    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. For text fields, use FieldName.depends_SourceField directly. For image/signature fields, include the type: FieldName.upload.depends_Source or FieldName.sign.depends_Source.",
+    title: ".depends Extension",
+    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. IMPORTANT: .depends is an extension (not a field type) but MUST come FIRST after the base ID (position 1). For image/signature fields, use the format: FieldName.depends_SourceField.upload or FieldName.depends_SourceField.sign.",
     codeExamples: [
       {
         title: "Simple Copy (Text)",
@@ -498,14 +508,14 @@ export const svgEditorDocs: DocSection[] = [
         description: "Copies value and tracks with role 'name'"
       },
       {
-        title: "Image Dependency (requires .upload)",
-        code: "Photo.upload\nPhoto_Copy.upload.depends_Photo",
-        description: "Photo_Copy automatically copies the image from Photo. For image dependencies, you MUST use .upload.depends_SourceField format. The dependent field is hidden from the form. Field name must be unique."
+        title: "Image Dependency",
+        code: "Photo.upload\nPhoto_Copy.depends_Photo.grayscale",
+        description: "Photo_Copy automatically copies the image from Photo and applies grayscale. IMPORTANT: .depends must come FIRST (after base ID), then .grayscale. The dependent field is hidden from the form. Field name must be unique."
       },
       {
-        title: "Signature Dependency (requires .sign)",
-        code: "Signature.sign\nSignature_Copy.sign.depends_Signature",
-        description: "Signature_Copy automatically copies the signature. For signature dependencies, you MUST use .sign.depends_SourceField format."
+        title: "Signature Dependency",
+        code: "Signature.sign\nSignature_Copy.depends_Signature",
+        description: "Signature_Copy automatically copies the signature. For signature dependencies, .depends must come FIRST."
       },
       {
         title: "Date Reformatting",

@@ -121,6 +121,7 @@ interface Props {
 import { FilePen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { useAdminConsoleStore } from '@/store/useAdminConsoleStore';
 
 export default function SvgFormTranslator({ isPurchased, templateId: templateIdProp }: Props) {
   const user = useAuthStore((state) => state.user);
@@ -246,18 +247,48 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
     setFields(initializedFields, isPurchased);
 
     // ADMIN DEBUG: Log form fields for troubleshooting
-    if (user?.is_staff) {
+    if (user?.is_staff || user?.role === 'ZK7T-93XY') {
       console.log(`[SvgFormTranslator] Initialized ${initializedFields.length} fields for ${isPurchased ? 'purchased ' : ''}template: ${id}`);
+      console.log(`[SvgFormTranslator] Template Name: ${data.name}`);
+      console.log(`[SvgFormTranslator] Template ID: ${id}`);
+
+      // Log to the custom UI console
+      const { addLog } = useAdminConsoleStore.getState();
+      addLog('success', `Loaded ${initializedFields.length} form fields for: ${data.name}`, {
+        templateId: id,
+        templateName: data.name,
+        fieldCount: initializedFields.length
+      });
+
+      // Log each field type breakdown
+      const fieldTypes = initializedFields.reduce((acc, f) => {
+        acc[f.type] = (acc[f.type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      addLog('info', `Field types: ${Object.entries(fieldTypes).map(([k, v]) => `${k}(${v})`).join(', ')}`);
+
+      // Detailed field table
       if (initializedFields.length > 0) {
-        console.table(initializedFields.map(f => ({ 
-          id: f.id, 
-          type: f.type, 
-          name: f.name,
-          current: f.currentValue,
-          default: f.defaultValue
-        })));
+        const fieldDetails = initializedFields.map(f => ({
+          ID: f.id,
+          Type: f.type,
+          Name: f.name,
+          Value: f.currentValue,
+          Default: f.defaultValue,
+          DependsOn: f.dependsOn || '-',
+          Grayscale: f.requiresGrayscale ? `Yes (${f.grayscaleIntensity}%)` : 'No',
+          Editable: f.editable ? '✓' : '-',
+          Tracking: f.trackingRole || '-',
+        }));
+
+        console.table(fieldDetails);
+
+        // Log to admin console
+        addLog('table', 'Form Fields Detail', fieldDetails);
       } else {
         console.warn('[SvgFormTranslator] NO FIELDS INITIALIZED! Check if template has IDs.');
+        addLog('error', 'NO FIELDS INITIALIZED! SVG may have missing IDs.', { templateId: id });
       }
     }
 

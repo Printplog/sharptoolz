@@ -104,6 +104,11 @@ export function validateSvgId(id: string): ValidationResult {
     if (extension) {
       isWhitelisted = true;
 
+      // Check mustBeFirst (special case for .depends)
+      if (extension.mustBeFirst && i !== 1) {
+        return { valid: false, error: `❌ Extension '.${part}' must come FIRST (immediately after base ID).`, parts, baseId };
+      }
+
       // Check allowedAfter
       if (lastPartBase) {
         const isAllowedAfter = extension.allowedAfter?.includes(lastPartBase);

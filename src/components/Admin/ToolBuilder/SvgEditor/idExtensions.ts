@@ -9,6 +9,7 @@ export interface ExtensionDefinition {
   valuePlaceholder?: string; // Placeholder for the value input
   allowedAfter?: string[]; // Which field types this can come after
   mustBeLast?: boolean; // If true, this must be the last extension
+  mustBeFirst?: boolean; // If true, this must come at position 1 (after base ID)
   isFieldType?: boolean; // If true, this is a field type (can only have one)
 }
 
@@ -96,18 +97,19 @@ export const FIELD_TYPES: ExtensionDefinition[] = [
     requiresValue: true,
     valuePlaceholder: "Enter option value",
   },
-  {
-    key: "depends",
-    label: "Depends On",
-    helper:
-      "Field depends on another field (e.g., depends_FieldName or depends_FieldName[w1])",
-    requiresValue: true,
-    valuePlaceholder: "Enter field name (e.g., Country or Country[w1])",
-  },
 ].map(ft => ({ ...ft, isFieldType: true }));
 
 // Extensions that can come after field types
 export const EXTENSIONS: ExtensionDefinition[] = [
+  {
+    key: "depends",
+    label: "Depends On",
+    helper:
+      "Field depends on another field (e.g., depends_FieldName or depends_FieldName[w1]). IMPORTANT: Must come FIRST after base ID.",
+    requiresValue: true,
+    valuePlaceholder: "Enter field name (e.g., Country or Country[w1])",
+    mustBeFirst: true, // Special: must come at position 1 (after base ID)
+  },
   {
     key: "max",
     label: "Max Length",
@@ -229,7 +231,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     key: "grayscale",
     label: "Grayscale",
     helper: "Force grayscale rendering (upload/file fields only)",
-    allowedAfter: ["upload", "file"],
+    allowedAfter: ["upload", "file", "depends"],
   },
   {
     key: "hide_checked",
