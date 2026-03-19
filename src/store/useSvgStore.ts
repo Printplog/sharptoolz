@@ -74,6 +74,7 @@ export const useSvgStore = create<SvgStore>()(
             const elementsMap: Record<string, SvgElement> = {};
             const order: string[] = [];
             const idCount: Record<string, number> = {};
+            const claimedPreserveIds = new Set<string>();
 
             allElements.forEach((domEl) => {
                 const tag = domEl.tagName.toLowerCase();
@@ -102,6 +103,7 @@ export const useSvgStore = create<SvgStore>()(
                     // Find matching element by Base ID (everything before the first dot)
                     const cleanBaseId = baseId.split('.')[0];
                     const match = Object.values(preserveFrom).find(el => {
+                        if (!el.id || claimedPreserveIds.has(el.id)) return false; // Skip if already claimed
                         const elBaseId = (el.originalId || el.id || "").split('.')[0];
                         return elBaseId === cleanBaseId;
                     });
@@ -114,6 +116,7 @@ export const useSvgStore = create<SvgStore>()(
                         if (preservedId) {
                             domEl.setAttribute('id', preservedId);
                             baseId = preservedId;
+                            claimedPreserveIds.add(preservedId); // Claim this ID
                         }
                     }
                 }

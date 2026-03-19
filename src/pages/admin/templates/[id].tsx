@@ -1,23 +1,49 @@
-import { getTemplateForAdmin, updateTemplateForAdmin, getTemplateSvgForAdmin } from '@/api/apiEndpoints';
+import { getTemplateForAdmin, updateTemplateForAdmin, getTemplateSvgForAdmin, getTemplatesForAdmin } from '@/api/apiEndpoints';
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import errorMessage from '@/lib/utils/errorMessage';
 import type { Template, TemplateUpdatePayload } from '@/types';
 import type { ApiError } from '@/lib/utils/errorMessage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { applySvgPatches } from "@/lib/utils/applySvgPatches";
-import { useRef, useState, useEffect } from 'react';
+import { cn } from "@/lib/utils";
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSvgPatch } from '@/hooks/useSvgPatch';
 import type { SvgPatch } from '@/types';
 import { useSvgStore } from '@/store/useSvgStore';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChevronLeft, ChevronRight, ChevronDownIcon, AlertTriangle, Search } from 'lucide-react';
 
 
 export default function SvgTemplateEditor() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const svgEditorRef = useRef<SvgEditorRef>(null);
+
+  const [pendingNavigateId, setPendingNavigateId] = useState<string | null>(null);
+  const [showConfirmNav, setShowConfirmNav] = useState(false);
   const { patches, addPatch, clearPatch } = useSvgPatch();
   const resetStore = useSvgStore(state => state.reset);
 
@@ -33,9 +59,55 @@ export default function SvgTemplateEditor() {
       console.log("Admin Template Data:", resp);
       return resp;
     },
-    enabled: !!id, // Only run query if id exists
-    refetchOnMount: false, // Don't refetch on mount to prevent flickering
+    enabled: !!id,
+    refetchOnMount: false,
   });
+
+  // Fetch all templates for the switcher
+
+  const { data: siblings } = useQuery<Template[]>({
+    queryKey: ["templates-for-admin-all"],
+    queryFn: () => getTemplatesForAdmin(undefined, undefined),
+    enabled: true,
+  });
+
+  const { prevTemplate, nextTemplate } = useMemo(() => {
+    if (!siblings || !id) return { prevTemplate: null, nextTemplate: null };
+    const index = siblings.findIndex(t => t.id === id);
+    if (index === -1) return { prevTemplate: null, nextTemplate: null };
+    
+    return {
+      prevTemplate: index > 0 ? siblings[index - 1] : null,
+      nextTemplate: index < siblings.length - 1 ? siblings[index + 1] : null
+    };
+  }, [siblings, id]);
+
+  const onNavigate = (targetId: string) => {
+    if (patches.length > 0) {
+      setPendingNavigateId(targetId);
+      setShowConfirmNav(true);
+    } else {
+      performNavigate(targetId);
+    }
+  };
+
+  const performNavigate = (targetId: string) => {
+    navigate(`/admin/templates/${targetId}`);
+    setSvgContent(""); // Clear current SVG to trigger fresh load for next template
+    resetStore();
+    clearPatch();
+    setPendingNavigateId(null);
+    setShowConfirmNav(false);
+  };
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const filteredSiblings = useMemo(() => {
+    if (!siblings) return [];
+    if (!searchQuery.trim()) return siblings;
+    return siblings.filter(t => 
+      t.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [siblings, searchQuery]);
 
   const [svgContent, setSvgContent] = useState<string>("");
   const [isFetchingSvg, setIsFetchingSvg] = useState(false);
@@ -286,10 +358,86 @@ export default function SvgTemplateEditor() {
 
   return (
     <>
-      <div className="container mx-auto relative">
-        {/* Floating Action Buttons - Removed */}
-
+      <div className="relative">
         <div className="w-full">
+          {/* Navigation Header - Minimal */}
+          {(prevTemplate || nextTemplate) && (
+            <div className="flex items-center justify-end gap-1.5 mb-6">
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={!prevTemplate}
+                onClick={() => prevTemplate && onNavigate(prevTemplate.id)}
+                className="bg-white/5 border-white/10 hover:bg-white/15 text-white h-9 w-9 transition-all shrink-0"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <DropdownMenu onOpenChange={(open) => !open && setSearchQuery("")}>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="bg-white/5 border-white/10 hover:bg-white/10 text-white gap-2 min-w-[180px] justify-between h-9 shadow-sm"
+                  >
+                    <span className="truncate max-w-[140px] font-medium text-xs opacity-90">{data.name}</span>
+                    <ChevronDownIcon className="h-3 w-3 opacity-40 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-[#0f1620] border-white/10 w-[240px] p-0" align="center">
+                  <div className="p-2 border-b border-white/10 sticky top-0 bg-[#0f1620] z-10">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-white/30" />
+                      <Input
+                        placeholder="Search templates..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8 bg-white/5 border-white/10 text-xs h-8 focus-visible:ring-primary/50"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <DropdownMenuLabel className="text-[10px] text-white/30 uppercase tracking-widest px-3 py-2">
+                    {filteredSiblings.length} Templates
+                  </DropdownMenuLabel>
+                  <ScrollArea className="h-[280px]">
+                    <div className="p-1">
+                      {filteredSiblings.length === 0 ? (
+                        <div className="py-6 text-center text-white/20 text-xs">No templates found</div>
+                      ) : (
+                        filteredSiblings.map((sibling) => (
+                          <DropdownMenuItem
+                            key={sibling.id}
+                            onClick={() => onNavigate(sibling.id)}
+                            className={cn(
+                              "flex flex-col items-start gap-0.5 rounded-md px-3 py-2 cursor-pointer transition-colors outline-none",
+                              sibling.id === id 
+                                ? "bg-white/20 text-white hover:bg-white/25 focus:bg-white/25" 
+                                : "text-white/70 hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white"
+                            )}
+                          >
+                            <span className="text-sm font-medium">{sibling.name}</span>
+                            <span className="text-[10px] opacity-40">{sibling.hot ? "🔥 Hot" : "Standard"}</span>
+                          </DropdownMenuItem>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={!nextTemplate}
+                onClick={() => nextTemplate && onNavigate(nextTemplate.id)}
+                className="bg-white/5 border-white/10 hover:bg-white/15 text-white h-9 w-9 transition-all shrink-0"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
           <SvgEditor
             ref={svgEditorRef}
             fonts={data?.fonts || []}
@@ -317,6 +465,32 @@ export default function SvgTemplateEditor() {
           />
         </div>
       </div>
+
+      <AlertDialog open={showConfirmNav} onOpenChange={setShowConfirmNav}>
+        <AlertDialogContent className="bg-[#111] border-white/10">
+          <AlertDialogHeader>
+            <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4">
+              <AlertTriangle className="h-6 w-6 text-yellow-500" />
+            </div>
+            <AlertDialogTitle className="text-white">Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              You have unsaved edits on the current template. 
+              Navigating to another template now will discard these changes forever.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white/5 text-white hover:bg-white/10 hover:text-white border-0">
+              Stay Here
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => pendingNavigateId && performNavigate(pendingNavigateId)}
+              className="bg-yellow-600 text-white hover:bg-yellow-700 border-0 font-bold"
+            >
+              Discard & Move
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
