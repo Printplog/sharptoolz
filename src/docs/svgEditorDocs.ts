@@ -795,7 +795,7 @@ export const svgEditorDocs: DocSection[] = [
           { title: "Airline Selection", code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline", description: "Airline selection dropdown (.track_airline must be on ONE option only)" },
           { title: "Error Message", code: "Error.text.track_error_message", description: "Internal error/status message (.track_error_message must be last)" },
           { title: "Leg 1 - Origin", code: "Departure_Location.text.track_leg1_origin", description: "First leg departure city/airport (e.g., 'London Heathrow (LHR)')" },
-          { title: "Leg 1 - Departure DateTime", code: "Departure_Date_and_Time.text.track_leg1_origin_departure_datetime", description: "First leg departure date+time (e.g., '4 Jun 2025, 08:25')" },
+          { title: "Leg 1 - Departure DateTime", code: "Departure_Date_and_Time.text.track_leg1_origin_datetime", description: "First leg departure date+time (e.g., '4 Jun 2025, 08:25')" },
           { title: "Leg 1 - Stopover 1", code: "First_StopOver_Location.text.track_leg1_stopover1", description: "First stopover/layover within leg 1 (e.g., 'Logan Airport (BOS)')" },
           { title: "Leg 1 - Stopover 1 DateTime", code: "First_StopOver_Date_and_Time.text.track_leg1_stopover1_datetime", description: "Stopover datetime (e.g., '4 Jun 2025, 10:56pm')" },
           { title: "Leg 1 - Flight Number", code: "Flight_No.text.track_leg1_flight_no", description: "Flight number specific to leg 1 (e.g., 'B61621')" },
@@ -808,7 +808,7 @@ export const svgEditorDocs: DocSection[] = [
           { title: "Leg 3 - Stopover 1 DateTime", code: "Fourt_StopOver_Date_and_Time.text.track_leg3_stopover1_datetime", description: "Leg 3 stopover datetime (e.g., '25 Jun 2025, 16:10')" },
           { title: "Leg 3 - Flight Number", code: "Leg3_Flight_No.text.track_leg3_flight_no", description: "Flight number specific to leg 3 (e.g., 'B61620')" },
           { title: "Leg 3 - Destination", code: "Arrival_Location.text.track_leg3_destination", description: "Third leg final arrival city (e.g., 'London Heathrow (LHR)')" },
-          { title: "Leg 3 - Arrival DateTime", code: "Arrival_Date_and_Time.text.track_leg3_destination_arrival_datetime", description: "Third leg final arrival date+time (e.g., '26 Jun 2025, 06:30')" },
+          { title: "Leg 3 - Arrival DateTime", code: "Arrival_Date_and_Time.text.track_leg3_destination_datetime", description: "Third leg final arrival date+time (e.g., '26 Jun 2025, 06:30')" },
         ],
         subsections: [
           {
@@ -818,7 +818,7 @@ export const svgEditorDocs: DocSection[] = [
             codeExamples: [
               {
                 title: "Leg 1 - With Stopover (Real Example)",
-                code: "Departure_Location.text.track_leg1_origin\nDeparture_Date_and_Time.text.track_leg1_origin_departure_datetime\nFirst_StopOver_Location.text.track_leg1_stopover1\nFirst_StopOver_Date_and_Time.text.track_leg1_stopover1_datetime\nFlight_No.text.track_leg1_flight_no",
+                code: "Departure_Location.text.track_leg1_origin\nDeparture_Date_and_Time.text.track_leg1_origin_datetime\nFirst_StopOver_Location.text.track_leg1_stopover1\nFirst_StopOver_Date_and_Time.text.track_leg1_stopover1_datetime\nFlight_No.text.track_leg1_flight_no",
                 description: "Leg 1: London (LHR) → Stopover at Boston (BOS)"
               },
               {
@@ -828,7 +828,7 @@ export const svgEditorDocs: DocSection[] = [
               },
               {
                 title: "Leg 3 - Stopover to Destination (Real Example)",
-                code: "Fourt_StopOver_Location.text.track_leg3_stopover1\nFourt_StopOver_Date_and_Time.text.track_leg3_stopover1_datetime\nArrival_Location.text.track_leg3_destination\nArrival_Date_and_Time.text.track_leg3_destination_arrival_datetime\nLeg3_Flight_No.text.track_leg3_flight_no",
+                code: "Fourt_StopOver_Location.text.track_leg3_stopover1\nFourt_StopOver_Date_and_Time.text.track_leg3_stopover1_datetime\nArrival_Location.text.track_leg3_destination\nArrival_Date_and_Time.text.track_leg3_destination_datetime\nLeg3_Flight_No.text.track_leg3_flight_no",
                 description: "Leg 3: Boston (BOS) stopover → Final destination London (LHR)"
               }
             ]

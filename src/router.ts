@@ -9,6 +9,7 @@ export type Path =
   | `/admin/analytics`
   | `/admin/audit-logs`
   | `/admin/dashboard`
+  | `/admin/docs`
   | `/admin/documents`
   | `/admin/fonts`
   | `/admin/fonts/FontUploadDialog`

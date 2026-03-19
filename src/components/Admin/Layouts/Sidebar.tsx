@@ -14,6 +14,7 @@ import {
   Wallet,
   ArrowLeftRight,
   ChevronDown,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -94,6 +95,11 @@ export default function Sidebar() {
       to: "/admin/fonts",
     },
     {
+      icon: <BookOpen className="h-4 w-4" />,
+      label: "Docs",
+      to: "/admin/docs",
+    },
+    {
       icon: <Users className="h-4 w-4" />,
       label: "Users",
       to: "/admin/users",
@@ -141,7 +147,7 @@ export default function Sidebar() {
 
           // 1. Staff: ALLOW-LIST only
           if (isStaff) {
-            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Purchased Templates", "Switch to User"];
+            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Purchased Templates", "Switch to User", "Docs"];
             return allowedForStaff.includes(item.label);
           }
 

@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSvgPatch } from '@/hooks/useSvgPatch';
-import type { SvgPatch } from '@/types';
 import { useSvgStore } from '@/store/useSvgStore';
 import { 
   AlertDialog, 
@@ -49,7 +48,8 @@ export default function SvgTemplateEditor() {
 
   useEffect(() => {
     resetStore();
-  }, [resetStore]);
+    clearPatch();
+  }, [id, resetStore, clearPatch]);
 
   // Fetch template data (without SVG for faster loading)
   const { data, isLoading } = useQuery<Template>({
@@ -154,87 +154,78 @@ export default function SvgTemplateEditor() {
 
   // Save template mutation
   const saveMutation = useMutation({
-    mutationFn: async (templateData: TemplateUpdatePayload & { svg_patch?: SvgPatch[] }): Promise<Template> => {
+    mutationFn: async (templateData: TemplateUpdatePayload): Promise<Template> => {
       try {
         console.log('[SaveMutation] Starting save...');
-        console.log('[SaveMutation] Current patches:', patches);
-        console.log('[SaveMutation] Patches count:', patches.length);
+        
+        // --- FRONTEND BAKING LOGIC ---
+        // We bake patches into the SVG content BEFORE sending it to the backend.
+        // This ensures the backend always gets a "Clean" file that already has edits.
+        let bakedSvg = templateData.svg || svgContent;
+        const hasPatches = patches.length > 0;
+        
+        if (hasPatches) {
+          console.log(`[Frontend-Bake] Applying ${patches.length} patches to SVG before save...`);
+          try {
+            bakedSvg = applySvgPatches(bakedSvg, patches);
+            console.log('[Frontend-Bake] Success. Final SVG size:', bakedSvg.length);
+          } catch (e) {
+            console.error('[Frontend-Bake] CRITICAL: Failed to apply patches before save!', e);
+            throw new Error(`Failed to bake patches into SVG: ${errorMessage(e as any)}`);
+          }
+        }
 
-        // If there's a banner file, use FormData
-        if (templateData.banner instanceof File) { // Corrected check
-          console.log('[SaveMutation] Using FormData (banner upload)');
+        const isFileUpload = templateData.banner instanceof File;
+
+        if (isFileUpload) {
+          console.log('[SaveMutation] Using FormData');
           const formData = new FormData();
           formData.append('name', templateData.name);
-          // PATCH-ONLY MODE: Only send patches, never full SVG
-          if (patches.length > 0) {
-            console.log('[SaveMutation] Adding patches to FormData:', patches);
-            formData.append('svg_patch', JSON.stringify(patches));
-          } else {
-            console.log('[SaveMutation] No patches to send (metadata-only update)');
-          }
-          // If no patches, we're only updating metadata (name, banner, etc.)
-
-          formData.append('hot', templateData.hot ? 'true' : 'false');
-          formData.append('is_active', templateData.is_active ? 'true' : 'false');
-          if (templateData.tool) {
-            formData.append('tool', templateData.tool);
-          }
-          if (templateData.tutorialUrl) {
-            formData.append('tutorial_url', templateData.tutorialUrl);
-          }
-          if (templateData.tutorialTitle) {
-            formData.append('tutorial_title', templateData.tutorialTitle);
-          }
-          if (templateData.svg) {
-            console.log('[SaveMutation] Adding full SVG content to FormData');
-            formData.append('svg', templateData.svg);
-          }
+          formData.append('hot', String(templateData.hot));
+          formData.append('is_active', String(templateData.is_active));
+          
+          if (templateData.tool) formData.append('tool', templateData.tool);
+          if (templateData.tutorialUrl) formData.append('tutorial_url', templateData.tutorialUrl);
+          if (templateData.tutorialTitle) formData.append('tutorial_title', templateData.tutorialTitle);
           formData.append('keywords', JSON.stringify(templateData.keywords ?? []));
-          formData.append('banner', templateData.banner);
-          if (templateData.fontIds && templateData.fontIds.length > 0) {
-            templateData.fontIds.forEach((fontId) => {
-              formData.append('font_ids', fontId);
-            });
+          if (templateData.banner) formData.append('banner', templateData.banner);
+          
+          if (templateData.fontIds?.length) {
+            templateData.fontIds.forEach(id => formData.append('font_ids', id));
           }
-          const result = await updateTemplateForAdmin(id as string, formData);
-          return result;
+
+          // SEND BAKED SVG & CLEAR PATCHES
+          if (bakedSvg) {
+            formData.append('svg', bakedSvg);
+            if (hasPatches) formData.append('svg_patch', JSON.stringify([]));
+          }
+
+          return await updateTemplateForAdmin(id as string, formData);
         } else {
           console.log('[SaveMutation] Using JSON payload');
-          // Otherwise, send as JSON
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const payload: any = {
             name: templateData.name,
-            hot: templateData.hot || false,
-            is_active: templateData.is_active !== undefined ? templateData.is_active : true,
-            tool: templateData.tool || undefined,
-            tutorial_url: templateData.tutorialUrl || undefined,
-            tutorial_title: templateData.tutorialTitle || undefined,
+            hot: !!templateData.hot,
+            is_active: templateData.is_active !== false,
+            tool: templateData.tool,
+            tutorial_url: templateData.tutorialUrl,
+            tutorial_title: templateData.tutorialTitle,
             keywords: templateData.keywords ?? [],
-            font_ids: templateData.fontIds || []
+            font_ids: templateData.fontIds ?? []
           };
 
-          // Conditionally add banner if it's a string (meaning it's a URL for an existing banner)
-          if (typeof templateData.banner === 'string') {
-            payload.banner = templateData.banner;
+          if (templateData.banner) payload.banner = templateData.banner;
+
+          // SEND BAKED SVG & CLEAR PATCHES
+          if (bakedSvg) {
+            payload.svg = bakedSvg;
+            if (hasPatches) payload.svg_patch = [];
           }
 
-          // PATCH-ONLY MODE: Only send patches, never full SVG (unless replaced)
-          if (templateData.svg) {
-            console.log('[SaveMutation] Adding full SVG content to JSON payload');
-            payload.svg = templateData.svg;
-          } else if (patches.length > 0) {
-            console.log('[SaveMutation] Adding patches to JSON payload:', patches);
-            payload.svg_patch = patches;
-          } else {
-            console.log('[SaveMutation] No patches or SVG to send (metadata-only update)');
-          }
-          // If no patches or SVG, we're only updating metadata
-
-          console.log('[SaveMutation] Final payload:', payload);
-          const result = await updateTemplateForAdmin(id as string, payload);
-          return result;
+          return await updateTemplateForAdmin(id as string, payload);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('[SaveMutation] Update template error:', error);
         throw error;
       }
@@ -266,7 +257,7 @@ export default function SvgTemplateEditor() {
       // Refresh other templates lists
       await queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       console.error('Save template error:', error);
       // Log full error response for debugging
       if ('response' in error) {
@@ -412,8 +403,8 @@ export default function SvgTemplateEditor() {
                             className={cn(
                               "flex flex-col items-start gap-0.5 rounded-md px-3 py-2 cursor-pointer transition-colors outline-none",
                               sibling.id === id 
-                                ? "bg-white/20 text-white hover:bg-white/25 focus:bg-white/25" 
-                                : "text-white/70 hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white"
+                                ? "bg-white/15 text-white! hover:bg-white/20 focus:bg-white/20 focus:text-white!" 
+                                : "text-white/60! hover:bg-white/10 hover:text-white! focus:bg-white/10 focus:text-white!"
                             )}
                           >
                             <span className="text-sm font-medium">{sibling.name}</span>
