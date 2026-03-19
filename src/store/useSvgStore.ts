@@ -30,7 +30,7 @@ interface SvgStore {
     historyIndex: number;
 
     // Actions
-    setInitialSvg: (svg: string) => void;
+    setInitialSvg: (svg: string, preserveFrom?: Record<string, SvgElement>) => void;
     updateElement: (id: string, updates: Partial<SvgElement>, undoable?: boolean) => void;
     commitChanges: (immediate?: boolean) => void; // Bake elements into workingSvg
     selectElement: (id: string | null) => void;
@@ -66,7 +66,7 @@ export const useSvgStore = create<SvgStore>()(
         history: [],
         historyIndex: -1,
 
-        setInitialSvg: (svg) => {
+        setInitialSvg: (svg, preserveFrom) => {
             const parser = new DOMParser();
             const svgDoc = parser.parseFromString(svg.trim(), "image/svg+xml");
             const allElements = Array.from(svgDoc.querySelectorAll("*")).filter(el => el.tagName.toLowerCase() !== "svg");
@@ -95,7 +95,29 @@ export const useSvgStore = create<SvgStore>()(
                 if (!isInteresting) return;
 
                 const internalIdAttr = domEl.getAttribute("data-internal-id");
-                const baseId = id || internalIdAttr || `el-${tag}`;
+                let baseId = id || internalIdAttr || `el-${tag}`;
+
+                // --- EDIT PRESERVATION (Fuzzy Match) ---
+                if (preserveFrom) {
+                    // Find matching element by Base ID (everything before the first dot)
+                    const cleanBaseId = baseId.split('.')[0];
+                    const match = Object.values(preserveFrom).find(el => {
+                        const elBaseId = (el.originalId || el.id || "").split('.')[0];
+                        return elBaseId === cleanBaseId;
+                    });
+
+                    if (match) {
+                        const preservedId = match.id;
+                        // For re-uploads, we want to keep the NEW SVG attributes (like x/y positions)
+                        // but carry over the ADMIN edits (like fills, colors, etc.)
+                        // Actually, for now let's just preserve the ID extensions
+                        if (preservedId) {
+                            domEl.setAttribute('id', preservedId);
+                            baseId = preservedId;
+                        }
+                    }
+                }
+
                 idCount[baseId] = (idCount[baseId] || 0) + 1;
                 const internalId = idCount[baseId] > 1 ? `${baseId}_${idCount[baseId]}` : baseId;
 
@@ -125,7 +147,7 @@ export const useSvgStore = create<SvgStore>()(
 
                 const element: SvgElement = {
                     tag,
-                    id: id || undefined,
+                    id: domEl.getAttribute("id") || undefined,
                     originalId: id || undefined,
                     internalId: internalId,
                     attributes,

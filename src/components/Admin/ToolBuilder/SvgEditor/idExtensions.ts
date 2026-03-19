@@ -231,7 +231,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     key: "grayscale",
     label: "Grayscale",
     helper: "Force grayscale rendering (upload/file/depends fields only). Use .grayscale for 100% or .grayscale_50 for custom intensity.",
-    requiresValue: true,
+    requiresValue: false, // Optional intensity
     valuePlaceholder: "Enter intensity (0-100, e.g., 80)",
     allowedAfter: ["upload", "file", "depends"],
   },
@@ -282,10 +282,20 @@ export function getAllowedExtensionsAfter(
   const hasFieldType = FIELD_TYPES.some((ft) =>
     currentExtensions.some(ext => ext === ft.key || ext.startsWith(ft.key + "_"))
   );
+  // depends_ satisfies the "needs a type" requirement
+  const hasDepends = currentExtensions.some(ext => ext.startsWith("depends_"));
 
-  if (!hasFieldType) {
+  if (!hasFieldType && !hasDepends) {
     // Still need a field type
     return FIELD_TYPES;
+  }
+
+  // After depends_, only grayscale and track_ are valid — don't suggest types or other extensions
+  if (hasDepends && !hasFieldType) {
+    return EXTENSIONS.filter(ext =>
+      ext.allowedAfter?.includes("depends") &&
+      !currentExtensions.some(e => e.startsWith(ext.key + "_") || e === ext.key)
+    );
   }
 
   // Get the last extension to determine what can come next
@@ -369,12 +379,26 @@ export function getSuggestions(id: string): ExtensionDefinition[] {
   // Get the last part to determine what can come next
   const lastPart = parts[parts.length - 1];
 
-  // Check if we have a field type yet (handle simple keys and key_value formats)
+  // Check if we have a field type yet (check extensions only)
   const fieldType = FIELD_TYPES.find((ft) => parts.some(p => p === ft.key || p.startsWith(ft.key + "_")));
+  // depends_ also satisfies the "needs a type" requirement
+  const hasDepends = parts.some(p => p.startsWith("depends_"));
 
-  if (!fieldType) {
+  if (!fieldType && !hasDepends) {
     // Still need a field type - suggest field types
     return FIELD_TYPES;
+  }
+
+  // After depends_, only grayscale and track_ are allowed — never suggest field types
+  if (hasDepends && !fieldType) {
+    const suggested: ExtensionDefinition[] = [];
+    for (const ext of EXTENSIONS) {
+      if (ext.allowedAfter?.includes("depends")) {
+        const alreadyPresent = parts.some(p => p.startsWith(ext.key + "_") || p === ext.key);
+        if (!alreadyPresent) suggested.push(ext);
+      }
+    }
+    return suggested;
   }
 
   // Check if track_ is already present (must be last)
@@ -392,7 +416,7 @@ export function getSuggestions(id: string): ExtensionDefinition[] {
       const alreadyPresent = parts.some(
         (p) => p.startsWith(ext.key + "_") || p === ext.key
       );
-      if (!alreadyPresent || (ext.key === "max" && fieldType.key === "gen")) {
+      if (!alreadyPresent || (ext.key === "max" && fieldType?.key === "gen")) {
         allowed.push(ext);
       }
     }

@@ -25,12 +25,12 @@ export function validateSvgId(id: string): ValidationResult {
   // Extract link URL before splitting (URLs contain dots and special chars)
   let cleanId = id;
   let hasLinkWithUrl = false;
-  
+
   if (id.includes(".link_\"")) {
     const linkIndex = id.indexOf(".link_\"");
     const urlStart = linkIndex + 7; // len(".link_\"")
     const urlEnd = id.indexOf("\"", urlStart);
-    
+
     if (urlEnd !== -1) {
       const linkValue = id.substring(urlStart, urlEnd);
       hasLinkWithUrl = linkValue.length > 0;

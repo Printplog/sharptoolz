@@ -296,8 +296,8 @@ export const svgEditorDocs: DocSection[] = [
       },
       {
         title: "With Depends (Field Sync)",
-        code: "Start.date_MM/DD/YYYY\nEnd.date_MM/DD/YYYY.depends_Start",
-        description: "End date syncs with Start date automatically"
+        code: "Start.date_MM/DD/YYYY\nEnd.depends_Start",
+        description: "End date syncs with Start date automatically. .depends_ comes FIRST and replaces the field type."
       }
     ],
     subsections: [
@@ -470,7 +470,7 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "dependencies",
     title: ".depends Extension",
-    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. IMPORTANT: .depends is an extension (not a field type) but MUST come FIRST after the base ID (position 1). For image/signature fields, use the format: FieldName.depends_SourceField.upload or FieldName.depends_SourceField.sign.",
+    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. IMPORTANT: .depends_ is an extension (not a field type) but MUST come FIRST after the base ID (position 1). It REPLACES the need for a field type — do not add .text, .upload etc. alongside it. After .depends_, only .grayscale and .track_ROLE are allowed.",
     codeExamples: [
       {
         title: "Simple Copy (Text)",

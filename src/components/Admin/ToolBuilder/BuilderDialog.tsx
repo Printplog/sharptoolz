@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { addTemplate, getTools, getFonts, addFont } from "@/api/apiEndpoints";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDialogStore } from "@/store/dialogStore";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
@@ -41,14 +41,12 @@ import { LazyImage } from "@/components/LazyImage";
 // ------------------------
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  svgFile: z.instanceof(File, { message: "SVG file is required" }).optional(),
   bannerFile: z.instanceof(File, { message: "Banner image is required" }).optional(),
   tool: z.string().optional(),
   tutorialUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   tutorialTitle: z.string().optional(),
   keywords: z.array(z.string()).optional(),
   fontIds: z.array(z.string()).optional(),
-  is_active: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -57,6 +55,7 @@ export default function BuilderDialog() {
   const { closeDialog, dialogs } = useDialogStore();
   const queryClient = useQueryClient();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Extract tool ID from current URL path (e.g., /admin/tools/7286b789-bca0-4327-9844-3df7e65b68dc/templates)
   const toolId = location.pathname.match(/\/admin\/tools\/([^/]+)\/templates/)?.[1] || null;
@@ -67,7 +66,6 @@ export default function BuilderDialog() {
       name: "",
       tool: toolId || undefined,
       keywords: [],
-      is_active: true,
     },
   });
 
@@ -105,7 +103,6 @@ export default function BuilderDialog() {
         tutorialUrl: "",
         tutorialTitle: "",
         keywords: [],
-        is_active: true,
       });
 
       // Also explicitly set the tool value to ensure it's selected
@@ -137,24 +134,7 @@ export default function BuilderDialog() {
     return () => subscription.unsubscribe();
   }, [form]);
 
-  // SVG Dropzone
-  const onSvgDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles?.length) {
-      form.setValue("svgFile", acceptedFiles[0]);
-    }
-  };
 
-  const {
-    getRootProps: getSvgRootProps,
-    getInputProps: getSvgInputProps,
-    isDragActive: isSvgDragActive,
-  } = useDropzone({
-    onDrop: onSvgDrop,
-    accept: {
-      "image/svg+xml": [".svg"],
-    },
-    maxFiles: 1,
-  });
 
   // Banner Dropzone
   const onBannerDrop = (acceptedFiles: File[]) => {
@@ -177,16 +157,22 @@ export default function BuilderDialog() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormData) => addTemplate(data),
-    onSuccess() {
-      toast.success("Template created successfully");
+    onSuccess(result: any) {
+      toast.success("Template created! Redirecting to SVG editor...");
 
-      // Invalidate queries first, then navigate
+      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       if (toolId) {
         queryClient.invalidateQueries({ queryKey: ["templates", "tool", toolId] });
       }
 
       closeDialog("toolBuilder");
+
+      // Redirect to SVG editor page for SVG upload
+      const templateId = (result as any)?.id;
+      if (templateId) {
+        navigate(`/admin/templates/${templateId}`);
+      }
     },
     onError(error: Error) {
       toast.error(errorMessage(error));
@@ -198,34 +184,17 @@ export default function BuilderDialog() {
     console.log('=== TEMPLATE CREATION DEBUG ===');
     console.log('Current toolId from URL:', toolId);
     console.log('Form values received:', values);
-    console.log('Tools available:', tools);
 
     try {
-      if (!values.svgFile) {
-        console.error("SVG file is missing");
-        return;
-      }
-      // Read SVG file
-      const svgText = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.onerror = reject;
-        reader.readAsText(values.svgFile as File);
-      });
-
-      // Create FormData for file upload
+      // Create FormData — metadata only, no SVG
       const formData = new FormData();
       formData.append('name', values.name);
-      formData.append('svg', svgText);
       if (values.bannerFile) {
         formData.append('banner', values.bannerFile);
       }
       formData.append('type', 'tool');
       if (values.tool) {
         formData.append('tool', values.tool);
-        console.log('Adding tool to form data:', values.tool);
-      } else {
-        console.log('No tool selected for template creation');
       }
 
       if (values.keywords && values.keywords.length > 0) {
@@ -235,11 +204,9 @@ export default function BuilderDialog() {
       // Add tutorial data if provided
       if (values.tutorialUrl?.trim()) {
         formData.append('tutorial_url', values.tutorialUrl);
-        console.log('Adding tutorial URL:', values.tutorialUrl);
       }
       if (values.tutorialTitle?.trim()) {
         formData.append('tutorial_title', values.tutorialTitle);
-        console.log('Adding tutorial title:', values.tutorialTitle);
       }
 
       // Add font IDs if provided
@@ -249,13 +216,8 @@ export default function BuilderDialog() {
         });
       }
 
-      formData.append('is_active', values.is_active ? 'true' : 'false');
-
-      console.log('Form values:', values);
-      console.log('FormData entries:');
-      for (const [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
+      // Always create as unpublished — admin publishes after editing SVG
+      formData.append('is_active', 'false');
 
       mutate(formData);
     } catch (error) {
@@ -263,7 +225,6 @@ export default function BuilderDialog() {
     }
   };
 
-  const svgFile = form.watch("svgFile");
   const bannerFile = form.watch("bannerFile");
 
   return (
@@ -318,29 +279,7 @@ export default function BuilderDialog() {
                 )}
               />
 
-              {/* Status Toggles */}
-              <div className="grid grid-cols-1 gap-4">
-                <FormField
-                  control={form.control}
-                  name="is_active"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border border-white/10 p-4 bg-white/5">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Published Status</FormLabel>
-                        <p className="text-sm text-white/40">Visible to users in listings</p>
-                      </div>
-                      <FormControl>
-                        <div
-                          className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ${field.value ? 'bg-emerald-600' : 'bg-white/10'}`}
-                          onClick={() => field.onChange(!field.value)}
-                        >
-                          <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-200 ${field.value ? 'translate-x-6' : 'translate-x-0'}`} />
-                        </div>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
+
 
               {/* Tutorial Section */}
               <div className="relative">
@@ -411,63 +350,7 @@ export default function BuilderDialog() {
                 </div>
               </div>
 
-              {/* SVG Dropzone */}
-              <FormField
-                control={form.control}
-                name="svgFile"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>SVG Template</FormLabel>
-                    <FormControl>
-                      <div
-                        {...getSvgRootProps()}
-                        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                          ${isSvgDragActive
-                            ? "border-primary bg-primary/5"
-                            : "border-white/20 hover:border-white/40"
-                          }
-                        `}
-                      >
-                        <input {...getSvgInputProps()} />
-                        {svgFile ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <span>📄 {svgFile.name}</span>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="text-sm text-white/70 mb-2">
-                              {isSvgDragActive
-                                ? "Drop your SVG here"
-                                : "Drag & drop an SVG file here, or click to select"}
-                            </p>
-                            <p className="text-xs text-white/50">
-                              Only SVG files are supported
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              {/* SVG Preview */}
-              {svgFile && (
-                <div className="mt-2">
-                  <object
-                    data={URL.createObjectURL(svgFile)}
-                    type="image/svg+xml"
-                    className="w-full h-40 max-h-60 border border-white/10 rounded-md p-2 bg-white/5"
-                  >
-                    <LazyImage
-                      src="/fallback.png"
-                      alt="SVG Preview"
-                      className="w-full h-full object-contain"
-                    />
-                  </object>
-                </div>
-              )}
 
               {/* Banner Dropzone */}
               <FormField
@@ -658,7 +541,7 @@ export default function BuilderDialog() {
                   className="text-sm font-medium"
                   disabled={isPending || !form.formState.isDirty}
                 >
-                  {isPending ? "Building..." : "Build Tool"}
+                  {isPending ? "Creating..." : "Create Template"}
                 </Button>
               </div>
             </div>

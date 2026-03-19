@@ -31,6 +31,7 @@ import { isImageElement, isTextElement } from "./utils/svgUtils";
 import { regenerateSvg } from "./utils/regenerateSvg";
 import { useSvgStore } from "@/store/useSvgStore";
 import { getAdaptiveStaleTime } from "@/lib/utils/deviceDetection";
+import { extractFieldsFromElements } from "./utils/fieldExtractor";
 
 interface SvgEditorProps {
   svgRaw: string;
@@ -96,6 +97,9 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   } = useSvgStore();
 
   const [activeTab, setActiveTab] = useState("layers");
+  const [showPreserveDialog, setShowPreserveDialog] = useState(false);
+  const [pendingSvgContent, setPendingSvgContent] = useState<string | null>(null);
+  const [fieldStats, setFieldStats] = useState({ total: 0, invalid: 0 });
 
   const elements = useMemo(() => elementOrder.map(id => elementsMap[id]), [elementOrder, elementsMap]);
   const selectedElementIndex = useMemo(() =>
@@ -114,7 +118,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   // const [showScrollTop, setShowScrollTop] = useState(false); // Removed - scroll button disabled
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [isReplaced, setIsReplaced] = useState(false);
-  const [freshSvgContent, setFreshSvgContent] = useState<string | null>(null);
   const [isEditorDirty, setIsEditorDirty] = useState(false);
 
   const svgUploadRef = useRef<import("./sections/SvgUpload").SvgUploadRef>(null);
@@ -171,6 +174,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isEditorDirty]);
+  
+  // Reset replaced state when receiving new base SVG from backend (after save)
+  useEffect(() => {
+    if (svgRaw) {
+      setIsReplaced(false);
+    }
+  }, [svgRaw]);
 
   // Keep a ref so the svgRaw effect can read current selection without adding it as a dep
   const selectedElementIdRef = useRef<string | null>(null);
@@ -307,7 +317,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
     onSave({
       name: name.trim(),
-      svg: isReplaced && freshSvgContent ? freshSvgContent : "",
+      svg: isReplaced ? workingSvg : "", // Bake edits directly into the SVG if it was replaced/newly uploaded
       banner: bannerFile,
       hot: isHot,
       isActive: isActiveState,
@@ -317,7 +327,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       keywords: keywordsTags,
       fontIds: selectedFontIds.length > 0 ? selectedFontIds : undefined
     });
-  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, isReplaced, freshSvgContent, elements, handleElementSelect]);
+  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, isReplaced, workingSvg, elements, handleElementSelect]);
 
   useImperativeHandle(ref, () => ({
     handleSave,
@@ -340,31 +350,89 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         return;
       }
 
-      // Pre-validate all IDs/data-names that look like fields (WARN ONLY)
-      try {
-        const elements = parseSvgElements(content);
-        const invalidIds: string[] = [];
-        for (const el of elements) {
-          const name = el.attributes["data-name"] || el.originalId;
-          if (name && name.includes(".") && !validateSvgId(name).valid) {
-            invalidIds.push(name);
-          }
-        }
-        
-        if (invalidIds.length > 0) {
-          toast.warning(`SVG uploaded, but ${invalidIds.length} elements have invalid ID syntax. Please fix them before saving.`);
-        }
-      } catch (err) {
-        console.error("Failed to pre-validate SVG:", err);
-      }
+      const stats = getFieldStats(content);
+      setFieldStats(stats);
 
-      setInitialSvg(content);
-      setIsReplaced(true);
-      setFreshSvgContent(content);
-      if (onSvgReplace) onSvgReplace(content);
-      toast.success("SVG uploaded successfully");
+      // --- NEW FLOW: ASK TO PRESERVE EDITS ---
+      const hasExistingEdits = Object.keys(elementsMap).length > 0;
+      
+      if (hasExistingEdits) {
+        setPendingSvgContent(content);
+        setShowPreserveDialog(true);
+        // We only show a simple "File read" toast here, the detailed stats come after the choice
+        toast.info("SVG file read successfully. Checking for previous edits...");
+      } else {
+        // Normal upload (first time)
+        setInitialSvg(content);
+        setIsReplaced(true);
+        if (onSvgReplace) onSvgReplace(content);
+        showUploadToasts(stats);
+      }
     };
     reader.readAsText(file);
+  };
+
+  const getFieldStats = (svgContent: string, preserveFrom?: Record<string, SvgElement>) => {
+    let fieldCount = 0;
+    let invalidCount = 0;
+    try {
+      const parsed = parseSvgElements(svgContent);
+      for (const el of parsed) {
+        let name = el.attributes["data-name"] || el.originalId;
+        
+        // Simulating the preservation logic for stats
+        if (preserveFrom && name) {
+            const cleanBaseId = name.split('.')[0];
+            const match = Object.values(preserveFrom).find(pEl => {
+                const pBaseId = (pEl.originalId || pEl.id || "").split('.')[0];
+                return pBaseId === cleanBaseId;
+            });
+            if (match && match.id) name = match.id;
+        }
+
+        if (name && name.includes(".")) {
+          fieldCount++;
+          if (!validateSvgId(name).valid) {
+            invalidCount++;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to calculate stats:", err);
+    }
+    return { total: fieldCount, invalid: invalidCount };
+  };
+
+  const showUploadToasts = (stats: { total: number, invalid: number }) => {
+    if (stats.total === 0) {
+      toast.success("SVG uploaded — no field IDs detected yet.");
+    } else if (stats.invalid > 0) {
+      toast.warning(`SVG uploaded · ${stats.total} fields found · ${stats.invalid} invalid ID${stats.invalid > 1 ? "s" : ""}. Fix them before saving.`);
+    } else {
+      toast.success(`SVG uploaded · ${stats.total} field${stats.total > 1 ? "s" : ""} found ✓`);
+    }
+  };
+
+  const handleConfirmPreserve = (preserve: boolean) => {
+    if (!pendingSvgContent) return;
+    
+    let finalStats = fieldStats;
+    if (preserve) {
+        setInitialSvg(pendingSvgContent, elementsMap);
+        finalStats = getFieldStats(pendingSvgContent, elementsMap);
+        toast.success("SVG replaced · Existing edits preserved!");
+    } else {
+        setInitialSvg(pendingSvgContent);
+        finalStats = getFieldStats(pendingSvgContent);
+        toast.info("SVG replaced · Starting fresh.");
+    }
+    
+    setIsReplaced(true);
+    if (onSvgReplace) onSvgReplace(pendingSvgContent);
+    showUploadToasts(finalStats);
+    
+    setPendingSvgContent(null);
+    setShowPreserveDialog(false);
   };
 
   const handleTabChange = useCallback((newTab: string) => {
@@ -431,6 +499,14 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   // const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []); // Removed - scroll button disabled
 
   // Working SVG is already destructured from useSvgStore at line 70
+  
+  // Use local fields for preview if we have no backend fields yet or SVG was replaced
+  const previewFormFields = useMemo(() => {
+    if (formFields.length > 0 && !isReplaced) return formFields;
+    
+    // Parse from current store elements for immediate preview
+    return extractFieldsFromElements(elements);
+  }, [elements, formFields, isReplaced]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
@@ -656,10 +732,36 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         open={showPreviewDialog}
         onOpenChange={setShowPreviewDialog}
         svgContent={regenerateSvg(originalSvg, elements)}
-        formFields={formFields}
+        formFields={previewFormFields}
         templateName={name}
         fonts={fonts.filter(f => selectedFontIds.includes(f.id))}
       />
+
+      <AlertDialog open={showPreserveDialog} onOpenChange={setShowPreserveDialog}>
+        <AlertDialogContent className="bg-[#111] border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Preserve Existing Edits?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              We found existing field settings, extensions, and customizations in your current editor. 
+              Would you like to try carrying them over to this new SVG?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => handleConfirmPreserve(false)}
+              className="bg-white/5 text-white hover:bg-white/10 hover:text-white border-0"
+            >
+              Start Fresh
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleConfirmPreserve(true)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 border-0 font-bold"
+            >
+              Yes, Preserve Edits
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <AlertDialogContent className="bg-[#111] border-white/10">
