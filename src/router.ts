@@ -18,10 +18,10 @@ export type Path =
   | `/admin/templates/:id`
   | `/admin/tools`
   | `/admin/tools/:id/templates`
+  | `/admin/transactions`
   | `/admin/users`
   | `/admin/users/:id`
   | `/admin/wallet`
-  | `/admin/wallet/transactions`
   | `/all-tools`
   | `/all-tools/:id`
   | `/auth/forgot-password`

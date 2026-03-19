@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   FileText,
   Wallet,
+  ArrowLeftRight,
   ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { adminOverview, getAdminAnalytics, adminUsers } from "@/api/apiEndpoints";
 import { useAuthStore } from "@/store/authStore";
 import { ROLES } from "@/lib/constants/roles";
+
+interface NavigationItem {
+  icon: React.ReactNode;
+  label: string;
+  to: string;
+  submenu?: { label: string; to: string }[];
+}
 
 export default function Sidebar() {
   const { pathname } = useLocation();
@@ -49,7 +57,7 @@ export default function Sidebar() {
     }
   };
 
-  const navigationItems = [
+  const navigationItems: NavigationItem[] = [
     {
       icon: <LayoutDashboard className="h-4 w-4" />,
       label: "Dashboard",
@@ -92,12 +100,13 @@ export default function Sidebar() {
     },
     {
       icon: <Wallet className="h-4 w-4" />,
-      label: "Wallet",
+      label: "Wallets",
       to: "/admin/wallet",
-      submenu: [
-        { label: "Wallets", to: "/admin/wallet" },
-        { label: "Transactions", to: "/admin/wallet/transactions" },
-      ],
+    },
+    {
+      icon: <ArrowLeftRight className="h-4 w-4" />,
+      label: "Transactions",
+      to: "/admin/transactions",
     },
     {
       icon: <Settings className="h-4 w-4" />,
