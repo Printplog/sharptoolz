@@ -15,7 +15,7 @@ export const logout = async (): Promise<unknown> => {
   const res = await apiClient.post('/accounts/logout/');
   return res.data;
 };
-
+ 
 export const forgotPassword = async (data: { email: string }): Promise<unknown> => {
   const res = await apiClient.post('/accounts/forgot-password/', data);
   return res.data;
