@@ -76,11 +76,14 @@ export default function SettingsDialog({
     if (!templateId) return;
     setIsReparsing(true);
     try {
-      await forceReparseTemplate(templateId);
-      toast.success("Template re-parsed successfully. Form fields synced.");
-    } catch (error) {
+      const result = await forceReparseTemplate(templateId);
+      toast.success(
+        `Template re-parsed successfully. ${result.form_fields_count || 0} form fields synced.`
+      );
+    } catch (error: any) {
       console.error("Reparse failed", error);
-      toast.error("Failed to re-parse template.");
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to re-parse template.";
+      toast.error(`Reparse failed: ${errorMessage}`);
     } finally {
       setIsReparsing(false);
     }

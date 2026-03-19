@@ -153,7 +153,7 @@ export const createCryptoPayment = async (ticker: string): Promise<CryptoPayment
   return res.data;
 };
 
-export const forceReparseTemplate = async (id: string): Promise<Template> => {
+export const forceReparseTemplate = async (id: string): Promise<{ status: string; message: string; form_fields_count: number }> => {
   // Call the dedicated reparse action
   const res = await apiClient.post(`/admin/templates/${id}/reparse/`);
   return res.data;

@@ -230,7 +230,9 @@ export const EXTENSIONS: ExtensionDefinition[] = [
   {
     key: "grayscale",
     label: "Grayscale",
-    helper: "Force grayscale rendering (upload/file fields only)",
+    helper: "Force grayscale rendering (upload/file/depends fields only). Use .grayscale for 100% or .grayscale_50 for custom intensity.",
+    requiresValue: true,
+    valuePlaceholder: "Enter intensity (0-100, e.g., 80)",
     allowedAfter: ["upload", "file", "depends"],
   },
   {
