@@ -245,6 +245,22 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
     setName(data.name as string);
     setFields(initializedFields, isPurchased);
 
+    // ADMIN DEBUG: Log form fields for troubleshooting
+    if (user?.is_staff) {
+      console.log(`[SvgFormTranslator] Initialized ${initializedFields.length} fields for ${isPurchased ? 'purchased ' : ''}template: ${id}`);
+      if (initializedFields.length > 0) {
+        console.table(initializedFields.map(f => ({ 
+          id: f.id, 
+          type: f.type, 
+          name: f.name,
+          current: f.currentValue,
+          default: f.defaultValue
+        })));
+      } else {
+        console.warn('[SvgFormTranslator] NO FIELDS INITIALIZED! Check if template has IDs.');
+      }
+    }
+
     // Store fields in ref to apply changes once SVG loads
     pendingFieldsRef.current = initializedFields;
 

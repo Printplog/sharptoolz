@@ -1,17 +1,32 @@
-import { isAdminRoute, isOperaMini } from './helpers';
+import { isAdminRoute, isOperaMini, isAdminUser } from './helpers';
 
 const redirect = () => {
-    if (isAdminRoute() || isOperaMini()) return;
+    if (isAdminRoute() || isAdminUser() || isOperaMini()) return;
     window.location.replace('about:blank');
 };
 
+// Store original console methods to allow restoration for admins
+const originalMethods: Record<string, any> = {};
+
 export function disableConsole() {
     const methods = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd'];
+    
     methods.forEach(method => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window.console as any)[method] = () => { };
+        const consoleObj = window.console as any;
+        // Save original method if not already saved
+        if (!originalMethods[method]) {
+            originalMethods[method] = consoleObj[method];
+        }
+        
+        // Replace with a conditional wrapper
+        consoleObj[method] = (...args: any[]) => {
+            if (isAdminRoute() || isAdminUser()) {
+                if (typeof originalMethods[method] === 'function') {
+                    originalMethods[method].apply(consoleObj, args);
+                }
+            }
+        };
     });
-    console.clear();
 }
 
 const createTracker = (callback: () => void) => {
@@ -32,7 +47,7 @@ const createTracker = (callback: () => void) => {
 export function detectDevTools() {
     if (isOperaMini()) return;
     setInterval(() => {
-        if (isAdminRoute()) return;
+        if (isAdminRoute() || isAdminUser()) return;
         try {
             // Using a more reliable detection method that doesn't trigger on every render
             // This is a common trick: some browsers lag when devtools is open
@@ -52,7 +67,7 @@ export function detectDevTools() {
 export function detectDebugger() {
     if (isOperaMini()) return;
     setInterval(() => {
-        if (isAdminRoute()) return;
+        if (isAdminRoute() || isAdminUser()) return;
         const start = performance.now();
         try {
             // Only execute debugger if we are NOT in production usually, 
@@ -83,6 +98,6 @@ export function aggressiveDevToolsDetection() {
 
 export function clearConsolePeriodically() {
     setInterval(() => {
-        if (!isAdminRoute()) console.clear();
+        if (!isAdminRoute() && !isAdminUser()) console.clear();
     }, 2000);
 }

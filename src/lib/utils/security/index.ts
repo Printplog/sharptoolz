@@ -1,7 +1,8 @@
 import type { SecurityOptions } from './helpers';
 import {
     isDevelopment,
-    isAdminRoute
+    isAdminRoute,
+    isAdminUser
 } from './helpers';
 
 import {
@@ -28,7 +29,7 @@ export * from './shortcuts';
 export * from './detection';
 
 export function initSecurity(options: SecurityOptions = {}) {
-    if (isDevelopment || isAdminRoute()) return;
+    if (isDevelopment || isAdminRoute() || isAdminUser()) return;
 
     const {
         disableRightClick: enableRightClickBlock = true,

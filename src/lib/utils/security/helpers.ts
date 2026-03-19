@@ -35,3 +35,16 @@ export const isAdminRoute = () => {
     if (typeof window === 'undefined') return false;
     return window.location.pathname.startsWith('/admin');
 };
+
+export const isAdminUser = () => {
+    if (typeof window === 'undefined') return false;
+    try {
+        const authData = localStorage.getItem('auth-storage');
+        if (!authData) return false;
+        const parsed = JSON.parse(authData);
+        // User structure from authStore: { state: { user: { is_staff: boolean } } }
+        return parsed?.state?.user?.is_staff === true;
+    } catch {
+        return false;
+    }
+};
