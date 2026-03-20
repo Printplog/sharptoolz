@@ -5,9 +5,10 @@ interface LogoProps {
   icon?: boolean;
   noLink?: boolean;
   size?: number;
+  showText?: boolean;
 }
 
-export default function Logo({ icon = false, noLink = false, size = 30 }: LogoProps) {
+export default function Logo({ icon = false, noLink = false, size = 30, showText = true }: LogoProps) {
   const logoImg = (
     <LazyImage
       src="/logo.png"
@@ -31,7 +32,7 @@ export default function Logo({ icon = false, noLink = false, size = 30 }: LogoPr
     return (
       <div className="flex items-center gap-2">
         {logoImg}
-        <span className="font-bold text-xl text-foreground">SharpToolz</span>
+        {showText && <span className="font-bold text-xl text-foreground animate-in fade-in duration-300">SharpToolz</span>}
       </div>
     );
   }
@@ -41,7 +42,7 @@ export default function Logo({ icon = false, noLink = false, size = 30 }: LogoPr
     <div>
       <Link to="/" className="flex items-center gap-2" aria-label="Go to home">
         {logoImg}
-        <span className="font-bold text-xl text-foreground">SharpToolz</span>
+        {showText && <span className="font-bold text-xl text-foreground animate-in fade-in duration-300">SharpToolz</span>}
       </Link>
     </div>
   );

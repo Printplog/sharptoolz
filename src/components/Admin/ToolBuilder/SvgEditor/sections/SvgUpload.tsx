@@ -60,7 +60,7 @@ export interface SvgUploadRef {
 
 const SvgUpload = forwardRef<SvgUploadRef, Props>(({
   currentSvg, onSvgUpload, onSelectElement,
-  elements = [], activeElementId, draftElement,
+  elements = [], activeElementId, draftElement: _draftElement,
 }, ref) => {
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
