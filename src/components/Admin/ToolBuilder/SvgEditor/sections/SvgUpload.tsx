@@ -276,7 +276,7 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
   // Wheel — non-passive so we can preventDefault
   // ══════════════════════════════════════════════════════════════════════════
   useEffect(() => {
-    const el = canvasRef.current;
+    const el = wrapperRef.current;
     if (!el) return;
     const handler = (e: WheelEvent) => {
       e.preventDefault();

@@ -33,9 +33,17 @@ export function useSvgPatch() {
     setPatches([]);
   }, []);
 
+  /**
+   * Bulk updates the patches from an external source (e.g. import)
+   */
+  const setPatchesRaw = useCallback((newPatches: SvgPatch[]) => {
+    setPatches(newPatches);
+  }, []);
+
   return {
     patches,
     addPatch,
     clearPatch,
+    setPatches: setPatchesRaw
   };
 }

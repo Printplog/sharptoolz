@@ -271,7 +271,11 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
       // Generate patches for backend
       if (onPatchUpdate && element.internalId) {
-        const patchId = element.internalId;
+        const patchId = element.id || element.originalId;
+        if (!patchId) {
+          console.error('[ElementEditor] Cannot generate patch: element has no ID!', element);
+          return;
+        }
 
         if (finalElement.innerText !== element.innerText) {
           onPatchUpdate({ id: patchId, attribute: 'innerText', value: finalElement.innerText });

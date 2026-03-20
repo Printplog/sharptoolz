@@ -13,6 +13,7 @@ import PreviewDialog from "./PreviewDialog";
 import SvgUpload from "./sections/SvgUpload";
 import SettingsDialog from "./sections/SettingsDialog";
 import DocsPanel from "./DocsPanel";
+import PatchManager from "./PatchManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -51,6 +52,8 @@ interface SvgEditorProps {
   formFields?: FormField[];
   onPatchUpdate?: (patch: SvgPatch) => void;
   onSvgReplace?: (svg: string) => void;
+  patches?: SvgPatch[];
+  onImportPatches?: (patches: SvgPatch[]) => void;
 }
 
 export interface SvgEditorRef {
@@ -77,7 +80,9 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     formFields = [],
     templateId,
     onPatchUpdate,
-    onSvgReplace
+    onSvgReplace,
+    patches = [],
+    onImportPatches
   } = props;
   const {
     setInitialSvg,
@@ -119,6 +124,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [isReplaced, setIsReplaced] = useState(false);
   const [isEditorDirty, setIsEditorDirty] = useState(false);
+  const [showPatchManager, setShowPatchManager] = useState(false);
 
   const svgUploadRef = useRef<import("./sections/SvgUpload").SvgUploadRef>(null);
 
@@ -584,6 +590,23 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
             <span>Final Preview</span>
           </Button>
 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPatchManager(true)}
+            className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 rounded-lg shadow-sm relative"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <span>Patches</span>
+            {patches.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-primary text-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-black animate-in zoom-in duration-200">
+                {patches.length}
+              </span>
+            )}
+          </Button>
+
           {onSave && (
             <Button
               onClick={handleSave}
@@ -785,6 +808,14 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <PatchManager
+        open={showPatchManager}
+        onOpenChange={setShowPatchManager}
+        patches={patches}
+        onImportPatches={onImportPatches}
+        templateName={templateName}
+      />
     </div>
   );
 };

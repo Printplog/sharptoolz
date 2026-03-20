@@ -1,7 +1,7 @@
 import { getTemplateForAdmin, updateTemplateForAdmin, getTemplateSvgForAdmin, getTemplatesForAdmin } from '@/api/apiEndpoints';
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import errorMessage from '@/lib/utils/errorMessage';
-import type { Template, TemplateUpdatePayload } from '@/types';
+import type { Template, TemplateUpdatePayload, SvgPatch } from '@/types';
 import type { ApiError } from '@/lib/utils/errorMessage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -43,13 +43,10 @@ export default function SvgTemplateEditor() {
 
   const [pendingNavigateId, setPendingNavigateId] = useState<string | null>(null);
   const [showConfirmNav, setShowConfirmNav] = useState(false);
-  const { patches, addPatch, clearPatch } = useSvgPatch();
+  const { patches, addPatch, clearPatch, setPatches } = useSvgPatch();
   const resetStore = useSvgStore(state => state.reset);
 
-  useEffect(() => {
-    resetStore();
-    clearPatch();
-  }, [id, resetStore, clearPatch]);
+
 
   // Fetch template data (without SVG for faster loading)
   const { data, isLoading } = useQuery<Template>({
@@ -62,6 +59,16 @@ export default function SvgTemplateEditor() {
     enabled: !!id,
     refetchOnMount: false,
   });
+
+  useEffect(() => {
+    resetStore();
+    if (data?.svg_patches && data.svg_patches.length > 0) {
+      console.log('[TemplateEditor] Initializing patches state with:', data.svg_patches);
+      setPatches(data.svg_patches);
+    } else {
+      clearPatch();
+    }
+  }, [id, resetStore, clearPatch, setPatches, data?.svg_patches]);
 
   // Fetch all templates for the switcher
 
@@ -111,6 +118,7 @@ export default function SvgTemplateEditor() {
 
   const [svgContent, setSvgContent] = useState<string>("");
   const [isFetchingSvg, setIsFetchingSvg] = useState(false);
+  const [isReplaced, setIsReplaced] = useState(false);
 
   useEffect(() => {
     // Only fetch the base file if it exists and we haven't loaded it yet
@@ -158,21 +166,28 @@ export default function SvgTemplateEditor() {
       try {
         console.log('[SaveMutation] Starting save...');
         
-        // --- FRONTEND BAKING LOGIC ---
-        // We bake patches into the SVG content BEFORE sending it to the backend.
-        // This ensures the backend always gets a "Clean" file that already has edits.
-        let bakedSvg = templateData.svg || svgContent;
+        let finalSvg: string | undefined = undefined;
+        let finalPatches: SvgPatch[] = [];
         const hasPatches = patches.length > 0;
         
-        if (hasPatches) {
-          console.log(`[Frontend-Bake] Applying ${patches.length} patches to SVG before save...`);
-          try {
-            bakedSvg = applySvgPatches(bakedSvg, patches);
-            console.log('[Frontend-Bake] Success. Final SVG size:', bakedSvg.length);
-          } catch (e) {
-            console.error('[Frontend-Bake] CRITICAL: Failed to apply patches before save!', e);
-            throw new Error(`Failed to bake patches into SVG: ${errorMessage(e as any)}`);
+        if (isReplaced) {
+          console.log('[SaveMutation] SVG was REPLACED. Baking patches and sending full SVG.');
+          let bakedSvg = templateData.svg || svgContent;
+          if (hasPatches) {
+            try {
+              bakedSvg = applySvgPatches(bakedSvg, patches);
+              console.log('[SaveMutation] Success baking patches into replaced SVG.');
+            } catch (e) {
+              console.error('[SaveMutation] Failed to bake patches into replaced SVG:', e);
+            }
           }
+          finalSvg = bakedSvg;
+          finalPatches = []; // Patches are now baked into the new SVG
+        } else {
+          console.log('[SaveMutation] SVG not replaced. Sending incremental patches.');
+          finalPatches = patches;
+          // NO SVG attribute sent to avoid backend overwriting the file if it's just patches
+          finalSvg = undefined; 
         }
 
         const isFileUpload = templateData.banner instanceof File;
@@ -194,11 +209,13 @@ export default function SvgTemplateEditor() {
             templateData.fontIds.forEach(id => formData.append('font_ids', id));
           }
 
-          // SEND BAKED SVG & CLEAR PATCHES
-          if (bakedSvg) {
-            formData.append('svg', bakedSvg);
-            if (hasPatches) formData.append('svg_patch', JSON.stringify([]));
+          // SEND SVG ONLY IF REPLACED
+          if (isReplaced && finalSvg) {
+            formData.append('svg', finalSvg);
           }
+          
+          // ALWAYS SEND PATCHES (empty if replaced/baked)
+          formData.append('svg_patch', JSON.stringify(finalPatches));
 
           return await updateTemplateForAdmin(id as string, formData);
         } else {
@@ -217,11 +234,13 @@ export default function SvgTemplateEditor() {
 
           if (templateData.banner) payload.banner = templateData.banner;
 
-          // SEND BAKED SVG & CLEAR PATCHES
-          if (bakedSvg) {
-            payload.svg = bakedSvg;
-            if (hasPatches) payload.svg_patch = [];
+          // SEND SVG ONLY IF REPLACED
+          if (isReplaced && finalSvg) {
+            payload.svg = finalSvg;
           }
+          
+          // ALWAYS SEND PATCHES (empty if replaced/baked)
+          payload.svg_patch = finalPatches;
 
           return await updateTemplateForAdmin(id as string, payload);
         }
@@ -239,9 +258,10 @@ export default function SvgTemplateEditor() {
       if (patches.length > 0) {
         setSvgContent((prev) => applySvgPatches(prev, patches));
         console.log('[SaveMutation] Local SVG updated with applied patches.');
+        clearPatch(); // Clear local pending patches after they are committed to SVG
       }
 
-      clearPatch(); // Clear local pending patches after successful save
+      setIsReplaced(false);
 
       // Update the React Query cache with the new template data (includes new svg_patches)
       queryClient.setQueryData(["template", id], (old: Template | undefined) => {
@@ -437,8 +457,12 @@ export default function SvgTemplateEditor() {
             templateId={id}
             onSave={handleSave}
             onPatchUpdate={addPatch}
-            onSvgReplace={() => {
-              console.log('[TemplateEditor] SVG replaced, clearing patches...');
+            onImportPatches={setPatches}
+            patches={patches}
+            onSvgReplace={(svg) => {
+              console.log('[TemplateEditor] SVG replaced - marking as REPLACED');
+              setSvgContent(svg);
+              setIsReplaced(true);
               clearPatch();
             }}
             banner={data.banner}
