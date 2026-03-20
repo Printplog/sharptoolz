@@ -449,8 +449,7 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
   useSvgLiveUpdate(
     containerRef as React.RefObject<HTMLDivElement>, 
     elements, 
-    activeElementId, 
-    draftElement
+    activeElementId
   );
 
   // ══════════════════════════════════════════════════════════════════════════

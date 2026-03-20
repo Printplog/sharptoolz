@@ -164,6 +164,9 @@ export const useSvgStore = create<SvgStore>()(
             const serializer = new XMLSerializer();
             const modifiedSvg = serializer.serializeToString(svgDoc);
 
+            const currentSelectedId = get().selectedElementId;
+            const newSelectedId = (currentSelectedId && elementsMap[currentSelectedId]) ? currentSelectedId : null;
+
             set({
                 originalSvg: modifiedSvg,
                 workingSvg: modifiedSvg,
@@ -171,7 +174,7 @@ export const useSvgStore = create<SvgStore>()(
                 elementOrder: order,
                 history: [],
                 historyIndex: -1,
-                selectedElementId: null,
+                selectedElementId: newSelectedId,
                 draftElement: null
             });
         },

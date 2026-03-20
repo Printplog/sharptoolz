@@ -9,8 +9,7 @@ import { applyWrappedText } from "@/lib/utils/textWrapping";
 export function useSvgLiveUpdate(
   containerRef: React.RefObject<HTMLDivElement>,
   elements: SvgElement[],
-  highlightId?: string | null,
-  overrideElement?: SvgElement | null
+  highlightId?: string | null
 ) {
   const prevStatesRef = useRef<Record<string, string>>({});
   const prevHighlightIdRef = useRef<string | null>(null);
@@ -44,10 +43,7 @@ export function useSvgLiveUpdate(
       prevHighlightIdRef.current = highlightId ?? null;
     }
 
-    // 2. Surgical Element Updates
-    // We only update what's changed. 
-    // If we have an overrideElement, it's our top priority for fast updates.
-    const elementsToProcess = overrideElement ? [overrideElement] : elements;
+    const elementsToProcess = elements;
 
     elementsToProcess.forEach((activeElement) => {
       try {
@@ -94,10 +90,11 @@ export function useSvgLiveUpdate(
           if (activeElement.tag === 'text') {
             // Only re-wrap if text or font-size changed
             const fSize = activeElement.attributes['font-size'] || '16';
-            const wrapKey = `${activeElement.internalId}_wrap_${activeElement.innerText}_${fSize}`;
+            const fFamily = activeElement.attributes['font-family'] || 'Arial';
+            const wrapKey = `${activeElement.internalId}_wrap_${activeElement.innerText}_${fSize}_${fFamily}`;
             if (prevStatesRef.current[activeElement.internalId + '_wrap'] !== wrapKey) {
               const fontSize = parseFloat(fSize);
-              applyWrappedText(domEl as SVGTextElement, activeElement.innerText, fontSize);
+              applyWrappedText(domEl as SVGTextElement, activeElement.innerText, fontSize, fFamily);
               prevStatesRef.current[activeElement.internalId + '_wrap'] = wrapKey;
             }
           } else if (domEl.textContent !== activeElement.innerText) {
@@ -118,5 +115,5 @@ export function useSvgLiveUpdate(
       }
     });
 
-  }, [elements, highlightId, containerRef, overrideElement]);
+  }, [elements, highlightId, containerRef]);
 }

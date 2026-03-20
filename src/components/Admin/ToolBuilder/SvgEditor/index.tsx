@@ -192,16 +192,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const selectedElementIdRef = useRef<string | null>(null);
   useEffect(() => { selectedElementIdRef.current = selectedElementId ?? null; });
 
-  // Sync SVG with prop — re-select the previously focused element after the store resets
+  // Sync SVG with prop — re-initialize store when prop changes (e.g. after save)
   useEffect(() => {
-    if (svgRaw && !originalSvg) {
-      const preservedId = selectedElementIdRef.current;
+    if (svgRaw && svgRaw !== originalSvg) {
+      console.log('[SvgEditor] Syncing with new svgRaw prop.');
       setInitialSvg(svgRaw);
-      if (preservedId) {
-        requestAnimationFrame(() => selectElement(preservedId));
-      }
     }
-  }, [svgRaw, setInitialSvg, selectElement, originalSvg]);
+  }, [svgRaw, originalSvg, setInitialSvg]);
 
   useEffect(() => { setName(templateName); }, [templateName]);
   useEffect(() => { setBannerImage(banner); }, [banner]);
@@ -301,6 +298,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const handleSave = useCallback(() => {
     if (!onSave) return;
     
+    // Safety: Check for unapplied changes in the element inspector
+    if (isEditorDirty) {
+      toast.error("Please 'Apply' your element changes before saving the template.");
+      setActiveTab("inspector");
+      return;
+    }
+
     // STRICT VALIDATION: Block save if any element has an invalid field ID
     const invalidElements = elements.filter(el => {
       const id = el.id || el.originalId;
@@ -333,7 +337,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       keywords: keywordsTags,
       fontIds: selectedFontIds.length > 0 ? selectedFontIds : undefined
     });
-  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, isReplaced, workingSvg, elements, handleElementSelect]);
+  }, [onSave, name, bannerFile, isHot, isActiveState, selectedTool, tutorialUrlState, tutorialTitleState, keywordsTags, selectedFontIds, isReplaced, workingSvg, elements, handleElementSelect, isEditorDirty, setActiveTab]);
 
   useImperativeHandle(ref, () => ({
     handleSave,
