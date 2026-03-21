@@ -11,6 +11,22 @@ export interface RegenerateOptions {
   keepInternalIds?: boolean;
 }
 
+// Module-level DOM cache — originalSvg never changes during a session.
+// Avoids re-parsing a 15MB SVG string on every debounced commit.
+let _cachedBaseSvg = "";
+let _cachedDoc: Document | null = null;
+
+function getBaseParsedDoc(svg: string): Document {
+  if (svg === _cachedBaseSvg && _cachedDoc) {
+    return _cachedDoc.cloneNode(true) as Document;
+  }
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svg, "image/svg+xml");
+  _cachedBaseSvg = svg;
+  _cachedDoc = doc;
+  return doc.cloneNode(true) as Document;
+}
+
 /**
  * Regenerate SVG string from edited elements
  */
@@ -23,8 +39,7 @@ export function regenerateSvg(
   if (!currentSvg) return "";
 
   try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(currentSvg, 'image/svg+xml');
+    const doc = getBaseParsedDoc(currentSvg);
     const svg = doc.documentElement;
 
     const ns = "http://www.w3.org/2000/svg";

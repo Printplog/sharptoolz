@@ -173,14 +173,15 @@ export default function GenRuleBuilder({
       <DropdownMenuContent
         align="center"
         sideOffset={8}
+        collisionPadding={12}
         className={cn(
           "w-[700px] max-w-[90vw] h-[350px]",
-          "bg-black/95 backdrop-blur-sm border-white/20",
-          "p-3 shadow-xl text-white flex flex-col",
-          "z-[100] overflow-y-auto"
+          "bg-black/95 backdrop-blur-sm border-white/20 rounded-xl",
+          "p-4 shadow-xl text-white flex flex-col",
+          "z-[100]"
         )}
       >
-        <div className="mb-2 flex flex-col gap-1 shrink-0">
+        <div className="mb-0 flex flex-col gap-1 shrink-0 pb-2 border-b border-white/10">
           <div className="text-sm font-semibold text-white">
             Generation Rule Builder
           </div>
@@ -195,7 +196,7 @@ export default function GenRuleBuilder({
         </div>
 
         {/* Cheatsheet Collapsible */}
-        <div className="px-3 pb-2 shrink-0">
+        <div className="px-3 pt-2 pb-2 shrink-0 border-b border-white/10">
           <details className="group">
             <summary className="text-[10px] text-white/40 cursor-pointer hover:text-white/60 transition-colors list-none flex items-center gap-1 select-none">
               <span className="group-open:rotate-90 transition-transform">▸</span>
@@ -217,10 +218,10 @@ export default function GenRuleBuilder({
         </div>
 
         {/* Two Column Layout */}
-        <div className="flex gap-3 flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 pt-3">
           {/* Left Section - Rules */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className="text-white/60 text-xs mb-2 shrink-0">Rules</div>
+          <div className="flex-1 flex flex-col min-w-0 pr-3">
+            <div className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2 shrink-0">Rules</div>
             <div className="flex-1 overflow-y-auto space-y-2 pr-2">
               {parts.length === 0 ? (
                 <div className="text-white/40 text-sm text-center py-4">No parts yet. Click buttons to add.</div>
@@ -479,10 +480,10 @@ export default function GenRuleBuilder({
           </div>
 
           {/* Right Section - Preview & Buttons */}
-          <div className="w-[280px] flex flex-col gap-3 shrink-0">
+          <div className="w-[280px] flex flex-col gap-3 shrink-0 border-l border-white/10 pl-3">
             {/* Preview & Playground */}
             <div className="flex flex-col shrink-0">
-              <div className="text-white/60 text-xs mb-2 shrink-0">Playground & Preview</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2 shrink-0">Preview</div>
               <div className="p-3 rounded-xl border border-white/20 bg-white/5 flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5">
                   <div className="text-white/40 text-[10px] uppercase tracking-widest font-black">Pattern</div>
@@ -565,7 +566,7 @@ export default function GenRuleBuilder({
             {/* Add Buttons */}
             <div className="shrink-0">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-white/60 text-xs">Add Rule</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-white/40">Add</div>
                 <button
                   type="button"
                   onClick={() => setIsAuto((prev) => !prev)}
@@ -583,43 +584,43 @@ export default function GenRuleBuilder({
               <div className="flex flex-wrap gap-1.5">
                 <button
                   onClick={() => handleAddPart('static')}
-                  className="px-2.5 py-1 rounded bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
+                  className="px-2.5 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
                 >
                   + Static
                 </button>
                 <button
                   onClick={() => handleAddPart('dep')}
-                  className="px-2.5 py-1 rounded bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
+                  className="px-2.5 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
                 >
                   + Dep
                 </button>
                 <button
                   onClick={() => handleAddPart('random')}
-                  className="px-2.5 py-1 rounded bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
+                  className="px-2.5 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
                 >
                   + Random
                 </button>
                 <button
                   onClick={() => handleAddPart('repeat')}
-                  className="px-2.5 py-1 rounded bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
+                  className="px-2.5 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
                 >
                   + Repeat
                 </button>
                 <button
                   onClick={() => handleAddPart('fill')}
-                  className="px-2.5 py-1 rounded bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
+                  className="px-2.5 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
                 >
                   + Fill
                 </button>
                 <button
                   onClick={() => handleAddPart('date')}
-                  className="px-2.5 py-1 rounded bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
+                  className="px-2.5 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
                 >
                   + Date
                 </button>
                 <button
                   onClick={() => handleAddPart('env')}
-                  className="px-2.5 py-1 rounded bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
+                  className="px-2.5 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
                 >
                   + Env
                 </button>
@@ -627,16 +628,16 @@ export default function GenRuleBuilder({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-2 shrink-0">
+            <div className="flex justify-end gap-2 shrink-0 mt-auto pt-2">
               <button
                 onClick={handleCancel}
-                className="px-3 py-1.5 rounded bg-white/5 text-white hover:bg-white/10 transition-colors text-xs"
+                className="px-3 py-1.5 rounded-full bg-white/5 text-white/60 hover:bg-white/10 transition-colors text-xs"
               >
                 Cancel
               </button>
               <button
                 onClick={handleApply}
-                className="px-3 py-1.5 rounded bg-white/10 text-white hover:bg-white/20 transition-colors text-xs"
+                className="px-4 py-1.5 rounded-full bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 transition-colors text-xs font-bold"
               >
                 Apply
               </button>

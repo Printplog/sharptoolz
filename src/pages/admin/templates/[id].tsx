@@ -473,7 +473,6 @@ export default function SvgTemplateEditor() {
             keywords={data.keywords}
             isLoading={saveMutation.isPending}
             isSvgLoading={isFetchingSvg || (!!data?.svg_url && !svgContent)} // Only show loading if we HAVE a URL but no content yet
-            formFields={data.form_fields || []} // Pass backend form fields
             onElementSelect={() => {
               // Simplified - no automatic section selection
             }}

@@ -152,6 +152,7 @@ function createDisplayList(elements: SvgElement[], expandedGroups: Set<string>) 
     }
   });
 
+  const addedGroups = new Set<string>();
   elements.forEach((element, index) => {
     if (processedIndices.has(index)) return;
 
@@ -159,9 +160,9 @@ function createDisplayList(elements: SvgElement[], expandedGroups: Set<string>) 
     const internalId = element.internalId || id;
     if (id.includes('.select_')) {
       const groupName = id.split('.select_')[0];
-      const groupExists = result.some(item => item.type === 'group' && item.groupName === groupName);
 
-      if (!groupExists) {
+      if (!addedGroups.has(groupName)) {
+        addedGroups.add(groupName);
         result.push({
           type: 'group',
           id: `group-${groupName}`,
@@ -262,9 +263,21 @@ function ElementNavigationComponent({
   isTextElement,
   isImageElement
 }: ElementNavigationProps) {
-  const elementsMap = useSvgStore(state => state.elements);
   const elementOrder = useSvgStore(state => state.elementOrder);
-  const elements = useMemo(() => elementOrder.map(id => elementsMap[id]), [elementOrder, elementsMap]);
+
+  // Stable string — only changes when IDs or order change, not on attribute edits
+  const elementIdSig = useSvgStore(state =>
+    state.elementOrder.map(id => `${id}:${state.elements[id]?.id || ''}`).join('|')
+  );
+
+  // Minimal objects for createDisplayList — only id + internalId needed for grouping
+  const elements = useMemo(() => {
+    const snap = useSvgStore.getState();
+    return snap.elementOrder.map(id => ({
+      id: snap.elements[id]?.id || '',
+      internalId: id
+    })) as SvgElement[];
+  }, [elementIdSig]);
 
   const [activeElementId, setActiveElementId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
@@ -280,13 +293,14 @@ function ElementNavigationComponent({
 
   const displayList = useMemo(() => {
     if (searchQuery.trim() === "") return allItems;
+    const map = useSvgStore.getState().elements;
     return allItems.filter(item => {
       if (item.type === 'group') return item.groupName?.toLowerCase().includes(searchQuery.toLowerCase());
-      const el = elementsMap[item.elementId!];
+      const el = map[item.elementId!];
       const name = el?.id || `${el?.tag} ${item.originalIndex! + 1}`;
       return name.toLowerCase().includes(searchQuery.toLowerCase());
     });
-  }, [allItems, searchQuery, elementsMap]);
+  }, [allItems, searchQuery]);
 
   function toggleGroup(groupName: string) {
     setExpandedGroups(prev => {
@@ -313,7 +327,7 @@ function ElementNavigationComponent({
       const newIdx = elementOrder.indexOf(over.id as string);
       if (oldIdx !== -1 && newIdx !== -1) {
         const newOrder = arrayMove(elementOrder, oldIdx, newIdx);
-        const newElements = newOrder.map(id => elementsMap[id]);
+        const newElements = newOrder.map(id => useSvgStore.getState().elements[id]);
         onElementReorder(newElements);
       }
     }
@@ -322,6 +336,12 @@ function ElementNavigationComponent({
   }
 
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Snapshot of the dragged element — only re-reads store on drag start/end
+  const draggedElement = useMemo(() =>
+    activeElementId ? useSvgStore.getState().elements[activeElementId] : null,
+    [activeElementId]
+  );
 
   // Auto-scroll selected element into view
   useEffect(() => {
@@ -410,11 +430,11 @@ function ElementNavigationComponent({
           </SortableContext>
 
           <DragOverlay dropAnimation={null}>
-            {activeElementId && elementsMap[activeElementId] ? (
+            {activeElementId && draggedElement ? (
               <div className="opacity-90 cursor-grabbing">
                 <Button variant="default" size="sm" className="h-8 gap-2 shadow-2xl border-2 border-primary/50 ring-4 ring-primary/20">
                   <span className="text-xs">⋮⋮</span>
-                  <span className="truncate max-w-[150px]">{elementsMap[activeElementId].id || elementsMap[activeElementId].tag}</span>
+                  <span className="truncate max-w-[150px]">{draggedElement.id || draggedElement.tag}</span>
                 </Button>
               </div>
             ) : null}

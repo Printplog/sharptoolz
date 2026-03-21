@@ -10,7 +10,7 @@ import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
 import { validateSvgId } from "@/lib/utils/svgIdValidator";
-import { useSvgStore } from "@/store/useSvgStore";
+
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -143,17 +143,20 @@ interface ElementEditorProps {
   allElements?: SvgElement[];
   onPatchUpdate?: (patch: SvgPatch) => void;
   onDirtyChange?: (isDirty: boolean) => void;
-  onDraftReset?: () => void;
 }
 
 const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
-  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onPatchUpdate, onDirtyChange, onDraftReset }, ref) => {
-    const { draftElement, setDraftElement } = useSvgStore();
-    const [isDirty, setIsDirty] = useState(!!draftElement);
+  ({ element, index, onUpdate, isTextElement, isImageElement, allElements = [], onPatchUpdate, onDirtyChange }, ref) => {
+    const [localElement, setLocalElement] = useState<SvgElement>(element);
+    const [isDirty, setIsDirty] = useState(false);
     const [showGenBuilder, setShowGenBuilder] = useState(false);
 
-    const localElement = draftElement || element;
-    const setLocalElement = setDraftElement; // Mapping for compatibility with existing code flow
+    // Sync localElement when the element prop changes (e.g., selection changes)
+    useEffect(() => {
+       if (!isDirty) {
+         setLocalElement(element);
+       }
+    }, [element, isDirty]);
 
     const imageMap = useRef<Record<string, string>>({});
 
@@ -214,7 +217,8 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       };
     };
 
-    const currentTransform = getTransform();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const currentTransform = useMemo(() => getTransform(), [localElement.attributes.style, localElement.attributes.transform]);
 
     const handleLocalUpdate = (updates: Partial<SvgElement>) => {
       const updated = {
@@ -223,8 +227,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         attributes: { ...localElement.attributes, ...(updates.attributes || {}) }
       };
       setLocalElement(updated);
-      setIsDirty(true);
-      onDirtyChange?.(true);
+      if (!isDirty) {
+        setIsDirty(true);
+        onDirtyChange?.(true);
+      }
     };
 
     // Live update is now disabled to ensure canvas only changes on "Apply"
@@ -293,16 +299,13 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       onUpdate(index, finalElement, true); // Final update with UNDO enabled
       setIsDirty(false);
       onDirtyChange?.(false);
-      setDraftElement(null);
-      onDraftReset?.();
       toast.success("Changes finalized");
     };
 
     const handleDiscard = () => {
+      setLocalElement(element);
       setIsDirty(false);
       onDirtyChange?.(false);
-      setDraftElement(null);
-      onDraftReset?.();
       toast.info("Changes discarded");
     };
 
@@ -490,7 +493,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           <Label className="text-sm font-medium">Helper Text</Label>
           <DebouncedTextarea
             value={localElement.attributes['data-helper'] || ""}
-            onChange={(val) => handleLocalUpdate({ attributes: { ...localElement.attributes, 'data-helper': val } })}
+            onChange={(val) => handleLocalUpdate({ attributes: { ...localElement.attributes, 'data-helper': String(val) } })}
             rows={2}
             className="bg-white/10 text-sm border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
           />
@@ -502,7 +505,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
               <Label className="text-sm font-medium">Text Content</Label>
               <DebouncedTextarea
                 value={localElement.innerText || ""}
-                onChange={(val) => handleLocalUpdate({ innerText: val })}
+                onChange={(val) => handleLocalUpdate({ innerText: String(val) })}
                 rows={6}
                 className="bg-white/10 text-sm font-mono border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
               />

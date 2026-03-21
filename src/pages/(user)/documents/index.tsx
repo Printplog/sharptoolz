@@ -12,8 +12,7 @@ export default function Documents() {
   const { data, isLoading } = useQuery({
     queryKey: ["purchased-templates"],
     queryFn: getPurchasedTemplates,
-    staleTime: 0, // Always refetch - no caching
-    gcTime: 0, // Don't keep in cache
+    staleTime: 60 * 1000,
   });
 
   const [searchQuery, setSearchQuery] = useState("");

@@ -462,18 +462,18 @@ const FormPanel = React.memo(function FormPanel({
         />
 
         <div className="space-y-3">
-          {statusFields.map((field, index) => (
+          {statusFields.map((field) => (
             <FormFieldComponent
-              key={`${field.id}-${index}`}
+              key={field.id}
               field={field}
               allFields={fields}
               tutorial={tutorial}
             />
           ))}
           <div className="m-0 p-0 border-0 space-y-3">
-            {nonStatusFields.map((field, index) => (
+            {nonStatusFields.map((field) => (
               <FormFieldComponent
-                key={`${field.id}-${index}`}
+                key={field.id}
                 field={field}
                 allFields={fields}
                 isPurchased={isPurchased}

@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import ElementNavigation from "./ElementNavigation";
 import ElementEditor from "./ElementEditor";
-import PreviewDialog from "./PreviewDialog";
 import SvgUpload from "./sections/SvgUpload";
 import SettingsDialog from "./sections/SettingsDialog";
 import DocsPanel from "./DocsPanel";
@@ -27,12 +26,12 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Tutorial, Font, SvgPatch, FormField } from "@/types";
+import type { Tutorial, Font, SvgPatch } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
-import { regenerateSvg } from "./utils/regenerateSvg";
+
 import { useSvgStore } from "@/store/useSvgStore";
 import { getAdaptiveStaleTime } from "@/lib/utils/deviceDetection";
-import { extractFieldsFromElements } from "./utils/fieldExtractor";
+
 
 interface SvgEditorProps {
   svgRaw: string;
@@ -49,7 +48,6 @@ interface SvgEditorProps {
   isLoading?: boolean;
   isSvgLoading?: boolean;
   onElementSelect?: (elementType: string, idPattern?: string) => void;
-  formFields?: FormField[];
   onPatchUpdate?: (patch: SvgPatch) => void;
   onSvgReplace?: (svg: string) => void;
   patches?: SvgPatch[];
@@ -59,7 +57,6 @@ interface SvgEditorProps {
 export interface SvgEditorRef {
   handleSave: () => void;
   name: string;
-  openPreview: () => void;
 }
 
 const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditorProps> = (props, ref) => {
@@ -77,7 +74,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     isLoading,
     isSvgLoading = false,
     onElementSelect,
-    formFields = [],
     templateId,
     onPatchUpdate,
     onSvgReplace,
@@ -96,15 +92,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     deleteElement,
     duplicateElement,
     originalSvg,
-    workingSvg,
-    draftElement,
-    setDraftElement
+    workingSvg
   } = useSvgStore();
 
   const [activeTab, setActiveTab] = useState("layers");
   const [showPreserveDialog, setShowPreserveDialog] = useState(false);
   const [pendingSvgContent, setPendingSvgContent] = useState<string | null>(null);
-  const [fieldStats, setFieldStats] = useState({ total: 0, invalid: 0 });
+  const [fieldStats, setFieldStats] = useState({ total: 0, invalid: 0, duplicates: 0 });
 
   const elements = useMemo(() => elementOrder.map(id => elementsMap[id]), [elementOrder, elementsMap]);
   const selectedElementIndex = useMemo(() =>
@@ -120,8 +114,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [tutorialUrlState, setTutorialUrlState] = useState<string>(tutorial?.url || "");
   const [tutorialTitleState, setTutorialTitleState] = useState<string>(tutorial?.title || "");
   const [keywordsTags, setKeywordsTags] = useState<string[]>(Array.isArray(keywords) ? keywords : []);
-  // const [showScrollTop, setShowScrollTop] = useState(false); // Removed - scroll button disabled
-  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [isReplaced, setIsReplaced] = useState(false);
   const [isEditorDirty, setIsEditorDirty] = useState(false);
   const [showPatchManager, setShowPatchManager] = useState(false);
@@ -240,14 +232,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo, deleteElement, duplicateElement, selectedElementId]);
 
-  useEffect(() => {
-    // Scroll button disabled - removed scroll listener
-    // const handleScroll = () => {
-    //   setShowScrollTop(window.scrollY > 300);
-    // };
-    // window.addEventListener('scroll', handleScroll);
-    // return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const updateElement = useCallback((index: number, updates: Partial<SvgElement>, undoable = true) => {
     const element = elements[index];
@@ -269,19 +253,12 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
     if (index === null) {
       selectElement(null);
-      setDraftElement(null);
       return;
     }
 
     const element = elements[index];
     if (element) {
       const id = element.internalId;
-
-      // If we are selecting a DIFFERENT element, we clear the draft.
-      // If it's the SAME element, we MUST preserve the draft!
-      if (index !== selectedElementIndex) {
-        setDraftElement(null);
-      }
 
       selectElement(id || null);
 
@@ -293,7 +270,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         onElementSelect(elementType, element.id || undefined);
       }
     }
-  }, [elements, selectElement, onElementSelect, isEditorDirty, selectedElementIndex, isTextElement, isImageElement, setDraftElement]);
+  }, [elements, selectElement, onElementSelect, isEditorDirty, selectedElementIndex, isTextElement, isImageElement]);
 
   const handleSave = useCallback(() => {
     if (!onSave) return;
@@ -318,10 +295,32 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       const firstInvalid = invalidElements[0];
       const id = firstInvalid.id || firstInvalid.originalId;
       toast.error(`Cannot save: Invalid field syntax in "${id}". Please fix it in the inspector.`);
-      
-      // Auto-select the first invalid element to help the user
       const idx = elements.findIndex(el => el.internalId === firstInvalid.internalId);
       if (idx !== -1) handleElementSelect(idx);
+      return;
+    }
+
+    // Block save if any two field elements share the same base ID (ambiguous, breaks patch targeting).
+    // Exception: select options intentionally share a base ID (e.g. color.select_Red, color.select_Blue).
+    const isSelectOption = (id: string) =>
+      id.split(".").slice(1).some(part => part.startsWith("select_"));
+    const baseIdGroups = new Map<string, string[]>();
+    elements.forEach(el => {
+      const id = el.id || el.originalId;
+      if (id && id.includes(".")) {
+        const baseId = id.split(".")[0];
+        const group = baseIdGroups.get(baseId) || [];
+        group.push(id);
+        baseIdGroups.set(baseId, group);
+      }
+    });
+    const duplicateBaseIds = Array.from(baseIdGroups.entries())
+      .filter(([, ids]) => ids.length > 1 && !ids.every(isSelectOption))
+      .map(([id]) => id);
+    if (duplicateBaseIds.length > 0) {
+      const preview = duplicateBaseIds.slice(0, 3).join(", ");
+      const extra = duplicateBaseIds.length > 3 ? ` +${duplicateBaseIds.length - 3} more` : "";
+      toast.error(`Cannot save: Duplicate base IDs found: ${preview}${extra}. Each field must have a unique base ID.`);
       return;
     }
 
@@ -341,8 +340,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
   useImperativeHandle(ref, () => ({
     handleSave,
-    name,
-    openPreview: () => setShowPreviewDialog(true)
+    name
   }), [handleSave, name]);
 
   const handleBannerUpload = (file: File) => {
@@ -364,7 +362,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       setFieldStats(stats);
 
       // --- NEW FLOW: ASK TO PRESERVE EDITS ---
-      const hasExistingEdits = Object.keys(elementsMap).length > 0;
+      const hasExistingEdits = patches.length > 0;
       
       if (hasExistingEdits) {
         setPendingSvgContent(content);
@@ -385,11 +383,12 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const getFieldStats = (svgContent: string, preserveFrom?: Record<string, SvgElement>) => {
     let fieldCount = 0;
     let invalidCount = 0;
+    const baseIdGroups = new Map<string, string[]>();
     try {
       const parsed = parseSvgElements(svgContent);
       for (const el of parsed) {
         let name = el.attributes["data-name"] || el.originalId;
-        
+
         // Simulating the preservation logic for stats
         if (preserveFrom && name) {
             const cleanBaseId = name.split('.')[0];
@@ -401,19 +400,30 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         }
 
         if (name && name.includes(".")) {
+          const baseId = name.split(".")[0];
           fieldCount++;
-          if (!validateSvgId(name).valid) {
-            invalidCount++;
-          }
+          if (!validateSvgId(name).valid) invalidCount++;
+          const group = baseIdGroups.get(baseId) || [];
+          group.push(name);
+          baseIdGroups.set(baseId, group);
         }
       }
     } catch (err) {
       console.error("Failed to calculate stats:", err);
     }
-    return { total: fieldCount, invalid: invalidCount };
+    // Count base IDs that are real duplicates (select option groups are intentional)
+    const isSelectOption = (id: string) =>
+      id.split(".").slice(1).some(part => part.startsWith("select_"));
+    const duplicateCount = Array.from(baseIdGroups.values())
+      .filter(ids => ids.length > 1 && !ids.every(isSelectOption))
+      .length;
+    return { total: fieldCount, invalid: invalidCount, duplicates: duplicateCount };
   };
 
-  const showUploadToasts = (stats: { total: number, invalid: number }) => {
+  const showUploadToasts = (stats: { total: number, invalid: number, duplicates: number }) => {
+    if (stats.duplicates > 0) {
+      toast.warning(`SVG has ${stats.duplicates} duplicate base ID${stats.duplicates > 1 ? "s" : ""} — multiple elements share the same base ID. Fix before saving.`);
+    }
     if (stats.total === 0) {
       toast.success("SVG uploaded — no field IDs detected yet.");
     } else if (stats.invalid > 0) {
@@ -506,18 +516,8 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     useSvgStore.getState().reorderElements(newOrder);
   }, [elements, onPatchUpdate]);
 
-  // const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []); // Removed - scroll button disabled
-
   // Working SVG is already destructured from useSvgStore at line 70
   
-  // Use local fields for preview if we have no backend fields yet or SVG was replaced
-  const previewFormFields = useMemo(() => {
-    if (formFields.length > 0 && !isReplaced) return formFields;
-    
-    // Parse from current store elements for immediate preview
-    return extractFieldsFromElements(elements);
-  }, [elements, formFields, isReplaced]);
-
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
       {/* Top Toolbar */}
@@ -589,16 +589,11 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
             </a>
           )}
 
-          <Button onClick={() => setShowPreviewDialog(true)} variant="outline" className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 rounded-lg shadow-sm">
-            <Eye className="h-3.5 w-3.5" />
-            <span>Final Preview</span>
-          </Button>
-
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowPatchManager(true)}
-            className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 rounded-lg shadow-sm relative"
+            className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 hover:bg-white/10 hover:text-white transition-all rounded-lg shadow-sm relative"
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -641,13 +636,12 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
               ref={svgUploadRef}
               currentSvg={workingSvg}
               onSvgUpload={handleSvgUpload}
-              onSelectElement={(id) => {
+              onSelectElement={useCallback((id: string) => {
                 const idx = elements.findIndex(el => el.id === id || el.internalId === id);
                 if (idx >= 0) handleElementSelect(idx);
-              }}
+              }, [elements, handleElementSelect])}
               elements={elements}
               activeElementId={selectedElementId}
-              draftElement={draftElement}
             />
           </div>
         </div>
@@ -729,7 +723,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
                       isImageElement={isImageElement}
                       allElements={elements}
                       onDirtyChange={(dirty) => setIsEditorDirty(dirty)}
-                      onDraftReset={() => setDraftElement(null)}
                     />
                   </>
                 ) : (
@@ -753,16 +746,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
           </Tabs>
         </aside>
       </div>
-
-      {/* Scroll to top button removed */}
-      <PreviewDialog
-        open={showPreviewDialog}
-        onOpenChange={setShowPreviewDialog}
-        svgContent={regenerateSvg(originalSvg, elements)}
-        formFields={previewFormFields}
-        templateName={name}
-        fonts={fonts.filter(f => selectedFontIds.includes(f.id))}
-      />
 
       <AlertDialog open={showPreserveDialog} onOpenChange={setShowPreserveDialog}>
         <AlertDialogContent className="bg-[#111] border-white/10">

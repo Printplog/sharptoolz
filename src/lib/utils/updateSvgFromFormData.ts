@@ -21,9 +21,26 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
   const fieldsMap = new Map<string, FormField>();
   fields.forEach(f => fieldsMap.set(f.id, f));
 
+  // Pre-compute once — reused by all fields with dependsOn (avoids O(n²) rebuilding)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allFieldValues: Record<string, string | number | boolean | unknown> = {};
+  fields.forEach((f) => {
+    if (f.type === "select" && f.options && f.options.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const selected = f.options.find((opt: any) => String(opt.value) === String(f.currentValue));
+      allFieldValues[f.id] = selected?.displayText ?? selected?.label ?? f.currentValue ?? "";
+    } else {
+      allFieldValues[f.id] = f.currentValue ?? "";
+    }
+  });
+
+  // Per-call cache — each unique ID is only queried once per updateSvgFromFormData invocation
+  const findCache = new Map<string, SVGElement[]>();
+
   // Helper to find all elements by ID or internal ID
   const findElements = (id: string): SVGElement[] => {
     if (!id) return [];
+    if (findCache.has(id)) return findCache.get(id)!;
 
     const results: Element[] = [];
 
@@ -60,8 +77,10 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
       } catch { /* ignore */ }
     }
 
-    // Filter duplicates and return as SVGElement array
-    return Array.from(new Set(results)) as SVGElement[];
+    // Filter duplicates, cache, and return as SVGElement array
+    const deduped = Array.from(new Set(results)) as SVGElement[];
+    findCache.set(id, deduped);
+    return deduped;
   };
 
   /*
@@ -189,33 +208,12 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
     let value: string = "";
 
     if ("dependsOn" in field && field.dependsOn) {
-      // Build field value map for extraction.
-      // For select fields, use the human-readable option text instead of the raw id,
-      // so .gen and other dependency-based fields see the actual value.
-      const allFieldValues: Record<string, string | number | boolean | unknown> = {};
-      fields.forEach((f) => {
-        if (f.type === "select" && f.options && f.options.length > 0) {
-          const selected = f.options.find(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (opt: any) => String(opt.value) === String(f.currentValue)
-          );
-          allFieldValues[f.id] =
-            selected?.displayText ?? selected?.label ?? f.currentValue ?? "";
-        } else {
-          allFieldValues[f.id] = f.currentValue ?? "";
-        }
-      });
-
-      // Use extraction utility to handle dependencies with patterns
       value = extractFromDependency(field.dependsOn, allFieldValues);
     } else {
       value = String(field.currentValue ?? "");
     }
 
     // Handle select fields (options) - Toggle visibility based on selected option
-    if (field.type === "select") {
-      console.log(`[Select-Update] Field ${field.id}: currentValue='${field.currentValue}', optionsCount=${field.options?.length}`);
-    }
     if (field.options && field.options.length > 0) {
       field.options.forEach((opt: any) => {
         if (opt.svgElementId) {

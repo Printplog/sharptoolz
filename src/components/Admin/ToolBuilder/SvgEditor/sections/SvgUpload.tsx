@@ -51,7 +51,6 @@ interface Props {
   onSelectElement?: (id: string) => void;
   elements?: SvgElement[];
   activeElementId?: string | null;
-  draftElement?: SvgElement | null;
 }
 
 export interface SvgUploadRef {
@@ -60,7 +59,7 @@ export interface SvgUploadRef {
 
 const SvgUpload = forwardRef<SvgUploadRef, Props>(({
   currentSvg, onSvgUpload, onSelectElement,
-  elements = [], activeElementId, draftElement: _draftElement,
+  elements = [], activeElementId,
 }, ref) => {
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
@@ -597,7 +596,8 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
   );
 });
 
-export default SvgUpload;
+import React from "react";
+export default React.memo(SvgUpload);
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 

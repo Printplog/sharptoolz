@@ -1,6 +1,6 @@
 import React, { useRef, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { FileJson, Download, Upload, AlertCircle, Layers } from "lucide-react";
+import { FileJson, Download, Upload, AlertCircle, Layers, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { validateSvgId } from "@/lib/utils/svgIdValidator";
 import type { SvgPatch } from "@/types";
@@ -42,6 +42,11 @@ const PatchManager: React.FC<PatchManagerProps> = ({
   const [showValidationDialog, setShowValidationDialog] = useState(false);
   const [pendingPatches, setPendingPatches] = useState<SvgPatch[]>([]);
   const [validationErrors, setValidationErrors] = useState<{id: string, error: string}[]>([]);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+
+  const toggleGroup = (id: string) => {
+    setOpenGroup(prev => prev === id ? null : id);
+  };
 
   // Smart Grouping Logic
   // We want to group patches by their "Final Identity"
@@ -168,7 +173,7 @@ const PatchManager: React.FC<PatchManagerProps> = ({
                 <DialogTitle className="text-xl font-black tracking-tight uppercase leading-none mb-1 text-white/95">Patch Manager</DialogTitle>
                 <DialogDescription className="text-white/30 text-[10px] font-bold uppercase tracking-[0.12em] flex items-center gap-2">
                   <Layers className="h-3 w-3" />
-                  {patches.length} Changes • {identityIds.length} Layers
+                  {patches.length} Changes • {identityIds.length} Elements
                 </DialogDescription>
               </div>
             </div>
@@ -208,28 +213,37 @@ const PatchManager: React.FC<PatchManagerProps> = ({
 
                   return (
                     <div key={identityId} className="relative group">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors duration-300 shadow-[0_0_8px_rgba(206,232,140,0.4)]" />
-                        <h3 className="text-[11px] font-black text-white/90 uppercase tracking-widest truncate max-w-[400px] flex items-center gap-2">
+                      <button
+                        onClick={() => toggleGroup(identityId)}
+                        className="w-full flex items-center gap-3 mb-3 group/header"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover/header:bg-primary transition-colors duration-300 shadow-[0_0_8px_rgba(206,232,140,0.4)]" />
+                        <h3 className="text-xs font-black text-white uppercase tracking-widest truncate max-w-[360px] flex items-center gap-2">
                           {displayId}
-                          {isRenamed && <span className="text-[8px] text-white/20 font-bold lowercase tracking-normal"> (renamed from {identityId})</span>}
+                          {isRenamed && <span className="text-[10px] text-white/40 font-bold lowercase tracking-normal">(renamed from {identityId})</span>}
                         </h3>
                         <div className="h-px flex-1 bg-white/5" />
-                      </div>
-                      
-                      <div className="ml-4 space-y-2">
-                        {identityPatches.map((patch, pIdx) => (
-                          <div key={`${pIdx}`} className="flex flex-col gap-1.5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.03] hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[8px] font-black uppercase text-primary tracking-[0.2em] bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">
-                                {patch.attribute}
-                              </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[10px] text-white/40 font-bold">{identityPatches.length}</span>
+                          <ChevronDown className={`h-3.5 w-3.5 text-white/50 transition-transform duration-200 ${openGroup === identityId ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+
+                      <div className={`grid transition-all duration-200 ease-out ${openGroup === identityId ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="ml-4 space-y-2 mb-2 min-h-0 overflow-hidden">
+                          {identityPatches.map((patch, pIdx) => (
+                            <div key={`${pIdx}`} className="flex flex-col gap-1.5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.03] hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase text-primary tracking-[0.15em] bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">
+                                  {patch.attribute}
+                                </span>
+                              </div>
+                              <div className="text-xs font-mono text-white/70 leading-relaxed break-all bg-black/20 p-2 rounded-lg border border-white/5 mx-[-2px]">
+                                {typeof patch.value === 'object' ? JSON.stringify(patch.value) : String(patch.value)}
+                              </div>
                             </div>
-                            <div className="text-[11px] font-mono text-white/50 leading-relaxed break-all bg-black/20 p-2 rounded-lg border border-white/5 mx-[-2px]">
-                              {typeof patch.value === 'object' ? JSON.stringify(patch.value) : String(patch.value)}
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
                   );
