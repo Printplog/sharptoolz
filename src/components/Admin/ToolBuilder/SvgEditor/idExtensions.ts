@@ -230,10 +230,10 @@ export const EXTENSIONS: ExtensionDefinition[] = [
   {
     key: "grayscale",
     label: "Grayscale",
-    helper: "Force grayscale rendering (upload/file fields only). Use .grayscale for 100% or .grayscale_50 for custom intensity. Depends fields inherit grayscale automatically from their source field.",
+    helper: "Force grayscale rendering. Use on .upload/.file fields, or on .depends_ fields for independent grayscale. .grayscale for 100% or .grayscale_50 for custom intensity.",
     requiresValue: false, // Optional intensity
     valuePlaceholder: "Enter intensity (0-100, e.g., 80)",
-    allowedAfter: ["upload", "file"],
+    allowedAfter: ["upload", "file", "depends"],
   },
   {
     key: "hide_checked",
@@ -290,7 +290,7 @@ export function getAllowedExtensionsAfter(
     return FIELD_TYPES;
   }
 
-  // After depends_, only track_ is valid (grayscale is inherited from source — don't suggest it)
+  // After depends_, grayscale and track_ are allowed
   if (hasDepends && !hasFieldType) {
     return EXTENSIONS.filter(ext =>
       ext.allowedAfter?.includes("depends") &&
@@ -389,7 +389,7 @@ export function getSuggestions(id: string): ExtensionDefinition[] {
     return FIELD_TYPES;
   }
 
-  // After depends_, only track_ is allowed (grayscale inherited from source) — never suggest field types
+  // After depends_, grayscale and track_ are allowed — never suggest field types
   if (hasDepends && !fieldType) {
     const suggested: ExtensionDefinition[] = [];
     for (const ext of EXTENSIONS) {

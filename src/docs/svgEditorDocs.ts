@@ -166,7 +166,7 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "grayscale-extension",
     title: ".grayscale Extension",
-    content: "Applies automatic grayscale conversion to uploaded images. Works with .upload and .file fields. Any .depends_ field that copies from a grayscale source automatically inherits the grayscale effect — no need to add .grayscale to the depends field itself.",
+    content: "Applies grayscale conversion to uploaded images. Works with .upload, .file, and .depends_ fields. Each field must carry .grayscale explicitly in its own ID.",
     codeExamples: [
       {
         title: "Full Grayscale",
@@ -179,9 +179,9 @@ export const svgEditorDocs: DocSection[] = [
         description: "Applies 65% grayscale so some color detail remains"
       },
       {
-        title: "Automatic Grayscale Inheritance",
-        code: "Photo.upload.grayscale\nPhoto_Copy.depends_Photo",
-        description: "Photo_Copy automatically inherits grayscale from Photo — no .grayscale needed on the depends field"
+        title: "Grayscale on Depends Field",
+        code: "Photo.upload\nPhoto_Copy.depends_Photo.grayscale",
+        description: "Photo_Copy renders in grayscale because it explicitly has .grayscale in its own ID"
       }
     ]
   },
@@ -465,7 +465,7 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "dependencies",
     title: ".depends Extension",
-    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. IMPORTANT: .depends_ is an extension (not a field type) but MUST come FIRST after the base ID (position 1). It REPLACES the need for a field type — do not add .text, .upload etc. alongside it. After .depends_, only .track_ROLE is allowed. Grayscale is inherited automatically from the source field.",
+    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. IMPORTANT: .depends_ is an extension (not a field type) but MUST come FIRST after the base ID (position 1). It REPLACES the need for a field type — do not add .text, .upload etc. alongside it. After .depends_, .grayscale (or .grayscale_N) and .track_ROLE are allowed.",
     codeExamples: [
       {
         title: "Simple Copy (Text)",
@@ -505,7 +505,7 @@ export const svgEditorDocs: DocSection[] = [
       {
         title: "Image Dependency",
         code: "Photo.upload\nPhoto_Copy.depends_Photo",
-        description: "Photo_Copy automatically copies the image from Photo. The dependent field is hidden from the form. If Photo has .grayscale, Photo_Copy inherits it automatically."
+        description: "Photo_Copy automatically copies the image from Photo. The dependent field is hidden from the form. Add .grayscale to Photo_Copy explicitly if you want it in grayscale."
       },
       {
         title: "Signature Dependency",

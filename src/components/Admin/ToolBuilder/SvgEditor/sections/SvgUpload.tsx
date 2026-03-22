@@ -430,7 +430,10 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
   const sanitize = (svg: string) => sanitizeSvgGradients(svg, svgNamespace(svg));
 
   useEffect(() => {
-    if (!currentSvg) return;
+    if (!currentSvg) {
+      setBaseSvg('');
+      return;
+    }
     if (structuralKey !== prevKey.current) {
       setBaseSvg(sanitize(currentSvg));
       prevKey.current = structuralKey;

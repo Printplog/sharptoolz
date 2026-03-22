@@ -46,6 +46,7 @@ export default function SvgTemplateEditor() {
   const { patches, addPatch, clearPatch, setPatches } = useSvgPatch();
   const resetStore = useSvgStore(state => state.reset);
   const patchesInitialized = useRef(false);
+  const isDirty = useRef(false);
 
 
 
@@ -65,7 +66,9 @@ export default function SvgTemplateEditor() {
   useEffect(() => {
     resetStore();
     clearPatch();
+    setSvgContent("");
     patchesInitialized.current = false;
+    isDirty.current = false;
   }, [id, resetStore, clearPatch]);
 
   // Initialize patches once per template load — skip re-runs triggered by saves
@@ -98,7 +101,7 @@ export default function SvgTemplateEditor() {
   }, [siblings, id]);
 
   const onNavigate = (targetId: string) => {
-    if (patches.length > 0) {
+    if (isDirty.current || isReplaced) {
       setPendingNavigateId(targetId);
       setShowConfirmNav(true);
     } else {
@@ -107,12 +110,12 @@ export default function SvgTemplateEditor() {
   };
 
   const performNavigate = (targetId: string) => {
-    navigate(`/admin/templates/${targetId}`);
     setSvgContent(""); // Clear current SVG to trigger fresh load for next template
     resetStore();
     clearPatch();
     setPendingNavigateId(null);
     setShowConfirmNav(false);
+    navigate(`/admin/templates/${targetId}`);
   };
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -132,10 +135,10 @@ export default function SvgTemplateEditor() {
     // Only fetch the base file if it exists and we haven't loaded it yet
     if (data?.svg_url && !svgContent) {
       setIsFetchingSvg(true);
+      let cancelled = false;
 
       const loadSvg = async () => {
         try {
-          // Try direct URL first as it's now absolute and signed
           if (!data?.svg_url) throw new Error("No SVG URL found");
 
           console.log('[SvgTemplateEditor] Fetching SVG via direct URL...');
@@ -143,30 +146,30 @@ export default function SvgTemplateEditor() {
           if (!res.ok) throw new Error(`HTTP status: ${res.status}`);
           const text = await res.text();
 
-          // FIGMA-STYLE: Merge base file with DB patches on initial load
           const patchedSvg = applySvgPatches(text, data.svg_patches || []);
-          setSvgContent(patchedSvg);
-          console.log('[SvgTemplateEditor] Base SVG loaded via direct URL and patched.');
+          if (!cancelled) setSvgContent(patchedSvg);
         } catch (err) {
+          if (cancelled) return;
           console.warn("Failed to load SVG via direct URL, trying backend proxy...", err);
           try {
-            // Fallback to proxy if direct fetch fails (e.g. CORS or localhost issues)
             const text = await getTemplateSvgForAdmin(id as string);
             const patchedSvg = applySvgPatches(text, data.svg_patches || []);
-            setSvgContent(patchedSvg);
-            console.log('[SvgTemplateEditor] Base SVG loaded via proxy and patched.');
+            if (!cancelled) setSvgContent(patchedSvg);
           } catch (proxyErr) {
-            console.error("Failed to load SVG content from all sources", proxyErr);
-            toast.error("Cloud storage sync failed. Please check CORS settings.");
+            if (!cancelled) {
+              console.error("Failed to load SVG content from all sources", proxyErr);
+              toast.error("Cloud storage sync failed. Please check CORS settings.");
+            }
           }
         } finally {
-          setIsFetchingSvg(false);
+          if (!cancelled) setIsFetchingSvg(false);
         }
       };
 
       loadSvg();
+      return () => { cancelled = true; };
     }
-  }, [data?.svg_url, id, data?.svg_patches, svgContent]); // Only re-run if the URL changes
+  }, [data?.svg_url, id, data?.svg_patches, svgContent]);
 
   // Save template mutation
   const saveMutation = useMutation({
@@ -269,6 +272,7 @@ export default function SvgTemplateEditor() {
       // Reinsert server's merged patches so the dialog reflects committed state immediately
       setPatches(updatedTemplate.svg_patches || []);
       setIsReplaced(false);
+      isDirty.current = false;
 
       // Update the React Query cache with the new template data (includes new svg_patches)
       queryClient.setQueryData(["template", id], (old: Template | undefined) => {
@@ -463,7 +467,7 @@ export default function SvgTemplateEditor() {
             templateName={data.name}
             templateId={id}
             onSave={handleSave}
-            onPatchUpdate={addPatch}
+            onPatchUpdate={(patch) => { isDirty.current = true; addPatch(patch); }}
             onImportPatches={setPatches}
             patches={patches}
             onSvgReplace={(svg) => {

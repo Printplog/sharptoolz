@@ -282,29 +282,25 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
             (el as SVGElement).style.transformBox = "fill-box";
             (el as SVGElement).style.transformOrigin = "center";
 
-            // Inherit grayscale from source field for depends_ fields
-            if (isDependsField && field.dependsOn) {
-              const baseSourceId = field.dependsOn.split('[')[0];
-              const sourceField = fieldsMap.get(baseSourceId);
-              if (sourceField?.requiresGrayscale) {
-                const intensity = Number(sourceField.grayscaleIntensity ?? 100);
-                let defs = doc.querySelector('defs');
-                if (!defs) {
-                  defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                  doc.documentElement.prepend(defs);
-                }
-                const filterId = `_gs_${field.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
-                if (!doc.getElementById(filterId)) {
-                  const filter = doc.createElementNS('http://www.w3.org/2000/svg', 'filter');
-                  filter.setAttribute('id', filterId);
-                  const cm = doc.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
-                  cm.setAttribute('type', 'saturate');
-                  cm.setAttribute('values', String(1 - intensity / 100));
-                  filter.appendChild(cm);
-                  defs.appendChild(filter);
-                }
-                el.setAttribute('filter', `url(#${filterId})`);
+            // Apply grayscale SVG filter when this depends field explicitly has .grayscale
+            if (field.dependsOn && field.requiresGrayscale) {
+              const intensity = Number(field.grayscaleIntensity ?? 100);
+              let defs = doc.querySelector('defs');
+              if (!defs) {
+                defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                doc.documentElement.prepend(defs);
               }
+              const filterId = `_gs_${field.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
+              if (!doc.getElementById(filterId)) {
+                const filter = doc.createElementNS('http://www.w3.org/2000/svg', 'filter');
+                filter.setAttribute('id', filterId);
+                const cm = doc.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
+                cm.setAttribute('type', 'saturate');
+                cm.setAttribute('values', String(1 - intensity / 100));
+                filter.appendChild(cm);
+                defs.appendChild(filter);
+              }
+              el.setAttribute('filter', `url(#${filterId})`);
             }
           }
         }
