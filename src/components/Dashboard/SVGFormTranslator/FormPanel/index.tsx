@@ -175,6 +175,10 @@ const FormPanel = React.memo(function FormPanel({
   // Track if we've applied duplicate values to prevent re-application
   const appliedDuplicateValuesRef = useRef(false);
 
+  // Stable ref for the progress interval — cleared on unmount to prevent memory leaks
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => () => { if (progressIntervalRef.current) clearInterval(progressIntervalRef.current); }, []);
+
   // Check for startValues in location state (from duplicate feature)
   // This is now handled in the parent SvgFormTranslator for better reliability
   useEffect(() => {
@@ -234,7 +238,7 @@ const FormPanel = React.memo(function FormPanel({
     setDocumentProgress(0);
 
     // Simulate progress
-    let progressInterval: NodeJS.Timeout | null = null;
+    const progressInterval = progressIntervalRef;
 
     const trackingField =
       fields?.find((field) => field.isTrackingId) ||
@@ -334,10 +338,10 @@ const FormPanel = React.memo(function FormPanel({
     }
 
     // Start progress simulation
-    progressInterval = setInterval(() => {
+    progressInterval.current = setInterval(() => {
       setDocumentProgress((prev) => {
         if (prev >= 90) {
-          if (progressInterval) clearInterval(progressInterval); // Stop at 90
+          if (progressInterval.current) { clearInterval(progressInterval.current); progressInterval.current = null; }
           return 90;
         }
         return prev + 10;
@@ -351,7 +355,7 @@ const FormPanel = React.memo(function FormPanel({
       await Promise.all([mutationPromise, minDelayPromise]);
 
       // Complete progress
-      if (progressInterval) clearInterval(progressInterval);
+      if (progressInterval.current) { clearInterval(progressInterval.current); progressInterval.current = null; }
       setDocumentProgress(100);
 
       // Wait a moment before hiding
@@ -366,7 +370,7 @@ const FormPanel = React.memo(function FormPanel({
       }
     } catch (error) {
       // Reset on error
-      if (progressInterval) clearInterval(progressInterval);
+      if (progressInterval.current) { clearInterval(progressInterval.current); progressInterval.current = null; }
       setIsCreatingDocument(false);
       setDocumentProgress(0);
       // Don't close dialog on error, let user see it and retry

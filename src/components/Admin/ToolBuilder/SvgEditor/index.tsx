@@ -187,19 +187,21 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   // Sync SVG with prop — re-initialize store when prop changes (e.g. after save)
   useEffect(() => {
     if (svgRaw && svgRaw !== originalSvg) {
-      console.log('[SvgEditor] Syncing with new svgRaw prop.');
       setInitialSvg(svgRaw);
     }
   }, [svgRaw, originalSvg, setInitialSvg]);
 
-  useEffect(() => { setName(templateName); }, [templateName]);
-  useEffect(() => { setBannerImage(banner); }, [banner]);
-  useEffect(() => { setIsHot(hot); }, [hot]);
-  useEffect(() => { setIsActiveState(isActive); }, [isActive]);
-  useEffect(() => { setSelectedTool(tool); }, [tool]);
-  useEffect(() => { setTutorialUrlState(tutorial?.url || ""); }, [tutorial]);
-  useEffect(() => { setTutorialTitleState(tutorial?.title || ""); }, [tutorial]);
-  useEffect(() => { setKeywordsTags(Array.isArray(keywords) ? keywords : []); }, [keywords]);
+  // Sync all prop-driven local state in one effect to avoid cascade re-renders
+  useEffect(() => {
+    setName(templateName);
+    setBannerImage(banner);
+    setIsHot(hot);
+    setIsActiveState(isActive);
+    setSelectedTool(tool);
+    setTutorialUrlState(tutorial?.url || "");
+    setTutorialTitleState(tutorial?.title || "");
+    setKeywordsTags(Array.isArray(keywords) ? keywords : []);
+  }, [templateName, banner, hot, isActive, tool, tutorial, keywords]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

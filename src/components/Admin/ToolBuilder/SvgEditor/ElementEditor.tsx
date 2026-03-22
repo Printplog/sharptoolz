@@ -233,32 +233,6 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       }
     };
 
-    // Live update is now disabled to ensure canvas only changes on "Apply"
-    // as per user request "make sure changes dont apply to canvas until the apply button is clicked"
-    /*
-    // Throttled Live Update (Still useful for hyper-fast feedback)
-    useEffect(() => {
-      const now = Date.now();
-      const limit = 16; // Faster 60fps local update
-
-      if (localElement !== element) {
-        if (now - lastUpdate.current >= limit) {
-          onLiveUpdate?.(localElement);
-          lastUpdate.current = now;
-        } else {
-          if (updateTimeout.current) clearTimeout(updateTimeout.current);
-          updateTimeout.current = setTimeout(() => {
-            onLiveUpdate?.(localElement);
-            lastUpdate.current = Date.now();
-          }, limit - (now - lastUpdate.current));
-        }
-      }
-      return () => {
-        if (updateTimeout.current) clearTimeout(updateTimeout.current);
-      };
-    }, [localElement, onLiveUpdate, element]);
-    */
-
     const handleApply = () => {
       console.log('[ElementEditor] Apply button clicked - finalizing state');
       const finalElement = { ...localElement };
