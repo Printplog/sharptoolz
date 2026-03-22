@@ -166,7 +166,7 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "grayscale-extension",
     title: ".grayscale Extension",
-    content: "Applies automatic grayscale conversion to uploaded images. Works with both .upload and .file fields so final renders match grayscale requirements without extra user actions. Can also be combined with .depends to apply grayscale when copying images from other fields.",
+    content: "Applies automatic grayscale conversion to uploaded images. Works with .upload and .file fields. Any .depends_ field that copies from a grayscale source automatically inherits the grayscale effect — no need to add .grayscale to the depends field itself.",
     codeExamples: [
       {
         title: "Full Grayscale",
@@ -179,14 +179,9 @@ export const svgEditorDocs: DocSection[] = [
         description: "Applies 65% grayscale so some color detail remains"
       },
       {
-        title: "Grayscale with Dependency",
-        code: "Photo.upload\nPhoto_Copy.depends_Photo.grayscale",
-        description: "Photo_Copy automatically copies the image from Photo and applies 100% grayscale. Note: .depends must come first (after base ID), then .grayscale"
-      },
-      {
-        title: "Partial Grayscale with Dependency",
-        code: "Logo.upload\nLogo_Dark.depends_Logo.grayscale_80",
-        description: "Logo_Dark copies from Logo and applies 80% grayscale"
+        title: "Automatic Grayscale Inheritance",
+        code: "Photo.upload.grayscale\nPhoto_Copy.depends_Photo",
+        description: "Photo_Copy automatically inherits grayscale from Photo — no .grayscale needed on the depends field"
       }
     ]
   },
@@ -470,7 +465,7 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "dependencies",
     title: ".depends Extension",
-    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. IMPORTANT: .depends_ is an extension (not a field type) but MUST come FIRST after the base ID (position 1). It REPLACES the need for a field type — do not add .text, .upload etc. alongside it. After .depends_, only .grayscale and .track_ROLE are allowed.",
+    content: "Create field dependencies with extraction support. Fields can copy values from other fields or extract specific parts like words or characters. IMPORTANT: .depends_ is an extension (not a field type) but MUST come FIRST after the base ID (position 1). It REPLACES the need for a field type — do not add .text, .upload etc. alongside it. After .depends_, only .track_ROLE is allowed. Grayscale is inherited automatically from the source field.",
     codeExamples: [
       {
         title: "Simple Copy (Text)",
@@ -509,8 +504,8 @@ export const svgEditorDocs: DocSection[] = [
       },
       {
         title: "Image Dependency",
-        code: "Photo.upload\nPhoto_Copy.depends_Photo.grayscale",
-        description: "Photo_Copy automatically copies the image from Photo and applies grayscale. IMPORTANT: .depends must come FIRST (after base ID), then .grayscale. The dependent field is hidden from the form. Field name must be unique."
+        code: "Photo.upload\nPhoto_Copy.depends_Photo",
+        description: "Photo_Copy automatically copies the image from Photo. The dependent field is hidden from the form. If Photo has .grayscale, Photo_Copy inherits it automatically."
       },
       {
         title: "Signature Dependency",

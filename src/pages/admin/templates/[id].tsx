@@ -45,6 +45,7 @@ export default function SvgTemplateEditor() {
   const [showConfirmNav, setShowConfirmNav] = useState(false);
   const { patches, addPatch, clearPatch, setPatches } = useSvgPatch();
   const resetStore = useSvgStore(state => state.reset);
+  const patchesInitialized = useRef(false);
 
 
 
@@ -60,15 +61,22 @@ export default function SvgTemplateEditor() {
     refetchOnMount: false,
   });
 
+  // Reset store and patches only when the template ID changes, not after every save
   useEffect(() => {
     resetStore();
-    if (data?.svg_patches && data.svg_patches.length > 0) {
-      console.log('[TemplateEditor] Initializing patches state with:', data.svg_patches);
-      setPatches(data.svg_patches);
-    } else {
-      clearPatch();
+    clearPatch();
+    patchesInitialized.current = false;
+  }, [id, resetStore, clearPatch]);
+
+  // Initialize patches once per template load — skip re-runs triggered by saves
+  useEffect(() => {
+    if (!patchesInitialized.current && data?.svg_patches !== undefined) {
+      patchesInitialized.current = true;
+      if (data.svg_patches.length > 0) {
+        setPatches(data.svg_patches);
+      }
     }
-  }, [id, resetStore, clearPatch, setPatches, data?.svg_patches]);
+  }, [data?.svg_patches, setPatches]);
 
   // Fetch all templates for the switcher
 
@@ -252,15 +260,14 @@ export default function SvgTemplateEditor() {
     onSuccess: async (updatedTemplate: Template) => {
       toast.success('Template saved successfully!');
 
-      // FIGMA-STYLE INSTANT UPDATE:
-      // Instead of re-fetching the whole SVG file, we apply the patches we JUST sent
-      // to the current locally loaded SVG content. 
-      if (patches.length > 0) {
+      // For SVG replacement: bake patches into the local svgContent so the store re-parses from the correct base.
+      // For patch-only saves: leave svgContent unchanged — the store already reflects the edits,
+      // so we avoid triggering setInitialSvg which would re-parse and lose the current selection.
+      if (isReplaced && patches.length > 0) {
         setSvgContent((prev) => applySvgPatches(prev, patches));
-        console.log('[SaveMutation] Local SVG updated with applied patches.');
-        clearPatch(); // Clear local pending patches after they are committed to SVG
       }
-
+      // Reinsert server's merged patches so the dialog reflects committed state immediately
+      setPatches(updatedTemplate.svg_patches || []);
       setIsReplaced(false);
 
       // Update the React Query cache with the new template data (includes new svg_patches)

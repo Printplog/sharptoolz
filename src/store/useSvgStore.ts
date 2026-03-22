@@ -408,6 +408,7 @@ export const useSvgStore = create<SvgStore>()(
 
         reset: () => set({
             originalSvg: '',
+            workingSvg: '',
             elements: {},
             elementOrder: [],
             selectedElementId: null,
