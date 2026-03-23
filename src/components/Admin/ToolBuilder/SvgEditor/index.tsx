@@ -52,6 +52,7 @@ interface SvgEditorProps {
   onSvgReplace?: (svg: string) => void;
   patches?: SvgPatch[];
   onImportPatches?: (patches: SvgPatch[]) => void;
+  hasUnsavedChanges?: boolean;
 }
 
 export interface SvgEditorRef {
@@ -78,7 +79,8 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     onPatchUpdate,
     onSvgReplace,
     patches = [],
-    onImportPatches
+    onImportPatches,
+    hasUnsavedChanges = false,
   } = props;
   const {
     setInitialSvg,
@@ -609,13 +611,18 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
           </Button>
 
           {onSave && (
-            <Button
-              onClick={handleSave}
-              disabled={!name.trim() || isLoading}
-              className="h-9 px-6 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-lg hover:scale-105 transition-all shadow-lg shadow-primary/20"
-            >
-              {isLoading ? "Saving..." : "Save Changes"}
-            </Button>
+            <div className="relative">
+              <Button
+                onClick={handleSave}
+                disabled={!name.trim() || isLoading}
+                className="h-9 px-6 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-lg hover:scale-105 transition-all shadow-lg shadow-primary/20"
+              >
+                {isLoading ? "Saving..." : "Save Changes"}
+              </Button>
+              {hasUnsavedChanges && !isLoading && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+              )}
+            </div>
           )}
         </div>
       </div>

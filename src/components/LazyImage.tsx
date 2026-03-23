@@ -7,39 +7,36 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     alt: string;
     className?: string;
     placeholderColor?: string;
+    /** Skip lazy loading — use for above-the-fold / logo images */
+    priority?: boolean;
 }
 
-/** Detect iPhone / iOS Safari — very memory-constrained, needs JS lazy loading */
-const isIOS = () =>
-    typeof navigator !== 'undefined' &&
-    /iphone|ipad|ipod/i.test(navigator.userAgent);
-
-export const LazyImage = ({ src, alt, className, placeholderColor = "transparent", onLoad, onError, ...props }: LazyImageProps) => {
+export const LazyImage = ({ src, alt, className, placeholderColor = "transparent", priority = false, onLoad, onError, ...props }: LazyImageProps) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isError, setIsError] = useState(false);
-
-    // iOS-only: intersection-observer gated loading to prevent memory crashes
-    const [isInView, setIsInView] = useState(!isIOS());
+    const [isInView, setIsInView] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (!isIOS()) return; // only need observer on iOS
+        // Priority images load immediately — no observer needed
+        if (priority) {
+            setIsInView(true);
+            return;
+        }
 
         const observer = new IntersectionObserver(
             (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        setIsInView(true);
-                        observer.disconnect();
-                    }
-                });
+                if (entries[0].isIntersecting) {
+                    setIsInView(true);
+                    observer.disconnect();
+                }
             },
-            { rootMargin: '80px', threshold: 0.1 }
+            { rootMargin: '500px', threshold: 0 }
         );
 
         if (containerRef.current) observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, []);
+    }, [priority]);
 
     return (
         <div
@@ -53,8 +50,14 @@ export const LazyImage = ({ src, alt, className, placeholderColor = "transparent
                         initial={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="absolute inset-0 bg-white/5 animate-pulse z-10 flex items-center justify-center"
+                        className="absolute inset-0 bg-white/5 overflow-hidden z-10 flex items-center justify-center"
                     >
+                        {!isError && (
+                            <div
+                                className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
+                                style={{ animation: 'shimmer 1.8s infinite' }}
+                            />
+                        )}
                         {isError && (
                             <div className="flex flex-col items-center gap-2 opacity-20">
                                 <Layout className="w-12 h-12" />
@@ -69,8 +72,6 @@ export const LazyImage = ({ src, alt, className, placeholderColor = "transparent
                 <img
                     src={src}
                     alt={alt}
-                    // Non-iOS: rely on native browser lazy loading (no JS overhead)
-                    loading={isIOS() ? undefined : "lazy"}
                     decoding="async"
                     className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                     onLoad={(e) => { setIsLoaded(true); onLoad?.(e); }}

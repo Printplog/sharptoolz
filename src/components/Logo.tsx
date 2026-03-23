@@ -15,6 +15,7 @@ export default function Logo({ icon = false, noLink = false, size = 30, showText
       alt="SharpToolz Logo"
       className="object-contain"
       style={{ width: size, height: size, backgroundColor: 'transparent' }}
+      priority
     />
   );
 

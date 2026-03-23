@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import type { User } from "@/types";
 import { toast } from "sonner";
 import PageLoader from "@/components/PageLoader";
+import { AnimatePresence } from "framer-motion";
 import { ROLES, type RoleCode } from "@/lib/constants/roles";
 
 const ROLE_MAP: Record<string, string> = {
@@ -62,7 +63,9 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
 
   if (isLoading) {
     return (
-      <PageLoader />
+      <AnimatePresence>
+        <PageLoader />
+      </AnimatePresence>
     );
   }
 

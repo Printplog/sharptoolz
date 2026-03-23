@@ -46,7 +46,7 @@ export default function SvgTemplateEditor() {
   const { patches, addPatch, clearPatch, setPatches } = useSvgPatch();
   const resetStore = useSvgStore(state => state.reset);
   const patchesInitialized = useRef(false);
-  const isDirty = useRef(false);
+  const [isDirty, setIsDirty] = useState(false);
 
 
 
@@ -68,7 +68,7 @@ export default function SvgTemplateEditor() {
     clearPatch();
     setSvgContent("");
     patchesInitialized.current = false;
-    isDirty.current = false;
+    setIsDirty(false);
   }, [id, resetStore, clearPatch]);
 
   // Initialize patches once per template load — skip re-runs triggered by saves
@@ -101,7 +101,7 @@ export default function SvgTemplateEditor() {
   }, [siblings, id]);
 
   const onNavigate = (targetId: string) => {
-    if (isDirty.current || isReplaced) {
+    if (isDirty || isReplaced) {
       setPendingNavigateId(targetId);
       setShowConfirmNav(true);
     } else {
@@ -113,6 +113,7 @@ export default function SvgTemplateEditor() {
     setSvgContent(""); // Clear current SVG to trigger fresh load for next template
     resetStore();
     clearPatch();
+    setIsDirty(false);
     setPendingNavigateId(null);
     setShowConfirmNav(false);
     navigate(`/admin/templates/${targetId}`);
@@ -272,7 +273,7 @@ export default function SvgTemplateEditor() {
       // Reinsert server's merged patches so the dialog reflects committed state immediately
       setPatches(updatedTemplate.svg_patches || []);
       setIsReplaced(false);
-      isDirty.current = false;
+      setIsDirty(false);
 
       // Update the React Query cache with the new template data (includes new svg_patches)
       queryClient.setQueryData(["template", id], (old: Template | undefined) => {
@@ -467,7 +468,7 @@ export default function SvgTemplateEditor() {
             templateName={data.name}
             templateId={id}
             onSave={handleSave}
-            onPatchUpdate={(patch) => { isDirty.current = true; addPatch(patch); }}
+            onPatchUpdate={(patch) => { setIsDirty(true); addPatch(patch); }}
             onImportPatches={setPatches}
             patches={patches}
             onSvgReplace={(svg) => {
@@ -483,6 +484,7 @@ export default function SvgTemplateEditor() {
             tutorial={data.tutorial}
             keywords={data.keywords}
             isLoading={saveMutation.isPending}
+            hasUnsavedChanges={isDirty || isReplaced}
             isSvgLoading={isFetchingSvg || (!!data?.svg_url && !svgContent)} // Only show loading if we HAVE a URL but no content yet
             onElementSelect={() => {
               // Simplified - no automatic section selection
