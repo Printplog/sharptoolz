@@ -8,6 +8,7 @@ import SignatureCanvas from 'react-signature-canvas';
 import { getSvgElementDimensions } from "@/lib/utils/svgDimensions";
 import { useDropzone } from "react-dropzone";
 import { Slider } from './slider';
+import { LazyImage } from "@/components/LazyImage";
 
 interface SignatureFieldProps {
   fieldId: string;
@@ -236,10 +237,12 @@ export default function SignatureField({
           {currentValue ? (
             <div className="relative w-full h-full">
               <div className="w-full h-full flex items-center justify-center p-4">
-                <img
+                <LazyImage
                   src={currentValue}
                   alt={`${fieldName} signature`}
-                  className="max-w-full max-h-full object-contain filter brightness-110"
+                  className="max-w-full max-h-full"
+                  imgClassName="max-w-full max-h-full object-contain filter brightness-110"
+                  priority
                 />
               </div>
               <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
@@ -420,10 +423,12 @@ export default function SignatureField({
                         )}
                         onClick={disabled ? undefined : () => handlePresetSignature(preset)}
                       >
-                        <img
+                        <LazyImage
                           src={preset.data}
                           alt={preset.name}
-                          className="max-h-[80%] max-w-[80%] object-contain transition-transform group-hover:scale-110"
+                          className="max-h-[80%] max-w-[80%]"
+                          imgClassName="max-h-full max-w-full object-contain transition-transform group-hover:scale-110"
+                          priority
                         />
                       </div>
                     ))}

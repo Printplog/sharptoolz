@@ -349,10 +349,12 @@ export default function ImageCropUpload({
                         </div>
                       ) : phase === 'reviewing' ? (
                         <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden">
-                          <img 
-                            src={showOriginal ? image || '' : bgRemovedImage || ''} 
-                            alt="Review Result" 
-                            className="max-h-[70vh] w-auto shadow-2xl object-contain animate-in fade-in zoom-in-95 duration-500"
+                          <LazyImage
+                            src={showOriginal ? image || '' : bgRemovedImage || ''}
+                            alt="Review Result"
+                            className="max-h-[70vh] w-auto"
+                            imgClassName="max-h-[70vh] w-auto shadow-2xl object-contain"
+                            priority
                           />
                         </div>
                       ) : null}

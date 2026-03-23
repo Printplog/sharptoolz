@@ -6,12 +6,14 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     src: string;
     alt: string;
     className?: string;
+    /** Classes applied to the inner <img> — overrides default 'w-full h-full object-cover' */
+    imgClassName?: string;
     placeholderColor?: string;
     /** Skip lazy loading — use for above-the-fold / logo images */
     priority?: boolean;
 }
 
-export const LazyImage = ({ src, alt, className, placeholderColor = "transparent", priority = false, onLoad, onError, ...props }: LazyImageProps) => {
+export const LazyImage = ({ src, alt, className, imgClassName, placeholderColor = "transparent", priority = false, onLoad, onError, ...props }: LazyImageProps) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isError, setIsError] = useState(false);
     const [isInView, setIsInView] = useState(false);
@@ -73,7 +75,7 @@ export const LazyImage = ({ src, alt, className, placeholderColor = "transparent
                     src={src}
                     alt={alt}
                     decoding="async"
-                    className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    className={`transition-opacity duration-500 ${imgClassName ?? 'w-full h-full object-cover'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                     onLoad={(e) => { setIsLoaded(true); onLoad?.(e); }}
                     onError={(e) => { setIsError(true); onError?.(e); }}
                     {...props}

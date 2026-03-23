@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { X } from "lucide-react";
+import { LazyImage } from "@/components/LazyImage";
 
 interface BannerPreviewModalProps {
     isOpen: boolean;
@@ -30,11 +31,13 @@ export function BannerPreviewModal({
                     </button>
 
                     {bannerUrl ? (
-                        <div className="overflow-y-auto flex-1">
-                            <img
+                        <div className="overflow-y-auto flex-1 min-h-48">
+                            <LazyImage
                                 src={bannerUrl}
                                 alt={templateName}
-                                className="w-full h-auto block"
+                                className="w-full min-h-48"
+                                imgClassName="w-full h-auto block"
+                                priority
                             />
                         </div>
                     ) : (
