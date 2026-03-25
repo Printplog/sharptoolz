@@ -12,7 +12,7 @@ export default function Layout() {
     <div className="bg-background text-white min-h-screen">
       <GlobalAnnouncement />
       <Navbar />
-      <main className="pt-32">
+      <main className="pt-16 md:pt-32">
         <Outlet />
       </main>
       <Footer />
