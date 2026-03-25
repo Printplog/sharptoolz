@@ -68,7 +68,7 @@ export function formatDate(date: Date | string, format: string): string {
   const getPlaceholder = (key: string) => {
     if (!placeholders[key]) {
       // Use a unique marker that won't appear in dates or format strings
-      placeholders[key] = `\u0001PH${counter++}\u0002`;
+      placeholders[key] = `\u0001${counter++}\u0002`;
     }
     return placeholders[key];
   };

@@ -72,14 +72,14 @@ export default function TermsAgreementDialog() {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full mt-4">
                         <Button
                             onClick={handleAccept}
-                            className="w-full sm:w-48 bg-primary hover:bg-primary/90 text-primary-foreground font-bold tracking-wider py-6 text-base rounded-md uppercase transition-colors"
+                            className="w-full sm:w-48 bg-primary text-primary-foreground font-bold tracking-wider py-6 text-base rounded-full uppercase transition-all"
                         >
                             YES, I AM
                         </Button>
                         <Button
                             onClick={handleReject}
                             variant="destructive"
-                            className="w-full sm:w-48 font-bold tracking-wider py-6 text-base rounded-md uppercase transition-colors"
+                            className="w-full sm:w-48 font-bold tracking-wider py-6 text-base rounded-full uppercase transition-all"
                         >
                             NO, I AM NOT
                         </Button>

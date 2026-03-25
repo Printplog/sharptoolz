@@ -1,7 +1,7 @@
 import { LazyImage } from "@/components/LazyImage";
-import { Button } from "@/components/ui/button";
 import SectionPadding from "@/layouts/SectionPadding";
-import { cn } from "@/lib/utils";
+import { PremiumButton } from "@/components/ui/PremiumButton";
+import { MessageCircle } from "lucide-react";
 
 export default function JoinCommunity() {
   return (
@@ -22,23 +22,13 @@ export default function JoinCommunity() {
         live discussions — all in one vibrant community.
       </p>
 
-      <Button
-        size="lg"
-        className={cn(
-          "bg-[#0a712c] text-white px-6 py-3 rounded-full text-base font-medium",
-          "shadow-[0_0_15px_#0a712c] hover:shadow-[0_0_25px_#0a712c]",
-          "hover:scale-105 transition-all duration-200 ease-out"
-        )}
-        asChild
-      >
-        <a
-          href="https://chat.whatsapp.com/YOUR_INVITE_LINK_HERE"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Join on WhatsApp
-        </a>
-      </Button>
+      <PremiumButton
+        text="Join on WhatsApp"
+        icon={MessageCircle}
+        href="https://chat.whatsapp.com/HMkF0uqv3ksC0QvNbr8Mqu"
+        className="bg-[#0a712c] text-white shadow-[#0a712c]/20 min-w-[200px]"
+        iconRotation={0}
+      />
     </SectionPadding>
   );
 }

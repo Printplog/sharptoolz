@@ -14,9 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-
 import errorMessage from "@/lib/utils/errorMessage";
-import { forgotPassword } from "@/api/apiEndpoints"; // <-- define this API call
+import { forgotPassword } from "@/api/apiEndpoints";
+import { Mail } from "lucide-react";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -47,24 +47,33 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto py-12 px-4">
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-semibold tracking-tight">Forgot password?</h2>
+        <p className="text-sm text-white/35">We'll send you a link to reset it</p>
+      </div>
+
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <h2 className="text-center text-[24px]">Forgot Password</h2>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email Address</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="you@example.com"
-                    className="border-white/20 bg-white/5"
-                    {...field}
-                  />
-                </FormControl>
+                <FormLabel className="text-xs text-white/50 uppercase tracking-wider font-medium">
+                  Email address
+                </FormLabel>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="you@example.com"
+                      {...field}
+                      className="border-white/10 bg-white/[0.03] pl-10 h-11 placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
+                    />
+                  </FormControl>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -72,23 +81,21 @@ export default function ForgotPassword() {
 
           <Button
             type="submit"
-            className="w-full bg-primary text-black hover:bg-primary/90"
+            className="w-full h-11 bg-[#cee88c] text-black font-medium hover:bg-[#cee88c]/90 transition-colors mt-2"
             disabled={isPending}
           >
-            {isPending ? "Sending..." : "Send Reset Link"}
+            {isPending ? "Sending..." : "Send reset link"}
           </Button>
 
-          <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Remember your password?{" "}
-              <Link
-                to="/auth/login"
-                className="text-primary underline hover:opacity-80"
-              >
-                Login
-              </Link>
-            </p>
-          </div>
+          <p className="text-center text-sm text-white/35 pt-1">
+            Remember your password?{" "}
+            <Link
+              to="/auth/login"
+              className="text-[#cee88c]/80 hover:text-[#cee88c] transition-colors"
+            >
+              Sign in
+            </Link>
+          </p>
         </form>
       </Form>
     </div>

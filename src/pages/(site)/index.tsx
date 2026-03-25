@@ -3,6 +3,8 @@ import Hero from "@/components/Site/Home/Hero";
 import SocialsSection from "@/components/Site/Home/SocialsSection";
 import ReviewsSection from "@/components/Site/Home/ReviewsSection";
 import Tools from "@/components/Site/Home/Tools";
+import DisclaimerSection from "@/components/Site/Home/DisclaimerSection";
+import ApiComingSoon from "@/components/Site/Home/ApiComingSoon";
 
 export default function Home() {
   return (
@@ -11,7 +13,9 @@ export default function Home() {
       <Tools />
       <FeaturesSection />
       <ReviewsSection />
+      <DisclaimerSection />
       <SocialsSection />
+      <ApiComingSoon />
     </div>
   )
 }

@@ -599,6 +599,7 @@ const FormFieldComponent: React.FC<{
               disabled={isFieldDisabled}
               requiresGrayscale={field.requiresGrayscale}
               grayscaleIntensity={field.grayscaleIntensity}
+              targetAspectRatio={field.aspectRatio}
             />
           </div>
         );

@@ -14,9 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-
 import { resetPasswordConfirm } from "@/api/apiEndpoints";
 import errorMessage from "@/lib/utils/errorMessage";
+import { Lock } from "lucide-react";
 
 const resetSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -60,25 +60,33 @@ export default function ResetPasswordConfirm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto py-12 px-4">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <h2 className="text-center text-[24px]">Reset Password</h2>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-semibold tracking-tight">Reset password</h2>
+        <p className="text-sm text-white/35">Enter your new password below</p>
+      </div>
 
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>New Password</FormLabel>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="********"
-                    className="border-white/20 bg-white/5"
-                    {...field}
-                  />
-                </FormControl>
+                <FormLabel className="text-xs text-white/50 uppercase tracking-wider font-medium">
+                  New password
+                </FormLabel>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      {...field}
+                      className="border-white/10 bg-white/[0.03] pl-10 h-11 placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
+                    />
+                  </FormControl>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -86,23 +94,21 @@ export default function ResetPasswordConfirm() {
 
           <Button
             type="submit"
-            className="w-full bg-primary text-black hover:bg-primary/90"
+            className="w-full h-11 bg-[#cee88c] text-black font-medium hover:bg-[#cee88c]/90 transition-colors mt-2"
             disabled={isPending}
           >
-            {isPending ? "Resetting..." : "Reset Password"}
+            {isPending ? "Resetting..." : "Reset password"}
           </Button>
 
-          <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Remember your password?{" "}
-              <Link
-                to="/auth/login"
-                className="text-primary underline hover:opacity-80"
-              >
-                Login
-              </Link>
-            </p>
-          </div>
+          <p className="text-center text-sm text-white/35 pt-1">
+            Remember your password?{" "}
+            <Link
+              to="/auth/login"
+              className="text-[#cee88c]/80 hover:text-[#cee88c] transition-colors"
+            >
+              Sign in
+            </Link>
+          </p>
         </form>
       </Form>
     </div>

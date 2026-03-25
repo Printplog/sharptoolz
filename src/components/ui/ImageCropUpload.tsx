@@ -3,7 +3,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Dialog as ShadcnDialog, DialogContent as ShadcnDialogContent } from "@/components/ui/dialog";
-import { Upload, Check, Loader2, Sparkles, Eye, RefreshCcw } from "lucide-react";
+import { Upload, Check, Loader2, Sparkles, RefreshCcw } from "lucide-react";
 import { annotationDetector } from "@/lib/utils/annotationDetector";
 import useToolStore from "@/store/formStore";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ interface ImageCropUploadProps {
   disabled?: boolean;
   requiresGrayscale?: boolean;
   grayscaleIntensity?: number;
+  targetAspectRatio?: number;
 }
 
 export default function ImageCropUpload({
@@ -32,6 +33,7 @@ export default function ImageCropUpload({
   disabled = false,
   requiresGrayscale = false,
   grayscaleIntensity = 100,
+  targetAspectRatio,
 }: ImageCropUploadProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [image, setImage] = useState<string | null>(() => currentValue || null);
@@ -40,17 +42,29 @@ export default function ImageCropUpload({
   // Background removal state
   const [bgRemovedImage, setBgRemovedImage] = useState<string | null>(null);
   const [isRemovingBackground, setIsRemovingBackground] = useState(false);
-  const [showOriginal, setShowOriginal] = useState(false);
   const [bgProgress, setBgProgress] = useState(0);
   const [isInserting, setIsInserting] = useState(false);
 
-  // New state to track initial crop for current upload session
+  // Post-crop state: set after "Done" in the crop editor
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+
+  // Initial crop selection for the cropper
   const [initialCrop, setInitialCrop] = useState<{ x: number, y: number, w: number, h: number } | undefined>(undefined);
 
-  const phase = isRemovingBackground ? 'processing' : bgRemovedImage ? 'reviewing' : 'editing';
+  // editing → postCrop → processing → reviewing
+  const phase = isRemovingBackground ? 'processing' : bgRemovedImage ? 'reviewing' : croppedImage ? 'postCrop' : 'editing';
 
   const cropperRef = useRef<ImageCropperRef>(null);
   const { svgRaw } = useToolStore();
+
+  // Reset transient state whenever the dialog closes
+  useEffect(() => {
+    if (!isDialogOpen) {
+      setCroppedImage(null);
+      setBgRemovedImage(null);
+      setBgProgress(0);
+    }
+  }, [isDialogOpen]);
 
   const applyGrayscaleToImage = useCallback(
     (imageSrc: string): Promise<string> => {
@@ -124,7 +138,6 @@ export default function ImageCropUpload({
     onSuccess: (data) => {
       setBgProgress(100);
       setBgRemovedImage(data.image);
-      toast.success("Background removed ✨", { id: 'bg-remove-status' });
     },
     onError: (e: any) => {
       const errorMsg = e.response?.data?.error || e.message || "Background removal failed";
@@ -137,27 +150,50 @@ export default function ImageCropUpload({
     }
   });
 
-  const handleMagicMask = async () => {
-    if (!image) return;
-    bgRemovalMutation.mutate(image);
+  // Triggered from the postCrop phase "Remove Background" button
+  const handleMagicMask = () => {
+    if (!croppedImage) return;
+    bgRemovalMutation.mutate(croppedImage);
   };
 
-  const handleApplyCrop = async (croppedDataUrl: string) => {
+  // Called by the cropper when "Done" is clicked — stores result, shows postCrop phase
+  const handleApplyCrop = useCallback((croppedDataUrl: string) => {
+    setCroppedImage(croppedDataUrl);
+  }, []);
+
+  // Final insertion — closes dialog, applies grayscale, calls onImageSelect
+  const finalizeAndClose = useCallback(async (imageDataUrl: string) => {
     setIsDialogOpen(false);
     setIsInserting(true);
     try {
-      const processed = await applyGrayscaleToImage(croppedDataUrl);
+      const processed = await applyGrayscaleToImage(imageDataUrl);
       onImageSelect(fieldId, processed, annotationResult?.rotation || 0);
-      setBgRemovedImage(null);
-      toast.success("Image updated ✂️");
+      toast.success("Image applied ✨");
     } catch (e) {
-      toast.error("Update failed");
+      toast.error("Failed to apply image");
       console.error(e);
     } finally {
       setIsInserting(false);
     }
-  };
+  }, [applyGrayscaleToImage, onImageSelect, fieldId, annotationResult]);
 
+  const computeAspectRatioCrop = (dataUrl: string) => {
+    if (!targetAspectRatio) return;
+    const img = new Image();
+    img.onload = () => {
+      const imgAR = img.naturalWidth / img.naturalHeight;
+      let x: number, y: number, w: number, h: number;
+      if (imgAR >= targetAspectRatio) {
+        h = 1; w = (img.naturalHeight * targetAspectRatio) / img.naturalWidth;
+        x = (1 - w) / 2; y = 0;
+      } else {
+        w = 1; h = img.naturalWidth / (img.naturalHeight * targetAspectRatio);
+        y = (1 - h) / 2; x = 0;
+      }
+      setInitialCrop({ x, y, w, h });
+    };
+    img.src = dataUrl;
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -168,7 +204,7 @@ export default function ImageCropUpload({
         setImage(dataUrl);
         setBgRemovedImage(null);
         setIsDialogOpen(true);
-        setInitialCrop(undefined); // Reset state for new image
+        setInitialCrop(undefined);
 
         // Analyze uploaded image for blue borders
         try {
@@ -183,16 +219,16 @@ export default function ImageCropUpload({
             });
           } else {
             setAnnotationResult(null);
-            setInitialCrop(undefined);
+            computeAspectRatioCrop(dataUrl);
           }
         } catch {
           setAnnotationResult(null);
-          setInitialCrop(undefined);
+          computeAspectRatioCrop(dataUrl);
         }
       };
       reader.readAsDataURL(file);
     }
-  }, []);
+  }, [targetAspectRatio]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -241,7 +277,7 @@ export default function ImageCropUpload({
                   <div className="text-xs opacity-80">Upload a new image</div>
                 </div>
               </div>
-              
+
               {isInserting && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50 animate-in fade-in duration-300">
                   <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
@@ -258,11 +294,11 @@ export default function ImageCropUpload({
               type="button"
               variant="outline"
               size="sm"
-              onClick={async (e: React.MouseEvent) => { 
-                e.stopPropagation(); 
-                setIsDialogOpen(true); 
-                
-                // If we already have an image but no annotation, re-analyze it
+              onClick={async (e: React.MouseEvent) => {
+                e.stopPropagation();
+                setCroppedImage(null);
+                setIsDialogOpen(true);
+
                 if (currentValue && !annotationResult) {
                   try {
                     const result = await annotationDetector.loadAndAnalyzeImage(currentValue);
@@ -274,10 +310,12 @@ export default function ImageCropUpload({
                         w: result.content.width / result.imageWidth,
                         h: result.content.height / result.imageHeight
                       });
+                    } else {
+                      computeAspectRatioCrop(currentValue);
                     }
                   } catch (e) { console.error("Re-analysis failed", e); }
                 } else {
-                  setInitialCrop(undefined); // Reset state to allow fresh detection fit
+                  setInitialCrop(undefined);
                 }
               }}
               className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
@@ -311,9 +349,8 @@ export default function ImageCropUpload({
                     <div className="relative h-full w-full flex items-center justify-center min-h-0">
                       {phase === 'editing' || phase === 'processing' ? (
                         <div className="relative w-full h-full flex flex-col items-center justify-center p-2 md:p-8 min-h-0">
-                          {/* Grid background moved here */}
                           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-size-[32px_32px] pointer-events-none" />
-                          
+
                           <div className="relative flex items-center justify-center min-h-0 w-full h-full">
                             <ImageCropper
                               ref={cropperRef}
@@ -322,9 +359,9 @@ export default function ImageCropUpload({
                               initialSelection={initialCrop}
                             />
                           </div>
-                          
+
                           {phase === 'processing' && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-50">
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-50">
                               <div className="relative mb-6">
                                 <div className="absolute inset-0 bg-primary/20 blur-3xl animate-pulse rounded-full" />
                                 <Loader2 className="h-16 w-16 animate-spin text-primary relative z-10" />
@@ -335,7 +372,7 @@ export default function ImageCropUpload({
                                   <span>{bgProgress}%</span>
                                 </div>
                                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
-                                  <div 
+                                  <div
                                     className="h-full bg-primary transition-all duration-300 ease-out shadow-[0_0_15px_rgba(var(--primary),0.5)]"
                                     style={{ width: `${bgProgress}%` }}
                                   />
@@ -347,11 +384,19 @@ export default function ImageCropUpload({
                             </div>
                           )}
                         </div>
+                      ) : phase === 'postCrop' ? (
+                        <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden">
+                          <img
+                            src={croppedImage || ''}
+                            alt="Cropped preview"
+                            className="max-h-[70vh] w-auto shadow-2xl object-contain animate-in fade-in zoom-in-95 duration-500"
+                          />
+                        </div>
                       ) : phase === 'reviewing' ? (
                         <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden">
                           <img
-                            src={showOriginal ? image || '' : bgRemovedImage || ''}
-                            alt="Review Result"
+                            src={bgRemovedImage || ''}
+                            alt="Background removed"
                             className="max-h-[70vh] w-auto shadow-2xl object-contain animate-in fade-in zoom-in-95 duration-500"
                           />
                         </div>
@@ -359,44 +404,42 @@ export default function ImageCropUpload({
                     </div>
                   </div>
 
-                  {/* Centered Actions Bar - Now in normal flow with 5px gap */}
+                  {/* Action bar */}
                   <div className="mt-[5px] z-50 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3 w-auto pb-2">
                     <div className="flex items-center gap-1 p-1 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl">
-                      {phase === 'reviewing' ? (
+                      {phase === 'postCrop' ? (
                         <div className="flex items-center gap-1">
-                          <Button 
-                            onClick={() => setShowOriginal(!showOriginal)} 
-                            variant="ghost" 
-                            size="sm" 
-                            className={`h-9 md:h-10 px-3 md:px-4 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${showOriginal ? 'bg-primary text-black' : 'text-white/60 hover:text-white'}`}
+                          <Button
+                            onClick={handleMagicMask}
+                            disabled={isRemovingBackground}
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 md:h-10 px-4 text-primary text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 rounded-lg group"
                           >
-                            <Eye className="h-3 w-3 mr-2" />
-                            {showOriginal ? 'Toggle Mask' : 'View Original'}
+                            <Sparkles className="h-3 w-3 mr-2 group-hover:scale-125 transition-transform" />
+                            Remove Background
                           </Button>
                           <div className="w-[1px] h-5 md:h-6 bg-white/10 mx-1 md:mx-2" />
-                          <Button 
-                            onClick={() => { 
-                              setImage(bgRemovedImage); 
-                              setBgRemovedImage(null); 
-                              setShowOriginal(false); 
-                            }} 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            onClick={() => finalizeAndClose(croppedImage!)}
+                            variant="ghost"
+                            size="sm"
                             className="h-9 md:h-10 px-4 text-green-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-green-400/10 rounded-lg"
                           >
                             <Check className="h-3 w-3 mr-2" />
-                            Confirm Removal
+                            Save As-Is
                           </Button>
-                          <Button 
-                            onClick={() => { 
-                              setBgRemovedImage(null); 
-                              setShowOriginal(false); 
-                            }} 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-9 md:h-10 px-3 text-red-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-400/10 rounded-lg"
+                        </div>
+                      ) : phase === 'reviewing' ? (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            onClick={() => finalizeAndClose(bgRemovedImage!)}
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 md:h-10 px-5 text-green-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-green-400/10 rounded-lg"
                           >
-                            Cancel
+                            <Check className="h-3 w-3 mr-2" />
+                            Apply & Close
                           </Button>
                         </div>
                       ) : phase === 'processing' ? (
@@ -410,27 +453,12 @@ export default function ImageCropUpload({
                             onClick={() => {
                               if (currentValue) setImage(currentValue);
                             }}
-                             variant="ghost"
+                            variant="ghost"
                             size="sm"
                             className="h-9 md:h-10 px-3 md:px-4 text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg"
                           >
                             <RefreshCcw className="h-3 w-3 mr-2" />
                             Reset
-                          </Button>
-                          <div className="w-[1px] h-5 md:h-6 bg-white/10 mx-1" />
-                          <Button
-                            onClick={handleMagicMask}
-                            disabled={isRemovingBackground}
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 md:h-10 px-4 text-primary text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 rounded-lg group"
-                          >
-                            {isRemovingBackground ? (
-                              <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                            ) : (
-                              <Sparkles className="h-3 w-3 mr-2 group-hover:scale-125 transition-transform" />
-                            )}
-                            Remove Bg
                           </Button>
                         </>
                       )}
@@ -449,11 +477,10 @@ export default function ImageCropUpload({
                         <Button
                           type="button"
                           onClick={() => cropperRef.current?.crop()}
-                          disabled={isRemovingBackground}
                           className="flex-1 md:flex-none h-9 md:h-10 px-6 md:px-7 bg-primary text-black text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:bg-primary/90 transition-all"
                         >
                           <Check className="h-3 w-3 mr-2" />
-                          Apply & Close
+                          Done
                         </Button>
                       </div>
                     )}

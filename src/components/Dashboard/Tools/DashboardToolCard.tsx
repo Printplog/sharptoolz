@@ -1,17 +1,18 @@
 import { Eye, Layout } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import type { Template } from "@/types";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { BannerPreviewModal } from "@/components/BannerPreviewModal";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 
 type Props = {
     template: Template;
+    delay?: number;
 };
 
-export default function DashboardToolCard({ template }: Props) {
+export default function DashboardToolCard({ template, delay = 0 }: Props) {
     const navigate = useNavigate();
     const pathname = useLocation().pathname;
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -32,9 +33,10 @@ export default function DashboardToolCard({ template }: Props) {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay }}
                 whileHover={{ y: -5 }}
                 onClick={handleCardClick}
-                className="relative h-[420px] rounded-3xl overflow-hidden border border-white/10 bg-white/[0.02] backdrop-blur-2xl p-6 transition-all duration-500 hover:border-white/20 cursor-pointer group/card"
+                className="relative h-[420px] rounded-3xl overflow-hidden border border-white/10 bg-white/2 backdrop-blur-2xl p-6 transition-all duration-500 hover:border-white/20 cursor-pointer group/card"
             >
                 {/* Background Glow */}
                 <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/10 rounded-full blur-[80px] opacity-0 group-hover/card:opacity-100 transition-opacity duration-700" />
@@ -72,7 +74,7 @@ export default function DashboardToolCard({ template }: Props) {
                 </div>
 
                 {/* Bottom Overlay Content */}
-                <div className="absolute bottom-0 left-0 w-full z-10 p-6 pt-24 flex flex-col gap-4 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/90 to-transparent">
+                <div className="absolute bottom-0 left-0 w-full z-10 p-6 pt-24 flex flex-col gap-4 bg-linear-to-t from-[#0a0a0a] via-[#0a0a0a]/90 to-transparent">
                     <div className="space-y-2">
                         <h3 className="text-white text-xl font-black tracking-tighter truncate drop-shadow-md">
                             {template.name}
@@ -81,15 +83,14 @@ export default function DashboardToolCard({ template }: Props) {
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-3">
-                        <Button
+                        <PremiumButton
+                            text="Use Template"
+                            icon={Eye}
                             onClick={handleActionClick}
-                            className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-white/5"
-                        >
-                            <span className="flex items-center justify-center">
-                                <Eye className="h-3.5 w-3.5 mr-2" />
-                                Use Template
-                            </span>
-                        </Button>
+                            variant="primary"
+                            className="w-full text-[10px] tracking-widest uppercase italic"
+                            iconRotation={0}
+                        />
                     </div>
                 </div>
             </motion.div>

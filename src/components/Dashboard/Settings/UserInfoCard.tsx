@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Mail, User,  } from "lucide-react"
 import { useAuthStore } from "@/store/authStore"
- 
+
 
 export default function UserInfoCard() {
      const { user } = useAuthStore()
@@ -14,13 +14,13 @@ export default function UserInfoCard() {
             <div className="w-15 h-15 bg-[#cee88c]/20 rounded-full flex items-center justify-center border border-[#cee88c]/30">
               <User className="w-6 h-6 text-[#cee88c]" />
             </div>
-            
+
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-[#cee88c]" />
                 <span className="font-medium ">{user?.username}</span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#cee88c]/70" />
                 <span className="text-sm text-white/80">{user?.email}</span>

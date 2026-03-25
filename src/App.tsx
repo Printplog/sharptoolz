@@ -1,9 +1,6 @@
 import { Routes } from '@generouted/react-router'
 import { useEffect } from 'react'
 import { initSecurity } from '@/lib/utils/security'
-
-
-
 import { useAuthStore } from '@/store/authStore'
 
 export default function App() {
@@ -11,7 +8,6 @@ export default function App() {
 
   useEffect(() => {
     // Initialize security measures
-    // initSecurity now has its own internal check for isAdminUser()
     initSecurity({
       disableRightClick: true,
       disableTextSelection: true,
@@ -28,5 +24,9 @@ export default function App() {
     })
   }, [user?.is_staff])
 
-  return <Routes />
+  return (
+    <>
+      <Routes />
+    </>
+  )
 }

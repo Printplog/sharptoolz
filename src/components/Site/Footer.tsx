@@ -3,152 +3,120 @@ import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings } from "@/api/apiEndpoints";
 import type { SiteSettings } from "@/types";
 import Logo from "../Logo";
+import SectionPadding from "@/layouts/SectionPadding";
 
 export default function Footer() {
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["siteSettings"],
     queryFn: getSiteSettings,
   });
+
   return (
-    <div className="mt-[120px] p-2 sm:p-5">
-      <footer className="bg-black rounded-2xl text-foreground py-12">
-        <div className="container mx-auto px-10 grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div>
+      <footer className="bg-[#0A0D11]/95 backdrop-blur-3xl border-t border-white/10 rounded-t-[48px] overflow-hidden">
+        <SectionPadding className="py-24 grid grid-cols-1 md:grid-cols-4 gap-16 border-none">
           {/* Brand Section */}
-          <div>
-            <div className="mb-4">
-              <Logo noLink={true} size={30} />
+          <div className="space-y-8">
+            <Logo noLink={true} size={42} />
+            <div className="space-y-6">
+              <p className="text-sm text-white/50 leading-relaxed max-w-[260px]">
+                The next-generation platform for rapid document generation. 
+                Build and automate high-fidelity templates in seconds.
+              </p>
+              <div className="flex items-center gap-2.5 text-xs font-semibold text-white/40">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                Form Studio Tools
+              </div>
             </div>
-            <p className="text-sm">
-              Create professional sample documents in seconds. Perfect for
-              testing, development, and demonstrations.
-            </p>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm">
+          {/* Directory */}
+          <div className="space-y-8">
+            <h4 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Directory</h4>
+            <ul className="space-y-4 text-sm text-white/60 font-medium">
               <li>
-                <Link
-                  to="#home"
-                  className="hover:text-primary transition-colors"
-                >
-                  Home
-                </Link>
+                <Link to="/" className="hover:text-primary transition-all hover:translate-x-1 inline-block">Home</Link>
               </li>
               <li>
-                <Link
-                  to="#services"
-                  className="hover:text-primary transition-colors"
-                >
-                  Services
-                </Link>
+                <Link to="/all-tools" className="hover:text-primary transition-all hover:translate-x-1 inline-block">All Tools</Link>
               </li>
               <li>
-                <Link
-                  to="#about-us"
-                  className="hover:text-primary transition-colors"
-                >
-                  About Us
-                </Link>
+                <Link to="/tutorials" className="hover:text-primary transition-all hover:translate-x-1 inline-block">Tutorials</Link>
               </li>
               <li>
-                <Link
-                  to="#why-us"
-                  className="hover:text-primary transition-colors"
-                >
-                  Why Us
-                </Link>
+                <Link to="/contact" className="hover:text-primary transition-all hover:translate-x-1 inline-block">Contact Support</Link>
               </li>
               <li>
-                <Link
-                  to="#testimonials"
-                  className="hover:text-primary transition-colors"
-                >
-                  Testimonials
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="#contact"
-                  className="hover:text-primary transition-colors"
-                >
-                  Contact
-                </Link>
+                 <a 
+                   href={settings?.whatsapp_community_link || "#"} 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="text-primary/70 hover:text-primary transition-all font-bold flex items-center gap-2"
+                 >
+                   Community Hub
+                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Connect with Us */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Connect with Us</h4>
-            <ul className="flex space-x-4 text-sm">
-              {settings?.twitter_link && (
-                <li>
-                  <a href={settings.twitter_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                    <i className="fab fa-twitter"></i>
-                  </a>
-                </li>
-              )}
-              {settings?.instagram_link && (
-                <li>
-                  <a href={settings.instagram_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                    <i className="fab fa-instagram"></i>
-                  </a>
-                </li>
-              )}
-              {settings?.telegram_link && (
-                <li>
-                  <a href={settings.telegram_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                    <i className="fab fa-telegram"></i>
-                  </a>
-                </li>
-              )}
-              {settings?.whatsapp_community_link && (
-                <li>
-                  <a href={settings.whatsapp_community_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                    <i className="fab fa-whatsapp"></i>
-                  </a>
-                </li>
-              )}
-              {settings?.tiktok_link && (
-                <li>
-                  <a href={settings.tiktok_link} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                    <i className="fab fa-tiktok"></i>
-                  </a>
-                </li>
-              )}
-              {/* Fallback icons if no settings found - strictly adhering to showing nothing if empty */}
+          {/* Connect Section */}
+          <div className="space-y-8">
+            <h4 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Social Feed</h4>
+            <ul className="grid grid-cols-3 gap-4">
+              {[
+                { key: 'twitter_link', icon: 'fab fa-twitter' },
+                { key: 'instagram_link', icon: 'fab fa-instagram' },
+                { key: 'telegram_link', icon: 'fab fa-telegram' },
+                { key: 'whatsapp_community_link', icon: 'fab fa-whatsapp' },
+                { key: 'tiktok_link', icon: 'fab fa-tiktok' }
+              ].map((social) => {
+                const link = settings?.[social.key as keyof SiteSettings] as string;
+                if (!link) return null;
+                return (
+                  <li key={social.key}>
+                    <a 
+                      href={link} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="w-12 h-12 rounded-2xl bg-white/2 border border-white/5 flex items-center justify-center hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all duration-300 text-lg group"
+                    >
+                      <i className={`${social.icon} group-hover:scale-110 transition-transform`}></i>
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
-          {/* Legal */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm">
+          {/* Legal / System Status */}
+          <div className="space-y-8">
+            <h4 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Governance</h4>
+            <ul className="space-y-4 text-sm text-white/60 font-medium">
               <li>
-                <Link to="#" className="hover:text-primary transition-colors">
-                  Privacy Policy
-                </Link>
+                <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-primary transition-colors">
-                  Terms of Service
-                </Link>
+                <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-primary transition-colors">
-                  Cookie Policy
-                </Link>
+                <Link to="/cookies" className="hover:text-primary transition-colors">Cookie Policy</Link>
               </li>
             </ul>
           </div>
-        </div>
+        </SectionPadding>
 
-        {/* Copyright */}
-        <div className="container mx-auto px-6 w-[90%] mt-8 border-t border-gray-700 pt-6 text-center text-sm">
-          <p>&copy; 2025 Sharptoolz. All rights reserved.</p>
-        </div>
+        {/* Global Footer Baseline */}
+        <SectionPadding className="border-t border-white/5 py-12 bg-black/20 border-none!">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 text-[11px] font-medium text-white/30">
+            <p>© {new Date().getFullYear()} SharpToolz Systems. Effortless Automation.</p>
+            <div className="flex items-center gap-10">
+               <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/5" />
+                  <span className="text-white/20">Secure & Stateless</span>
+               </div>
+            </div>
+          </div>
+        </SectionPadding>
       </footer>
     </div>
   );

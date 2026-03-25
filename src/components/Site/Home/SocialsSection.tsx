@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MessageCircle, Send, Twitter, Instagram, ArrowUpRight, Zap } from "lucide-react";
+import { MessageCircle, Send, Twitter, Instagram, ArrowUpRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings } from "@/api/apiEndpoints";
 import type { SiteSettings } from "@/types";
@@ -96,18 +96,6 @@ export default function SocialsSection() {
 
             <SectionPadding>
                 <div className="text-center mb-16 relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full mb-6"
-                    >
-                        <Zap className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-primary font-black uppercase tracking-[0.2em] text-[10px]">
-                            Stay Connected
-                        </span>
-                    </motion.div>
-
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -123,10 +111,10 @@ export default function SocialsSection() {
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.2 }}
-                        className="text-white/50 max-w-2xl mx-auto text-lg leading-relaxed"
+                        className="text-white/40 max-w-2xl mx-auto text-lg leading-relaxed font-medium"
                     >
-                        Be part of our fast-growing ecosystem. Get exclusive access to tools,
-                        tutorials, and real-time support directly from our community channels.
+                        Be part of our fast-growing community. Get exclusive access to tools,
+                        tutorials, and real-time support directly from our members.
                     </motion.p>
                 </div>
 
@@ -148,7 +136,7 @@ export default function SocialsSection() {
                                 rel="noopener noreferrer"
                                 variants={cardVariants}
                                 whileHover={{ y: -10, scale: 1.02 }}
-                                className="group relative bg-white/[0.03] border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl transition-all duration-500 overflow-hidden"
+                                className="group relative bg-white/[0.03] border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-xl shadow-2xl transition-all duration-500 overflow-hidden"
                             >
                                 {/* Brand Color Glow on Hover */}
                                 <div

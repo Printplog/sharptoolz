@@ -18,6 +18,7 @@ import { login, register } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { useAuthStore } from "@/store/authStore";
+import { User, Mail, Lock } from "lucide-react";
 
 const registerSchema = z
   .object({
@@ -38,30 +39,12 @@ const fields: {
   label: string;
   type?: string;
   placeholder: string;
+  icon: typeof User;
 }[] = [
-  {
-    name: "username",
-    label: "Username",
-    placeholder: "your_username",
-  },
-  {
-    name: "email",
-    label: "Email",
-    type: "email",
-    placeholder: "you@example.com",
-  },
-  {
-    name: "password",
-    label: "Password",
-    type: "password",
-    placeholder: "********",
-  },
-  {
-    name: "confirmPassword",
-    label: "Confirm Password",
-    type: "password",
-    placeholder: "********",
-  },
+  { name: "username", label: "Username", placeholder: "your_username", icon: User },
+  { name: "email", label: "Email", type: "email", placeholder: "you@example.com", icon: Mail },
+  { name: "password", label: "Password", type: "password", placeholder: "••••••••", icon: Lock },
+  { name: "confirmPassword", label: "Confirm Password", type: "password", placeholder: "••••••••", icon: Lock },
 ];
 
 interface Props {
@@ -115,29 +98,36 @@ export default function Register({ dialog = false }: Props) {
     mutate(values);
   };
 
-
   return (
-    <div className="">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <h2 className="text-center text-[24px]">Register</h2>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-semibold tracking-tight">Create account</h2>
+        <p className="text-sm text-white/35">Join SharpToolz to get started</p>
+      </div>
 
-          {fields.map((field) => (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          {fields.map((f) => (
             <FormField
-              key={field.name}
+              key={f.name}
               control={form.control}
-              name={field.name}
+              name={f.name}
               render={({ field: inputField }) => (
                 <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type={field.type || "text"}
-                      placeholder={field.placeholder}
-                      {...inputField}
-                      className="border-white/20 bg-white/5"
-                    />
-                  </FormControl>
+                  <FormLabel className="text-xs text-white/50 uppercase tracking-wider font-medium">
+                    {f.label}
+                  </FormLabel>
+                  <div className="relative">
+                    <f.icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />
+                    <FormControl>
+                      <Input
+                        type={f.type || "text"}
+                        placeholder={f.placeholder}
+                        {...inputField}
+                        className="border-white/10 bg-white/[0.03] pl-10 h-11 placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
+                      />
+                    </FormControl>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -146,22 +136,22 @@ export default function Register({ dialog = false }: Props) {
 
           <Button
             type="submit"
-            className="w-full bg-primary text-black hover:bg-primary/90"
+            className="w-full h-11 bg-[#cee88c] text-black font-medium hover:bg-[#cee88c]/90 transition-colors mt-2"
             disabled={isPending || loginPending}
           >
-            {isPending ? "Creating account..." : loginPending ? "Logging in..." : "Register"}
+            {isPending ? "Creating account..." : loginPending ? "Signing in..." : "Create account"}
           </Button>
 
           {!dialog && (
-            <div className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-sm text-white/35 pt-1">
               Already have an account?{" "}
               <Link
                 to="/auth/login"
-                className="text-primary underline hover:opacity-80"
+                className="text-[#cee88c]/80 hover:text-[#cee88c] transition-colors"
               >
-                Login
+                Sign in
               </Link>
-            </div>
+            </p>
           )}
         </form>
       </Form>
