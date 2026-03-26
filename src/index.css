@@ -139,6 +139,10 @@
   scrollbar-width: none;
 }
 
+.dashboard-content {
+  @apply max-w-7xl mx-auto w-full;
+}
+
 
 .input {
   @apply border-white/10 focus-visible:border-white/10

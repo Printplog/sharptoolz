@@ -109,7 +109,9 @@ export default function AdminTools() {
       accessorKey: "name",
       header: "Name",
       cell: ({ row }) => (
-        <div className="font-semibold">{row.original.name}</div>
+        <div className="font-semibold truncate max-w-[150px]" title={row.original.name}>
+          {row.original.name}
+        </div>
       ),
       filterFn: (row, _id, value) => {
         const needle = (value as string)?.toLowerCase?.() ?? "";
@@ -133,9 +135,9 @@ export default function AdminTools() {
       id: "description",
       header: "Description",
       cell: ({ row }) => (
-        <div className="max-w-xl text-white/70">
+        <div className="max-w-[250px] text-white/70 line-clamp-1" title={row.original.description}>
           {row.original.description || (
-            <span className="text-white/40 italic">No description</span>
+            <span className="text-white/40 italic text-[10px]">No description</span>
           )}
         </div>
       ),
@@ -199,7 +201,7 @@ export default function AdminTools() {
   ];
 
   return (
-    <div className="container mx-auto space-y-6">
+    <div className="dashboard-content space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

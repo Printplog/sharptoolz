@@ -60,7 +60,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 text-white">
+    <div className="dashboard-content space-y-6 text-white">
       {/* User Info Card */}
       <UserInfoCard />
       {/* Settings Links */}

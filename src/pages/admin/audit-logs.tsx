@@ -92,7 +92,7 @@ export default function AuditLogsPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="dashboard-content space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">

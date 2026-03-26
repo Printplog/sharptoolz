@@ -64,7 +64,7 @@ export default function ToolTemplates() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="dashboard-content space-y-6">
       {/* Header */}
       <Link
         to="/admin/tools"

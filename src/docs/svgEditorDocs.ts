@@ -338,12 +338,12 @@ export const svgEditorDocs: DocSection[] = [
   {
     id: "select-fields",
     title: ".select_ Extension",
-    content: "Create dropdown fields by using the .select_ pattern for multiple related elements. The text content of each element becomes the option text. To make a select field trackable, add .track_[role] to ONE of the select options.",
+    content: "Create dropdown fields by using the .select_ pattern for multiple related elements. The internal 'value' is automatically extracted from the ID (e.g., .select_USA extracts 'USA'). The text content of each element becomes the human-readable option label. To make a select field trackable, add .track_[role] to ONE of the select options.",
     codeExamples: [
       {
         title: "Basic Dropdown Options",
         code: "Status.select_Processing\nStatus.select_In_Transit\nStatus.select_Delivered",
-        description: "Creates a dropdown with three options"
+        description: "Creates a dropdown with three options. Values will be 'Processing', 'In_Transit', 'Delivered'."
       },
       {
         title: "Trackable Select Field",
@@ -351,9 +351,9 @@ export const svgEditorDocs: DocSection[] = [
         description: "Creates a dropdown that can be tracked with role 'status'. Only ONE option needs the .track_ extension (track_ must be last)."
       },
       {
-        title: "Airline Selection with Tracking",
-        code: "Airline.select_American\nAirline.select_United\nAirline.select_Delta.track_airline",
-        description: "Airline selection dropdown that can be tracked with role 'airline' (track_ must be last)"
+        title: "Editable Select Field",
+        code: "Priority.select_High\nPriority.select_Medium\nPriority.select_Low.editable",
+        description: "Creates a dropdown that remains editable after purchase. Only one option needs the .editable extension to make the whole field editable."
       }
     ]
   },

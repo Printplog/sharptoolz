@@ -1,5 +1,6 @@
 import * as React from "react";
 import { CheckCircle2, Settings } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FancyProgressProps {
     value: number;
@@ -7,6 +8,7 @@ interface FancyProgressProps {
     statusText?: string;
     className?: string;
     isComplete?: boolean;
+    noShadow?: boolean;
 }
 
 export const FancyProgress: React.FC<FancyProgressProps> = ({
@@ -15,9 +17,10 @@ export const FancyProgress: React.FC<FancyProgressProps> = ({
     statusText,
     className = "",
     isComplete = false,
+    noShadow = false,
 }) => {
     return (
-        <div className={`space-y-4 py-2 ${className}`}>
+        <div className={cn("space-y-4 py-2", !noShadow && "shadow-xl", className)}>
             {/* Message text */}
             {(label || statusText) && (
                 <div className="flex items-center gap-3">

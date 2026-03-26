@@ -113,7 +113,7 @@ export default function AdminDocumentsPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="dashboard-content space-y-6">
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-black text-white tracking-tighter uppercase italic">

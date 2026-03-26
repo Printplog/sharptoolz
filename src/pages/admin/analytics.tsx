@@ -28,7 +28,7 @@ export default function Analytics() {
   if (isAnalyticsLoading || isOverviewLoading) return <AnalyticsSkeleton />;
 
   return (
-    <div className="space-y-6 w-full p-6">
+    <div className="dashboard-content space-y-6 p-6">
       <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic mb-8">
         Platform <span className="text-primary">Analytics</span>
       </h1>

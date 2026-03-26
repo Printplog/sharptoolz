@@ -2,9 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
   Upload,
   Download,
-  Loader2,
   Copy,
-  PenLine,
 } from "lucide-react";
 import useToolStore from "@/store/formStore";
 import { FancyProgress } from "@/components/ui/FancyProgress";
@@ -29,6 +27,7 @@ import type { Tutorial } from "@/types";
 import { FormPanelHeader } from "./FormPanelHeader";
 import { TestDocumentDialog } from "./TestDocumentDialog";
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 
 
 type NavigationBlocker = {
@@ -428,7 +427,7 @@ const FormPanel = React.memo(function FormPanel({
       {/* Document Creation Progress Bar */}
       {/* Document Creation Progress Bar */}
       {isCreatingDocument && (
-        <div className="bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8 mt-2 shadow-2xl overflow-hidden relative group">
+        <div className="bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8 mt-2 overflow-hidden relative group">
           {/* Animated Background Pulse */}
           {documentProgress < 100 && (
             <div className="absolute inset-0 bg-primary/5 animate-pulse pointer-events-none" />
@@ -511,31 +510,26 @@ const FormPanel = React.memo(function FormPanel({
         )}
 
         {/* Buttons */}
-        <div className="pt-4 border-t border-white/20 flex flex-col lg:flex-row justify-end gap-5 ">
+        <div className="pt-4 border-t border-white/20 flex flex-col lg:flex-row justify-end gap-5 items-center">
           {isPurchased && test && (
-            <Button
-              variant={"outline"}
-              disabled={createPending || updatePending}
+            <PremiumButton
+              variant="outline"
+              noShadow
+              isLoading={updatePending}
               onClick={() => {
                 void createDocument(false);
               }}
-              className="py-6 px-10 hover:bg-black/50 hover:text-white"
-            >
-              <>
-                {updatePending ? "Removing Watermark" : `Remove Watermark ($${toolPrice || 5})`}
-                {updatePending ? (
-                  <PenLine className="animate-spin" />
-                ) : (
-                  <Upload className="w-4 h-4 ml-1" />
-                )}
-              </>
-            </Button>
+              text={`Remove Watermark ($${toolPrice || 5})`}
+              icon={Upload}
+              className="w-full lg:w-auto"
+            />
           )}
 
           {!isPurchased ? (
-            <Button
+            <PremiumButton
               variant="outline"
-              disabled={createPending || updatePending || isCreatingDocument}
+              noShadow
+              isLoading={createPending || isCreatingDocument}
               onClick={() => {
                 if (!isAuthenticated) {
                   toast.info("Please login to continue");
@@ -544,21 +538,14 @@ const FormPanel = React.memo(function FormPanel({
                   setShowTestDialog(true);
                 }
               }}
-              className="py-6 px-10 hover:bg-black/50 hover:text-white"
-            >
-              <>
-                {createPending || isCreatingDocument ? "Creating Document" : "Create Document"}
-                {createPending || isCreatingDocument ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Upload className="w-4 h-4 ml-1" />
-                )}
-              </>
-            </Button>
+              text={createPending || isCreatingDocument ? "Creating Document" : "Create Document"}
+              icon={Upload}
+              className="w-full lg:w-auto"
+            />
           ) : (
             <>
               {templateId && (
-                <Button
+                <PremiumButton
                   variant="outline"
                   onClick={() => {
                     // Gather current values
@@ -573,70 +560,64 @@ const FormPanel = React.memo(function FormPanel({
                       }
                     });
                   }}
-                  className="py-6 px-10 hover:bg-black/50 hover:text-white"
-                >
-                  Duplicate Document
-                  <Copy className="w-4 h-4 ml-1" />
-                </Button>
+                  text="Duplicate Document"
+                  icon={Copy}
+                  className="w-full lg:w-auto"
+                />
               )}
-              <Button
+              <PremiumButton
                 variant="outline"
-                disabled={createPending || updatePending || isCreatingDocument}
+                noShadow
+                isLoading={updatePending || isCreatingDocument}
                 onClick={() => {
                   void createDocument(test);
                 }}
-                className="py-6 px-10 hover:bg-black/50 hover:text-white"
-              >
-                <>
-                  {updatePending || isCreatingDocument ? "Updating Document" : "Update Document"}
-                  {updatePending || isCreatingDocument ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Upload className="w-4 h-4 ml-1" />
-                  )}
-                </>
-              </Button>
+                text={updatePending || isCreatingDocument ? "Updating Document" : "Update Document"}
+                icon={Upload}
+                className="w-full lg:w-auto"
+              />
             </>
           )}
 
-          <Button
+          <PremiumButton
             disabled={createPending || updatePending}
             onClick={handleDownloadClick}
-            className="py-6 px-10 bg-primary/90 text-black hover:bg-primary hover:text-black w-full sm:w-auto"
-          >
-            <>
-              Download Document
-              <Download className="w-4 h-4 ml-1" />
-            </>
-          </Button>
-          <DownloadDocDialog
-            svg={svgRaw}
-            fields={fields ?? []}
-            purchasedTemplateId={isPurchased ? id : undefined}
-            templateName={name}
-            keywords={keywords}
-            isTest={test}
-          />
-          <TestDocumentDialog
-            open={showTestDialog}
-            onOpenChange={(open) => {
-              // Only allow closing if not submitting
-              if (!createPending && !updatePending && !isCreatingDocument) {
-                setShowTestDialog(open);
-              }
-            }}
-            onCreateTest={() => {
-              void createDocument(true);
-              // Don't close dialog here - it will close after successful creation
-            }}
-            onCreatePaid={() => {
-              void createDocument(false);
-              // Don't close dialog here - it will close after successful creation
-            }}
-            isSubmitting={createPending || updatePending || isCreatingDocument}
-            price={toolPrice}
+            variant="primary"
+            noShadow
+            text="Download Document"
+            icon={Download}
+            className="w-full lg:w-auto"
           />
         </div>
+
+        {/* Dialogs moved outside flex container to avoid event interference */}
+        <DownloadDocDialog
+          svg={svgRaw}
+          fields={fields ?? []}
+          purchasedTemplateId={isPurchased ? id : undefined}
+          templateName={name}
+          keywords={keywords}
+          isTest={test}
+        />
+        <TestDocumentDialog
+          open={showTestDialog}
+          onOpenChange={(open) => {
+            // Only allow closing if not submitting
+            if (!createPending && !updatePending && !isCreatingDocument) {
+              setShowTestDialog(open);
+            }
+          }}
+          onCreateTest={() => {
+            void createDocument(true);
+            // Don't close dialog here - it will close after successful creation
+          }}
+          onCreatePaid={() => {
+            void createDocument(false);
+            // Don't close dialog here - it will close after successful creation
+          }}
+          isSubmitting={createPending || updatePending || isCreatingDocument}
+          price={toolPrice}
+        />
       </div>
 
       <UnsavedChangesDialog

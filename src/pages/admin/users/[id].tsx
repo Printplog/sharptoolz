@@ -93,7 +93,7 @@ export default function UserDetailsPage() {
   const { user, stats } = data;
 
   return (
-    <div className="space-y-6">
+    <div className="dashboard-content space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Link to="/admin/users">

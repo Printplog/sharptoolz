@@ -242,7 +242,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     allowedAfter: [
       "text", "textarea", "gen", "email", "number", "date", "checkbox",
       "upload", "tel", "password", "range", "color", "file", "status", "sign",
-      "editable", "max", "min", "tracking_id", "link", "date_format", "gen_rule"
+      "select", "editable", "max", "min", "tracking_id", "link", "date_format", "gen_rule"
     ],
   },
   {
@@ -252,21 +252,10 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     allowedAfter: [
       "text", "textarea", "gen", "email", "number", "date", "checkbox",
       "upload", "tel", "password", "range", "color", "file", "status", "sign",
-      "editable", "max", "min", "tracking_id", "link", "date_format", "gen_rule"
+      "select", "editable", "max", "min", "tracking_id", "link", "date_format", "gen_rule"
     ],
   },
 ];
-
-// Special case: select fields use select_OPTION format
-export const SELECT_EXTENSION: ExtensionDefinition = {
-  key: "select",
-  label: "Select Option",
-  helper:
-    "Creates a dropdown option (e.g., select_USA, select_Canada). Create multiple elements with same base ID for dropdown",
-  requiresValue: true,
-  valuePlaceholder: "Enter option value (e.g., USA, Canada)",
-  allowedAfter: ["editable", "track"],
-};
 
 // Helper function to get all extensions that can come after a given field type
 export function getAllowedExtensionsAfter(

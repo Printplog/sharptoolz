@@ -88,7 +88,7 @@ export default function AdminSvgTestRender() {
     }, [svgText]);
 
     return (
-        <div>
+        <div className="dashboard-content py-8">
             <h1 className="text-xl font-bold text-white mb-2">SVG Gradient Test Render</h1>
             <p className="text-sm text-white/50 mb-4">
                 Rendered inside the real admin layout — same bg, same CSS, same DOM context as the editor.

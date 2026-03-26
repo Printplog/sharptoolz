@@ -12,7 +12,7 @@ export default function Users() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="dashboard-content space-y-6">
         <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-12 backdrop-blur-md flex flex-col items-center justify-center gap-4">
           <p className="text-red-400 text-center font-medium italic">Error: {error}</p>
         </div>
@@ -21,7 +21,7 @@ export default function Users() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="dashboard-content space-y-6">
       {/* Users Overview */}
       <UsersOverview data={data} isLoading={isLoading} />
 

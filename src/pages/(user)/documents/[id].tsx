@@ -3,7 +3,7 @@ import SvgFormTranslator from "@/components/Dashboard/SVGFormTranslator/SvgFormT
 
 export default function EditDocument() {
   return (
-    <div>
+    <div className="dashboard-content">
         <SvgFormTranslator isPurchased={true} />
     </div>
   )

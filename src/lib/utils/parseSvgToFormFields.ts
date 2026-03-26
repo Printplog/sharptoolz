@@ -23,13 +23,34 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
 
     // If it's a select option
     if (parts.some(p => p.startsWith("select_"))) {
+      const selectPart = parts.find(p => p.startsWith("select_"))!;
+      const value = selectPart.replace("select_", "");
+      const isEditable = parts.includes("editable");
+      
       const selectOption: SelectOption = {
-        value: id,
-        label: id.replace(/_/g, " "),
+        value,
+        label: textContent || value.replace(/_/g, " "),
         svgElementId: id,
       };
       if (!selectOptionsMap[baseId]) selectOptionsMap[baseId] = [];
       selectOptionsMap[baseId].push(selectOption);
+
+      // Initialize field if not exists to store extensions found on options
+      if (!fieldsMap[baseId]) {
+        fieldsMap[baseId] = {
+          id: baseId,
+          name,
+          type: "select",
+          svgElementId,
+          defaultValue: "",
+          currentValue: "",
+        };
+      }
+      
+      if (isEditable) {
+        fieldsMap[baseId].editable = true;
+      }
+
       continue; // we'll build this later when finalizing the map
     }
 
@@ -71,15 +92,24 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
 
   // Merge select options into form fields
   for (const id in selectOptionsMap) {
-    const field: FormField = {
-      id,
-      name: id.replace(/_/g, " "),
-      type: "text", // We can override this in frontend if options exist
-      options: selectOptionsMap[id],
-      defaultValue: selectOptionsMap[id][0]?.value || "",
-      currentValue: selectOptionsMap[id][0]?.value || "",
-    };
-    fieldsMap[id] = field;
+    if (!fieldsMap[id]) {
+      fieldsMap[id] = {
+        id,
+        name: id.replace(/_/g, " "),
+        type: "select",
+        defaultValue: selectOptionsMap[id][0]?.value || "",
+        currentValue: selectOptionsMap[id][0]?.value || "",
+      };
+    }
+    
+    fieldsMap[id].options = selectOptionsMap[id];
+    // If we have options, it's definitely a select type
+    fieldsMap[id].type = "select";
+    
+    if (!fieldsMap[id].currentValue && selectOptionsMap[id].length > 0) {
+      fieldsMap[id].defaultValue = selectOptionsMap[id][0].value;
+      fieldsMap[id].currentValue = selectOptionsMap[id][0].value;
+    }
   }
 
   return Object.values(fieldsMap);

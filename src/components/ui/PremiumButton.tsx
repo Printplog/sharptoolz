@@ -58,8 +58,8 @@ const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonProps>(
           }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className={cn(
-            "absolute inset-0",
-            isPrimary ? "bg-white/30" : "bg-white/10"
+            "absolute inset-0 z-0",
+            isPrimary ? "bg-white/20" : "bg-white/10"
           )}
         />
       </>

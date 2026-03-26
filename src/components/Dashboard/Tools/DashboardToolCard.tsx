@@ -79,6 +79,11 @@ export default function DashboardToolCard({ template, delay = 0 }: Props) {
                         <h3 className="text-white text-xl font-black tracking-tighter truncate drop-shadow-md">
                             {template.name}
                         </h3>
+                        {typeof template.tool === 'object' && template.tool?.description && (
+                            <p className="text-white/40 text-[10px] leading-tight line-clamp-1 italic font-medium">
+                                {template.tool.description}
+                            </p>
+                        )}
                     </div>
 
                     {/* Action Buttons */}

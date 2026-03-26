@@ -30,7 +30,7 @@ const WalletPage: React.FC = () => {
   if (!wallet) return <LoadingWallet />;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700">
+    <div className="dashboard-content space-y-10 animate-in fade-in duration-700">
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">

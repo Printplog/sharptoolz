@@ -2,6 +2,7 @@ import BottomBar from "@/components/Admin/Layouts/BottomBar";
 import Navbar from "@/components/Admin/Layouts/Navbar";
 import Sidebar from "@/components/Admin/Layouts/Sidebar";
 import GlobalAnnouncement from "@/components/Dashboard/Layouts/GlobalAnnouncement";
+import Disclaimer from "@/components/Disclaimer";
 import BuilderDialog from "@/components/Admin/ToolBuilder/BuilderDialog";
 import ProtectedLayout from "@/layouts/ProtectedLayout";
 import { AdminConsole } from "@/components/Admin/Layouts/AdminConsole";
@@ -42,6 +43,7 @@ export default function AdminLayout() {
           <Navbar />
           <div className="px-3 sm:px-6 md:px-10 py-5">
             <Outlet />
+            <Disclaimer />
           </div>
         </main>
         <BuilderDialog />

@@ -26,7 +26,7 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="dashboard-content space-y-6">
       {/* Analytics Cards */}
       <Overview data={overviewData} isLoading={isOverviewLoading} />
 
