@@ -64,7 +64,7 @@ export function applySvgPatches(svgContent: string, patches: SvgPatch[]): string
 
         // 2. Apply patches if any
         if (patches && patches.length > 0) {
-            console.log(`[applySvgPatches] Applying ${patches.length} patches`);
+
             let appliedCount = 0;
 
             patches.forEach((patch) => {
@@ -118,7 +118,7 @@ export function applySvgPatches(svgContent: string, patches: SvgPatch[]): string
                     }
                 }
             });
-            console.log(`[applySvgPatches] Successfully applied ${appliedCount}/${patches.length} patches`);
+
         }
 
         // Serialize back to string

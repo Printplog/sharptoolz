@@ -238,7 +238,12 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
           selectedEl.removeAttribute("display");
         });
       }
+
+      // Select fields rely entirely on visibility toggling above.
+      // Never write text content into SVG elements for select fields.
+      return;
     }
+
 
     // Handle standard element updates (Text, Images, etc.)
     if (targets.length > 0) {
