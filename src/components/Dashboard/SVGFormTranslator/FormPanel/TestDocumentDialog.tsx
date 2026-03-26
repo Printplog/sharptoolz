@@ -114,10 +114,16 @@ export function TestDocumentDialog({
                 animate={{ opacity: 1 }}
                 className="space-y-8"
               >
-                <div className="space-y-1">
-                  <h2 className="text-2xl font-bold text-white tracking-tight">Select option</h2>
-                  <p className="text-white/40 text-sm">
-                    How would you like to proceed?
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-bold text-white tracking-tight">Select option</h2>
+                    <p className="text-white/40 text-sm">
+                      How would you like to proceed?
+                    </p>
+                  </div>
+                  
+                  <p className="text-sm text-yellow-500/80 font-medium leading-tight text-left">
+                    Confirm all fields are correct. No editing after creation.
                   </p>
                 </div>
 
@@ -157,7 +163,7 @@ export function TestDocumentDialog({
                    </p>
                    <button 
                      onClick={() => onOpenChange(false)}
-                     className="text-white/20 hover:text-white/40 text-xs font-medium transition-colors"
+                     className="w-full py-3 rounded-xl border border-white/5 bg-white/2 text-white/40 hover:text-white/80 hover:bg-white/5 font-medium transition-all active:scale-95 text-xs uppercase tracking-widest"
                    >
                      Cancel
                    </button>

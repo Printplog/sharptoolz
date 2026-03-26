@@ -216,7 +216,7 @@ export default function AdminDocumentsPage() {
 
                                         {/* Template */}
                                         <td className="px-6 py-4">
-                                            <span className="text-white/60 text-sm">
+                                            <span className="text-white/60 text-sm truncate max-w-[150px] block" title={doc.template?.name || undefined}>
                                                 {doc.template?.name ?? <span className="text-white/20 italic">Deleted</span>}
                                             </span>
                                         </td>

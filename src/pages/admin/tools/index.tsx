@@ -107,10 +107,15 @@ export default function AdminTools() {
   const columns: ColumnDef<Tool>[] = [
     {
       accessorKey: "name",
-      header: "Name",
+      header: "Tool / Category",
       cell: ({ row }) => (
-        <div className="font-semibold truncate max-w-[150px]" title={row.original.name}>
-          {row.original.name}
+        <div className="flex flex-col gap-0.5 py-1">
+          <div className="font-bold text-white tracking-tight">{row.original.name}</div>
+          {row.original.description && (
+             <div className="text-[10px] text-white/40 italic line-clamp-1 max-w-[250px]" title={row.original.description}>
+               {row.original.description}
+             </div>
+          )}
         </div>
       ),
       filterFn: (row, _id, value) => {
@@ -128,17 +133,6 @@ export default function AdminTools() {
       cell: ({ row }) => (
         <div className="font-mono text-green-400">
           ${parseFloat(row.original.price.toString()).toFixed(2)}
-        </div>
-      ),
-    },
-    {
-      id: "description",
-      header: "Description",
-      cell: ({ row }) => (
-        <div className="max-w-[250px] text-white/70 line-clamp-1" title={row.original.description}>
-          {row.original.description || (
-            <span className="text-white/40 italic text-[10px]">No description</span>
-          )}
         </div>
       ),
     },

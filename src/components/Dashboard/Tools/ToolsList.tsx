@@ -128,9 +128,16 @@ export default function ToolsList({ hot }: Props) {
               {Object.entries(groupedTools).map(([toolId, { tool, templates }]) => (
                 <div key={toolId} className="space-y-8">
                   <div className="relative pb-4">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-1 bg-gradient-to-b from-primary via-primary/80 to-primary/60 rounded-full"></div>
-                      <h2 className="text-2xl font-bold text-white tracking-tight">{tool.name}</h2>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-1 bg-gradient-to-b from-primary via-primary/80 to-primary/60 rounded-full"></div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">{tool.name}</h2>
+                      </div>
+                      {tool.description && (
+                        <p className="text-sm text-white/40 ml-5 italic font-medium leading-relaxed max-w-[800px]">
+                          {tool.description}
+                        </p>
+                      )}
                     </div>
                     <div className="mt-3 h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                   </div>
