@@ -5,6 +5,7 @@ import { validateSvgId } from "@/lib/utils/svgIdValidator";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getTools, getFonts, addFont } from "@/api/apiEndpoints";
+import useSettingsStore from "@/store/settingsStore";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import ElementNavigation from "./ElementNavigation";
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Tutorial, Font, SvgPatch } from "@/types";
+import type { Tool, Tutorial, Font, SvgPatch } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
 
 import { useSvgStore } from "@/store/useSvgStore";
@@ -126,10 +127,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<{ target: number | null } | null>(null);
 
+  // Global cache versioning
+  const cacheVersion = useSettingsStore(state => state.getCacheVersion());
+  
   // Fetch tools with adaptive caching
-  const { data: tools = [] } = useQuery({
-    queryKey: ["tools"],
-    queryFn: getTools,
+  const { data: tools = [] } = useQuery<Tool[]>({
+    queryKey: ["tools", cacheVersion],
+    queryFn: () => getTools(cacheVersion),
     staleTime: getAdaptiveStaleTime(5 * 60 * 1000), // 5min on high-end, 10min on low-end
   });
 
