@@ -107,7 +107,7 @@ export default function AnimatedFormSection() {
   }, [step]);
 
   return (
-    <div className="pt-2 md:pt-12 pb-6 md:pb-12 px-4 w-full flex flex-col items-center overflow-visible">
+    <div className="pt-4 md:pt-12 pb-6 md:pb-12 px-4 w-full flex flex-col items-center">
       {/* Container to handle the scaled layout dimensions */}
       <div 
         ref={containerRef}
@@ -137,7 +137,7 @@ export default function AnimatedFormSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="w-[1024px] rounded-2xl border border-white/10 bg-[#0A0D11]/90 backdrop-blur-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] overflow-hidden relative"
+            className="w-[1024px] rounded-3xl md:rounded-2xl border border-white/10 bg-[#0A0D11]/90 backdrop-blur-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] overflow-hidden relative"
           >
         {/* Browser-style Notification (Inside Window) */}
         <div className="absolute top-14 right-6 z-[100] pointer-events-none">
@@ -294,7 +294,7 @@ export default function AnimatedFormSection() {
           </div>
 
           {/* Right Side: Virtual Card Preview */}
-          <div className="min-w-[664px] w-[664px] p-8 bg-black/40 flex items-center justify-center relative overflow-hidden">
+          <div className="min-w-[664px] w-[664px] p-8 bg-black/40 flex items-center justify-center relative">
              {/* Subtle background glow */}
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#cee88c]/5 blur-[120px] rounded-full pointer-events-none" />
 
