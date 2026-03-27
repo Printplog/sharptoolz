@@ -104,8 +104,8 @@ export default function ReviewsSection() {
   const ReviewCard = ({ review }: { review: Review }) => (
     <div className={`
       group relative bg-[#0A0D11]/40 border border-white/10 hover:border-primary/30 rounded-3xl p-8 transition-all duration-500 overflow-hidden flex flex-col min-h-[260px]
-      ${isMobile ? 'min-w-[300px] backdrop-blur-md shadow-lg mr-4 mb-0' : 'backdrop-blur-xl shadow-2xl mb-6'}
-      will-change-transform
+      ${isMobile ? 'w-[320px] shrink-0 backdrop-blur-md shadow-lg mr-6 mb-0' : 'backdrop-blur-xl shadow-2xl mb-6'}
+      will-change-transform whitespace-normal
     `}>
       <div className="absolute inset-0 bg-linear-to-b from-white/[0.05] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
       
@@ -217,7 +217,15 @@ export default function ReviewsSection() {
     );
   };
 
-  const HorizontalScrollingRow = ({ reviews, speed }: { reviews: Review[]; speed: number }) => {
+  const HorizontalScrollingRow = ({ 
+    reviews, 
+    speed,
+    reverse = false 
+  }: { 
+    reviews: Review[]; 
+    speed: number;
+    reverse?: boolean;
+  }) => {
     const x = useMotionValue(0);
     const containerRef = useRef<HTMLDivElement>(null);
     const [totalWidth, setTotalWidth] = useState(0);
@@ -232,26 +240,36 @@ export default function ReviewsSection() {
       if (totalWidth === 0) return;
 
       const animateLoop = () => {
-        if (x.get() <= -totalWidth) x.set(0);
-        return animate(x, -totalWidth, {
-          duration: speed,
-          ease: "linear",
-          onComplete: () => {
-            x.set(0);
-            animateLoop();
-          }
-        });
+        const currentX = x.get();
+        if (reverse) {
+          if (currentX >= 0) x.set(-totalWidth);
+          return animate(x, 0, {
+            duration: speed,
+            ease: "linear",
+            onComplete: () => {
+              x.set(-totalWidth);
+              animateLoop();
+            }
+          });
+        } else {
+          if (currentX <= -totalWidth) x.set(0);
+          return animate(x, -totalWidth, {
+            duration: speed,
+            ease: "linear",
+            onComplete: () => {
+              x.set(0);
+              animateLoop();
+            }
+          });
+        }
       };
 
       const controls = animateLoop();
       return () => controls?.stop();
-    }, [totalWidth, speed, x]);
+    }, [totalWidth, speed, reverse, x]);
 
     return (
-      <div className="relative overflow-hidden py-10">
-        <div className="absolute left-0 top-0 bottom-0 w-20 bg-linear-to-r from-[#0A0D11] to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-20 bg-linear-to-l from-[#0A0D11] to-transparent z-10 pointer-events-none" />
-        
+      <div className="relative overflow-hidden py-4">
         <motion.div
           ref={containerRef}
           style={{ x }}
@@ -270,7 +288,7 @@ export default function ReviewsSection() {
        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(206,232,140,0.02)_0%,transparent_70%)] pointer-events-none" />
 
       <div className="z-1 relative">
-        <div className="text-center mb-12 md:mb-24">
+        <div className="text-center mb-12 md:mb-24 px-4">
           <h2 className="text-4xl md:text-5xl lg:text-7xl font-fancy font-black text-white tracking-tighter uppercase italic mb-6 leading-[0.9]">
             User <span className="text-primary">Reviews</span>
           </h2>
@@ -281,7 +299,17 @@ export default function ReviewsSection() {
         </div>
 
         {isMobile ? (
-          <HorizontalScrollingRow reviews={duplicateReviews(mockReviews)} speed={40} />
+          <div className="space-y-2">
+            <HorizontalScrollingRow 
+              reviews={duplicateReviews(mockReviews.slice(0, 5))} 
+              speed={50} 
+            />
+            <HorizontalScrollingRow 
+              reviews={duplicateReviews(mockReviews.slice(5))} 
+              speed={60} 
+              reverse={true}
+            />
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <ScrollingColumn reviews={column1} speed={25} />
