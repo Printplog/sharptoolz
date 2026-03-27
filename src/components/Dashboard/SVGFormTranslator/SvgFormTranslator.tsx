@@ -162,6 +162,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
 
   const [svgContent, setSvgContent] = useState<string>("");
   const [isSvgFetching, setIsSvgFetching] = useState<boolean>(false);
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [isAssetsLoading, setIsAssetsLoading] = useState<boolean>(false);
   const lastLoadedBaseUrl = useRef<string | null>(null);
   const baseSvgText = useRef<string | null>(null);
@@ -172,6 +173,32 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
     const isNewUrl = data.svg_url !== lastLoadedBaseUrl.current;
     let cancelled = false;
 
+    const fetchWithProgress = (url: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        
+        xhr.onprogress = (event) => {
+          if (event.lengthComputable && !cancelled) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            setDownloadProgress(percentComplete);
+            console.log(`[SvgFormTranslator] Download progress: ${percentComplete}%`);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(xhr.responseText);
+          } else {
+            reject(new Error(`HTTP error ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.send();
+      });
+    };
+
     const loadAndApply = async () => {
       try {
         let text = baseSvgText.current;
@@ -179,10 +206,10 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         // Re-fetch only if URL changed or we don't have the base text yet
         if (isNewUrl || !text) {
           setIsSvgFetching(true);
-          console.log('[SvgFormTranslator] Fetching base SVG:', data.svg_url);
-          const r = await fetch(data.svg_url!);
-          if (!r.ok) throw new Error("Failed to fetch SVG file");
-          text = await r.text();
+          setDownloadProgress(0);
+          console.log('[SvgFormTranslator] Fetching base SVG with progress:', data.svg_url);
+          
+          text = await fetchWithProgress(data.svg_url!);
           
           if (!cancelled) {
             baseSvgText.current = text;
@@ -202,6 +229,8 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         try {
           // Fallback to proxy
           const targetId = isPurchased && data && 'template' in data ? (data as PurchasedTemplate).template : id as string;
+          setIsSvgFetching(true);
+          setDownloadProgress(0);
           const text = await getTemplateSvgForAdmin(targetId);
           if (!cancelled) {
             baseSvgText.current = text;
@@ -219,6 +248,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         if (!cancelled) {
           setIsSvgFetching(false);
           setIsAssetsLoading(false);
+          setDownloadProgress(100);
         }
       }
     };
@@ -557,18 +587,23 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
           <TabsContent value="preview" forceMount className="space-y-4">
             {/* Only show skeleton if we don't have SVG text or assets are loading */}
             {(!svgText || isSvgFetching || isAssetsLoading) ? (
-              <PreviewSkeleton />
+              <PreviewSkeleton progress={downloadProgress || (isAssetsLoading ? 95 : 0)} />
             ) : (
               <div
-                className={`w-full overflow-auto p-5 bg-white/10 border border-white/20 rounded-xl transition-all duration-700 ease-in-out ${(isSvgFetching || isAssetsLoading) ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
+                className={`w-full overflow-auto p-2 sm:p-5 bg-white/10 border border-white/20 rounded-xl transition-all duration-700 ease-in-out ${(isSvgFetching || isAssetsLoading) ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
                   }`}
               >
-                <div className="min-w-[300px] inline-block max-w-full">
-                  <div
-                    data-svg-preview
-                    className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full bg-white shadow-xl"
-                    dangerouslySetInnerHTML={{ __html: livePreview || svgText }}
-                  />
+                {/* Mobile: horizontal scroll container with min-height */}
+                <div className="min-w-full inline-block align-middle overflow-x-auto">
+                    <div 
+                        className="min-h-[400px] sm:min-h-[600px] flex items-center justify-center bg-white/5 rounded-lg overflow-hidden"
+                    >
+                        <div
+                            data-svg-preview
+                            className="bg-white shadow-2xl mx-auto w-auto min-w-[600px] sm:min-w-0 sm:w-full [&_svg]:w-full [&_svg]:h-auto"
+                            dangerouslySetInnerHTML={{ __html: livePreview || svgText }}
+                        />
+                    </div>
                 </div>
               </div>
             )}

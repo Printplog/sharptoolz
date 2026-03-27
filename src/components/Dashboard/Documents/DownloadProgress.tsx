@@ -29,16 +29,24 @@ export default function DownloadProgress({
         setProgress(10);
         setStatusText("Fetching document data...");
         break;
-      case 'processing-svg':
-        setProgress(30);
-        setStatusText("Processing SVG components...");
+      case 'processing-patches':
+        setProgress(25);
+        setStatusText("Applying document patches...");
+        break;
+      case 'processing-fonts':
+        setProgress(45);
+        setStatusText("Injecting typography assets...");
+        break;
+      case 'processing-images':
+        setProgress(65);
+        setStatusText("Processing embedded images...");
         break;
       case 'rendering':
-        setProgress(60);
+        setProgress(80);
         setStatusText("Rendering document...");
         break;
       case 'generating':
-        setProgress(85);
+        setProgress(92);
         setStatusText("Generating final file...");
         break;
       case 'complete':

@@ -11,7 +11,7 @@ import { addWatermarkToSvg } from "@/lib/utils/svgWatermark";
 import { BASE_URL } from "@/api/apiClient";
 import type { FormField } from "@/types";
 
-export type ProgressStep = 'idle' | 'fetching' | 'processing-svg' | 'rendering' | 'generating' | 'complete';
+export type ProgressStep = 'idle' | 'fetching' | 'processing-patches' | 'processing-fonts' | 'processing-images' | 'rendering' | 'generating' | 'complete';
 
 interface UseDownloadLogicProps {
     purchasedTemplateId?: string;
@@ -62,8 +62,7 @@ export const useDownloadLogic = ({
                         if (!svgResponse.ok) throw new Error("Could not fetch SVG content");
                         workingSvg = await svgResponse.text();
 
-                        setProgressStep('processing-svg');
-
+                        setProgressStep('processing-patches');
                         // Apply patches
                         workingSvg = applySvgPatches(workingSvg, data.svg_patches || []);
 
@@ -84,6 +83,7 @@ export const useDownloadLogic = ({
 
                         // Inject fonts (with base64 embedding for stable PDF rendering)
                         if (data.fonts && data.fonts.length > 0) {
+                            setProgressStep('processing-fonts');
                             workingSvg = await injectFontsIntoSVG(workingSvg, data.fonts, BASE_URL, true);
                         }
                     }
@@ -97,7 +97,7 @@ export const useDownloadLogic = ({
 
             // Ensure all images (including signatures) are base64-embedded
             // This is the CRITICAL STEP to match what the user sees in preview
-            setProgressStep('processing-svg');
+            setProgressStep('processing-images');
             workingSvg = await injectImagesIntoSVG(workingSvg, BASE_URL);
 
             // 1.5 Apply watermark if this is a test document
