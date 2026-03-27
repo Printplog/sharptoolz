@@ -132,56 +132,64 @@ export default function SvgTemplateEditor() {
   const [svgContent, setSvgContent] = useState<string>("");
   const [isFetchingSvg, setIsFetchingSvg] = useState(false);
   const [isReplaced, setIsReplaced] = useState(false);
-  const lastLoadedUrl = useRef<string | null>(null);
+  const lastLoadedBaseUrl = useRef<string | null>(null);
+  const baseSvgText = useRef<string | null>(null);
 
   useEffect(() => {
-    // Only fetch if we have a URL AND (we haven't loaded anything yet OR the URL has changed)
-    const shouldFetch = data?.svg_url && (!svgContent || data.svg_url !== lastLoadedUrl.current);
-    
-    if (shouldFetch) {
-      setIsFetchingSvg(true);
-      let cancelled = false;
+    if (!data?.svg_url) return;
 
-      const loadSvg = async () => {
-        try {
-          if (!data?.svg_url) throw new Error("No SVG URL found");
+    const isNewUrl = data.svg_url !== lastLoadedBaseUrl.current;
+    let cancelled = false;
 
-          console.log('[SvgTemplateEditor] Fetching SVG via URL:', data.svg_url);
-          const res = await fetch(data.svg_url);
+    const loadAndApply = async () => {
+      try {
+        let text = baseSvgText.current;
+
+        // Re-fetch only if URL changed or we don't have the base text yet
+        if (isNewUrl || !text) {
+          setIsFetchingSvg(true);
+          console.log('[SvgTemplateEditor] Fetching base SVG:', data.svg_url);
+          const res = await fetch(data.svg_url!);
           if (!res.ok) throw new Error(`HTTP status: ${res.status}`);
-          const text = await res.text();
-
-          const patchedSvg = applySvgPatches(text, data.svg_patches || []);
+          text = await res.text();
+          
           if (!cancelled) {
-            setSvgContent(patchedSvg);
-            lastLoadedUrl.current = data.svg_url;
+            baseSvgText.current = text;
+            lastLoadedBaseUrl.current = data.svg_url!;
           }
-        } catch (err) {
-          if (cancelled) return;
-          console.warn("Failed to load SVG via direct URL, trying backend proxy...", err);
-          try {
-            const text = await getTemplateSvgForAdmin(id as string);
-            const patchedSvg = applySvgPatches(text, data.svg_patches || []);
-            if (!cancelled) {
-              setSvgContent(patchedSvg);
-              // Proxy doesn't have the buster in its URL, but we've loaded the latest
-              lastLoadedUrl.current = data.svg_url || null;
-            }
-          } catch (proxyErr) {
-            if (!cancelled) {
-              console.error("Failed to load SVG content from all sources", proxyErr);
-              toast.error("Cloud storage sync failed. Please check CORS settings.");
-            }
-          }
-        } finally {
-          if (!cancelled) setIsFetchingSvg(false);
         }
-      };
 
-      loadSvg();
-      return () => { cancelled = true; };
-    }
-  }, [data?.svg_url, id, data?.svg_patches, svgContent]);
+        if (text && !cancelled) {
+          // Always apply current patches to the base text
+          console.log('[SvgTemplateEditor] Applying patches to base SVG. Patches count:', data.svg_patches?.length || 0);
+          const patchedSvg = applySvgPatches(text, data.svg_patches || []);
+          setSvgContent(patchedSvg);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.warn("Failed to load SVG via direct URL, trying backend proxy...", err);
+        try {
+          const text = await getTemplateSvgForAdmin(id as string);
+          if (!cancelled) {
+            baseSvgText.current = text;
+            lastLoadedBaseUrl.current = data.svg_url!; // Mark this URL as "last loaded" even if via proxy
+            const patchedSvg = applySvgPatches(text, data.svg_patches || []);
+            setSvgContent(patchedSvg);
+          }
+        } catch (proxyErr) {
+          if (!cancelled) {
+            console.error("Failed to load SVG content from all sources", proxyErr);
+            toast.error("Cloud storage sync failed. Please check CORS settings.");
+          }
+        }
+      } finally {
+        if (!cancelled) setIsFetchingSvg(false);
+      }
+    };
+
+    loadAndApply();
+    return () => { cancelled = true; };
+  }, [data?.svg_url, id, data?.svg_patches]); // Removed svgContent dependency
 
   // Save template mutation
   const saveMutation = useMutation({

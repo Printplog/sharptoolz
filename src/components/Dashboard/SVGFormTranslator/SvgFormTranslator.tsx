@@ -142,6 +142,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   const fields = useToolStore((state) => state.fields);
 
   const { id: paramId } = useParams<{ id: string }>();
+  const location = useLocation();
   const id = templateIdProp ?? paramId;
 
   // Fetch template data (without SVG for faster loading)
@@ -162,57 +163,77 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   const [svgContent, setSvgContent] = useState<string>("");
   const [isSvgFetching, setIsSvgFetching] = useState<boolean>(false);
   const [isAssetsLoading, setIsAssetsLoading] = useState<boolean>(false);
+  const lastLoadedBaseUrl = useRef<string | null>(null);
+  const baseSvgText = useRef<string | null>(null);
 
   useEffect(() => {
-    // FIGMA-STYLE: Only fetch if we have a URL and haven't loaded the content yet.
-    if (data?.svg_url && !svgContent) {
-      setIsSvgFetching(true);
+    if (!data?.svg_url) return;
 
-      const svgUrl = data.svg_url;
-      const templateData = data;
-      const templateId = id;
+    const isNewUrl = data.svg_url !== lastLoadedBaseUrl.current;
+    let cancelled = false;
 
-      const loadSvg = async () => {
-        try {
-          // Try direct URL first
-          console.log('[SvgFormTranslator] Fetching SVG via direct URL...');
-          const r = await fetch(svgUrl);
+    const loadAndApply = async () => {
+      try {
+        let text = baseSvgText.current;
+
+        // Re-fetch only if URL changed or we don't have the base text yet
+        if (isNewUrl || !text) {
+          setIsSvgFetching(true);
+          console.log('[SvgFormTranslator] Fetching base SVG:', data.svg_url);
+          const r = await fetch(data.svg_url!);
           if (!r.ok) throw new Error("Failed to fetch SVG file");
-          const text = await r.text();
+          text = await r.text();
+          
+          if (!cancelled) {
+            baseSvgText.current = text;
+            lastLoadedBaseUrl.current = data.svg_url!;
+          }
+        }
 
-          // 1. Merge original file with database patches
-          const patchedBase = applySvgPatches(text, templateData.svg_patches || []);
+        if (text && !cancelled) {
+          // Always apply current patches to the base text
+          console.log('[SvgFormTranslator] Applying patches to base SVG. Patches count:', data.svg_patches?.length || 0);
+          const patchedBase = applySvgPatches(text, data.svg_patches || []);
           setSvgContent(patchedBase);
-          console.log('[SvgFormTranslator] Base SVG loaded via direct URL and patched.');
-        } catch (e) {
-          console.warn("Failed to load SVG via direct URL, trying backend proxy...", e);
-          try {
-            // Fallback to proxy
-            const targetId = isPurchased && templateData && 'template' in templateData ? (templateData as PurchasedTemplate).template : templateId as string;
-            const text = await getTemplateSvgForAdmin(targetId);
-            const patchedBase = applySvgPatches(text, templateData.svg_patches || []);
+        }
+      } catch (e) {
+        if (cancelled) return;
+        console.warn("Failed to load SVG via direct URL, trying backend proxy...", e);
+        try {
+          // Fallback to proxy
+          const targetId = isPurchased && data && 'template' in data ? (data as PurchasedTemplate).template : id as string;
+          const text = await getTemplateSvgForAdmin(targetId);
+          if (!cancelled) {
+            baseSvgText.current = text;
+            lastLoadedBaseUrl.current = data.svg_url!; // Mark this URL as "last loaded"
+            const patchedBase = applySvgPatches(text, data.svg_patches || []);
             setSvgContent(patchedBase);
-            console.log('[SvgFormTranslator] Base SVG loaded via proxy and patched.');
-          } catch (proxyErr) {
+          }
+        } catch (proxyErr) {
+          if (!cancelled) {
             console.error("Failed to load SVG content from all sources", proxyErr);
             toast.error("Cloud storage sync failed.");
           }
-        } finally {
+        }
+      } finally {
+        if (!cancelled) {
           setIsSvgFetching(false);
           setIsAssetsLoading(false);
         }
-      };
+      }
+    };
 
-      loadSvg();
-    }
-  }, [data?.svg_url, isLoading, data, id, isPurchased, svgContent]);
+    loadAndApply();
+    return () => { cancelled = true; };
+  }, [data?.svg_url, isLoading, data, id, isPurchased]); // Removed svgContent dependency
 
   // Initialize fields immediately when template data loads (before SVG)
   useEffect(() => {
     if (isLoading || !data) return;
 
     // Check for duplicated values in location state
-    const startValues = (location.state as { startValues?: Record<string, unknown> } | null)?.startValues;
+    const locationState = location as any;
+    const startValues = locationState.state?.startValues;
 
     // Initialize fields - use currentValue if available (for purchased templates), otherwise use defaultValue
     const initializedFields = data.form_fields?.map((field: FormField) => {
@@ -299,7 +320,8 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   // EFFECT 3: Sync defaults from SVG text (runs once when SVG content is ready)
   useEffect(() => {
     // skip sync if we have startValues (duplicating a doc) to prevent overwriting
-    const startValues = (location.state as { startValues?: Record<string, unknown> } | null)?.startValues;
+    const locationState = location as any;
+    const startValues = locationState.state?.startValues;
     if (isSvgFetching || !svgContent || !data || isPurchased || startValues) return;
 
     // Only run this sync once per SVG URL
