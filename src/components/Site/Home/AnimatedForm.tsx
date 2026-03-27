@@ -76,10 +76,10 @@ export default function AnimatedFormSection() {
     const updateScale = () => {
       if (typeof window !== "undefined") {
         const width = window.innerWidth;
-        const padding = width < 640 ? 32 : 48; // Responsive padding
+        const padding = width < 640 ? 48 : 64; // More conservative padding for mobile
         const targetWidth = 1024;
         const availableWidth = width - padding;
-        const newScale = Math.min(1, availableWidth / targetWidth);
+        const newScale = Math.max(0.1, Math.min(1, availableWidth / targetWidth));
         setScale(newScale);
       }
     };

@@ -120,10 +120,12 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
+  html, body {
     @apply bg-background text-foreground;
     font-family: "Nunito Sans";
     overflow-x: hidden;
+    position: relative;
+    max-width: 100%;
   }
 }
 

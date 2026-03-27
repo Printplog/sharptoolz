@@ -10,7 +10,7 @@ import SmoothScroll from '@/components/Site/SmoothScroll'
 export default function Layout() {
   useDialog()
   return (
-    <div className="bg-background text-white min-h-screen">
+    <div className="bg-background text-white min-h-screen overflow-x-hidden w-full relative">
       <SmoothScroll>
         <GlobalAnnouncement />
         <Navbar />

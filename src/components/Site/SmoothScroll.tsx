@@ -34,7 +34,7 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
   }, []);
 
   return (
-    <div ref={scrollRef}>
+    <div ref={scrollRef} className="overflow-x-hidden relative w-full">
       {children}
     </div>
   );
