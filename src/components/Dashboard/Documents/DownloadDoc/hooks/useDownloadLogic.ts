@@ -151,6 +151,7 @@ export const useDownloadLogic = ({
         } catch (error: unknown) {
             console.error("Download failed:", error);
             const message = error instanceof Error ? error.message : "Failed to generate document";
+
             toast.error(message);
             setProgressStep('idle');
         } finally {

@@ -5,19 +5,22 @@ import GlobalAnnouncement from "@/components/Dashboard/Layouts/GlobalAnnouncemen
 import useDialog from '@/hooks/useDialog'
 import { Outlet } from 'react-router-dom'
 import TermsAgreementDialog from '@/components/Site/TermsAgreementDialog'
+import SmoothScroll from '@/components/Site/SmoothScroll'
 
 export default function Layout() {
   useDialog()
   return (
     <div className="bg-background text-white min-h-screen">
-      <GlobalAnnouncement />
-      <Navbar />
-      <main className="pt-16 md:pt-32">
-        <Outlet />
-      </main>
-      <Footer />
-      <TermsAgreementDialog />
-      <RegisterDialog />
+      <SmoothScroll>
+        <GlobalAnnouncement />
+        <Navbar />
+        <main className="pt-16 md:pt-32">
+          <Outlet />
+        </main>
+        <Footer />
+        <TermsAgreementDialog />
+        <RegisterDialog />
+      </SmoothScroll>
     </div>
   )
 }

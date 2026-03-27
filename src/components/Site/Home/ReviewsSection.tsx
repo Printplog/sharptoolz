@@ -82,6 +82,15 @@ const getColumnReviews = (columnIndex: number): Review[] => {
 };
 
 export default function ReviewsSection() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const column1Reviews = getColumnReviews(0);
   const column2Reviews = getColumnReviews(1);
   const column3Reviews = getColumnReviews(2);
@@ -93,7 +102,11 @@ export default function ReviewsSection() {
   const column3 = duplicateReviews(column3Reviews);
 
   const ReviewCard = ({ review }: { review: Review }) => (
-    <div className="group relative bg-[#0A0D11]/40 backdrop-blur-xl border border-white/10 hover:border-primary/30 rounded-3xl p-8 mb-6 transition-all duration-500 shadow-2xl overflow-hidden flex flex-col min-h-[260px]">
+    <div className={`
+      group relative bg-[#0A0D11]/40 border border-white/10 hover:border-primary/30 rounded-3xl p-8 transition-all duration-500 overflow-hidden flex flex-col min-h-[260px]
+      ${isMobile ? 'min-w-[300px] backdrop-blur-md shadow-lg mr-4 mb-0' : 'backdrop-blur-xl shadow-2xl mb-6'}
+      will-change-transform
+    `}>
       <div className="absolute inset-0 bg-linear-to-b from-white/[0.05] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
       
       <div className="flex items-center justify-between mb-8 relative z-10">
@@ -204,12 +217,60 @@ export default function ReviewsSection() {
     );
   };
 
+  const HorizontalScrollingRow = ({ reviews, speed }: { reviews: Review[]; speed: number }) => {
+    const x = useMotionValue(0);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [totalWidth, setTotalWidth] = useState(0);
+
+    useEffect(() => {
+      if (containerRef.current) {
+        setTotalWidth(containerRef.current.scrollWidth / 3);
+      }
+    }, [reviews]);
+
+    useEffect(() => {
+      if (totalWidth === 0) return;
+
+      const animateLoop = () => {
+        if (x.get() <= -totalWidth) x.set(0);
+        return animate(x, -totalWidth, {
+          duration: speed,
+          ease: "linear",
+          onComplete: () => {
+            x.set(0);
+            animateLoop();
+          }
+        });
+      };
+
+      const controls = animateLoop();
+      return () => controls?.stop();
+    }, [totalWidth, speed, x]);
+
+    return (
+      <div className="relative overflow-hidden py-10">
+        <div className="absolute left-0 top-0 bottom-0 w-20 bg-linear-to-r from-[#0A0D11] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-20 bg-linear-to-l from-[#0A0D11] to-transparent z-10 pointer-events-none" />
+        
+        <motion.div
+          ref={containerRef}
+          style={{ x }}
+          className="flex whitespace-nowrap"
+        >
+          {reviews.map((review, index) => (
+            <ReviewCard key={`${review.id}-h-${index}`} review={review} />
+          ))}
+        </motion.div>
+      </div>
+    );
+  };
+
   return (
     <SectionPadding className="py-24 relative overflow-hidden" id="feedback">
        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(206,232,140,0.02)_0%,transparent_70%)] pointer-events-none" />
 
       <div className="z-1 relative">
-        <div className="text-center mb-24">
+        <div className="text-center mb-12 md:mb-24">
           <h2 className="text-4xl md:text-5xl lg:text-7xl font-fancy font-black text-white tracking-tighter uppercase italic mb-6 leading-[0.9]">
             User <span className="text-primary">Reviews</span>
           </h2>
@@ -219,11 +280,15 @@ export default function ReviewsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <ScrollingColumn reviews={column1} speed={25} />
-          <ScrollingColumn reviews={column2} speed={35} reverse={true} />
-          <ScrollingColumn reviews={column3} speed={30} />
-        </div>
+        {isMobile ? (
+          <HorizontalScrollingRow reviews={duplicateReviews(mockReviews)} speed={40} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <ScrollingColumn reviews={column1} speed={25} />
+            <ScrollingColumn reviews={column2} speed={35} reverse={true} />
+            <ScrollingColumn reviews={column3} speed={30} />
+          </div>
+        )}
       </div>
     </SectionPadding>
   );
