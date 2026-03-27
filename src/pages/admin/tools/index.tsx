@@ -12,7 +12,6 @@ import {
   updateTool,
   deleteTool,
 } from "@/api/apiEndpoints";
-import useSettingsStore from "@/store/settingsStore";
 import type { Tool } from "@/types";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, Loader, Eye } from "lucide-react";
@@ -26,13 +25,10 @@ export default function AdminTools() {
   const [editingTool, setEditingTool] = useState<Tool | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Global cache versioning
-  const cacheVersion = useSettingsStore(state => state.getCacheVersion());
-  
   // Fetch tools
   const { data: tools = [], isLoading } = useQuery<Tool[]>({
-    queryKey: ["tools", cacheVersion],
-    queryFn: () => getTools(cacheVersion),
+    queryKey: ["tools"],
+    queryFn: getTools,
   });
 
   // Create tool mutation

@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/select";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { addTemplate, getTools, getFonts, addFont } from "@/api/apiEndpoints";
-import useSettingsStore from "@/store/settingsStore";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDialogStore } from "@/store/dialogStore";
 import { toast } from "sonner";
@@ -70,13 +69,10 @@ export default function BuilderDialog() {
     },
   });
 
-  // Global cache versioning
-  const cacheVersion = useSettingsStore(state => state.getCacheVersion());
-  
   // Fetch tools
   const { data: tools = [] } = useQuery<Tool[]>({
-    queryKey: ["tools", cacheVersion],
-    queryFn: () => getTools(cacheVersion),
+    queryKey: ["tools"],
+    queryFn: getTools,
   });
 
   // Fetch fonts

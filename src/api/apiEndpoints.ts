@@ -80,21 +80,19 @@ export const deleteTemplate = async (id: string): Promise<unknown> => {
   return res.data;
 }
 
-export const getTemplates = async (hot?: boolean, tool?: string, version?: number | string): Promise<Template[]> => {
+export const getTemplates = async (hot?: boolean, tool?: string): Promise<Template[]> => {
   const params = new URLSearchParams();
   if (hot) params.append('hot', 'true');
   if (tool) params.append('tool', tool);
-  if (version) params.append('v', version.toString());
 
   const queryString = params.toString();
   const res = await apiClient.get(`/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
 }
-export const getTemplatesForAdmin = async (hot?: boolean, tool?: string, version?: number | string): Promise<Template[]> => {
+export const getTemplatesForAdmin = async (hot?: boolean, tool?: string): Promise<Template[]> => {
   const params = new URLSearchParams();
   if (hot) params.append('hot', 'true');
   if (tool) params.append('tool', tool);
-  if (version) params.append('v', version.toString());
 
   const queryString = params.toString();
   const res = await apiClient.get(`/admin/templates/${queryString ? `?${queryString}` : ''}`);
@@ -102,23 +100,20 @@ export const getTemplatesForAdmin = async (hot?: boolean, tool?: string, version
 }
 
 
-export const getTemplate = async (id: string, version?: number | string): Promise<Template> => {
-  const url = version ? `/templates/${id}/?v=${version}` : `/templates/${id}/`;
-  const res = await apiClient.get(url);
+export const getTemplate = async (id: string): Promise<Template> => {
+  const res = await apiClient.get(`/templates/${id}/`);
   return res.data;
 }
 
-export const getTemplateForAdmin = async (id: string, version?: number | string): Promise<Template> => {
-  const url = version ? `/admin/templates/${id}/?v=${version}` : `/admin/templates/${id}/`;
-  const res = await apiClient.get(url);
+export const getTemplateForAdmin = async (id: string): Promise<Template> => {
+  const res = await apiClient.get(`/admin/templates/${id}/`);
   return res.data;
 }
 
 
 // Proxy function to fetch SVG content directly via backend to avoid CORS issues
 export const getTemplateSvgForAdmin = async (id: string): Promise<string> => {
-  const buster = Date.now();
-  const res = await apiClient.get(`/admin/templates/${id}/svg/?cb=${buster}`, {
+  const res = await apiClient.get(`/admin/templates/${id}/svg/`, {
     responseType: 'text'
   });
   return res.data;
@@ -224,15 +219,13 @@ export const adminDocuments = async (params?: { page?: number; page_size?: numbe
 };
 
 // Tools API (same as categories but with different naming)
-export const getTools = async (version?: number | string): Promise<Tool[]> => {
-  const url = version ? `/tools/?v=${version}` : '/tools/';
-  const res = await apiClient.get(url);
+export const getTools = async (): Promise<Tool[]> => {
+  const res = await apiClient.get('/tools/');
   return res.data;
 };
 
-export const getTool = async (id: string, version?: number | string): Promise<Tool> => {
-  const url = version ? `/tools/${id}/?v=${version}` : `/tools/${id}/`;
-  const res = await apiClient.get(url);
+export const getTool = async (id: string): Promise<Tool> => {
+  const res = await apiClient.get(`/tools/${id}/`);
   return res.data;
 };
 
@@ -327,4 +320,3 @@ export const deleteTransformVariable = async (id: number): Promise<unknown> => {
   const res = await apiClient.delete(`/transform-variables/${id}/`);
   return res.data;
 };
- 

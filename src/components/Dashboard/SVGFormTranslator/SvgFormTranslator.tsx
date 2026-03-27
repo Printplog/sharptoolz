@@ -122,7 +122,6 @@ import { FilePen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { useAdminConsoleStore } from '@/store/useAdminConsoleStore';
-import useSettingsStore from "@/store/settingsStore";
 
 export default function SvgFormTranslator({ isPurchased, templateId: templateIdProp }: Props) {
   const user = useAuthStore((state) => state.user);
@@ -146,19 +145,16 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   const location = useLocation();
   const id = templateIdProp ?? paramId;
 
-  // Global cache versioning
-  const cacheVersion = useSettingsStore(state => state.getCacheVersion());
-
   // Fetch template data (without SVG for faster loading)
   const { data, isLoading, error } = useQuery<PurchasedTemplate | Template>({
-    queryKey: [isPurchased ? "purchased-template" : "template", id, cacheVersion],
+    queryKey: [isPurchased ? "purchased-template" : "template", id],
     queryFn: () =>
       isPurchased
         ? getPurchasedTemplate(id as string)
-        : getTemplate(id as string, cacheVersion),
+        : getTemplate(id as string),
     enabled: !!id, // Only run query if id exists
     refetchOnWindowFocus: true,
-    staleTime: user?.is_staff ? 0 : 30 * 1000, // Admins always get fresh; users get 30s cache
+    staleTime: 30 * 1000, // 30s cache
   });
 
 
