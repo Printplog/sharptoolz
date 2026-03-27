@@ -141,11 +141,8 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   const setName = useToolStore((state) => state.setName);
   const fields = useToolStore((state) => state.fields);
 
-  const location = useLocation();
   const { id: paramId } = useParams<{ id: string }>();
   const id = templateIdProp ?? paramId;
-
-
 
   // Fetch template data (without SVG for faster loading)
   const { data, isLoading, error } = useQuery<PurchasedTemplate | Template>({

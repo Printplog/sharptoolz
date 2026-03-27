@@ -80,19 +80,21 @@ export const deleteTemplate = async (id: string): Promise<unknown> => {
   return res.data;
 }
 
-export const getTemplates = async (hot?: boolean, tool?: string): Promise<Template[]> => {
+export const getTemplates = async (hot?: boolean, tool?: string, version?: number | string): Promise<Template[]> => {
   const params = new URLSearchParams();
   if (hot) params.append('hot', 'true');
   if (tool) params.append('tool', tool);
+  if (version) params.append('v', version.toString());
 
   const queryString = params.toString();
   const res = await apiClient.get(`/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
 }
-export const getTemplatesForAdmin = async (hot?: boolean, tool?: string): Promise<Template[]> => {
+export const getTemplatesForAdmin = async (hot?: boolean, tool?: string, version?: number | string): Promise<Template[]> => {
   const params = new URLSearchParams();
   if (hot) params.append('hot', 'true');
   if (tool) params.append('tool', tool);
+  if (version) params.append('v', version.toString());
 
   const queryString = params.toString();
   const res = await apiClient.get(`/admin/templates/${queryString ? `?${queryString}` : ''}`);
@@ -100,21 +102,23 @@ export const getTemplatesForAdmin = async (hot?: boolean, tool?: string): Promis
 }
 
 
-export const getTemplate = async (id: string): Promise<Template> => {
-  const res = await apiClient.get(`/templates/${id}/`);
+export const getTemplate = async (id: string, version?: number | string): Promise<Template> => {
+  const url = version ? `/templates/${id}/?v=${version}` : `/templates/${id}/`;
+  const res = await apiClient.get(url);
   return res.data;
 }
 
-// Redundant SVG fetching functions removed. SVG URLs are now included directly in Template/PurchasedTemplate objects.
-
-export const getTemplateForAdmin = async (id: string): Promise<Template> => {
-  const res = await apiClient.get(`/admin/templates/${id}/`);
+export const getTemplateForAdmin = async (id: string, version?: number | string): Promise<Template> => {
+  const url = version ? `/admin/templates/${id}/?v=${version}` : `/admin/templates/${id}/`;
+  const res = await apiClient.get(url);
   return res.data;
 }
+
 
 // Proxy function to fetch SVG content directly via backend to avoid CORS issues
 export const getTemplateSvgForAdmin = async (id: string): Promise<string> => {
-  const res = await apiClient.get(`/admin/templates/${id}/svg/`, {
+  const buster = Date.now();
+  const res = await apiClient.get(`/admin/templates/${id}/svg/?cb=${buster}`, {
     responseType: 'text'
   });
   return res.data;

@@ -148,6 +148,7 @@ export type Template = {
   is_active: boolean;
   banner: string;
   tool_price?: number;
+  version?: number;
 };
 
 export interface AuditLog {
@@ -204,6 +205,7 @@ export type PurchasedTemplate = {
   field_updates?: FieldUpdate[];
 
   updated_at: string;
+  version?: number;
 };
 
 export type CryptoPaymentData = {
@@ -360,6 +362,7 @@ export type SiteSettings = {
   dev_name_obfuscated: string;
   owner_name_obfuscated: string;
   updated_at: string;
+  template_cache_version?: number;
 };
 
 export interface TransformVariable {

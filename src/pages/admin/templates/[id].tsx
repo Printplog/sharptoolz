@@ -89,6 +89,7 @@ export default function SvgTemplateEditor() {
     enabled: true,
   });
 
+
   const { prevTemplate, nextTemplate } = useMemo(() => {
     if (!siblings || !id) return { prevTemplate: null, nextTemplate: null };
     const index = siblings.findIndex(t => t.id === id);
@@ -131,10 +132,13 @@ export default function SvgTemplateEditor() {
   const [svgContent, setSvgContent] = useState<string>("");
   const [isFetchingSvg, setIsFetchingSvg] = useState(false);
   const [isReplaced, setIsReplaced] = useState(false);
+  const lastLoadedUrl = useRef<string | null>(null);
 
   useEffect(() => {
-    // Only fetch the base file if it exists and we haven't loaded it yet
-    if (data?.svg_url && !svgContent) {
+    // Only fetch if we have a URL AND (we haven't loaded anything yet OR the URL has changed)
+    const shouldFetch = data?.svg_url && (!svgContent || data.svg_url !== lastLoadedUrl.current);
+    
+    if (shouldFetch) {
       setIsFetchingSvg(true);
       let cancelled = false;
 
@@ -142,20 +146,27 @@ export default function SvgTemplateEditor() {
         try {
           if (!data?.svg_url) throw new Error("No SVG URL found");
 
-          console.log('[SvgTemplateEditor] Fetching SVG via direct URL...');
+          console.log('[SvgTemplateEditor] Fetching SVG via URL:', data.svg_url);
           const res = await fetch(data.svg_url);
           if (!res.ok) throw new Error(`HTTP status: ${res.status}`);
           const text = await res.text();
 
           const patchedSvg = applySvgPatches(text, data.svg_patches || []);
-          if (!cancelled) setSvgContent(patchedSvg);
+          if (!cancelled) {
+            setSvgContent(patchedSvg);
+            lastLoadedUrl.current = data.svg_url;
+          }
         } catch (err) {
           if (cancelled) return;
           console.warn("Failed to load SVG via direct URL, trying backend proxy...", err);
           try {
             const text = await getTemplateSvgForAdmin(id as string);
             const patchedSvg = applySvgPatches(text, data.svg_patches || []);
-            if (!cancelled) setSvgContent(patchedSvg);
+            if (!cancelled) {
+              setSvgContent(patchedSvg);
+              // Proxy doesn't have the buster in its URL, but we've loaded the latest
+              lastLoadedUrl.current = data.svg_url || null;
+            }
           } catch (proxyErr) {
             if (!cancelled) {
               console.error("Failed to load SVG content from all sources", proxyErr);
