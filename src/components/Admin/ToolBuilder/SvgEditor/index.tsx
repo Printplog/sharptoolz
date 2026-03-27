@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Tool, Tutorial, Font, SvgPatch } from "@/types";
+import type { Tutorial, Font, SvgPatch } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
 
 import { useSvgStore } from "@/store/useSvgStore";
