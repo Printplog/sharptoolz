@@ -12,7 +12,6 @@ const socialPlatforms = [
         icon: <MessageCircle className="w-8 h-8" />,
         color: "#25D366",
         description: "Join our vibrant community for instant updates and support.",
-        stats: "2.4k+ Members",
         delay: 0.1,
     },
     {
@@ -21,7 +20,6 @@ const socialPlatforms = [
         icon: <Send className="w-8 h-8" />,
         color: "#0088cc",
         description: "Cloud-based messaging for our power users and developers.",
-        stats: "1.8k+ Subscribers",
         delay: 0.2,
     },
     {
@@ -30,7 +28,6 @@ const socialPlatforms = [
         icon: <Twitter className="w-8 h-8" />,
         color: "#1DA1F2",
         description: "Follow us for the latest news, features, and platform status.",
-        stats: "5.2k+ Followers",
         delay: 0.3,
     },
     {
@@ -39,7 +36,6 @@ const socialPlatforms = [
         icon: <Instagram className="w-8 h-8" />,
         color: "#E1306C",
         description: "Behind the scenes, tutorials, and visual platform updates.",
-        stats: "3.1k+ Followers",
         delay: 0.4,
     },
     {
@@ -52,7 +48,6 @@ const socialPlatforms = [
         ),
         color: "#00f2ea",
         description: "Watch our tool highlights, tutorials and trending hacks.",
-        stats: "12.4k+ Likes",
         delay: 0.5,
     },
 ];
@@ -166,9 +161,6 @@ export default function SocialsSection() {
                                     </p>
 
                                     <div className="flex items-center justify-between pt-6 border-t border-white/5">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">
-                                            {platform.stats}
-                                        </span>
                                         <span
                                             className="text-xs font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300"
                                             style={{ color: platform.color }}
