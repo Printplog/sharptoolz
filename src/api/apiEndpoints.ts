@@ -224,13 +224,15 @@ export const adminDocuments = async (params?: { page?: number; page_size?: numbe
 };
 
 // Tools API (same as categories but with different naming)
-export const getTools = async (): Promise<Tool[]> => {
-  const res = await apiClient.get('/tools/');
+export const getTools = async (version?: number | string): Promise<Tool[]> => {
+  const url = version ? `/tools/?v=${version}` : '/tools/';
+  const res = await apiClient.get(url);
   return res.data;
 };
 
-export const getTool = async (id: string): Promise<Tool> => {
-  const res = await apiClient.get(`/tools/${id}/`);
+export const getTool = async (id: string, version?: number | string): Promise<Tool> => {
+  const url = version ? `/tools/${id}/?v=${version}` : `/tools/${id}/`;
+  const res = await apiClient.get(url);
   return res.data;
 };
 
