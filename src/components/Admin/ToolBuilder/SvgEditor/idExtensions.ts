@@ -184,6 +184,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "grayscale",
       "hide",
       "depends",
+      "show_if",
     ],
   },
   {
