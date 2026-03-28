@@ -380,6 +380,33 @@ export const svgEditorDocs: DocSection[] = [
     ]
   },
   {
+    id: "show-if",
+    title: ".show_if_ Extension",
+    content: "Conditionally show a form field only when another field's value matches a specific value. The field is hidden until the condition is met. Comparison is case-insensitive and matches both the raw value and the option label (for select fields). Format: .show_if_FieldId[Value]",
+    codeExamples: [
+      {
+        title: "Basic Example",
+        code: "Error_Message.textarea.editable.show_if_Status[Error]",
+        description: "Shows the Error_Message textarea only when the Status field equals 'Error'"
+      },
+      {
+        title: "With Select Field",
+        code: "Status.editable.select_Active\nStatus.editable.select_Error\nError_Message.textarea.editable.show_if_Status[Error]",
+        description: "Status is a select dropdown; Error_Message appears only when 'Error' is selected"
+      },
+      {
+        title: "Any Field Type",
+        code: "Premium_Note.text.editable.show_if_Plan[Premium]",
+        description: "Shows a text field only when the Plan field value is 'Premium'"
+      },
+      {
+        title: "Multiple Conditions (separate fields)",
+        code: "Refund_Reason.textarea.editable.show_if_Status[Refunded]\nDenial_Reason.textarea.editable.show_if_Status[Denied]",
+        description: "Different fields shown for different Status values — each has its own show_if_"
+      }
+    ]
+  },
+  {
     id: "helper-text",
     title: "Helper Text (data-helper attribute)",
     content: "Add contextual help text to any field by using the data-helper attribute on the SVG element. This helper text will appear below the field to provide additional guidance to users.",
