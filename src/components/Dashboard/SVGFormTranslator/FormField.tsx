@@ -705,16 +705,23 @@ const FormFieldComponent: React.FC<{
     }
   }, (prevProps, nextProps) => {
     // Return true to skip re-render if nothing relevant changed
-    // Only re-render if this specific field's value changed
     const fieldChanged =
       prevProps.field.id !== nextProps.field.id ||
       prevProps.field.currentValue !== nextProps.field.currentValue ||
       prevProps.field.touched !== nextProps.field.touched ||
       prevProps.isPurchased !== nextProps.isPurchased;
 
-    // If field didn't change, skip re-render (return true)
-    // If field changed, allow re-render (return false)
-    return !fieldChanged;
+    if (fieldChanged) return false;
+
+    // If this field has a show_if condition, re-render when the target field's value changes
+    if (nextProps.field.showIf) {
+      const targetId = nextProps.field.showIf.fieldId;
+      const prevTarget = prevProps.allFields?.find(f => f.id === targetId);
+      const nextTarget = nextProps.allFields?.find(f => f.id === targetId);
+      if (prevTarget?.currentValue !== nextTarget?.currentValue) return false;
+    }
+
+    return true;
   });
 
 FormFieldComponent.displayName = 'FormFieldComponent';
