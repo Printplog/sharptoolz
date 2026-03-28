@@ -184,7 +184,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "grayscale",
       "hide",
       "depends",
-      "show_if",
+      "showIf",
     ],
   },
   {
@@ -257,9 +257,9 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     ],
   },
   {
-    key: "show_if",
+    key: "showIf",
     label: "Show If",
-    helper: "Show this form field only when another field equals a specific value. Format: show_if_FieldId[Value] (e.g., show_if_Status[Error])",
+    helper: "Show this form field only when another field equals a specific value. Format: showIf_FieldId[Value] (e.g., showIf_Status[Error])",
     requiresValue: true,
     valuePlaceholder: "FieldId[Value] (e.g., Status[Error])",
     allowedAfter: [

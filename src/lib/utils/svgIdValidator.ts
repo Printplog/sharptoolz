@@ -75,31 +75,31 @@ export function validateSvgId(id: string): ValidationResult {
     const part = parts[i];
     let isWhitelisted = false;
 
-    // ── SPECIAL: .show_if_ — conditional form field visibility ──────────
-    if (part.startsWith("show_if_")) {
-      const suffix = part.slice("show_if_".length);
+    // ── SPECIAL: .showIf_ — conditional form field visibility ──────────
+    if (part.startsWith("showIf_")) {
+      const suffix = part.slice("showIf_".length);
       if (!suffix || !suffix.includes("[") || !suffix.endsWith("]")) {
-        return { valid: false, error: "✍️ Use bracket syntax: .show_if_FieldId[Value] (e.g., .show_if_Status[Error])", parts, baseId };
+        return { valid: false, error: "✍️ Use bracket syntax: .showIf_FieldId[Value] (e.g., .showIf_Status[Error])", parts, baseId };
       }
       const bracketPos = suffix.indexOf("[");
       const fieldIdPart = suffix.slice(0, bracketPos);
       const valuePart = suffix.slice(bracketPos + 1, -1);
       if (!fieldIdPart) {
-        return { valid: false, error: "✍️ Missing field name in '.show_if_': use .show_if_FieldId[Value].", parts, baseId };
+        return { valid: false, error: "✍️ Missing field name in '.showIf_': use .showIf_FieldId[Value].", parts, baseId };
       }
       if (!valuePart) {
-        return { valid: false, error: "✍️ Missing value in '.show_if_': use .show_if_FieldId[Value].", parts, baseId };
+        return { valid: false, error: "✍️ Missing value in '.showIf_': use .showIf_FieldId[Value].", parts, baseId };
       }
-      if (parts.slice(1, i).some(p => p.startsWith("show_if_"))) {
-        return { valid: false, error: "❌ Duplicate '.show_if_' not allowed.", parts, baseId };
+      if (parts.slice(1, i).some(p => p.startsWith("showIf_"))) {
+        return { valid: false, error: "❌ Duplicate '.showIf_' not allowed.", parts, baseId };
       }
       if (lastPartBase) {
-        const showIfExt = EXTENSIONS.find(e => e.key === "show_if");
+        const showIfExt = EXTENSIONS.find(e => e.key === "showIf");
         if (showIfExt?.allowedAfter && !showIfExt.allowedAfter.includes(lastPartBase)) {
-          return { valid: false, error: `❌ Extension '.show_if_...' is not allowed after '.${lastPartBase}'.`, parts, baseId };
+          return { valid: false, error: `❌ Extension '.showIf_...' is not allowed after '.${lastPartBase}'.`, parts, baseId };
         }
       }
-      lastPartBase = "show_if";
+      lastPartBase = "showIf";
       continue;
     }
 

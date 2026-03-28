@@ -3,7 +3,7 @@ import SectionPadding from "@/layouts/SectionPadding";
 
 export default function EditTool() {
   return (
-    <SectionPadding>
+    <SectionPadding >
         <SvgFormTranslator />
     </SectionPadding>
   )

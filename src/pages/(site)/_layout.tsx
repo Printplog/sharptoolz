@@ -14,7 +14,7 @@ export default function Layout() {
       <SmoothScroll>
         <GlobalAnnouncement />
         <Navbar />
-        <main className="pt-16 md:pt-32 pb-20">
+        <main className="pt-26 md:pt-32 pb-20">
           <Outlet />
         </main>
         <Footer />
