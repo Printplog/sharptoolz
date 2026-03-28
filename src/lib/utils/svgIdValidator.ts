@@ -75,6 +75,34 @@ export function validateSvgId(id: string): ValidationResult {
     const part = parts[i];
     let isWhitelisted = false;
 
+    // ── SPECIAL: .show_if_ — conditional form field visibility ──────────
+    if (part.startsWith("show_if_")) {
+      const suffix = part.slice("show_if_".length);
+      if (!suffix || !suffix.includes("[") || !suffix.endsWith("]")) {
+        return { valid: false, error: "✍️ Use bracket syntax: .show_if_FieldId[Value] (e.g., .show_if_Status[Error])", parts, baseId };
+      }
+      const bracketPos = suffix.indexOf("[");
+      const fieldIdPart = suffix.slice(0, bracketPos);
+      const valuePart = suffix.slice(bracketPos + 1, -1);
+      if (!fieldIdPart) {
+        return { valid: false, error: "✍️ Missing field name in '.show_if_': use .show_if_FieldId[Value].", parts, baseId };
+      }
+      if (!valuePart) {
+        return { valid: false, error: "✍️ Missing value in '.show_if_': use .show_if_FieldId[Value].", parts, baseId };
+      }
+      if (parts.slice(1, i).some(p => p.startsWith("show_if_"))) {
+        return { valid: false, error: "❌ Duplicate '.show_if_' not allowed.", parts, baseId };
+      }
+      if (lastPartBase) {
+        const showIfExt = EXTENSIONS.find(e => e.key === "show_if");
+        if (showIfExt?.allowedAfter && !showIfExt.allowedAfter.includes(lastPartBase)) {
+          return { valid: false, error: `❌ Extension '.show_if_...' is not allowed after '.${lastPartBase}'.`, parts, baseId };
+        }
+      }
+      lastPartBase = "show_if";
+      continue;
+    }
+
     // Check if this is a flag extension (no underscore suffix needed)
     // Examples: "tracking_id", "editable", "hide_checked", "hide_unchecked"
     const isFlagExtension = EXTENSIONS.some(ext => ext.key.toLowerCase() === part.toLowerCase());

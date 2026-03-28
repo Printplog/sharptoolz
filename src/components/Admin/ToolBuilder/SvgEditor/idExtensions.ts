@@ -255,6 +255,18 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "select", "editable", "max", "min", "tracking_id", "link", "date_format", "gen_rule"
     ],
   },
+  {
+    key: "show_if",
+    label: "Show If",
+    helper: "Show this form field only when another field equals a specific value. Format: show_if_FieldId[Value] (e.g., show_if_Status[Error])",
+    requiresValue: true,
+    valuePlaceholder: "FieldId[Value] (e.g., Status[Error])",
+    allowedAfter: [
+      "text", "textarea", "gen", "email", "number", "date", "checkbox",
+      "upload", "tel", "password", "range", "color", "file", "status", "sign",
+      "editable", "max", "min", "tracking_id", "date_format", "gen_rule", "select",
+    ],
+  },
 ];
 
 // Helper function to get all extensions that can come after a given field type

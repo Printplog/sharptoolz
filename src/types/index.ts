@@ -89,6 +89,7 @@ export interface FormField {
   signatureBackground?: string; // Background color for signature canvas
   signaturePenColor?: string; // Pen color for signature drawing
   editable?: boolean; // Whether field remains editable after purchase (default: false)
+  showIf?: { fieldId: string; value: string }; // Show field only when another field's value matches
   requiresGrayscale?: boolean; // Whether uploaded images should be forced to grayscale
   grayscaleIntensity?: number; // Grayscale intensity percentage (0-100)
   touched?: boolean; // Frontend-only flag to know if user modified the field

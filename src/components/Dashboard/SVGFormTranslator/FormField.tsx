@@ -270,21 +270,19 @@ const FormFieldComponent: React.FC<{
       };
     }, []);
 
-    // 2. Conditional check for visibility
-    const shouldShowErrorMessage = useCallback(() => {
-      if (field.id === "Error_Message") {
-        const statusField = allFields.find((f) => f.id === "Status");
-        const statusValue = statusField?.currentValue || statusField?.defaultValue;
-        const selectedOption = statusField?.options?.find(
-          (opt) => opt.value === statusValue
-        );
-        return selectedOption?.label === "Error";
-      }
-      return true;
-    }, [field.id, allFields]);
+    // 2. Conditional check for visibility based on show_if modifier
+    const shouldShowField = useCallback(() => {
+      if (!field.showIf) return true;
+      const target = allFields.find((f) => f.id === field.showIf!.fieldId);
+      const rawValue = String(target?.currentValue ?? target?.defaultValue ?? "");
+      const labelValue = target?.options?.find((o) => o.value === rawValue)?.label ?? "";
+      const expected = field.showIf.value;
+      return rawValue.toLowerCase() === expected.toLowerCase() ||
+             labelValue.toLowerCase() === expected.toLowerCase();
+    }, [field.showIf, allFields]);
 
     // 3. Early return after all hooks
-    if (!shouldShowErrorMessage()) {
+    if (!shouldShowField()) {
       return null;
     }
 
