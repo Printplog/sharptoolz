@@ -273,13 +273,13 @@ const FormFieldComponent: React.FC<{
     // 2. Conditional check for visibility based on show_if modifier
     const shouldShowField = useCallback(() => {
       if (!field.showIf) return true;
-      const target = allFields.find((f) => f.id === field.showIf!.fieldId);
+      const target = fieldsForDependencies.find((f) => f.id === field.showIf!.fieldId);
       const rawValue = String(target?.currentValue ?? target?.defaultValue ?? "");
       const labelValue = target?.options?.find((o) => o.value === rawValue)?.label ?? "";
       const expected = field.showIf.value;
       return rawValue.toLowerCase() === expected.toLowerCase() ||
              labelValue.toLowerCase() === expected.toLowerCase();
-    }, [field.showIf, allFields]);
+    }, [field.showIf, fieldsForDependencies]);
 
     // 3. Early return after all hooks
     if (!shouldShowField()) {
