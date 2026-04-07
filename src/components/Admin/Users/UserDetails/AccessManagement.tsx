@@ -19,10 +19,10 @@ export default function AccessManagement({
     onToggleStatus,
 }: AccessManagementProps) {
     return (
-        <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20 backdrop-blur-sm h-full">
+        <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full rounded-2xl">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-100">
-                    <Shield className="h-5 w-5 text-amber-400" />
+                <CardTitle className="flex items-center gap-2 text-white/50 text-[10px] font-black uppercase tracking-widest">
+                    <Shield className="h-3.5 w-3.5" />
                     Access Management
                 </CardTitle>
             </CardHeader>

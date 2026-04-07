@@ -1,70 +1,60 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, Download, Calendar } from "lucide-react";
+import { TrendingUp, DollarSign, Download, Wallet } from "lucide-react";
 import type { AdminUserDetails } from "@/types";
+import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 
 interface StatsOverviewProps {
     stats: AdminUserDetails["stats"];
+    walletBalance?: string | number;
 }
 
-export default function StatsOverview({ stats }: StatsOverviewProps) {
-    const statItems = [
+export default function StatsOverview({ stats, walletBalance }: StatsOverviewProps) {
+    const statItems: StatData[] = [
+        ...(walletBalance !== undefined ? [{
+            title: "Wallet Balance",
+            value: `$${walletBalance}`,
+            label: "Current user funds",
+            icon: Wallet,
+            gradient: "from-blue-500/20 to-blue-600/5",
+            borderColor: "border-blue-500/20",
+            iconBg: "bg-blue-500/10",
+            iconColor: "text-blue-400",
+        }] : []),
         {
-            icon: DollarSign,
+            title: "Total Purchases",
             value: stats.total_purchases,
-            label: "Total Purchases",
-            color: "blue",
+            label: "Lifetime orders",
+            icon: DollarSign,
+            gradient: "from-indigo-500/20 to-indigo-600/5",
+            borderColor: "border-indigo-500/20",
+            iconBg: "bg-indigo-500/10",
+            iconColor: "text-indigo-400",
         },
         {
-            icon: TrendingUp,
+            title: "Paid Purchases",
             value: stats.paid_purchases,
-            label: "Paid Purchases",
-            color: "green",
+            label: "Completed payments",
+            icon: TrendingUp,
+            gradient: "from-green-500/20 to-green-600/5",
+            borderColor: "border-green-500/20",
+            iconBg: "bg-green-500/10",
+            iconColor: "text-green-400",
         },
         {
-            icon: Download,
+            title: "Test Purchases",
             value: stats.test_purchases,
-            label: "Test Purchases",
-            color: "orange",
-        },
-        {
-            icon: Calendar,
-            value: stats.days_since_joined,
-            label: "Days Since Joined",
-            color: "purple",
+            label: "System tests",
+            icon: Download,
+            gradient: "from-orange-500/20 to-orange-600/5",
+            borderColor: "border-orange-500/20",
+            iconBg: "bg-orange-500/10",
+            iconColor: "text-orange-400",
         },
     ];
 
     return (
-        <Card className="bg-gradient-to-br from-slate-500/10 to-slate-600/5 border-slate-500/20 backdrop-blur-sm">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-slate-100">
-                    <TrendingUp className="h-5 w-5 text-slate-400" />
-                    Statistics Overview
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {statItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                            <div
-                                key={item.label}
-                                className={`text-center p-6 bg-gradient-to-br from-${item.color}-500/15 to-${item.color}-600/10 rounded-xl border border-${item.color}-500/25 hover:border-${item.color}-500/40 transition-colors`}
-                            >
-                                <div className={`w-12 h-12 bg-${item.color}-500/20 rounded-full flex items-center justify-center mx-auto mb-3`}>
-                                    <Icon className={`h-6 w-6 text-${item.color}-300`} />
-                                </div>
-                                <div className={`text-3xl font-bold text-${item.color}-200 mb-1`}>
-                                    {item.value}
-                                </div>
-                                <div className={`text-sm text-${item.color}-200/70 font-medium`}>
-                                    {item.label}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </CardContent>
-        </Card>
+        <StatsCards 
+            stats={statItems} 
+            className="lg:grid-cols-4 mb-8" 
+        />
     );
 }

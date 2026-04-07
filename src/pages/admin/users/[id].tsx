@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminUserDetails, updateAdminUser } from "@/api/apiEndpoints";
 import type { AdminUserDetails } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, User, Wallet, History, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import UserDetailSkeleton from "@/components/Admin/Users/UserDetailSkeleton";
 import ProfileCard from "@/components/Admin/Users/UserDetails/ProfileCard";
@@ -13,11 +13,13 @@ import WalletActivity from "@/components/Admin/Users/UserDetails/WalletActivity"
 import StatsOverview from "@/components/Admin/Users/UserDetails/StatsOverview";
 import PurchaseHistory from "@/components/Admin/Users/UserDetails/PurchaseHistory";
 import TransactionHistory from "@/components/Admin/Users/UserDetails/TransactionHistory";
+import { CustomTabs, CustomTabsContent } from "@/components/ui/custom-tabs";
 
 export default function UserDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const { data, isLoading, error } = useQuery<AdminUserDetails>({
     queryKey: ["adminUserDetails", id],
@@ -92,40 +94,68 @@ export default function UserDetailsPage() {
 
   const { user, stats } = data;
 
-  return (
-    <div className="dashboard-content space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <Link to="/admin/users">
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-white/5 border-white/20 text-white hover:bg-white/10"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Users
-          </Button>
-        </Link>
-      </div>
+  const tabs = [
+    { id: "overview", label: "Overview", icon: User },
+    { id: "access", label: "Access", icon: ShieldCheck },
+    { id: "financials", label: "Financials", icon: Wallet },
+    { id: "history", label: "History", icon: History },
+  ];
 
-      {/* User Profile & Role Management Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProfileCard user={user} />
-        <AccessManagement
-          user={user}
-          isUpdating={isUpdating}
-          onUpdateRole={handleUpdateRole}
-          onToggleStatus={handleToggleStatus}
+  return (
+    <div className="dashboard-content space-y-10">
+      {/* Header */}
+      <div className="flex flex-col gap-8">
+        <div className="flex items-center gap-6">
+          <Link to="/admin/users">
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-full w-12 h-12 shrink-0 transition-transform active:scale-95"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-3xl font-black text-white tracking-tighter">
+              {user.username}
+            </h1>
+            <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
+              User Administrative Controls
+            </p>
+          </div>
+        </div>
+
+        <CustomTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          className="mx-0"
         />
       </div>
 
-      <WalletActivity user={user} />
-      <StatsOverview stats={stats} />
+      <div className="mt-8">
+        <CustomTabsContent value="overview" activeTab={activeTab} className="space-y-8">
+          <StatsOverview stats={stats} walletBalance={user.wallet_balance} />
+          <ProfileCard user={user} />
+        </CustomTabsContent>
 
-      {/* History Components */}
-      <div className="space-y-6">
-        <PurchaseHistory purchases={data.purchase_history} />
-        <TransactionHistory transactions={data.transaction_history} />
+        <CustomTabsContent value="access" activeTab={activeTab} className="space-y-6">
+          <AccessManagement
+            user={user}
+            isUpdating={isUpdating}
+            onUpdateRole={handleUpdateRole}
+            onToggleStatus={handleToggleStatus}
+          />
+        </CustomTabsContent>
+
+        <CustomTabsContent value="financials" activeTab={activeTab} className="space-y-6">
+          <WalletActivity user={user} />
+          <TransactionHistory transactions={data.transaction_history} />
+        </CustomTabsContent>
+
+        <CustomTabsContent value="history" activeTab={activeTab} className="space-y-6">
+          <PurchaseHistory purchases={data.purchase_history} />
+        </CustomTabsContent>
       </div>
     </div>
   );
