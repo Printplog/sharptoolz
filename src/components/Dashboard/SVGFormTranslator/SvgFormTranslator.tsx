@@ -207,7 +207,6 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         if (isNewUrl || !text) {
           setIsSvgFetching(true);
           setDownloadProgress(0);
-          console.log('[SvgFormTranslator] Fetching base SVG with progress:', data.svg_url);
           
           text = await fetchWithProgress(data.svg_url!);
           
@@ -219,7 +218,6 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
 
         if (text && !cancelled) {
           // Always apply current patches to the base text
-          console.log('[SvgFormTranslator] Applying patches to base SVG. Patches count:', data.svg_patches?.length || 0);
           const patchedBase = applySvgPatches(text, data.svg_patches || []);
           setSvgContent(patchedBase);
         }

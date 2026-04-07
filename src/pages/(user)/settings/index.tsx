@@ -35,7 +35,7 @@ export default function SettingsPage() {
     {
       label: "Customer Service",
       to: settings?.whatsapp_number
-        ? `https://wa.me/${settings.whatsapp_number}`
+        ? `https://wa.me/${settings.whatsapp_number.replace(/\D/g, "")}`
         : "https://wa.me/2348147929994",
       icon: LifeBuoy,
     },

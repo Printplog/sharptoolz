@@ -117,12 +117,10 @@ export default function WalletManagementPage() {
 
   const handleViewDetails = (wallet: UserWallet) => {
     // TODO: Open wallet details dialog
-    console.log('View details:', wallet);
   };
 
   const handleBlockWallet = (wallet: UserWallet) => {
     // TODO: Implement block/unblock wallet
-    console.log('Block wallet:', wallet);
   };
 
   const handleApproveRequest = (requestId: string, notes?: string) => {

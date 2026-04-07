@@ -24,7 +24,6 @@ export function useWalletSocket() {
         setWallet(msg.data);
         setNewPayment(msg.new_payment)
       }
-      console.log("[WS] Wallet updated:", msg);
     },
     [setWallet, setNewPayment]
   );

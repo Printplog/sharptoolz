@@ -201,16 +201,16 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="whatsapp_number" className="text-white/70 text-xs font-black uppercase tracking-widest">WhatsApp Number</Label>
+                    <Label htmlFor="whatsapp_number" className="text-white/70 text-xs font-black uppercase tracking-widest">WhatsApp Customer Care</Label>
                   </div>
                   <Input
                     id="whatsapp_number"
                     value={formData.whatsapp_number}
                     onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
                     className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
-                    placeholder="2349160914217"
+                    placeholder="2348147929994"
                   />
-                  <p className="text-[11px] text-white/40 italic">Used for manual Naira payments and fallback support.</p>
+                  <p className="text-[11px] text-white/40 italic">This number is used for the floating WhatsApp button and Customer Service links across the platform.</p>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
