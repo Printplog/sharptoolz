@@ -115,11 +115,11 @@ export default function WalletManagementPage() {
     setShowAdjustDialog(true);
   };
 
-  const handleViewDetails = (wallet: UserWallet) => {
+  const handleViewDetails = (_wallet: UserWallet) => {
     // TODO: Open wallet details dialog
   };
 
-  const handleBlockWallet = (wallet: UserWallet) => {
+  const handleBlockWallet = (_wallet: UserWallet) => {
     // TODO: Implement block/unblock wallet
   };
 
