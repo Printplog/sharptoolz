@@ -12,34 +12,39 @@ export default function BottomBar() {
 
   const baseNavigationItems = [
     {
-      icon: LayoutDashboard,
+      icon: <LayoutDashboard className="w-5 h-5 mb-[2px]" />,
       label: "Home",
       to: "/dashboard",
     },
     {
-      icon: Hammer,
+      icon: <img src="/sharpguy.png" className="w-5 h-5 mb-[2px] object-contain" alt="Sharp Guy" />,
+      label: "Sharp Guy",
+      to: "/sharp-guy",
+    },
+    {
+      icon: <Hammer className="w-5 h-5 mb-[2px]" />,
       label: "Tools",
       to: "/tools",
     },
     {
-      icon: ClipboardList,
+      icon: <ClipboardList className="w-5 h-5 mb-[2px]" />,
       label: "Documents",
       to: "/documents",
     },
     {
-      icon: Wallet,
+      icon: <Wallet className="w-5 h-5 mb-[2px]" />,
       label: "Wallet",
       to: "/wallet",
     },
     {
-      icon: Settings,
+      icon: <Settings className="w-5 h-5 mb-[2px]" />,
       label: "Settings",
       to: "/settings",
     },
   ];
 
   const adminNavigationItem = {
-    icon: ArrowRight,
+    icon: <ArrowRight className="w-5 h-5 mb-[2px]" />,
     label: "Admin",
     to: "/admin/dashboard",
   };
@@ -59,7 +64,6 @@ export default function BottomBar() {
           // For user routes, check if pathname includes the route but not /admin/
           isActive = pathname.includes(item.to) && !pathname.startsWith("/admin/");
         }
-        const Icon = item.icon;
 
         return (
           <Link
@@ -70,7 +74,7 @@ export default function BottomBar() {
               isActive && "text-primary"
             )}
           >
-            <Icon className="w-5 h-5 mb-[2px]" />
+            {item.icon}
             {item.label}
           </Link>
         );

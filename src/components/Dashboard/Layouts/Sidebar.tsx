@@ -25,6 +25,11 @@ export default function Sidebar() {
       to: "/dashboard",
     },
     {
+      icon: <img src="/sharpguy.png" className="h-4 w-4 object-contain" alt="Sharp Guy" />,
+      label: "Sharp Guy",
+      to: "/sharp-guy",
+    },
+    {
       icon: <Hammer className="h-4 w-4" />,
       label: "All Tools",
       to: "/tools",

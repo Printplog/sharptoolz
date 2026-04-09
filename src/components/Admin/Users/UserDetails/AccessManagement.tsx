@@ -65,7 +65,7 @@ export default function AccessManagement({
                         </div>
                     </div>
 
-                    <div className="h-[1px] bg-white/5 w-full" />
+                    <div className="h-px bg-white/10 my-6" />
 
                     <div className="flex items-center justify-between">
                         <div className="flex flex-col gap-1">

@@ -35,6 +35,7 @@ export type Path =
   | `/documents/:id`
   | `/settings`
   | `/settings/api`
+  | `/sharp-guy`
   | `/sub`
   | `/svg-test-render`
   | `/tools`

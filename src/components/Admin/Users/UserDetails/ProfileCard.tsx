@@ -16,7 +16,7 @@ interface InfoTileProps {
 
 function InfoTile({ label, value, icon: Icon, active }: InfoTileProps) {
     return (
-        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-white/[0.08] group">
+        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-white/8 group">
             <div className={cn(
                 "w-12 h-12 rounded-xl flex items-center justify-center border transition-colors shrink-0",
                 active ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-white/5 border-white/10 text-white/30 group-hover:text-white/60"
