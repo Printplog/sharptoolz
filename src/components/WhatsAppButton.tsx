@@ -10,8 +10,7 @@ import {
   Headphones, 
   Send, 
   Twitter,
-  Instagram,
-  Video
+  Instagram
 } from "lucide-react";
 
 interface ActionItem {
@@ -228,7 +227,7 @@ export default function WhatsAppButton() {
                 <Headphones size={28} />
                 {/* Pulsing effect only when closed */}
                 {!isOpen && (
-                  <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                  <span className="absolute -inset-2 rounded-full bg-primary/20 animate-ping" />
                 )}
               </motion.div>
             )}
