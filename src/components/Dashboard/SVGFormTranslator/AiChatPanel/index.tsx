@@ -1,22 +1,36 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import useChatStore, { type ClarificationOption } from "@/store/chatStore";
 import useToolStore from "@/store/formStore";
 
 import AiChatMessages from "./AiChatMessages";
 import AiChatInput from "./AiChatInput";
-import AiPreviewPanel from "./AiPreviewPanel";
 
 interface AiChatPanelProps {
   templateId?: string;
   purchasedTemplateId?: string;
+  onSwitchPreview?: () => void;
+  isActive?: boolean;
 }
 
 export default function AiChatPanel({
   templateId,
   purchasedTemplateId,
+  onSwitchPreview,
+  isActive,
 }: AiChatPanelProps) {
-  const { messages, isStreaming, statusText, sendMessage } = useChatStore();
+  const { messages, isStreaming, statusText, sendMessage, loadSession, currentSessionId } = useChatStore();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get("session_id");
   const { fields, updateField, notifyDependents } = useToolStore();
+  
+  useEffect(() => {
+    if (sessionId && sessionId !== currentSessionId) {
+      loadSession(sessionId, (id) => {
+        // Handle side effects of template loading if needed
+      });
+    }
+  }, [sessionId, currentSessionId, loadSession]);
   const [input, setInput] = useState("");
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
   const [fieldUpdateCount, setFieldUpdateCount] = useState(0);
@@ -94,15 +108,9 @@ export default function AiChatPanel({
           bottomRef={bottomRef}
           statusText={statusText}
           onOptionSelect={handleOptionSelect}
+          onSwitchPreview={onSwitchPreview}
         />
       </div>
-
-      {/* Inline live preview — auto-expands after AI edits */}
-      <AiPreviewPanel
-        templateId={templateId}
-        purchasedTemplateId={purchasedTemplateId}
-        updateCount={fieldUpdateCount}
-      />
 
       {/* Input */}
       <AiChatInput
@@ -112,6 +120,7 @@ export default function AiChatPanel({
         onSend={handleSend}
         attachedImage={attachedImage}
         setAttachedImage={setAttachedImage}
+        isActive={isActive}
       />
     </div>
   );

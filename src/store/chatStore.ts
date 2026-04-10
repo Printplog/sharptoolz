@@ -43,6 +43,19 @@ export interface ToolCard {
   banner: string;
 }
 
+export interface FieldUpdateSuggestion {
+  id: string;
+  value: string;
+  old_value?: string;
+}
+
+export interface FieldSuggestion {
+  suggestion_id: string;
+  rationale: string;
+  updates: FieldUpdateSuggestion[];
+  status: "pending" | "approved" | "rejected";
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -58,24 +71,32 @@ export interface ChatMessage {
   loadedTemplate?: LoadedTemplate;
   purchasedTemplate?: PurchasedTemplateInfo;
   documentFile?: DocumentFile;
+  suggestions?: FieldSuggestion[];
+}
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  template?: string;
+  purchased_template?: string;
+  message_count: number;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ChatStore {
   messages: ChatMessage[];
+  sessions: ChatSession[];
+  currentSessionId: string | null;
   isStreaming: boolean;
   statusText: string | null;
   fieldSnapshot: Record<string, string> | null;
   onTemplateLoad: ((templateId: string) => void) | null;
   activeInlineTemplateId: string | null;
   inlineEditorFields: Record<string, string>;
-  /** SVG text cache keyed by template ID — avoids re-fetching on every message */
-  /** SVG text cache keyed by template ID — avoids re-fetching on every message */
   svgCache: Record<string, string>;
-  /** Field definitions for the currently active inline template */
   activeInlineTemplateFields: any[];
-  /** Latest recommended templates from the AI */
   suggestedTemplates: ToolCard[];
-  /** Current UI mode for the chat */
   chatMode: "chat" | "create";
 
   sendMessage: (
@@ -89,7 +110,11 @@ interface ChatStore {
       onTemplateLoad?: (templateId: string) => void;
     }
   ) => void;
-  /** Load a template inline without an AI round-trip (e.g. from clarification option clicks) */
+  fetchSessions: () => Promise<void>;
+  loadSession: (sessionId: string, onTemplateLoad?: (id: string) => void) => Promise<void>;
+  deleteSession: (sessionId: string) => Promise<void>;
+  renameSession: (sessionId: string, title: string) => Promise<void>;
+  newChat: (chatMode?: "chat" | "create") => void;
   loadTemplateDirectly: (tpl: LoadedTemplate) => void;
   clearChat: () => void;
   takeSnapshot: (fields: any[]) => void;
@@ -97,10 +122,14 @@ interface ChatStore {
   cacheSvg: (templateId: string, svgText: string) => void;
   setActiveTemplateFields: (fields: any[]) => void;
   setChatMode: (mode: "chat" | "create") => void;
+  approveSuggestion: (messageIndex: number, suggestionId: string, onUpdate: (id: string, value: string) => void) => void;
+  rejectSuggestion: (messageIndex: number, suggestionId: string) => void;
 }
 
 const useChatStore = create<ChatStore>((set, get) => ({
   messages: [],
+  sessions: [],
+  currentSessionId: null,
   isStreaming: false,
   statusText: null,
   fieldSnapshot: null,
@@ -114,6 +143,141 @@ const useChatStore = create<ChatStore>((set, get) => ({
 
   setChatMode: (mode) => set({ chatMode: mode }),
 
+  fetchSessions: async () => {
+    try {
+      const res = await fetch(`${BASE_URL.replace(/\/+$/, "")}/ai-chat/sessions/`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        set({ sessions: data });
+      }
+    } catch (err) {
+      console.error("Failed to fetch chat sessions", err);
+    }
+  },
+
+  loadSession: async (sessionId, onTemplateLoad) => {
+    set({ isStreaming: true, currentSessionId: sessionId, messages: [] });
+    try {
+      const res = await fetch(`${BASE_URL.replace(/\/+$/, "")}/ai-chat/sessions/${sessionId}/messages/`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Map backend messages to frontend ChatMessage structure
+        const msgs: ChatMessage[] = data.map((m: any) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content || "",
+          attachmentUrl: m.metadata?.attachmentUrl,
+          toolCards: m.metadata?.tool_cards,
+          clarification: m.metadata?.clarification?.[0], // Metadata stores arrays of events per message
+          loadedTemplate: m.metadata?.template_loaded?.[0]?.template,
+          purchasedTemplate: m.metadata?.purchased?.[0]?.template,
+          documentFile: m.metadata?.document_ready?.[0]?.file,
+          suggestions: m.metadata?.field_suggestion?.map((s: any) => ({ ...s, status: "pending" })),
+        }));
+        
+        // If the last assistant message has a loaded template, set it as active
+        const lastWithTemplate = [...msgs].reverse().find(m => m.loadedTemplate);
+        if (lastWithTemplate?.loadedTemplate) {
+          set({ activeInlineTemplateId: lastWithTemplate.loadedTemplate.id });
+          if (onTemplateLoad) onTemplateLoad(lastWithTemplate.loadedTemplate.id);
+        }
+
+        set({ messages: msgs, isStreaming: false });
+      }
+    } catch (err) {
+      console.error("Failed to load session history", err);
+      set({ isStreaming: false });
+    }
+  },
+
+  deleteSession: async (sessionId) => {
+    try {
+      const res = await fetch(`${BASE_URL.replace(/\/+$/, "")}/ai-chat/sessions/${sessionId}/`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        set((state) => ({
+          sessions: state.sessions.filter((s) => s.id !== sessionId),
+          currentSessionId: state.currentSessionId === sessionId ? null : state.currentSessionId,
+          messages: state.currentSessionId === sessionId ? [] : state.messages,
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to delete session", err);
+    }
+  },
+
+  renameSession: async (sessionId, title) => {
+    try {
+      const res = await fetch(`${BASE_URL.replace(/\/+$/, "")}/ai-chat/sessions/${sessionId}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title }),
+      });
+      if (res.ok) {
+        set((state) => ({
+          sessions: state.sessions.map((s) => (s.id === sessionId ? { ...s, title } : s)),
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to rename session", err);
+    }
+  },
+
+  newChat: (mode) => {
+    set({
+      currentSessionId: null,
+      messages: [],
+      activeInlineTemplateId: null,
+      inlineEditorFields: {},
+      activeInlineTemplateFields: [],
+      suggestedTemplates: [],
+      chatMode: mode || get().chatMode
+    });
+  },
+
+  approveSuggestion: (msgIdx, sugId, onUpdate) => {
+    set((state) => {
+      const msgs = [...state.messages];
+      const msg = msgs[msgIdx];
+      if (!msg?.suggestions) return state;
+
+      const suggestion = msg.suggestions.find((s) => s.suggestion_id === sugId);
+      if (suggestion && suggestion.status === "pending") {
+        suggestion.status = "approved";
+        const newFields = { ...state.inlineEditorFields };
+        suggestion.updates.forEach((upd) => {
+          newFields[upd.id] = upd.value;
+          onUpdate(upd.id, upd.value);
+        });
+        return { 
+          messages: msgs,
+          inlineEditorFields: newFields
+        };
+      }
+      return { messages: msgs };
+    });
+  },
+
+  rejectSuggestion: (msgIdx, sugId) => {
+    set((state) => {
+      const msgs = [...state.messages];
+      const msg = msgs[msgIdx];
+      if (!msg?.suggestions) return state;
+
+      const suggestion = msg.suggestions.find((s) => s.suggestion_id === sugId);
+      if (suggestion && suggestion.status === "pending") {
+        suggestion.status = "rejected";
+      }
+      return { messages: msgs };
+    });
+  },
+
   cacheSvg: (templateId, svgText) =>
     set((state) => ({ svgCache: { ...state.svgCache, [templateId]: svgText } })),
 
@@ -124,7 +288,7 @@ const useChatStore = create<ChatStore>((set, get) => ({
     const userMessage: ChatMessage = { 
       role: "user", 
       content,
-      attachmentUrl: imageBase64 // Store the actual base64 so it can be re-sent in history
+      attachmentUrl: imageBase64 
     };
     const updatedMessages = [...get().messages, userMessage];
 
@@ -133,7 +297,6 @@ const useChatStore = create<ChatStore>((set, get) => ({
       isStreaming: true,
     });
 
-    // Add empty streaming assistant message
     const assistantIdx = updatedMessages.length;
     set((state) => ({
       messages: [
@@ -142,8 +305,9 @@ const useChatStore = create<ChatStore>((set, get) => ({
       ],
     }));
 
-    const { activeInlineTemplateId, chatMode } = get();
+    const { activeInlineTemplateId, chatMode, currentSessionId } = get();
     const body: Record<string, unknown> = {
+      session_id: currentSessionId,
       messages: updatedMessages.map(({ role, content, attachmentUrl }) => ({ 
         role, 
         content, 
@@ -183,6 +347,8 @@ const useChatStore = create<ChatStore>((set, get) => ({
               }
               return { messages: msgs, isStreaming: false, statusText: null };
             });
+            // Refresh sessions list after message finishes to catch new titles
+            get().fetchSessions();
             return Promise.resolve();
           }
 
@@ -195,7 +361,13 @@ const useChatStore = create<ChatStore>((set, get) => ({
             try {
               const event = JSON.parse(line.slice(6));
 
-              if (event.type === "status") {
+              if (event.type === "session_id") {
+                if (!get().currentSessionId) set({ currentSessionId: event.id });
+              } else if (event.type === "session_updated") {
+                set((state) => ({
+                  sessions: state.sessions.map(s => s.id === state.currentSessionId ? { ...s, title: event.title } : s)
+                }));
+              } else if (event.type === "status") {
                 set({ statusText: event.label ?? null });
               } else if (event.type === "text") {
                 set({ statusText: null });
@@ -211,21 +383,16 @@ const useChatStore = create<ChatStore>((set, get) => ({
                 });
               } else if (event.type === "field_update") {
                 fieldUpdatesForMsg.push(event.id);
-                // Replace [[ATTACHED_IMAGE]] placeholder with the actual base64
                 const resolvedValue =
                   event.value === "[[ATTACHED_IMAGE]]" && imageBase64
                     ? imageBase64
                     : event.value;
                 onFieldUpdate(event.id, resolvedValue);
-                // Mirror updates into inlineEditorFields so InlineTemplateEditor can react
                 set((state) => ({
                   inlineEditorFields: { ...state.inlineEditorFields, [event.id]: resolvedValue },
                 }));
               } else if (event.type === "tool_cards") {
-                // Store tool cards globally for the right preview panel
                 set({ suggestedTemplates: event.cards });
-                
-                // Also store in the specific message if no template is actively being edited
                 const { activeInlineTemplateId } = get();
                 if (!activeInlineTemplateId) {
                   set((state) => {
@@ -240,7 +407,6 @@ const useChatStore = create<ChatStore>((set, get) => ({
                   });
                 }
               } else if (event.type === "clarification") {
-                // Store clarification options in the current assistant message
                 set((state) => {
                   const msgs = [...state.messages];
                   if (msgs[assistantIdx]) {
@@ -255,7 +421,6 @@ const useChatStore = create<ChatStore>((set, get) => ({
                   return { messages: msgs };
                 });
               } else if (event.type === "template_loaded") {
-                // Store loaded template - inline editor will show in chat
                 const tpl = event.template;
                 if (onTemplateLoad && tpl?.id) {
                   onTemplateLoad(tpl.id);
@@ -272,7 +437,6 @@ const useChatStore = create<ChatStore>((set, get) => ({
                   };
                 });
               } else if (event.type === "purchased") {
-                // Template purchased successfully
                 const pt = event.template;
                 set((state) => {
                   const msgs = [...state.messages];
@@ -285,7 +449,6 @@ const useChatStore = create<ChatStore>((set, get) => ({
                   return { messages: msgs };
                 });
               } else if (event.type === "document_ready") {
-                // Document ready for download
                 const file = event.file;
                 set((state) => {
                   const msgs = [...state.messages];
@@ -297,20 +460,20 @@ const useChatStore = create<ChatStore>((set, get) => ({
                   }
                   return { messages: msgs };
                 });
-              } else if (event.type === "purchase_error") {
-                // Purchase failed
+              } else if (event.type === "field_suggestion") {
                 set((state) => {
                   const msgs = [...state.messages];
                   if (msgs[assistantIdx]) {
-                    msgs[assistantIdx] = {
-                      ...msgs[assistantIdx],
-                      content: msgs[assistantIdx].content + `\n\n⚠️ ${event.message}`,
-                    };
+                    const suggestions = msgs[assistantIdx].suggestions || [];
+                    suggestions.push({
+                      ...event,
+                      status: "pending"
+                    });
+                    msgs[assistantIdx] = { ...msgs[assistantIdx], suggestions };
                   }
                   return { messages: msgs };
                 });
-              } else if (event.type === "download_error") {
-                // Download failed
+              } else if (event.type === "purchase_error" || event.type === "download_error") {
                 set((state) => {
                   const msgs = [...state.messages];
                   if (msgs[assistantIdx]) {
@@ -323,7 +486,6 @@ const useChatStore = create<ChatStore>((set, get) => ({
                 });
               } else if (event.type === "done") {
                 set({ statusText: null });
-                // Mark message as having field updates (for UI badge logic)
                 if (fieldUpdatesForMsg.length > 0) {
                   set((state) => {
                     const msgs = [...state.messages];
@@ -339,7 +501,7 @@ const useChatStore = create<ChatStore>((set, get) => ({
                 }
               }
             } catch {
-              // Malformed SSE line — skip
+              // skip
             }
           }
 
@@ -380,6 +542,7 @@ const useChatStore = create<ChatStore>((set, get) => ({
   clearChat: () =>
     set({
       messages: [],
+      currentSessionId: null,
       isStreaming: false,
       activeInlineTemplateId: null,
       inlineEditorFields: {},

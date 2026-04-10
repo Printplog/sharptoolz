@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Loader2, Copy, Check, FileText } from "lucide-react";
+import { Loader2, Copy, Check, FileText, Hammer } from "lucide-react";
 import SharpGuyIcon from "@/components/SharpGuyIcon";
 import { cn } from "@/lib/utils";
 import type { ChatMessage, ClarificationOption } from "@/store/chatStore";
@@ -8,6 +8,8 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ClarificationPrompt from "./ClarificationPrompt";
 import DocumentReady from "./DocumentReady";
+import SuggestionCard from "./SuggestionCard";
+import useChatStore from "@/store/chatStore";
 
 const CHARS_PER_TICK = 3;
 const TICK_MS = 20;
@@ -15,10 +17,12 @@ const TICK_MS = 20;
 const MessageItem = memo(
   ({
     msg,
+    index,
     statusText,
     onOptionSelect,
   }: {
     msg: ChatMessage;
+    index: number;
     statusText?: string | null;
     onOptionSelect?: (option: ClarificationOption) => void;
   }) => {
@@ -28,6 +32,9 @@ const MessageItem = memo(
     const [copied, setCopied] = useState(false);
     const queueRef = useRef("");
     const navigate = useNavigate();
+
+    const approveSuggestion = useChatStore((s) => s.approveSuggestion);
+    const rejectSuggestion = useChatStore((s) => s.rejectSuggestion);
 
     useEffect(() => {
       if (!msg.isStreaming) {
@@ -91,13 +98,13 @@ const MessageItem = memo(
 
         {!shouldHideBubble && (
           <>
-            <div className="relative max-w-[88%]">
+            <div className="relative max-w-[85%]">
               <div
                 className={cn(
-                  "rounded-xl px-3 py-2 text-sm leading-relaxed wrap-break-word",
+                  "rounded-2xl px-4 py-3 text-[15px] leading-relaxed transition-all",
                   msg.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
-                    : "bg-white/5 border border-white/10 text-white rounded-bl-sm [&_ul]:list-disc [&_ul]:list-inside [&_li]:mt-1 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:list-inside [&_a]:text-blue-400 [&_a]:underline",
+                    ? "bg-primary/20 backdrop-blur-md border border-primary/30 text-white rounded-tr-none whitespace-pre-wrap font-medium"
+                    : "glass-card rounded-tl-none text-white/90 [&_ul]:list-disc [&_ul]:list-inside [&_li]:mt-1 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:list-inside [&_a]:text-indigo-400 [&_a]:underline [&_strong]:text-indigo-400 [&_strong]:font-bold",
                 )}
               >
                 {msg.role === "assistant" ? (
@@ -107,6 +114,7 @@ const MessageItem = memo(
                       a: ({ href, children }) => (
                         <a
                           href={href || "#"}
+                          className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium border-b border-indigo-400/30"
                           onClick={(e) => handleLinkClick(e, href || "")}
                           target={href?.startsWith("/") ? undefined : "_blank"}
                           rel={
@@ -126,7 +134,7 @@ const MessageItem = memo(
                   renderContent
                 )}
                 {msg.isStreaming && (
-                  <span className="inline-block w-[6px] h-[13px] bg-white rounded-sm ml-1 align-middle animate-pulse" />
+                  <span className="inline-block w-[2.5px] h-[1.1em] bg-primary ml-1.5 align-middle animate-[blink_1s_step-end_infinite] primary-glow" />
                 )}
 
                 {msg.role === "user" && msg.attachmentUrl && (
@@ -164,25 +172,98 @@ const MessageItem = memo(
               />
             )}
 
-            {/* Template loaded — slim badge (preview is in the right panel) */}
+            {/* Template loaded card */}
             {msg.loadedTemplate && (
-              <div className="w-full mt-2 animate-in fade-in duration-300">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/6 text-[11px] text-emerald-300">
-                  <FileText size={11} className="shrink-0" />
-                  <span>
-                    <strong>{msg.loadedTemplate.name}</strong> loaded — see preview →
-                  </span>
-                </div>
+              <div className="w-full mt-3 animate-in fade-in duration-300">
+                <button
+                  onClick={() => navigate(`/tools/${msg.loadedTemplate?.id}`)}
+                  className="flex items-center gap-3 p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 transition-all text-left group w-fit max-w-full"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                    <FileText size={20} />
+                  </div>
+                  <div className="flex-1 min-w-0 pr-4">
+                    <p className="text-[14px] font-bold text-indigo-300 truncate">
+                      {msg.loadedTemplate.name}
+                    </p>
+                    <p className="text-[10px] text-indigo-500/60 uppercase tracking-widest mt-0.5">
+                      Open Editor →
+                    </p>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {/* Tool Cards (SearchResults) */}
+            {msg.toolCards && msg.toolCards.length > 0 && (
+              <div className="flex flex-col gap-2 mt-4 w-full">
+                {msg.toolCards.map((card) => (
+                  <button
+                    key={card.id}
+                    onClick={() => navigate(`/tools/${card.id}`)}
+                    className="flex items-center gap-4 p-3 rounded-2xl glass-card border-white/5 hover:border-indigo-500/30 transition-all text-left group w-full max-w-[420px]"
+                  >
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-indigo-500/5 border border-white/5 shrink-0">
+                      {card.banner ? (
+                        <img
+                          src={card.banner}
+                          alt=""
+                          className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-indigo-400/40 group-hover:text-indigo-400 transition-colors">
+                          <Hammer size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-bold text-white group-hover:text-indigo-300 transition-colors truncate leading-tight">
+                        {card.name}
+                      </p>
+                      <p className="text-[11px] text-white/40 line-clamp-1 mt-1 group-hover:text-white/60 transition-colors">
+                        {card.description || `Build your professional ${card.name}`}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-bold uppercase tracking-wider border border-indigo-500/20">
+                          ${card.price}
+                        </span>
+                        <span className="text-[9px] text-white/20 uppercase tracking-tighter">
+                          {card.toolName}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
 
             {/* Document ready for download */}
             {msg.documentFile && <DocumentReady file={msg.documentFile} />}
 
+            {/* Field Suggestions */}
+            {msg.suggestions?.map((sug) => (
+              <SuggestionCard
+                key={sug.suggestion_id}
+                suggestion={sug}
+                onApprove={() =>
+                  approveSuggestion(
+                    index,
+                    sug.suggestion_id,
+                    (id, val) =>
+                      (window as any).__inlineEditorUpdateField?.(id, val),
+                  )
+                }
+                onReject={() => rejectSuggestion(index, sug.suggestion_id)}
+              />
+            ))}
+
             {/* Purchased confirmation */}
             {msg.purchasedTemplate && (
               <div className="w-full mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] px-3.5 py-2.5 flex items-center gap-2">
+                <div 
+                  className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] px-3.5 py-2.5 flex items-center gap-2 cursor-pointer hover:bg-emerald-500/[0.08] transition-colors"
+                  onClick={() => navigate(`/tools/${msg.purchasedTemplate?.id}`)}
+                >
                   <Check size={14} className="text-emerald-400 shrink-0" />
                   <p className="text-[12px] text-emerald-200">
                     Purchased <strong>{msg.purchasedTemplate.name}</strong> for
@@ -241,6 +322,7 @@ export default function SharpGuyMessages({
         <MessageItem
           key={i}
           msg={msg}
+          index={i}
           statusText={statusText}
           onOptionSelect={onOptionSelect}
         />
@@ -249,22 +331,22 @@ export default function SharpGuyMessages({
         <div
           className={cn(
             "flex items-start gap-2 px-1",
-            lastIsAssistant ? "mt-[-8px] ml-[36px]" : "",
+            lastIsAssistant ? "mt-[-12px] ml-[36px]" : "",
           )}
         >
           {!lastIsAssistant && <SharpGuyIcon size={28} className="shrink-0" />}
-          <div className="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3 py-1.5 min-w-[140px]">
-            <span className="flex gap-[3px] items-end h-3">
-              <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:0ms]" />
-              <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:150ms]" />
-              <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:300ms]" />
+          <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 rounded-2xl px-4 py-2 min-w-[160px]">
+            <span className="flex gap-[4px] items-end h-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:150ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:300ms]" />
             </span>
-            <span className="text-[11px] text-indigo-300 font-medium whitespace-nowrap">
+            <span className="text-[11px] text-primary font-bold uppercase tracking-wider">
               {statusText}
             </span>
             <Loader2
-              size={10}
-              className="animate-spin text-indigo-400 shrink-0 ml-auto"
+              size={12}
+              className="animate-spin text-primary shrink-0 ml-auto opacity-60"
             />
           </div>
         </div>

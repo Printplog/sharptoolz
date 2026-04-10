@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp, Paperclip, X, Image as ImageIcon, Mic, MicOff, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface AiChatInputProps {
   input: string;
@@ -11,6 +12,7 @@ interface AiChatInputProps {
   onSend: () => void;
   attachedImage: File | null;
   setAttachedImage: (file: File | null) => void;
+  isActive?: boolean;
 }
 
 export default function AiChatInput({
@@ -20,8 +22,30 @@ export default function AiChatInput({
   onSend,
   attachedImage,
   setAttachedImage,
+  isActive = true,
 }: AiChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Type-to-focus pattern: Global listener that focuses the input when printable keys are pressed
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleWindowKeyDown = (e: KeyboardEvent) => {
+      const isSearchActive = document.activeElement?.tagName === "INPUT" || 
+                             document.activeElement?.tagName === "TEXTAREA" ||
+                             (document.activeElement as HTMLElement)?.isContentEditable;
+      
+      if (isSearchActive) return;
+
+      // Check if it's a printable character (single char, not a modifier)
+      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        textareaRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleWindowKeyDown);
+    return () => window.removeEventListener("keydown", handleWindowKeyDown);
+  }, [isActive]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
@@ -111,20 +135,20 @@ export default function AiChatInput({
   };
 
   return (
-    <div className="border-t border-white/10 p-4 flex flex-col gap-3 bg-black/20">
+    <div className="p-4 md:p-6 flex flex-col gap-3 md:gap-4 bg-white/[0.02] backdrop-blur-xl border-t border-white/10">
       {/* Smart Chips */}
       {!input && !attachedImage && (
         <div className="flex gap-2 mb-1 overflow-x-auto pb-1 no-scrollbar">
           <button
             onClick={handleMagicFill}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-400 font-bold uppercase tracking-wider hover:bg-blue-500/20 transition-all whitespace-nowrap group"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card border-primary/20 text-[10px] text-primary font-bold uppercase tracking-wider transition-all whitespace-nowrap group"
           >
-            <Sparkles size={10} className="group-hover:animate-pulse" />
+            <Sparkles size={11} className="group-hover:animate-pulse" />
             Magic Fill
           </button>
           <button
             onClick={() => setInput("Search for recent company addresses in New York")}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/40 font-bold uppercase tracking-wider hover:bg-white/10 transition-all whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[10px] text-white/40 font-bold uppercase tracking-wider whitespace-nowrap"
           >
             Web Search
           </button>
@@ -133,7 +157,7 @@ export default function AiChatInput({
 
       {/* Attachment Preview */}
       {attachedImage && (
-        <div className="flex items-center gap-2 bg-white/5 border border-white/10 p-2 rounded-xl w-max animate-in fade-in slide-in-from-bottom-1">
+        <div className="flex items-center gap-2 glass-card p-2 rounded-xl w-max animate-in fade-in slide-in-from-bottom-1">
           <ImageIcon size={14} className="text-muted-foreground" />
           <span className="text-xs text-white max-w-[150px] truncate">
             {attachedImage.name}
@@ -147,8 +171,8 @@ export default function AiChatInput({
         </div>
       )}
 
-      {/* Input Row */}
-      <div className="flex gap-2 items-end">
+      {/* Integrated Action Bar (Stacked Layout) */}
+      <div className="flex-1 relative glass-panel rounded-2xl bg-white/[0.03] border-white/20 group-focus-within:border-primary/30 transition-all flex flex-col p-2 gap-2 shadow-2xl">
         <input
           type="file"
           accept="image/*"
@@ -156,45 +180,57 @@ export default function AiChatInput({
           ref={fileInputRef}
           onChange={handleFileSelect}
         />
-        <div className="flex gap-1 shrink-0">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-10 w-10 text-muted-foreground hover:text-white hover:bg-white/5 rounded-full transition-all focus-visible:ring-0 focus-visible:ring-offset-0"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isStreaming}
-          >
-            <Paperclip size={18} />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className={`h-10 w-10 rounded-full transition-all focus-visible:ring-0 focus-visible:ring-offset-0 ${isListening ? 'bg-red-500/20 text-red-500 animate-pulse' : 'text-muted-foreground hover:text-white hover:bg-white/5'}`}
-            onClick={toggleListening}
-            disabled={isStreaming}
-          >
-            {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-          </Button>
-        </div>
-
+        
+        {/* Dynamic Textarea (Top) */}
         <Textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={isListening ? "Listening..." : "Ask AI or attach an image..."}
+          placeholder={isListening ? "Listening..." : "Ask AI..."}
           rows={1}
-          className="resize-none min-h-[40px] max-h-[150px] text-sm py-2.5 bg-white/5 border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl px-4 transition-all outline-none shadow-none"
+          className="flex-1 resize-none min-h-[44px] max-h-[200px] text-[15px] py-2 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl px-2 transition-all outline-none shadow-none text-white placeholder:text-white/20"
           disabled={isStreaming}
         />
-        <Button
-          size="icon"
-          className="h-10 w-10 shrink-0 bg-blue-600 text-white hover:bg-blue-500 rounded-full shadow-lg shadow-blue-600/20 active:scale-95 transition-all focus-visible:ring-0 focus-visible:ring-offset-0"
-          onClick={handleSend}
-          disabled={(!input.trim() && !attachedImage) || isStreaming}
-        >
-          <ArrowUp size={18} />
-        </Button>
+
+        {/* Action Row (Bottom) */}
+        <div className="flex items-center justify-between mt-auto pt-1 border-t border-white/5">
+          <div className="flex gap-1 items-center">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-9 w-9 text-white/30 hover:text-white hover:bg-white/10 rounded-full transition-all"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isStreaming}
+            >
+              <Paperclip size={18} />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className={cn(
+                "h-9 w-9 rounded-full transition-all",
+                isListening ? "bg-red-500/20 text-red-500 animate-pulse" : "text-white/30 hover:text-white hover:bg-white/10"
+              )}
+              onClick={toggleListening}
+              disabled={isStreaming}
+            >
+              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+            </Button>
+          </div>
+
+          <Button
+            size="icon"
+            className={cn(
+              "h-10 w-10 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full active:scale-90 transition-all",
+              (!input.trim() && !attachedImage) || isStreaming ? "opacity-30 grayscale saturate-0" : "opacity-100"
+            )}
+            onClick={handleSend}
+            disabled={(!input.trim() && !attachedImage) || isStreaming}
+          >
+            <ArrowUp size={20} className="stroke-[3]" />
+          </Button>
+        </div>
       </div>
     </div>
   );

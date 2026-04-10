@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Loader2, Copy, Check } from "lucide-react";
+import { Loader2, Copy, Check, Eye, FileText } from "lucide-react";
 import SharpGuyIcon from "@/components/SharpGuyIcon";
 import { cn } from "@/lib/utils";
 import type { ChatMessage, ClarificationOption } from "@/store/chatStore";
@@ -16,6 +16,7 @@ interface AiChatMessagesProps {
   bottomRef: React.RefObject<HTMLDivElement | null>;
   statusText?: string | null;
   onOptionSelect?: (option: ClarificationOption) => void;
+  onSwitchPreview?: () => void;
 }
 
 const CHARS_PER_TICK = 3;
@@ -26,10 +27,12 @@ const MemoizedMessageItem = memo(
     msg,
     statusText,
     onOptionSelect,
+    onSwitchPreview,
   }: {
     msg: ChatMessage;
     statusText?: string | null;
     onOptionSelect?: (option: ClarificationOption) => void;
+    onSwitchPreview?: () => void;
   }) => {
     const [displayed, setDisplayed] = useState(
       msg.isStreaming ? "" : msg.content,
@@ -100,13 +103,13 @@ const MemoizedMessageItem = memo(
 
         {!shouldHideBubble && (
           <>
-            <div className="relative max-w-[88%]">
+            <div className="relative max-w-[85%]">
               <div
                 className={cn(
-                  "rounded-xl px-3 py-2 text-sm leading-relaxed wrap-break-word",
+                  "rounded-2xl px-4 py-3 text-[15px] leading-relaxed transition-all",
                   msg.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
-                    : "bg-white/5 border border-white/10 text-white rounded-bl-sm [&_ul]:list-disc [&_ul]:list-inside [&_li]:mt-1 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:list-inside [&_a]:text-blue-400 [&_a]:underline",
+                    ? "bg-primary/20 backdrop-blur-md border border-primary/30 text-white rounded-tr-none whitespace-pre-wrap font-medium"
+                    : "glass-card rounded-tl-none text-white/90 [&_ul]:list-disc [&_ul]:list-inside [&_li]:mt-1 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:list-inside [&_a]:text-indigo-400 [&_a]:underline [&_strong]:text-indigo-400 [&_strong]:font-bold",
                 )}
               >
                 {msg.role === "assistant" ? (
@@ -116,6 +119,7 @@ const MemoizedMessageItem = memo(
                       a: ({ href, children }) => (
                         <a
                           href={href || "#"}
+                          className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium border-b border-indigo-400/30"
                           onClick={(e) => handleLinkClick(e, href || "")}
                           target={href?.startsWith("/") ? undefined : "_blank"}
                           rel={
@@ -123,7 +127,6 @@ const MemoizedMessageItem = memo(
                               ? undefined
                               : "noopener noreferrer"
                           }
-                          className="text-blue-400 underline"
                         >
                           {children}
                         </a>
@@ -136,7 +139,7 @@ const MemoizedMessageItem = memo(
                   renderContent
                 )}
                 {msg.isStreaming && (
-                  <span className="inline-block w-[6px] h-[13px] bg-white rounded-sm ml-1 align-middle animate-pulse" />
+                  <span className="inline-block w-[2.5px] h-[1.1em] bg-primary ml-1.5 align-middle animate-[blink_1s_step-end_infinite] primary-glow" />
                 )}
 
                 {msg.role === "user" && msg.attachmentUrl && (
@@ -152,7 +155,7 @@ const MemoizedMessageItem = memo(
               {!msg.isStreaming && msg.content && (
                 <button
                   onClick={handleCopy}
-                  className="absolute -bottom-3 right-1 transition-transform hover:scale-125 bg-background border border-white/10 rounded-md p-1"
+                  className="absolute -bottom-3 right-1 transition-transform hover:scale-125 bg-background border border-white/10 rounded-md p-1 shadow-md z-10"
                   title="Copy message"
                 >
                   {copied ? (
@@ -179,9 +182,19 @@ const MemoizedMessageItem = memo(
               />
             )}
 
-            {/* Template loaded */}
+            {/* Template loaded card */}
             {msg.loadedTemplate && (
-              <TemplateLoaded template={msg.loadedTemplate} />
+              <div className="w-full mt-2 animate-in fade-in duration-300">
+                <button 
+                  onClick={() => navigate(`/tools/${msg.loadedTemplate?.id}`)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 transition-all text-[11px] text-indigo-300 font-bold uppercase tracking-wider shadow-sm"
+                >
+                  <FileText size={12} className="shrink-0" />
+                  <span>
+                    {msg.loadedTemplate.name} Loaded — Open Full Editor →
+                  </span>
+                </button>
+              </div>
             )}
 
             {/* Document ready for download */}
@@ -200,16 +213,27 @@ const MemoizedMessageItem = memo(
                 </div>
               </div>
             )}
+
+            {/* View Preview Button — added when changes are made */}
+            {msg.fieldUpdates && msg.fieldUpdates.length > 0 && onSwitchPreview && (
+              <button
+                onClick={onSwitchPreview}
+                className="mt-2 inline-flex items-center gap-2 py-2 px-4 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-[11px] text-indigo-300 font-bold uppercase tracking-widest transition-all"
+              >
+                <Eye size={13} className="shrink-0" />
+                <span>View Preview</span>
+              </button>
+            )}
           </>
         )}
 
-        {/* Field update badges */}
+        {/* Field update badges (smaller) */}
         {msg.fieldUpdates && msg.fieldUpdates.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-0.5 max-w-[88%]">
+          <div className="flex flex-wrap gap-1 mt-1 max-w-[88%]">
             {msg.fieldUpdates.map((fid) => (
               <span
                 key={fid}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20"
+                className="text-[9px] px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground border border-white/10"
               >
                 ✓ {fid}
               </span>
@@ -227,6 +251,7 @@ export default function AiChatMessages({
   bottomRef,
   statusText,
   onOptionSelect,
+  onSwitchPreview,
 }: AiChatMessagesProps) {
   if (messages.length === 0) {
     return (
@@ -256,28 +281,29 @@ export default function AiChatMessages({
           msg={msg}
           statusText={statusText}
           onOptionSelect={onOptionSelect}
+          onSwitchPreview={onSwitchPreview}
         />
       ))}
       {statusText && (
         <div
           className={cn(
             "flex items-start gap-2 px-1",
-            lastIsAssistant ? "mt-[-8px] ml-[36px]" : "",
+            lastIsAssistant ? "mt-[-12px] ml-[36px]" : "",
           )}
         >
           {!lastIsAssistant && <SharpGuyIcon size={28} className="shrink-0" />}
-          <div className="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl px-3 py-1.5 min-w-[140px]">
-            <span className="flex gap-[3px] items-end h-3">
-              <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:0ms]" />
-              <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:150ms]" />
-              <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce [animation-delay:300ms]" />
+          <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 rounded-2xl px-4 py-2 min-w-[160px]">
+            <span className="flex gap-[4px] items-end h-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:150ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:300ms]" />
             </span>
-            <span className="text-[11px] text-indigo-300 font-medium whitespace-nowrap">
+            <span className="text-[11px] text-primary font-bold uppercase tracking-wider">
               {statusText}
             </span>
             <Loader2
-              size={10}
-              className="animate-spin text-indigo-400 shrink-0 ml-auto"
+              size={12}
+              className="animate-spin text-primary shrink-0 ml-auto opacity-60"
             />
           </div>
         </div>

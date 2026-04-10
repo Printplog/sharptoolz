@@ -1,29 +1,47 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageSquare, FilePlus } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { MessageSquare, FilePlus, Menu, X as CloseIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import useChatStore, { type ClarificationOption, type LoadedTemplate } from "@/store/chatStore";
 import { cn } from "@/lib/utils";
 
 import SharpGuyMessages from "./SharpGuyMessages";
 import SharpGuyInput from "./SharpGuyInput";
-import LivePreviewPanel from "./LivePreviewPanel";
+import ChatSidebar from "./ChatSidebar";
 
 export default function SharpGuyChat() {
-  const messages = useChatStore((s) => s.messages);
-  const isStreaming = useChatStore((s) => s.isStreaming);
-  const statusText = useChatStore((s) => s.statusText);
-  const sendMessage = useChatStore((s) => s.sendMessage);
-  const loadTemplateDirectly = useChatStore((s) => s.loadTemplateDirectly);
-  const activeInlineTemplateId = useChatStore((s) => s.activeInlineTemplateId);
-  const inlineEditorFields = useChatStore((s) => s.inlineEditorFields);
-  const chatMode = useChatStore((s) => s.chatMode);
-  const setChatMode = useChatStore((s) => s.setChatMode);
+  const { 
+    messages, 
+    isStreaming, 
+    statusText, 
+    sendMessage, 
+    loadTemplateDirectly, 
+    loadSession, 
+    fetchSessions,
+    currentSessionId 
+  } = useChatStore();
+  
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get("session_id");
 
   const [input, setInput] = useState("");
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll last message into view above preview/input — keyboard-avoidance pattern
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
+  useEffect(() => {
+    if (sessionId && sessionId !== currentSessionId) {
+      loadSession(sessionId);
+    }
+  }, [sessionId, currentSessionId, loadSession]);
+
+  // Scroll last message into view — keyboard-avoidance pattern
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isStreaming]);
@@ -50,10 +68,10 @@ export default function SharpGuyChat() {
     setAttachedImage(null);
 
     sendMessage(trimmed, {
-      templateId: activeInlineTemplateId ?? undefined,
-      currentValues: inlineEditorFields,
+      templateId: undefined,
+      currentValues: {},
       imageBase64: base64Image,
-      onFieldUpdate: () => {},
+      onFieldUpdate: () => {}, // No field updates in global chat
     });
   };
 
@@ -71,56 +89,72 @@ export default function SharpGuyChat() {
       return;
     }
     sendMessage(option.value, {
-      templateId: activeInlineTemplateId ?? undefined,
-      currentValues: inlineEditorFields,
+      templateId: undefined,
+      currentValues: {},
       onFieldUpdate: () => {},
     });
   };
 
   return (
-    <div
-      className="flex h-[calc(100vh-140px)] max-w-6xl mx-auto rounded-2xl border border-white/10 overflow-hidden bg-background transition-all duration-500"
-    >
-      {/* ── Chat column ──────────────────────────────────────────────────────── */}
-      <div
+    <div className="flex h-[calc(100vh-140px)] max-w-6xl mx-auto rounded-3xl overflow-hidden glass-panel relative">
+      
+      {/* ── Chat Sidebar (Desktop) ───────────────────────────────────────────── */}
+      <div 
         className={cn(
-          "flex flex-col min-w-0 transition-all duration-500",
-          chatMode === "create" ? "flex-1" : "w-full"
+          "hidden md:block border-r border-white/10 transition-all duration-300 ease-in-out h-full overflow-hidden",
+          isSidebarVisible ? "w-64 opacity-100" : "w-0 opacity-0 border-none"
         )}
       >
-        {/* Mode Toggle Header */}
-        <div className="flex items-center justify-center p-2 border-b border-white/5 bg-white/2">
-          <div className="flex p-1 bg-black/40 rounded-xl border border-white/10 shadow-inner">
-            <button
-              onClick={() => setChatMode("chat")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all",
-                chatMode === "chat"
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                  : "text-white/40 hover:text-white/60"
-              )}
-            >
-              <MessageSquare size={14} />
-              Chat
-            </button>
-            <button
-              onClick={() => setChatMode("create")}
-              className={cn(
-                "flex items-center gap-2 px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all",
-                chatMode === "create"
-                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
-                  : "text-white/40 hover:text-white/60"
-              )}
-            >
-              <FilePlus size={14} />
-              Create Doc
-            </button>
-          </div>
+        <div className="w-64 h-full">
+          <ChatSidebar />
+        </div>
+      </div>
+
+      {/* ── Chat Sidebar (Mobile Overlay) ────────────────────────────────────── */}
+      <div 
+        className={cn(
+          "fixed inset-0 z-50 md:hidden transition-opacity duration-300",
+          isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+      >
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
+        <div 
+          className={cn(
+            "absolute inset-y-0 left-0 w-64 bg-background border-r border-white/10 transition-transform duration-300 transform",
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <ChatSidebar />
+        </div>
+      </div>
+
+      {/* ── Chat Main Column ─────────────────────────────────────────────────── */}
+      <div className="flex flex-col flex-1 min-w-0 relative h-full">
+        {/* Desktop Collapse Toggle */}
+        <div className="hidden md:block absolute top-1 left-1 z-10">
+          <button
+            onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+            className="p-2 text-white/20 hover:text-primary transition-colors bg-black/20 backdrop-blur-md rounded-xl border border-white/5 hover:border-primary/20"
+          >
+            {isSidebarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+          </button>
+        </div>
+        
+        {/* Mobile Header Toolbar */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-white/10 bg-white/5 backdrop-blur-md">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2.5 hover:bg-white/10 rounded-xl text-primary transition-colors"
+          >
+            <Menu size={20} />
+          </button>
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Sharp Guy AI</span>
+          <div className="w-10" /> {/* Spacer */}
         </div>
 
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto px-4 py-3 space-y-4"
+          className="flex-1 overflow-y-auto px-6 py-6 space-y-6 no-scrollbar"
         >
           <SharpGuyMessages
             messages={messages}
@@ -139,13 +173,6 @@ export default function SharpGuyChat() {
           setAttachedImage={setAttachedImage}
         />
       </div>
-
-      {/* ── Live preview column — desktop only ───────────────────────────────── */}
-      {chatMode === "create" && (
-        <div className="w-[380px] shrink-0 hidden lg:flex flex-col border-l border-white/8 min-h-0 animate-in slide-in-from-right duration-500">
-          <LivePreviewPanel />
-        </div>
-      )}
     </div>
   );
 }

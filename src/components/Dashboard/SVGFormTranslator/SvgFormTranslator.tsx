@@ -695,6 +695,8 @@ export default function SvgFormTranslator({
               <AiChatPanel
                 templateId={isPurchased ? undefined : id}
                 purchasedTemplateId={isPurchased ? id : undefined}
+                onSwitchPreview={() => setActiveTab("preview")}
+                isActive={activeTab === "ai"}
               />
             </div>
           </TabsContent>

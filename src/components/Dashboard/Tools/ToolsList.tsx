@@ -56,7 +56,7 @@ export default function ToolsList({ hot }: Props) {
 
   if (!hot && toolCategories && filteredTools.length > 0) {
     filteredTools.forEach((template) => {
-      const toolId = typeof template.tool === 'object' ? template.tool.id : template.tool;
+      const toolId = template.tool && typeof template.tool === 'object' ? template.tool.id : template.tool;
       if (toolId) {
         const toolCategory = toolCategories.find(t => t.id === toolId);
         if (toolCategory) {
@@ -68,6 +68,14 @@ export default function ToolsList({ hot }: Props) {
           }
           groupedTools[toolId].templates.push(template);
         }
+      } else {
+        if (!groupedTools['uncategorized']) {
+          groupedTools['uncategorized'] = {
+            tool: { id: 'uncategorized', name: 'Other Templates', description: 'Miscellaneous templates without a specific category.', price: '0.00', banner: '' },
+            templates: []
+          };
+        }
+        groupedTools['uncategorized'].templates.push(template);
       }
     });
   }
