@@ -172,7 +172,7 @@ export default function WhatsAppButton() {
                   className="pointer-events-auto group relative flex items-center"
                 >
                   {/* Tooltip Label */}
-                  <span className="absolute right-16 px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md text-white text-[11px] font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10 shadow-xl">
+                  <span className="absolute right-16 px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md text-white text-[11px] font-bold uppercase tracking-widest whitespace-nowrap opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10 shadow-xl">
                     {action.label}
                   </span>
 
