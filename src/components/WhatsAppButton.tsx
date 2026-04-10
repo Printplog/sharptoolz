@@ -34,10 +34,13 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg 
     viewBox="0 0 24 24" 
-    className={cn("w-5 h-5 fill-current", className)} 
+    className={cn("w-6 h-6", className)} 
     xmlns="http://www.w3.org/2000/svg"
   >
-    <path d="M12.525.02c1.31-.32 2.51.85 2.51 2.1l-.01 6.31c1.33-1.25 3.03-1.6 4.79-1.03l.01 2.92a4.99 4.99 0 0 0-3.32.33l-.01 7.82c0 3.1-2.52 5.62-5.63 5.62-3.11 0-5.63-2.52-5.63-5.63 0-3.1 2.52-5.62 5.63-5.62l.01 3.01c-1.45 0-2.62 1.17-2.62 2.62s1.17 2.62 2.62 2.62c1.45 0 2.63-1.17 2.63-2.62l.01-18.15Z"/>
+    <path 
+      fill="white"
+      d="M12.525.02c1.31-.32 2.51.85 2.51 2.1l-.01 6.31c1.33-1.25 3.03-1.6 4.79-1.03l.01 2.92a4.99 4.99 0 0 0-3.32.33l-.01 7.82c0 3.1-2.52 5.62-5.63 5.62-3.11 0-5.63-2.52-5.63-5.63 0-3.1 2.52-5.62 5.63-5.62l.01 3.01c-1.45 0-2.62 1.17-2.62 2.62s1.17 2.62 2.62 2.62c1.45 0 2.63-1.17 2.63-2.62l.01-18.15Z"
+    />
   </svg>
 );
 
@@ -222,7 +225,7 @@ export default function WhatsAppButton() {
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
-                className="relative"
+                className="relative flex items-center justify-center"
               >
                 <Headphones size={28} />
                 {/* Pulsing effect only when closed */}
