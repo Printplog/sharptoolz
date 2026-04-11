@@ -107,6 +107,7 @@ export default function WhatsAppButton() {
         ? `https://wa.me/${settings.whatsapp_number.replace(/\D/g, "")}`
         : `https://wa.me/2348147929994`,
       color: "bg-[#25D366]",
+      show: settings?.show_whatsapp_on_hover ?? true
     },
     {
       id: "community",
@@ -114,6 +115,7 @@ export default function WhatsAppButton() {
       icon: <WhatsAppIcon />,
       href: settings?.whatsapp_community_link || "#",
       color: "bg-[#128C7E]",
+      show: settings?.show_community_on_hover ?? true
     },
     {
       id: "telegram",
@@ -121,6 +123,7 @@ export default function WhatsAppButton() {
       icon: <Send size={20} />,
       href: settings?.telegram_link || "#",
       color: "bg-[#0088cc]",
+      show: settings?.show_telegram_on_hover ?? true
     },
     {
       id: "instagram",
@@ -128,6 +131,7 @@ export default function WhatsAppButton() {
       icon: <Instagram size={20} />,
       href: settings?.instagram_link || "#",
       color: "bg-radial-[at_30%_107%] from-[#fdf497] via-[#fdf497] to-[#d6249f] shadow-lg",
+      show: settings?.show_instagram_on_hover ?? true
     },
     {
       id: "twitter",
@@ -135,6 +139,7 @@ export default function WhatsAppButton() {
       icon: <Twitter size={20} />,
       href: settings?.twitter_link || "#",
       color: "bg-black",
+      show: settings?.show_twitter_on_hover ?? true
     },
     {
       id: "tiktok",
@@ -142,8 +147,9 @@ export default function WhatsAppButton() {
       icon: <TikTokIcon />,
       href: settings?.tiktok_link || "#",
       color: "bg-black border border-white/10",
+      show: settings?.show_tiktok_on_hover ?? true
     },
-  ].filter(action => action.href !== "#");
+  ].filter(action => action.href !== "#" && (action.show ?? true));
 
   return (
     <div 

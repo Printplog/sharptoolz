@@ -59,6 +59,12 @@ export default function AdminSettings() {
     enable_global_announcement: false,
     manual_purchase_text: "",
     tiktok_link: "",
+    show_whatsapp_on_hover: true,
+    show_community_on_hover: true,
+    show_telegram_on_hover: true,
+    show_instagram_on_hover: true,
+    show_twitter_on_hover: true,
+    show_tiktok_on_hover: true,
   });
 
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
@@ -91,6 +97,12 @@ export default function AdminSettings() {
         enable_global_announcement: settings.enable_global_announcement || false,
         manual_purchase_text: settings.manual_purchase_text || "",
         tiktok_link: settings.tiktok_link || "",
+        show_whatsapp_on_hover: settings.show_whatsapp_on_hover ?? true,
+        show_community_on_hover: settings.show_community_on_hover ?? true,
+        show_telegram_on_hover: settings.show_telegram_on_hover ?? true,
+        show_instagram_on_hover: settings.show_instagram_on_hover ?? true,
+        show_twitter_on_hover: settings.show_twitter_on_hover ?? true,
+        show_tiktok_on_hover: settings.show_tiktok_on_hover ?? true,
       });
     }
   }, [settings]);
@@ -298,6 +310,39 @@ export default function AdminSettings() {
                     placeholder="https://tiktok.com/@yourhandle"
                   />
                 </div>
+              </div>
+
+              {/* Hover Button Visibility Section */}
+              <div className="mt-8 pt-8 border-t border-white/5">
+                <div className="flex items-center gap-2 mb-6">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-black uppercase tracking-widest text-primary">Hover Button Visibility</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { id: 'show_whatsapp_on_hover', label: 'Support WhatsApp', icon: <MessageCircle className="w-4 h-4" /> },
+                    { id: 'show_community_on_hover', label: 'WhatsApp Community', icon: <MessageSquare className="w-4 h-4" /> },
+                    { id: 'show_telegram_on_hover', label: 'Telegram Channel', icon: <MessageSquare className="w-4 h-4" /> },
+                    { id: 'show_instagram_on_hover', label: 'Instagram Profile', icon: <Instagram className="w-4 h-4" /> },
+                    { id: 'show_twitter_on_hover', label: 'Twitter (X) Profile', icon: <Twitter className="w-4 h-4" /> },
+                    { id: 'show_tiktok_on_hover', label: 'TikTok Profile', icon: <Zap className="w-4 h-4" /> },
+                  ].map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-white/5 text-white/70">
+                          {item.icon}
+                        </div>
+                        <Label htmlFor={item.id} className="text-[11px] font-bold uppercase tracking-wider text-white/90 cursor-pointer">{item.label}</Label>
+                      </div>
+                      <Switch
+                        id={item.id}
+                        checked={formData[item.id as keyof SiteSettings] as boolean}
+                        onCheckedChange={(checked) => setFormData({ ...formData, [item.id]: checked })}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-[11px] text-white/40 italic">Note: All links will still be visible in the website footer. These toggles only affect the floating support button dial.</p>
               </div>
             </CardContent>
           </Card>
