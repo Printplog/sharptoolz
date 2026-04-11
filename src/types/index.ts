@@ -341,6 +341,14 @@ export type SiteSettings = {
   twitter_link: string;
   instagram_link: string;
   tiktok_link: string;
+  
+  // Hover Button Toggles
+  show_whatsapp_on_hover: boolean;
+  show_community_on_hover: boolean;
+  show_telegram_on_hover: boolean;
+  show_instagram_on_hover: boolean;
+  show_twitter_on_hover: boolean;
+  show_tiktok_on_hover: boolean;
 
   // 2. Wallet & Financial Constraints
   min_topup_amount: string; // Decimal field usually strings over JSON
