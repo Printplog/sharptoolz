@@ -165,7 +165,7 @@ export default function AdminSettings() {
         </div>
         <Button
           onClick={handleSaveClick}
-          className="relative group overflow-hidden gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs px-8 py-6 rounded-2xl transition-all duration-500 shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] active:scale-95"
+          className="relative group overflow-hidden gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs px-8 py-6 rounded-full transition-all duration-500 shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] active:scale-95"
         >
           <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
           <Save className="h-4 w-4 relative z-10" />
@@ -174,20 +174,20 @@ export default function AdminSettings() {
       </div>
 
       <Tabs defaultValue="support" className="space-y-4">
-        <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-2xl h-auto flex flex-wrap md:flex-nowrap gap-1">
-          <TabsTrigger value="support" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
+        <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-full h-auto flex flex-wrap md:flex-nowrap gap-1">
+          <TabsTrigger value="support" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Headset className="w-4 h-4" />
             Contact & Support
           </TabsTrigger>
-          <TabsTrigger value="financial" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
+          <TabsTrigger value="financial" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Wallet className="w-4 h-4" />
             Financial
           </TabsTrigger>
-          <TabsTrigger value="toggles" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
+          <TabsTrigger value="toggles" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Activity className="w-4 h-4" />
             Platform Toggles
           </TabsTrigger>
-          <TabsTrigger value="branding" className="rounded-xl px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
+          <TabsTrigger value="branding" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Flag className="w-4 h-4" />
             Branding Defaults
           </TabsTrigger>
