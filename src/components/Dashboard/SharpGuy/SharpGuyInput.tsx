@@ -175,7 +175,7 @@ export default function SharpGuyInput({
       )}
 
       {/* Integrated Action Bar (Stacked Layout) */}
-      <div className="flex-1 relative glass-panel rounded-2xl bg-white/[0.03] border-white/20 group-focus-within:border-primary/30 transition-all flex flex-col p-2 gap-2 shadow-2xl">
+      <div className="flex-1 relative glass-panel rounded-2xl bg-white/[0.04] border border-white/10 hover:border-primary/30 group-focus-within:border-primary/50 group-focus-within:bg-white/[0.06] transition-all duration-300 flex flex-col p-2.5 gap-2 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
         <input
           type="file"
           accept="image/*"
@@ -192,47 +192,60 @@ export default function SharpGuyInput({
           onKeyDown={handleKeyDown}
           placeholder={isListening ? "Listening..." : "Ask Sharp Guy..."}
           rows={1}
-          className="flex-1 resize-none min-h-[44px] max-h-[200px] text-[15px] py-2 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl px-2 transition-all outline-none shadow-none text-white placeholder:text-white/20"
+          className="flex-1 resize-none min-h-[44px] max-h-[200px] text-[15px] py-1.5 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-xl px-2.5 transition-all outline-none shadow-none text-white placeholder:text-white/30"
           disabled={isStreaming}
         />
 
         {/* Action Row (Bottom) */}
-        <div className="flex items-center justify-between mt-auto pt-1 border-t border-white/5">
-          <div className="flex gap-1 items-center">
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/5">
+          <div className="flex gap-1.5 items-center">
             <Button
               size="icon"
               variant="ghost"
-              className="h-9 w-9 text-white/30 hover:text-white hover:bg-white/10 rounded-full transition-all"
+              className="h-10 w-10 text-white/40 hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-300 active:scale-95"
               onClick={() => fileInputRef.current?.click()}
               disabled={isStreaming}
+              title="Attach File"
             >
-              <Paperclip size={18} />
+              <Paperclip size={19} />
             </Button>
             <Button
               size="icon"
               variant="ghost"
               className={cn(
-                "h-9 w-9 rounded-full transition-all",
-                isListening ? "bg-red-500/20 text-red-500 animate-pulse" : "text-white/30 hover:text-white hover:bg-white/10"
+                "h-10 w-10 rounded-xl transition-all duration-300 active:scale-95",
+                isListening 
+                  ? "bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)] animate-pulse" 
+                  : "text-white/40 hover:text-primary hover:bg-primary/10"
               )}
               onClick={toggleListening}
               disabled={isStreaming}
+              title={isListening ? "Stop Voice" : "Voice Input"}
             >
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              {isListening ? <MicOff size={19} /> : <Mic size={19} />}
             </Button>
           </div>
 
-          <Button
-            size="icon"
-            className={cn(
-              "h-10 w-10 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full active:scale-90 transition-all",
-              (!input.trim() && !attachedImage) || isStreaming ? "opacity-30 grayscale saturate-0" : "opacity-100"
+          <div className="flex items-center gap-2">
+            {isStreaming && (
+              <div className="flex gap-1 mr-2">
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-1 h-1 bg-primary rounded-full animate-bounce" />
+              </div>
             )}
-            onClick={handleSend}
-            disabled={(!input.trim() && !attachedImage) || isStreaming}
-          >
-            <ArrowUp size={20} className="stroke-[3]" />
-          </Button>
+            <Button
+              size="icon"
+              className={cn(
+                "h-10 w-10 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 rounded-xl active:scale-90 transition-all duration-300 shadow-lg shadow-primary/20 cursor-pointer",
+                (!input.trim() && !attachedImage) || isStreaming ? "opacity-20 grayscale cursor-not-allowed" : "opacity-100"
+              )}
+              onClick={handleSend}
+              disabled={(!input.trim() && !attachedImage) || isStreaming}
+            >
+              <ArrowUp size={20} className="stroke-[3]" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

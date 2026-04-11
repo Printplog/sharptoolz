@@ -146,7 +146,7 @@ export default function SharpGuyChat() {
             onClick={() => setIsSidebarOpen(true)}
             className="p-2.5 hover:bg-white/10 rounded-xl text-primary transition-colors"
           >
-            <Menu size={20} />
+            <PanelLeftOpen size={20} />
           </button>
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Sharp Guy AI</span>
           <div className="w-10" /> {/* Spacer */}
