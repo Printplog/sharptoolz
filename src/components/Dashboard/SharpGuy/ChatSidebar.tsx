@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Plus, MessageSquare, Trash2, Edit2, Check, X, MoreVertical } from "lucide-react";
+import { useState } from "react";
+import { Plus, MessageSquare, Trash2, Edit2, Check, MoreVertical } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import useChatStore from "@/store/chatStore";
 import { cn } from "@/lib/utils";

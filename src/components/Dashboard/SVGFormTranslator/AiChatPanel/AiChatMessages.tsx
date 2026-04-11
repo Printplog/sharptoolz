@@ -8,7 +8,6 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ToolCardGrid from "../../SharpGuy/ToolCardGrid";
 import ClarificationPrompt from "../../SharpGuy/ClarificationPrompt";
-import TemplateLoaded from "../../SharpGuy/TemplateLoaded";
 import DocumentReady from "../../SharpGuy/DocumentReady";
 
 interface AiChatMessagesProps {

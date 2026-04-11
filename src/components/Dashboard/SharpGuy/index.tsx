@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { MessageSquare, FilePlus, Menu, X as CloseIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import useChatStore, { type ClarificationOption, type LoadedTemplate } from "@/store/chatStore";
 import { cn } from "@/lib/utils";
 

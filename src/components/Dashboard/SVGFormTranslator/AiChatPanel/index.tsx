@@ -26,7 +26,7 @@ export default function AiChatPanel({
   
   useEffect(() => {
     if (sessionId && sessionId !== currentSessionId) {
-      loadSession(sessionId, (id) => {
+      loadSession(sessionId, () => {
         // Handle side effects of template loading if needed
       });
     }

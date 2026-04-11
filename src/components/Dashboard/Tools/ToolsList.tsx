@@ -71,7 +71,7 @@ export default function ToolsList({ hot }: Props) {
       } else {
         if (!groupedTools['uncategorized']) {
           groupedTools['uncategorized'] = {
-            tool: { id: 'uncategorized', name: 'Other Templates', description: 'Miscellaneous templates without a specific category.', price: '0.00', banner: '' },
+            tool: { id: 'uncategorized', name: 'Other Templates', description: 'Miscellaneous templates without a specific category.', price: 0, created_at: new Date().toISOString() },
             templates: []
           };
         }
