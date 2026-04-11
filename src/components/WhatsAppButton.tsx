@@ -7,7 +7,7 @@ import type { SiteSettings } from "@/types";
 import { cn } from "@/lib/utils";
 import { 
   X, 
-  Headphones, 
+  Headset,
   Send, 
   Twitter,
   Instagram
@@ -102,7 +102,7 @@ export default function WhatsAppButton() {
     {
       id: "whatsapp",
       label: "Customer Care",
-      icon: <WhatsAppIcon />,
+      icon: <Headset size={20} />,
       href: settings?.whatsapp_number 
         ? `https://wa.me/${settings.whatsapp_number.replace(/\D/g, "")}`
         : `https://wa.me/2348147929994`,
@@ -227,7 +227,7 @@ export default function WhatsAppButton() {
                 exit={{ opacity: 0, scale: 0.5 }}
                 className="relative flex items-center justify-center"
               >
-                <Headphones size={28} />
+                <Headset size={28} />
                 {/* Pulsing effect only when closed */}
                 {!isOpen && (
                   <span className="absolute -inset-2 rounded-full bg-primary/20 animate-ping" />
