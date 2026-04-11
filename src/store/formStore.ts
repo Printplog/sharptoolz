@@ -7,6 +7,8 @@ interface ToolStore {
   name: string;
   fields: FormField[];
   svgRaw: string;
+  /** Sanitized/watermarked live preview SVG — set by SvgFormTranslator, read by AiChatPanel */
+  svgPreview: string;
 
   setName: (name: string) => void;
   setFields: (fields: FormField[], isPurchased?: boolean) => void;
@@ -17,6 +19,7 @@ interface ToolStore {
   markFieldsSaved: (fieldIds?: string[]) => void;
   getFieldValue: (fieldId: string) => string | number | boolean | null | undefined;
   setSvgRaw: (svg: string) => void;
+  setSvgPreview: (svg: string) => void;
   downloadSvg: (fileName?: string) => void;
 }
 
@@ -24,6 +27,7 @@ const useToolStore = create<ToolStore>((set, get) => ({
   name: "",
   fields: [] as FormField[],
   svgRaw: "",
+  svgPreview: "",
 
   setName: (name) => set({ name }),
 
@@ -151,6 +155,7 @@ const useToolStore = create<ToolStore>((set, get) => ({
   },
 
   setSvgRaw: (svg) => set({ svgRaw: svg }),
+  setSvgPreview: (svg) => set({ svgPreview: svg }),
 
   downloadSvg: (fileName = "form-output.svg") => {
     const { svgRaw, fields } = get();
