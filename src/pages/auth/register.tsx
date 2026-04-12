@@ -22,7 +22,10 @@ import { User, Mail, Lock } from "lucide-react";
 
 const registerSchema = z
   .object({
-    username: z.string().min(3, "Username is required"),
+    username: z
+      .string()
+      .min(3, "Username is required")
+      .regex(/^\S+$/, "Username cannot contain spaces"),
     email: z.string().email("Invalid email"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm your password"),
@@ -124,6 +127,14 @@ export default function Register({ dialog = false }: Props) {
                         type={f.type || "text"}
                         placeholder={f.placeholder}
                         {...inputField}
+                        onChange={(e) => {
+                          if (f.name === "username") {
+                            const value = e.target.value.replace(/\s+/g, "");
+                            inputField.onChange(value);
+                          } else {
+                            inputField.onChange(e);
+                          }
+                        }}
                         className="border-white/10 bg-white/[0.03] pl-10 h-11 placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
                       />
                     </FormControl>
