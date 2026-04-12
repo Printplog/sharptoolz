@@ -1,6 +1,6 @@
 import ToolsList from "@/components/Dashboard/Tools/ToolsList";
-
 import SectionPadding from "@/layouts/SectionPadding";
+import SEO from "@/components/SEO";
 
 import SEO from "@/components/SEO";
 

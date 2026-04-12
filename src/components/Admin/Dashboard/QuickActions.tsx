@@ -28,7 +28,7 @@ export default function QuickActions() {
                         Tools
                     </Button>
                 </Link>
-                <Link to="/dashboard" target="_blank">
+                <Link to="/dashboard" target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 hover:text-white transition-all gap-2 h-10">
                         <ExternalLink className="h-4 w-4 text-green-400" />
                         Main Site

@@ -20,7 +20,7 @@ const SEO: React.FC<SEOProps> = ({
 }) => {
   const siteName = 'SharpToolz';
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
-  const defaultDescription = 'Generate professional-looking sample documents instantly. Perfect for testing, development, and demonstrations.';
+  const defaultDescription = 'Create realistic sample documents for testing, development, and demonstrations with SharpToolz. The ultimate professional tool for rapid document automation.';
   const siteUrl = 'https://sharptoolz.com';
 
   return (

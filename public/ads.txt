@@ -1,0 +1,4 @@
+# SharpToolz ads.txt
+# This file is used to authorize ad sellers. 
+# Placeholder for future monetization.
+# Add your merchant/publisher IDs below.

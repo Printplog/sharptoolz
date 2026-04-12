@@ -121,11 +121,9 @@ interface Props {
 import { FilePen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
-import SEO from "@/components/SEO";
 
 export default function SvgFormTranslator({ isPurchased, templateId: templateIdProp }: Props) {
   const user = useAuthStore((state) => state.user);
-  // ... rest of imports/setup logic ... (wait, I should only replace the top imports and start of function, but I need to insert the button in JSX)
 
   const [svgText, setSvgText] = useState<string>("");
   const [debouncedFields, setDebouncedFields] = useState<FormField[]>([]);
@@ -298,10 +296,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
       console.log(`[SvgFormTranslator] Template Name: ${data.name}`);
       console.log(`[SvgFormTranslator] Template ID: ${id}`);
 
-      // console.log(`[SvgFormTranslator] Template Name: ${data.name}`);
-
       // Log each field type breakdown
-
 
       // Detailed field table
       if (initializedFields.length > 0) {
@@ -318,8 +313,6 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         }));
 
         console.table(fieldDetails);
-
-        // Log to admin console
       } else {
         console.warn('[SvgFormTranslator] NO FIELDS INITIALIZED! Check if template has IDs.');
       }
@@ -513,11 +506,6 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
 
   return (
     <div>
-      <SEO 
-        title={data ? `Generate ${data.name} Sample` : "Loading Tool..."}
-        description={data ? `Create professional ${data.name} samples in seconds. ${'tool' in data && typeof data.tool === 'object' ? data.tool?.description : ''}` : "Our sample document generator lets you create professional results in seconds."}
-        canonical={`/all-tools/${id}`}
-      />
       {/* Admin Edit Link */}
       {user?.is_staff && (
         <div className="flex justify-end mb-4">
