@@ -53,7 +53,7 @@ export default function DashboardToolCard({ template, delay = 0 }: Props) {
                         <div className="h-full rounded-2xl overflow-hidden bg-black/20">
                             <LazyImage
                                 src={template.banner}
-                                alt={`${template.name} preview`}
+                                alt={`SharpToolz ${template.name} - Professional Sample Document Generator Preview`}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110"
                             />
                         </div>

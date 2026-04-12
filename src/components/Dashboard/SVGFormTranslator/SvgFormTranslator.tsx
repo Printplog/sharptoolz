@@ -127,6 +127,7 @@ interface Props {
 import { FilePen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import SEO from "@/components/SEO";
 import EditorPanel from "./EditorPanel";
 import AiChatPanel from "./AiChatPanel";
 
@@ -599,6 +600,11 @@ export default function SvgFormTranslator({
 
   return (
     <div>
+      <SEO 
+        title={data ? `Generate ${data.name} Sample` : "Loading Tool..."}
+        description={data ? `Create professional ${data.name} samples in seconds. ${data.description || ''}` : "Our sample document generator lets you create professional results in seconds."}
+        canonical={`/all-tools/${id}`}
+      />
       {/* Admin Edit Link */}
       {user?.is_staff && (
         <div className="flex justify-end mb-4">

@@ -7,7 +7,7 @@ export default function Disclaimer() {
       <div>
         <strong className="block text-white mb-1">Disclaimer</strong>
         <p>
-          Documents generated on this platform are for <strong>demonstration and testing purposes</strong> only. Use them to create professional-looking sample invoices, contracts, and reports instantly.
+          Documents generated on this platform are for <strong>demonstration, educational, and testing purposes</strong> only. Any unauthorized or illegal use is strictly prohibited. The user is solely responsible for the use and handling of any files generated.
         </p>
       </div>
     </div>

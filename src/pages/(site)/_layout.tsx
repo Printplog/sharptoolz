@@ -14,6 +14,7 @@ export default function Layout() {
       <SmoothScroll>
         <GlobalAnnouncement />
         <Navbar />
+        <BreadcrumbSEO />
         <main className="pt-26 md:pt-32 pb-20">
           <Outlet />
         </main>

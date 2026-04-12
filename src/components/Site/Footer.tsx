@@ -78,6 +78,7 @@ export default function Footer() {
                       href={link} 
                       target="_blank" 
                       rel="noopener noreferrer" 
+                      aria-label={`SharpToolz on ${social.key.split('_')[0]}`}
                       className="w-12 h-12 rounded-2xl bg-white/2 border border-white/5 flex items-center justify-center hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all duration-300 text-lg group"
                     >
                       <i className={`${social.icon} group-hover:scale-110 transition-transform`}></i>

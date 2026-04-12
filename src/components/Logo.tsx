@@ -12,7 +12,7 @@ export default function Logo({ icon = false, noLink = false, size = 30, showText
   const logoImg = (
     <LazyImage
       src="/logo.png"
-      alt="SharpToolz Logo"
+      alt="SharpToolz - Professional Sample Document Generator"
       className="object-contain"
       style={{ width: size, height: size, backgroundColor: 'transparent' }}
       priority
