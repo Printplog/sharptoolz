@@ -16,7 +16,7 @@ export default function DashboardLayout() {
   const dialog = params.get("dialog") as string;
   const { openDialog } = useDialogStore();
 
-  const isSharpGuy = location.pathname === "/sharp-guy";
+  const isSharpGuy = location.pathname.startsWith("/sharp-guy");
 
   useEffect(() => {
     openDialog(dialog);

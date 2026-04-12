@@ -4,7 +4,7 @@ import WhatsAppButton from '@/components/WhatsAppButton'
 
 export default function App() {
   const location = useLocation();
-  const isSharpGuy = location.pathname === "/sharp-guy";
+  const isSharpGuy = location.pathname.startsWith("/sharp-guy");
 
   return (
     <>

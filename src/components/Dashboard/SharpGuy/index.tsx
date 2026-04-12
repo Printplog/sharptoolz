@@ -145,7 +145,7 @@ export default function SharpGuyChat() {
         {/* Mobile Header Toolbar */}
         <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/5 backdrop-blur-xl z-20">
           <button 
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
             className="p-2 hover:bg-white/10 rounded-full text-white/70 hover:text-primary transition-all active:scale-90"
           >
             <ChevronLeft size={24} />
