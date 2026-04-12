@@ -24,10 +24,10 @@ export default function Navbar() {
 
 
   return (
-    <header className="flex items-center justify-between py-5 border-b border-white/10 bg-white/5 px-5 sticky top-0 backdrop-blur-2xl z-[9]">
+    <header className="flex items-center justify-between py-3 md:py-5 border-b border-white/10 bg-white/5 px-4 md:px-5 sticky top-0 backdrop-blur-2xl z-[9]">
       {/* Left Side - Title */}
       <div className="flex items-center gap-5">
-        <h2 className="text-xl font-semibold">Dashboard</h2>
+        <h2 className="text-lg md:text-xl font-semibold">Dashboard</h2>
 
       </div>
       {/* Right Side - User Menu */}
@@ -35,7 +35,7 @@ export default function Navbar() {
         {/* Dropdown Menu for User Actions */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="cursor-pointer">
-            <div className="bg-primary text-lg font-semibold text-background size-[40px] flex justify-center items-center rounded-full">
+            <div className="bg-primary text-base md:text-lg font-semibold text-background size-9 md:size-10 flex justify-center items-center rounded-full">
                 <h2 className="">{user?.username[0].toUpperCase()}</h2>
             </div>
           </DropdownMenuTrigger>
