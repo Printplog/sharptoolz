@@ -21,7 +21,7 @@ export default function Navbar() {
     <header className="flex items-center justify-between py-3 md:py-5 border-b border-white/10 bg-white/5 px-4 md:px-5 sticky top-0 backdrop-blur-2xl z-[9]">
       {/* Left Side - Title */}
       <div className="flex items-center gap-5">
-        <h2 className="text-lg md:text-xl font-semibold">Hey {user?.username} 👋</h2>
+        <h2 className="text-lg md:text-xl font-semibold">Hey {user?.username?.toUpperCase()} 👋</h2>
 
       </div>
       {/* Right Side - User Menu */}
