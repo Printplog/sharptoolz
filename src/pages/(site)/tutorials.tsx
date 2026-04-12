@@ -13,6 +13,7 @@ import type { Tutorial, Tool } from "@/types";
 import { getYouTubeThumbnailFromUrl } from "@/lib/utils/youtube";
 import { useState } from "react";
 import { LazyImage } from "@/components/LazyImage";
+import SEO from "@/components/SEO";
 
 export default function Tutorials() {
   const [selectedToolId, setSelectedToolId] = useState<string>("all");
@@ -34,6 +35,11 @@ export default function Tutorials() {
 
   return (
     <SectionPadding>
+      <SEO 
+        title="Document Creation Tutorials" 
+        description="Learn how to generate professional sample documents with our step-by-step video tutorials and guides."
+        canonical="/tutorials"
+      />
       <div className="flex flex-col gap-4">
         <h1 className="text-xl font-semibold pb-4 border-b border-white/10">
           Tutorials for all tools
