@@ -3,7 +3,6 @@ import Navbar from "@/components/Dashboard/Layouts/Navbar";
 import Sidebar from "@/components/Dashboard/Layouts/Sidebar";
 import GlobalAnnouncement from "@/components/Dashboard/Layouts/GlobalAnnouncement";
 import Disclaimer from "@/components/Disclaimer";
-import { AdminConsole } from "@/components/Admin/Layouts/AdminConsole";
 import ProtectedLayout from "@/layouts/ProtectedLayout";
 import { useDialogStore } from "@/store/dialogStore";
 import { useEffect } from "react";
@@ -32,7 +31,6 @@ export default function DashboardLayout() {
 
         </main>
         <BottomBar />
-        <AdminConsole />
       </div>
     </ProtectedLayout>
   );
