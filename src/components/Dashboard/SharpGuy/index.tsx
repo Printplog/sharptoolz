@@ -26,7 +26,6 @@ export default function SharpGuyChat() {
 
   const [input, setInput] = useState("");
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   
   const bottomRef = useRef<HTMLDivElement>(null);
