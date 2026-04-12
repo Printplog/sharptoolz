@@ -127,7 +127,6 @@ interface Props {
 import { FilePen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
-import { useAdminConsoleStore } from "@/store/useAdminConsoleStore";
 import EditorPanel from "./EditorPanel";
 import AiChatPanel from "./AiChatPanel";
 
@@ -333,17 +332,8 @@ export default function SvgFormTranslator({
       console.log(`[SvgFormTranslator] Template Name: ${data.name}`);
       console.log(`[SvgFormTranslator] Template ID: ${id}`);
 
-      // Log to the custom UI console
-      const { addLog } = useAdminConsoleStore.getState();
-      addLog(
-        "success",
-        `Loaded ${initializedFields.length} form fields for: ${data.name}`,
-        {
-          templateId: id,
-          templateName: data.name,
-          fieldCount: initializedFields.length,
-        },
-      );
+      console.log(`[SvgFormTranslator] Template Name: ${data.name}`);
+      console.log(`[SvgFormTranslator] Template ID: ${id}`);
 
       // Log each field type breakdown
       const fieldTypes = initializedFields.reduce(
@@ -354,8 +344,7 @@ export default function SvgFormTranslator({
         {} as Record<string, number>,
       );
 
-      addLog(
-        "info",
+      console.log(
         `Field types: ${Object.entries(fieldTypes)
           .map(([k, v]) => `${k}(${v})`)
           .join(", ")}`,
@@ -378,16 +367,10 @@ export default function SvgFormTranslator({
         }));
 
         console.table(fieldDetails);
-
-        // Log to admin console
-        addLog("table", "Form Fields Detail", fieldDetails);
       } else {
         console.warn(
           "[SvgFormTranslator] NO FIELDS INITIALIZED! Check if template has IDs.",
         );
-        addLog("error", "NO FIELDS INITIALIZED! SVG may have missing IDs.", {
-          templateId: id,
-        });
       }
     }
 

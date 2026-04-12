@@ -5,7 +5,6 @@ import GlobalAnnouncement from "@/components/Dashboard/Layouts/GlobalAnnouncemen
 import Disclaimer from "@/components/Disclaimer";
 import BuilderDialog from "@/components/Admin/ToolBuilder/BuilderDialog";
 import ProtectedLayout from "@/layouts/ProtectedLayout";
-import { AdminConsole } from "@/components/Admin/Layouts/AdminConsole";
 import { useDialogStore } from "@/store/dialogStore";
 import { useEffect } from "react";
 import { Outlet, useSearchParams, useNavigate, useLocation } from "react-router-dom"; // or next/router if using Next.js
@@ -48,7 +47,6 @@ export default function AdminLayout() {
         </main>
         <BuilderDialog />
         <BottomBar />
-        <AdminConsole />
       </div>
     </ProtectedLayout>
   );

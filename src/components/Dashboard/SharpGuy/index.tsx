@@ -41,6 +41,24 @@ export default function SharpGuyChat() {
     }
   }, [sessionId, currentSessionId, loadSession]);
 
+  // Body scroll lock and hardware-accelerated overlay fixes
+  useEffect(() => {
+    const originalStyle = document.body.style.overflow;
+    const originalOverscroll = document.body.style.overscrollBehavior;
+    
+    // Only lock on mobile where the overlay is full-screen
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      document.body.style.overflow = "hidden";
+      document.body.style.overscrollBehavior = "none";
+    }
+
+    return () => {
+      document.body.style.overflow = originalStyle;
+      document.body.style.overscrollBehavior = originalOverscroll;
+    };
+  }, []);
+
   // Scroll last message into view — keyboard-avoidance pattern
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -96,7 +114,7 @@ export default function SharpGuyChat() {
   };
 
   return (
-    <div className="flex h-screen md:h-[calc(100vh-140px)] w-full max-w-6xl mx-auto md:rounded-3xl overflow-hidden fixed inset-0 z-[60] md:relative md:inset-auto md:z-auto bg-background md:bg-background/50 md:backdrop-blur-sm md:border md:border-white/10 md:glass-panel">
+    <div className="flex h-dvh md:h-[calc(100vh-140px)] w-full max-w-6xl mx-auto md:rounded-3xl overflow-hidden fixed inset-0 z-[100] md:relative md:inset-auto md:z-auto bg-background md:bg-background/50 md:backdrop-blur-sm md:border md:border-white/10 md:glass-panel overscroll-none">
       
       {/* ── Chat Sidebar (Desktop) ───────────────────────────────────────────── */}
       <div 
