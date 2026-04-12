@@ -110,7 +110,7 @@ export default function SignatureField({
   }, [svgElementId, width, height]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'draw' | 'preset'>('draw');
+  const [activeTab, setActiveTab] = useState<'upload' | 'draw' | 'preset'>('preset');
   //   const [isProcessing, setIsProcessing] = useState(false);
 
   const [strokeWidth, setStrokeWidth] = useState([2]);
@@ -323,18 +323,40 @@ export default function SignatureField({
 
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'draw' | 'upload' | 'preset')} className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-black/40 border border-white/5 h-9 p-0.5 rounded-lg mb-4">
+                <TabsTrigger value="preset" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
+                  Preset
+                </TabsTrigger>
                 <TabsTrigger value="draw" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
                   Draw
                 </TabsTrigger>
                 <TabsTrigger value="upload" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
                   Upload
                 </TabsTrigger>
-                <TabsTrigger value="preset" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
-                  Preset
-                </TabsTrigger>
               </TabsList>
 
               <div className="min-h-[220px] flex flex-col items-center justify-center">
+                {/* Preset Signature Tab */}
+                <TabsContent value="preset" className="w-full m-0 animate-in fade-in duration-300">
+                  <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                    {PRESET_SIGNATURES.map((preset) => (
+                      <div
+                        key={preset.id}
+                        className={cn(
+                          "group h-14 rounded-lg border border-white/5 bg-white hover:border-primary transition-all p-1 flex items-center justify-center shadow-sm",
+                          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                        )}
+                        onClick={disabled ? undefined : () => handlePresetSignature(preset)}
+                      >
+                        <img
+                          src={preset.data}
+                          alt={preset.name}
+                          className="max-h-[80%] max-w-[80%] object-contain transition-transform group-hover:scale-110"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
                 {/* Draw Signature Tab */}
                 <TabsContent value="draw" className="w-full space-y-3 m-0 animate-in fade-in duration-300">
                   <div className="flex flex-col items-center w-full">
@@ -405,28 +427,6 @@ export default function SignatureField({
                     <div className="text-[9px] font-bold uppercase tracking-widest text-white/60">
                       {isDragActive ? "Drop here" : "Choose File"}
                     </div>
-                  </div>
-                </TabsContent>
-
-                {/* Preset Signature Tab */}
-                <TabsContent value="preset" className="w-full m-0 animate-in fade-in duration-300">
-                  <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
-                    {PRESET_SIGNATURES.map((preset) => (
-                      <div
-                        key={preset.id}
-                        className={cn(
-                          "group h-14 rounded-lg border border-white/5 bg-white hover:border-primary transition-all p-1 flex items-center justify-center shadow-sm",
-                          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-                        )}
-                        onClick={disabled ? undefined : () => handlePresetSignature(preset)}
-                      >
-                        <img
-                          src={preset.data}
-                          alt={preset.name}
-                          className="max-h-[80%] max-w-[80%] object-contain transition-transform group-hover:scale-110"
-                        />
-                      </div>
-                    ))}
                   </div>
                 </TabsContent>
               </div>
