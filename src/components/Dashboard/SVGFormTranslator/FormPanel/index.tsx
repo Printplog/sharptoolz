@@ -374,7 +374,7 @@ const FormPanel = React.memo(function FormPanel({
       if (progressInterval.current) { clearInterval(progressInterval.current); progressInterval.current = null; }
       setIsCreatingDocument(false);
       setDocumentProgress(0);
-      setSubmissionError(errorMessage(error));
+      setSubmissionError(errorMessage(error as any));
       // Don't close dialog on error, let user see it and retry
       throw error;
     }
