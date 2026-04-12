@@ -27,16 +27,16 @@ export default function DashboardLayout() {
       <div className="flex h-screen text-white">
         <Sidebar />
         <main className={cn(
-          "flex-1 overflow-auto bg-background transition-all duration-300",
-          isSharpGuy ? "pb-0 md:pb-30" : "pb-30"
+          "flex-1 bg-background transition-all duration-300",
+          isSharpGuy ? "overflow-hidden pb-0 md:pb-30" : "overflow-auto pb-30"
         )}>
           {!isSharpGuy && <GlobalAnnouncement />}
           <div className={cn(isSharpGuy && "hidden md:block")}>
             <Navbar />
           </div>
           <div className={cn(
-            "py-5 transition-all duration-300",
-            isSharpGuy ? "px-0 md:px-10" : "px-3 sm:px-6 md:px-10"
+            "transition-all duration-300",
+            isSharpGuy ? "py-0 px-0 md:px-10 md:py-5" : "py-5 px-3 sm:px-6 md:px-10"
           )}>
             <Outlet />
             {!isSharpGuy && <Disclaimer />}
