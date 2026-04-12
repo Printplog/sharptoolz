@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { PanelLeftClose, PanelLeftOpen, ChevronLeft } from "lucide-react";
 import useChatStore, { type ClarificationOption, type LoadedTemplate } from "@/store/chatStore";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ import SharpGuyInput from "./SharpGuyInput";
 import ChatSidebar from "./ChatSidebar";
 
 export default function SharpGuyChat() {
+  const navigate = useNavigate();
   const { 
     messages, 
     isStreaming, 
@@ -96,7 +97,7 @@ export default function SharpGuyChat() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-140px)] max-w-6xl mx-auto rounded-3xl overflow-hidden glass-panel relative">
+    <div className="flex h-screen md:h-[calc(100vh-140px)] w-full max-w-6xl mx-auto md:rounded-3xl overflow-hidden md:border md:border-white/10 md:glass-panel relative bg-background/50 backdrop-blur-sm">
       
       {/* ── Chat Sidebar (Desktop) ───────────────────────────────────────────── */}
       <div 
@@ -110,7 +111,8 @@ export default function SharpGuyChat() {
         </div>
       </div>
 
-      {/* ── Chat Sidebar (Mobile Overlay) ────────────────────────────────────── */}
+      {/* ── Mobile Sidebar Overlay (Disabled as per optimization plan) ────────────────── */}
+      {/* 
       <div 
         className={cn(
           "fixed inset-0 z-50 md:hidden transition-opacity duration-300",
@@ -127,6 +129,7 @@ export default function SharpGuyChat() {
           <ChatSidebar />
         </div>
       </div>
+      */}
 
       {/* ── Chat Main Column ─────────────────────────────────────────────────── */}
       <div className="flex flex-col flex-1 min-w-0 relative h-full">
@@ -141,20 +144,23 @@ export default function SharpGuyChat() {
         </div>
         
         {/* Mobile Header Toolbar */}
-        <div className="md:hidden flex items-center justify-between p-4 border-b border-white/10 bg-white/5 backdrop-blur-md">
+        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/5 backdrop-blur-xl z-20">
           <button 
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2.5 hover:bg-white/10 rounded-xl text-primary transition-colors"
+            onClick={() => navigate("/")}
+            className="p-2 hover:bg-white/10 rounded-full text-white/70 hover:text-primary transition-all active:scale-90"
           >
-            <PanelLeftOpen size={20} />
+            <ChevronLeft size={24} />
           </button>
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Sharp Guy AI</span>
+          <div className="flex flex-col items-center">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sharp Guy AI</span>
+            <span className="text-[9px] text-white/30 font-medium">Always here to help</span>
+          </div>
           <div className="w-10" /> {/* Spacer */}
         </div>
 
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto px-6 py-6 space-y-6 no-scrollbar"
+          className="flex-1 overflow-y-auto px-4 py-4 md:px-8 md:py-8 space-y-6 no-scrollbar h-full"
         >
           <SharpGuyMessages
             messages={messages}

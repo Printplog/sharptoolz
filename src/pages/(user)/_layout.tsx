@@ -7,12 +7,16 @@ import { AdminConsole } from "@/components/Admin/Layouts/AdminConsole";
 import ProtectedLayout from "@/layouts/ProtectedLayout";
 import { useDialogStore } from "@/store/dialogStore";
 import { useEffect } from "react";
-import { Outlet, useSearchParams } from "react-router-dom";
+import { Outlet, useSearchParams, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 export default function DashboardLayout() {
   const [params] = useSearchParams();
+  const location = useLocation();
   const dialog = params.get("dialog") as string;
   const { openDialog } = useDialogStore();
+
+  const isSharpGuy = location.pathname === "/sharp-guy";
 
   useEffect(() => {
     openDialog(dialog);
@@ -22,16 +26,25 @@ export default function DashboardLayout() {
     <ProtectedLayout>
       <div className="flex h-screen text-white">
         <Sidebar />
-        <main className="flex-1 overflow-auto bg-background pb-30">
-          <GlobalAnnouncement />
-          <Navbar />
-          <div className="px-3 sm:px-6 md:px-10 py-5">
-            <Outlet />
-            <Disclaimer />
+        <main className={cn(
+          "flex-1 overflow-auto bg-background transition-all duration-300",
+          isSharpGuy ? "pb-0 md:pb-30" : "pb-30"
+        )}>
+          {!isSharpGuy && <GlobalAnnouncement />}
+          <div className={cn(isSharpGuy && "hidden md:block")}>
+            <Navbar />
           </div>
-
+          <div className={cn(
+            "py-5 transition-all duration-300",
+            isSharpGuy ? "px-0 md:px-10" : "px-3 sm:px-6 md:px-10"
+          )}>
+            <Outlet />
+            {!isSharpGuy && <Disclaimer />}
+          </div>
         </main>
-        <BottomBar />
+        <div className={cn(isSharpGuy && "hidden md:block")}>
+          <BottomBar />
+        </div>
         <AdminConsole />
       </div>
     </ProtectedLayout>

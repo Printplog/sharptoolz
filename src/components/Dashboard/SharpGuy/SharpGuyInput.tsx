@@ -123,7 +123,7 @@ export default function SharpGuyInput({
   };
 
   return (
-    <div className="p-4 md:p-6 flex flex-col gap-3 md:gap-4 bg-white/[0.02] backdrop-blur-xl border-t border-white/10">
+    <div className="p-3 md:p-6 flex flex-col gap-3 md:gap-4 bg-white/[0.02] backdrop-blur-xl border-t border-white/10">
       {/* Smart Chips */}
       {!input && !attachedImage && (
         <div className="flex gap-2 mb-1 overflow-x-auto pb-1 no-scrollbar -mx-2 px-2 md:mx-0 md:px-0">
