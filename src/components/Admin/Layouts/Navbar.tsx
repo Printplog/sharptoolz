@@ -4,7 +4,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { ROLES, getRoleLabel } from "@/lib/constants/roles";
@@ -13,8 +13,6 @@ import { useLogout } from "@/hooks/useLogout";
 export default function Navbar() {
   const { user } = useAuthStore()
   const { logout, isPending } = useLogout();
-
-  const navigate = useNavigate()
 
 
   return (

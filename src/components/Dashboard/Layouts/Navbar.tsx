@@ -4,17 +4,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { LogOut, LayoutDashboard } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { logout } from "@/api/apiEndpoints";
+import { useAuthStore } from "@/store/authStore";
 import { useLogout } from "@/hooks/useLogout";
 
 export default function Navbar() {
   const { user } = useAuthStore();
   const { logout, isPending } = useLogout();
-
-  const navigate = useNavigate();
 
 
   return (

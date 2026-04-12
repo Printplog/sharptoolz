@@ -6,13 +6,15 @@ import {
   Code2,
   MessageCircle,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import UserInfoCard from "@/components/Dashboard/Settings/UserInfoCard";
 import ChangePassword from "@/components/Dashboard/Settings/ChangePassword";
 import { useLogout } from "@/hooks/useLogout";
+import { useQuery } from "@tanstack/react-query";
+import { getSiteSettings } from "@/api/apiEndpoints";
+import type { SiteSettings } from "@/types";
 
 export default function SettingsPage() {
-  const navigate = useNavigate();
   const { logout, isPending } = useLogout();
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["siteSettings"],

@@ -24,6 +24,7 @@ interface UsersState {
   fetchUsers: () => Promise<void>;
   handleSearch: () => void;
   resetSearch: () => void;
+  reset: () => void;
 }
 
 export const useUsersStore = create<UsersState>((set, get) => ({
