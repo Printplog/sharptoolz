@@ -9,13 +9,11 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import UserInfoCard from "@/components/Dashboard/Settings/UserInfoCard";
 import ChangePassword from "@/components/Dashboard/Settings/ChangePassword";
-import { useAuthStore } from "@/store/authStore";
-import { useQuery } from "@tanstack/react-query";
-import { getSiteSettings } from "@/api/apiEndpoints";
-import type { SiteSettings } from "@/types";
+import { useLogout } from "@/hooks/useLogout";
+
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
+  const { logout, isPending } = useLogout();
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["siteSettings"],
     queryFn: getSiteSettings,
@@ -54,9 +52,7 @@ export default function SettingsPage() {
   ];
 
   const handleLogout = () => {
-    // perform logout logic here (clear tokens, call API, etc.)
     logout();
-    navigate("/auth/login");
   };
 
   return (
@@ -77,10 +73,11 @@ export default function SettingsPage() {
           </Link>
         ))}
         <div className="">
-          <button
-            className="text-red-500 border-white/10 w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition"
-            onClick={handleLogout}
-          >
+            <button
+              className="text-red-500 border-white/10 w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition disabled:opacity-50"
+              onClick={handleLogout}
+              disabled={isPending}
+            >
             <LogOut className="w-5 h-5" />
             Logout
           </button>

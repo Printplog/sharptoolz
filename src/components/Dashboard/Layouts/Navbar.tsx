@@ -8,19 +8,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { LogOut, LayoutDashboard } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { logout } from "@/api/apiEndpoints";
-import { useAuthStore } from "@/store/authStore";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function Navbar() {
-  const { user, logout: logoutStore } = useAuthStore()
+  const { user } = useAuthStore();
+  const { logout, isPending } = useLogout();
 
-    const navigate = useNavigate()
-    const { mutate } = useMutation({
-      mutationFn: logout,
-      onSuccess: () => {
-        logoutStore();
-        navigate("/auth/login")
-      }
-    })
+  const navigate = useNavigate();
 
 
   return (
@@ -46,7 +40,7 @@ export default function Navbar() {
                 <span>View Main Site</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => mutate()} className="cursor-pointer focus:bg-white/10 focus:text-white/80">
+            <DropdownMenuItem onClick={() => logout()} className="cursor-pointer focus:bg-white/10 focus:text-white/80" disabled={isPending}>
               <LogOut className="mr-2 h-4 w-4 text-primary" />
               <span>Logout</span>
             </DropdownMenuItem>

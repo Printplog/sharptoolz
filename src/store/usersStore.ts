@@ -85,4 +85,16 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     set({ searchQuery: '', searchInput: '', currentPage: 1 });
     get().fetchUsers();
   },
-})); 
+
+  reset: () => {
+    set({
+      data: null,
+      isLoading: false,
+      error: null,
+      currentPage: 1,
+      pageSize: 10,
+      searchQuery: '',
+      searchInput: '',
+    });
+  },
+}));
