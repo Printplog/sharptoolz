@@ -135,7 +135,7 @@ export default function Register({ dialog = false }: Props) {
                             inputField.onChange(e);
                           }
                         }}
-                        className="border-white/10 bg-white/[0.03] pl-10 h-11 placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
+                        className="border-white/10 bg-white/[0.03] pl-10 h-11 rounded-full placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
                       />
                     </FormControl>
                   </div>
@@ -147,7 +147,7 @@ export default function Register({ dialog = false }: Props) {
 
           <Button
             type="submit"
-            className="w-full h-11 bg-[#cee88c] text-black font-medium hover:bg-[#cee88c]/90 transition-colors mt-2"
+            className="w-full h-11 bg-[#cee88c] text-black font-medium rounded-full hover:bg-[#cee88c]/90 transition-colors mt-2"
             disabled={isPending || loginPending}
           >
             {isPending ? "Creating account..." : loginPending ? "Signing in..." : "Create account"}

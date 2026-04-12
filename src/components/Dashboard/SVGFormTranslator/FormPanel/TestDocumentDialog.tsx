@@ -11,6 +11,7 @@ type TestDocumentDialogProps = {
   onCreatePaid: () => void;
   isSubmitting: boolean;
   price?: number;
+  error?: string | null;
 };
 
 export function TestDocumentDialog({
@@ -20,6 +21,7 @@ export function TestDocumentDialog({
   onCreatePaid,
   isSubmitting,
   price = 5,
+  error,
 }: TestDocumentDialogProps) {
   const [progress, setProgress] = useState(0);
 
@@ -34,9 +36,16 @@ export function TestDocumentDialog({
       }, 250);
       return () => clearInterval(interval);
     } else {
-      setProgress((prev) => (prev > 0 && prev < 100 ? 100 : prev));
+      // Only set to success progress if we finished without an error
+      if (!error) {
+        setProgress((prev) => (prev > 0 && prev < 100 ? 100 : prev));
+      } else {
+        setProgress(0);
+      }
     }
-  }, [isSubmitting]);
+  }, [isSubmitting, error]);
+
+  const isInsufficientFunds = error?.toLowerCase().includes("insufficient funds");
 
   return (
     <Dialog
@@ -74,8 +83,8 @@ export function TestDocumentDialog({
                 </div>
                 
                 <div className="space-y-1">
-                  <h2 className="text-xl font-semibold text-white tracking-tight">Processing document</h2>
-                  <p className="text-white/40 text-xs">Optimizing assets for you</p>
+                   <h2 className="text-xl font-semibold text-white tracking-tight">Processing document</h2>
+                   <p className="text-white/40 text-xs">Optimizing assets for you</p>
                 </div>
 
                 <div className="px-4">
@@ -99,8 +108,8 @@ export function TestDocumentDialog({
                 </div>
                 
                 <div className="space-y-1">
-                  <h2 className="text-xl font-semibold text-white">Ready!</h2>
-                  <p className="text-white/40 text-xs">Your creation is complete.</p>
+                   <h2 className="text-xl font-semibold text-white">Ready!</h2>
+                   <p className="text-white/40 text-xs">Your creation is complete.</p>
                 </div>
 
                 <div className="px-4">
@@ -122,9 +131,28 @@ export function TestDocumentDialog({
                     </p>
                   </div>
                   
-                  <p className="text-sm text-yellow-500/80 font-medium leading-tight text-left">
-                    Confirm all fields are correct. No editing after creation.
-                  </p>
+                  {error && (
+                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 space-y-3">
+                       <p className="text-red-400 text-sm font-medium leading-relaxed">
+                         {error}
+                       </p>
+                       {isInsufficientFunds && (
+                         <a 
+                           href="/wallet"
+                           className="flex items-center justify-center gap-2 w-full py-2.5 bg-green-600/60 hover:bg-green-600/80 text-white rounded-lg transition-all font-bold text-sm"
+                         >
+                           <CreditCard className="w-4 h-4" />
+                           Fund Wallet
+                         </a>
+                       )}
+                    </div>
+                  )}
+
+                  {!error && (
+                    <p className="text-sm text-yellow-500/80 font-medium leading-tight text-left">
+                      Confirm all fields are correct. No editing after creation.
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-3">

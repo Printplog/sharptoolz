@@ -75,8 +75,8 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
-        <p className="text-sm text-white/35">Sign in to your account to continue</p>
+        <h2 className="text-2xl font-semibold tracking-tight">Sign in with Username or Email</h2>
+        <p className="text-sm text-white/35">Welcome back! Sign in to your account to continue</p>
       </div>
 
       <Form {...form}>
@@ -87,15 +87,15 @@ export default function Login({ dialog = false }: AuthDialogProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs text-white/50 uppercase tracking-wider font-medium">
-                  Username
+                  Username or Email
                 </FormLabel>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />
                   <FormControl>
                     <Input
-                      placeholder="your_username"
+                      placeholder="username@example.com"
                       {...field}
-                      className="border-white/10 bg-white/[0.03] pl-10 h-11 placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
+                      className="border-white/10 bg-white/[0.03] pl-10 h-11 rounded-full placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
                     />
                   </FormControl>
                 </div>
@@ -119,7 +119,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       {...field}
-                      className="border-white/10 bg-white/[0.03] pl-10 pr-10 h-11 placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
+                      className="border-white/10 bg-white/[0.03] pl-10 pr-10 h-11 rounded-full placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
                     />
                   </FormControl>
                   <button
@@ -137,7 +137,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
 
           <Button
             type="submit"
-            className="w-full h-11 bg-[#cee88c] text-black font-medium hover:bg-[#cee88c]/90 transition-colors mt-2"
+            className="w-full h-11 bg-[#cee88c] text-black font-medium rounded-full hover:bg-[#cee88c]/90 transition-colors mt-2"
             disabled={isPending}
           >
             {isPending ? "Signing in..." : "Sign in"}

@@ -115,6 +115,7 @@ const FormPanel = React.memo(function FormPanel({
   const [isSavingBeforeLeave, setIsSavingBeforeLeave] = useState(false);
   const [documentProgress, setDocumentProgress] = useState(0);
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const { isAuthenticated } = useAuthStore();
 
   // Memoize touched fields check to avoid recalculating on every render
@@ -235,6 +236,7 @@ const FormPanel = React.memo(function FormPanel({
     // Show progress bar
     setIsCreatingDocument(true);
     setDocumentProgress(0);
+    setSubmissionError(null);
 
     // Simulate progress
     const progressInterval = progressIntervalRef;
@@ -372,6 +374,7 @@ const FormPanel = React.memo(function FormPanel({
       if (progressInterval.current) { clearInterval(progressInterval.current); progressInterval.current = null; }
       setIsCreatingDocument(false);
       setDocumentProgress(0);
+      setSubmissionError(errorMessage(error));
       // Don't close dialog on error, let user see it and retry
       throw error;
     }
@@ -617,6 +620,7 @@ const FormPanel = React.memo(function FormPanel({
           }}
           isSubmitting={createPending || updatePending || isCreatingDocument}
           price={toolPrice}
+          error={submissionError}
         />
       </div>
 
