@@ -23,10 +23,6 @@ export default function Footer() {
                 The next-generation platform for rapid document generation. 
                 Build and automate high-fidelity templates in seconds.
               </p>
-              <div className="flex items-center gap-2.5 text-xs font-semibold text-white/40">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
-                Form Studio Tools
-              </div>
             </div>
           </div>
 
@@ -71,11 +67,10 @@ export default function Footer() {
                 { key: 'tiktok_link', icon: 'fab fa-tiktok' }
               ].map((social) => {
                 const link = settings?.[social.key as keyof SiteSettings] as string;
-                if (!link) return null;
                 return (
                   <li key={social.key}>
                     <a 
-                      href={link} 
+                      href={link || "#"} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       aria-label={`SharpToolz on ${social.key.split('_')[0]}`}
