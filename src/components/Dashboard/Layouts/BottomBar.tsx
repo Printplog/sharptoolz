@@ -1,4 +1,6 @@
 import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, ArrowRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getSiteSettings } from "@/api/apiEndpoints";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -8,7 +10,13 @@ export default function BottomBar() {
   const { pathname } = useLocation();
   const { user } = useAuthStore();
 
+  const { data: settings } = useQuery({
+    queryKey: ["siteSettings"],
+    queryFn: getSiteSettings,
+  });
+
   const canAccessAdmin = isAdminOrStaff(user?.role);
+  const aiEnabled = settings?.enable_ai_features ?? true;
 
   const baseNavigationItems = [
     {
@@ -16,11 +24,11 @@ export default function BottomBar() {
       label: "Home",
       to: "/dashboard",
     },
-    {
+    ...(aiEnabled ? [{
       icon: <img src="/sharpguy.png" className="w-5 h-5 mb-[2px] object-contain" alt="Sharp Guy" />,
       label: "Sharp Guy",
       to: "/sharp-guy",
-    },
+    }] : []),
     {
       icon: <Hammer className="w-5 h-5 mb-[2px]" />,
       label: "Tools",

@@ -65,6 +65,7 @@ export default function AdminSettings() {
     show_instagram_on_hover: true,
     show_twitter_on_hover: true,
     show_tiktok_on_hover: true,
+    enable_ai_features: true,
   });
 
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
@@ -103,6 +104,7 @@ export default function AdminSettings() {
         show_instagram_on_hover: settings.show_instagram_on_hover ?? true,
         show_twitter_on_hover: settings.show_twitter_on_hover ?? true,
         show_tiktok_on_hover: settings.show_tiktok_on_hover ?? true,
+        enable_ai_features: settings.enable_ai_features ?? true,
       });
     }
   }, [settings]);
@@ -484,6 +486,17 @@ export default function AdminSettings() {
                   checked={formData.disable_deposits}
                   onCheckedChange={(checked: boolean) => setFormData({ ...formData, disable_deposits: checked })}
                   className="data-[state=checked]:bg-yellow-500"
+                />
+              </div>
+              <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-bold text-white">Enable AI Features</Label>
+                  <p className="text-sm text-white/50">Global kill-switch for Sharp Guy AI Chat and Assistant.</p>
+                </div>
+                <Switch
+                  checked={formData.enable_ai_features}
+                  onCheckedChange={(checked: boolean) => setFormData({ ...formData, enable_ai_features: checked })}
+                  className="data-[state=checked]:bg-primary"
                 />
               </div>
             </CardContent>

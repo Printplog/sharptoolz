@@ -366,7 +366,7 @@ export type SiteSettings = {
   global_announcement_link: string;
   enable_global_announcement: boolean;
 
-  // Legacy
+  enable_ai_features: boolean;
   manual_purchase_text: string;
   dev_name_obfuscated: string;
   owner_name_obfuscated: string;

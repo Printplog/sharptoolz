@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getSiteSettings } from "@/api/apiEndpoints";
 import {
   LayoutDashboard,
   Hammer,
@@ -22,13 +24,19 @@ export default function Sidebar() {
   const { user } = useAuthStore();
   const { sessions, currentSessionId, fetchSessions, newChat, loadSession } = useChatStore();
 
+  const { data: settings } = useQuery({
+    queryKey: ["siteSettings"],
+    queryFn: getSiteSettings,
+  });
+
   const canAccessAdmin = isAdminOrStaff(user?.role);
+  const aiEnabled = settings?.enable_ai_features ?? true;
 
   useEffect(() => {
-    if (user) {
+    if (user && aiEnabled) {
       fetchSessions();
     }
-  }, [user, fetchSessions]);
+  }, [user, fetchSessions, aiEnabled]);
 
   const navigationItems = [
     {
@@ -36,11 +44,11 @@ export default function Sidebar() {
       label: "Dashboard",
       to: "/dashboard",
     },
-    {
+    ...(aiEnabled ? [{
       icon: <img src="/sharpguy.png" className="h-4 w-4 object-contain" alt="Sharp Guy" />,
       label: "Sharp Guy",
       to: "/sharp-guy",
-    },
+    }] : []),
     {
       icon: <Hammer className="h-4 w-4" />,
       label: "All Tools",
@@ -123,45 +131,49 @@ export default function Sidebar() {
         })}
 
         {/* Recent Chats Section */}
-        <div className="mt-8 mb-2 px-4 flex items-center justify-between">
-          <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">
-            Recent Chats
-          </span>
-          <button 
-            onClick={handleNewChat}
-            className="p-1 hover:bg-white/10 rounded-md transition-colors text-foreground/40 hover:text-primary"
-            title="New Global Chat"
-          >
-            <Plus className="h-3 w-3" />
-          </button>
-        </div>
-
-        <div className="space-y-0.5 max-h-[300px] overflow-y-auto custom-scrollbar">
-          {sessions.length === 0 ? (
-            <div className="px-4 py-2 text-xs text-foreground/30 italic">
-              No recent chats
-            </div>
-          ) : (
-            sessions.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => handleSessionClick(session)}
-                className={cn(
-                  "w-full text-left py-2 px-4 flex items-center text-xs rounded-lg transition-all group",
-                  currentSessionId === session.id
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground/60 hover:bg-white/5 hover:text-foreground"
-                )}
+        {aiEnabled && (
+          <>
+            <div className="mt-8 mb-2 px-4 flex items-center justify-between">
+              <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">
+                Recent Chats
+              </span>
+              <button 
+                onClick={handleNewChat}
+                className="p-1 hover:bg-white/10 rounded-md transition-colors text-foreground/40 hover:text-primary"
+                title="New Global Chat"
               >
-                <MessageSquare className={cn(
-                  "h-3 w-3 mr-2 shrink-0",
-                  currentSessionId === session.id ? "text-primary" : "text-foreground/30 group-hover:text-foreground/60"
-                )} />
-                <span className="truncate flex-1">{session.title}</span>
+                <Plus className="h-3 w-3" />
               </button>
-            ))
-          )}
-        </div>
+            </div>
+
+            <div className="space-y-0.5 max-h-[300px] overflow-y-auto custom-scrollbar">
+              {sessions.length === 0 ? (
+                <div className="px-4 py-2 text-xs text-foreground/30 italic">
+                  No recent chats
+                </div>
+              ) : (
+                sessions.map((session) => (
+                  <button
+                    key={session.id}
+                    onClick={() => handleSessionClick(session)}
+                    className={cn(
+                      "w-full text-left py-2 px-4 flex items-center text-xs rounded-lg transition-all group",
+                      currentSessionId === session.id
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground/60 hover:bg-white/5 hover:text-foreground"
+                    )}
+                  >
+                    <MessageSquare className={cn(
+                      "h-3 w-3 mr-2 shrink-0",
+                      currentSessionId === session.id ? "text-primary" : "text-foreground/30 group-hover:text-foreground/60"
+                    )} />
+                    <span className="truncate flex-1">{session.title}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </nav>
     </aside>
   );
