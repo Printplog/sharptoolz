@@ -96,7 +96,7 @@ export default function SharpGuyChat() {
   };
 
   return (
-    <div className="flex h-screen md:h-[calc(100vh-140px)] w-full max-w-6xl mx-auto md:rounded-3xl overflow-hidden md:border md:border-white/10 md:glass-panel relative bg-background/50 backdrop-blur-sm">
+    <div className="flex h-screen md:h-[calc(100vh-140px)] w-full max-w-6xl mx-auto md:rounded-3xl overflow-hidden fixed inset-0 z-[60] md:relative md:inset-auto md:z-auto bg-background md:bg-background/50 md:backdrop-blur-sm md:border md:border-white/10 md:glass-panel relative">
       
       {/* ── Chat Sidebar (Desktop) ───────────────────────────────────────────── */}
       <div 
