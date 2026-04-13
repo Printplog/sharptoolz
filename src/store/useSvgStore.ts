@@ -78,7 +78,7 @@ export const useSvgStore = create<SvgStore>()(
             const idCount: Record<string, number> = {};
             const claimedPreserveIds = new Set<string>();
             const claimedOldBaseIds = new Set<string>();
-            const unmatchedNew: { baseId: string, tag: string }[] = [];
+            const unmatchedNew: { id: string, tag: string }[] = [];
 
             allElements.forEach((domEl) => {
                 const tag = domEl.tagName.toLowerCase();

@@ -105,7 +105,7 @@ export const ManualMismatchDialog: React.FC<ManualMismatchDialogProps> = ({
                                 <p className="text-xs text-amber-200/60 leading-relaxed">
                                     The following old IDs were not found and have no new elements to be assigned to:
                                     <span className="block mt-2 font-mono text-amber-500/80">
-                                        {report.unmatchedOld.map(o => o.baseId).join(", ")}
+                                        {report.unmatchedOld.map(o => o.id).join(", ")}
                                     </span>
                                 </p>
                             </div>
