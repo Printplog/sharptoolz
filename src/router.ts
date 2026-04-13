@@ -30,14 +30,17 @@ export type Path =
   | `/auth/register`
   | `/auth/reset-password`
   | `/contact`
+  | `/cookies`
   | `/dashboard`
   | `/documents`
   | `/documents/:id`
+  | `/privacy`
   | `/settings`
   | `/settings/api`
   | `/sharp-guy`
   | `/sub`
   | `/svg-test-render`
+  | `/terms`
   | `/tools`
   | `/tools/:id`
   | `/tutorials`

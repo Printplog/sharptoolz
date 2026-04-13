@@ -320,3 +320,12 @@ export const deleteTransformVariable = async (id: number): Promise<unknown> => {
   const res = await apiClient.delete(`/transform-variables/${id}/`);
   return res.data;
 };
+export const submitContactForm = async (data: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<{ message: string }> => {
+  const res = await apiClient.post('/contact/', data);
+  return res.data;
+};

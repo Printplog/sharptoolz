@@ -1,96 +1,104 @@
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Link } from "react-router-dom"
-import Logo from "@/components/Logo"
-import { Home, Hammer, ShieldCheck, Truck, BookOpen } from "lucide-react"
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Home } from "lucide-react";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 
 export default function NotFound() {
-  const quickLinks = [
-    { title: "Dashboard", href: "/dashboard", icon: Home, color: "text-blue-400" },
-    { title: "Document Tools", href: "/all-tools", icon: Hammer, color: "text-purple-400" },
-    { title: "ID Templates", href: "/tools?category=ID", icon: ShieldCheck, color: "text-green-400" },
-    { title: "Logistics", href: "/tools?category=Logistics", icon: Truck, color: "text-amber-400" },
-    { title: "Tutorials", href: "/tutorials", icon: BookOpen, color: "text-red-400" },
-  ]
-
   return (
-    <div className="min-h-screen w-full bg-[#050505] flex flex-col items-center justify-center px-4 text-center overflow-hidden relative">
-      {/* Dynamic Background Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] opacity-20 animate-pulse" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] opacity-10" />
-
-      <div className="relative z-10 max-w-2xl w-full">
+    <div className="min-h-screen w-full bg-[#050505] flex flex-col items-center justify-center px-6 overflow-hidden relative">
+      {/* Ambient background effects */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[160px] opacity-40 pointer-events-none" />
+      
+      <div className="relative z-10 text-center space-y-12 max-w-2xl">
         <motion.div
-           initial={{ opacity: 0, y: 30 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.6 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="space-y-4"
         >
-          <div className="flex justify-center mb-12">
-            <Logo size={48} />
+          {/* Main Error Indicator */}
+          <div className="space-y-0">
+            <motion.h1 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-[14vw] md:text-[180px] font-black leading-none tracking-tighter italic bg-clip-text text-transparent bg-gradient-to-b from-white via-white/80 to-white/20 select-none pb-4"
+            >
+              404
+            </motion.h1>
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="h-px w-24 bg-primary/50 mx-auto"
+            />
           </div>
 
           <motion.div
-            className="text-[120px] md:text-[180px] font-black text-white/90 leading-none tracking-tighter italic flex items-center justify-center gap-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="space-y-6"
           >
-            4
-            <motion.span
-              animate={{ 
-                rotate: [0, 5, -5, 0],
-                scale: [1, 1.05, 0.95, 1]
-              }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="text-primary inline-block drop-shadow-[0_0_35px_rgba(var(--primary),0.5)]"
-            >
-              0
-            </motion.span>
-            4
+            <h2 className="text-2xl md:text-3xl font-bold text-white uppercase tracking-[0.2em] italic">
+              Lost in <span className="text-primary italic">Empty Space</span>
+            </h2>
+            <p className="text-white/30 text-lg font-medium max-w-md mx-auto leading-relaxed">
+              The coordinates you requested are no longer available in our systems.
+            </p>
           </motion.div>
-
-          <h1 className="text-3xl md:text-4xl font-black text-white uppercase italic tracking-tighter mt-4">
-            Coordinates Not Found
-          </h1>
-          <p className="text-white/40 mt-4 text-lg font-medium max-w-md mx-auto leading-relaxed">
-            The document you're looking for has been archived or relocated. 
-            Let's get you back to the right coordinates.
-          </p>
         </motion.div>
 
-        {/* Quick Help Links */}
-        <motion.div 
+        {/* Action button */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-4"
-        >
-          {quickLinks.map((link, idx) => (
-            <Link 
-              key={idx} 
-              to={link.href}
-              className="group bg-white/5 border border-white/10 p-4 rounded-2xl hover:bg-white/10 hover:border-primary/20 transition-all duration-300 text-left"
-            >
-              <link.icon className={`w-5 h-5 mb-3 ${link.color} group-hover:scale-110 transition-transform`} />
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{link.title}</span>
-            </Link>
-          ))}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-12"
+          className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8"
         >
           <Link to="/">
-            <Button size="lg" className="bg-primary text-black font-black uppercase tracking-[0.2em] px-10 h-14 rounded-full hover:scale-105 transition-all shadow-xl shadow-primary/20">
-              Return to Base
-            </Button>
+            <PremiumButton 
+              text="Return to Base"
+              icon={Home}
+              className="h-16 px-12 text-lg"
+            />
           </Link>
+          
+          <button 
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-white/20 hover:text-white transition-all group"
+          >
+            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
+            Previous Location
+          </button>
         </motion.div>
       </div>
 
-      <footer className="absolute bottom-8 left-0 w-full text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
-        © SharpToolz Systems · Operations Center
-      </footer>
+      {/* Decorative floating elements */}
+      <motion.div 
+        animate={{ 
+          y: [-10, 10, -10],
+          rotate: [0, 5, 0]
+        }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-[20%] right-[15%] w-12 h-12 border border-white/5 rounded-full pointer-events-none" 
+      />
+      <motion.div 
+        animate={{ 
+          y: [15, -15, 15],
+          rotate: [0, -10, 0]
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-[25%] left-[20%] w-8 h-8 bg-primary/5 rounded-lg rotate-12 pointer-events-none" 
+      />
+
+      {/* Bottom info */}
+      <div className="absolute bottom-12 left-0 w-full flex flex-col items-center gap-4">
+        <div className="h-px w-8 bg-white/10" />
+        <span className="text-[9px] font-black uppercase tracking-[0.6em] text-white/10">
+          SharpToolz Operations Center
+        </span>
+      </div>
     </div>
-  )
+  );
 }

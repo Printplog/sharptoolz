@@ -9,7 +9,7 @@ export default function Contact() {
       <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.02]" 
            style={{ backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`, backgroundSize: '32px 32px' }} />
       
-      <SectionPadding className="pt-32 pb-24 relative z-10">
+      <SectionPadding className="pt-32 pb-0 relative z-10">
         <div className="max-w-5xl mx-auto">
           {/* Simple Header */}
           <div className="mb-20">

@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Send, CheckCircle2, User, Mail, MessageSquare, HelpCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Send, CheckCircle2, User, Mail, MessageSquare, HelpCircle, Loader2 } from "lucide-react";
 import { PremiumButton } from "@/components/ui/PremiumButton";
+import { submitContactForm } from "@/api/apiEndpoints";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -47,123 +50,164 @@ export default function ContactForm() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      toast.error("Please fix the errors in the form.");
       return;
     }
 
     setIsSubmitting(true);
-    // Simulate submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    setSubmitted(true);
-    setIsSubmitting(false);
-    setFormData({ name: "", email: "", subject: "", message: "" });
-    
-    setTimeout(() => setSubmitted(false), 5000);
+    try {
+      await submitContactForm(formData);
+      setSubmitted(true);
+      setFormData({ name: "", email: "", subject: "", message: "" });
+      toast.success("Message sent successfully!");
+      // Reset submission state after a while
+      setTimeout(() => setSubmitted(false), 8000);
+    } catch (error: any) {
+      console.error("Contact submission error:", error);
+      toast.error(error?.response?.data?.error || "Failed to send message. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const InputWrapper = ({ label, icon: Icon, children, error }: any) => (
+  const InputWrapper = ({ label, icon: Icon, children, error, rootClassName }: any) => (
     <div className="space-y-2 group">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-           <Icon className="w-3 h-3 text-white/40 group-focus-within:text-primary transition-colors" />
-           <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] group-focus-within:text-primary transition-colors">
+           <Icon className="w-3.5 h-3.5 text-white/20 group-focus-within:text-primary transition-all group-focus-within:scale-110" />
+           <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] group-focus-within:text-white transition-colors">
             {label}
            </span>
         </div>
-        {error && (
-          <span className="text-[10px] font-bold text-red-500/80 uppercase tracking-widest animate-pulse">
-            {error}
-          </span>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.span 
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="text-[9px] font-bold text-red-500 uppercase tracking-widest"
+            >
+              {error}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
-      <div className="relative">
+      <div className={cn(
+        "relative overflow-hidden bg-white/2 border border-white/5 group-focus-within:border-primary/30 group-focus-within:bg-white/[0.04] transition-all duration-300",
+        rootClassName || "rounded-full"
+      )}>
         {children}
-        <div className="absolute inset-x-0 bottom-0 h-px bg-white/10 group-focus-within:bg-primary/50 transition-colors" />
+        <div className="absolute inset-x-0 bottom-0 h-[2px] bg-primary/0 group-focus-within:bg-primary/50 transition-all scale-x-0 group-focus-within:scale-x-100 duration-500 origin-left" />
       </div>
     </div>
   );
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="relative bg-white/[0.03] backdrop-blur-xl border border-white/5 rounded-[40px] p-8 md:p-12 shadow-2xl overflow-hidden"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="relative bg-[#0D1117] backdrop-blur-3xl border border-white/5 rounded-[2rem] p-8 md:p-14 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] overflow-hidden"
     >
-      {/* Glass Reflection */}
-      <div className="absolute inset-0 bg-linear-to-br from-white/[0.05] to-transparent pointer-events-none" />
+      {/* Premium Background Glow */}
+      <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-      {submitted ? (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-20 flex flex-col items-center relative z-10"
-        >
-          <div className="w-20 h-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-            <CheckCircle2 className="w-10 h-10 text-primary" />
-          </div>
-          <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-4">
-             Message <span className="text-primary">Sent</span>
-          </h2>
-          <p className="text-white/40 text-sm font-medium max-w-xs mx-auto leading-relaxed">
-            Thank you for reaching out. We will get back to you as soon as possible.
-          </p>
-        </motion.div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <InputWrapper label="Your Name" icon={User} error={errors.name}>
+      <AnimatePresence mode="wait">
+        {submitted ? (
+          <motion.div 
+            key="success"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="text-center py-16 flex flex-col items-center relative z-10"
+          >
+            <motion.div 
+              initial={{ scale: 0.5, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              className="w-24 h-24 rounded-full bg-primary/20 border-2 border-primary/50 flex items-center justify-center mb-10 shadow-[0_0_40px_rgba(var(--primary),0.2)]"
+            >
+              <CheckCircle2 className="w-12 h-12 text-primary" />
+            </motion.div>
+            <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-6 leading-none">
+               Message <span className="text-primary">Transmitted</span>
+            </h2>
+            <p className="text-white/40 text-lg font-medium max-w-sm mx-auto leading-relaxed">
+              We've received your request. Our support team will analyze and respond within 24 hours.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileActive={{ scale: 0.95 }}
+              onClick={() => setSubmitted(false)}
+              className="mt-12 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-primary transition-colors cursor-pointer"
+            >
+              Send another message
+            </motion.button>
+          </motion.div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <InputWrapper label="Your Name" icon={User} error={errors.name}>
+                <input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full bg-transparent border-none py-4 px-4 text-white placeholder:text-white/20 text-sm focus:outline-none transition-all"
+                  placeholder="Official Name"
+                />
+              </InputWrapper>
+
+              <InputWrapper label="Your Email" icon={Mail} error={errors.email}>
+                <input
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full bg-transparent border-none py-4 px-4 text-white placeholder:text-white/20 text-sm focus:outline-none transition-all"
+                  placeholder="active-email@provider.com"
+                />
+              </InputWrapper>
+            </div>
+
+            <InputWrapper label="Inquiry Subject" icon={HelpCircle} error={errors.subject}>
               <input
-                name="name"
-                value={formData.name}
+                name="subject"
+                value={formData.subject}
                 onChange={handleInputChange}
-                className="w-full bg-transparent border-none py-3 px-2 text-white placeholder:text-white/30 text-sm focus:outline-none transition-all"
-                placeholder="Full Name"
+                className="w-full bg-transparent border-none py-4 px-4 text-white placeholder:text-white/20 text-sm focus:outline-none transition-all"
+                placeholder="What can we help you with?"
               />
             </InputWrapper>
 
-            <InputWrapper label="Your Email" icon={Mail} error={errors.email}>
-              <input
-                name="email"
-                type="email"
-                value={formData.email}
+            <InputWrapper label="Your Message" icon={MessageSquare} error={errors.message} rootClassName="rounded-3xl">
+              <textarea
+                name="message"
+                value={formData.message}
                 onChange={handleInputChange}
-                className="w-full bg-transparent border-none py-3 px-2 text-white placeholder:text-white/30 text-sm focus:outline-none transition-all"
-                placeholder="email@example.com"
+                rows={4}
+                className="w-full bg-transparent border-none py-4 px-6 text-white placeholder:text-white/20 text-sm focus:outline-none transition-all resize-none"
+                placeholder="Describe your request in detail..."
               />
             </InputWrapper>
-          </div>
 
-          <InputWrapper label="Reason for messaging" icon={HelpCircle} error={errors.subject}>
-            <input
-              name="subject"
-              value={formData.subject}
-              onChange={handleInputChange}
-              className="w-full bg-transparent border-none py-3 px-2 text-white placeholder:text-white/30 text-sm focus:outline-none transition-all"
-              placeholder="E.g Question about a tool"
-            />
-          </InputWrapper>
-
-          <InputWrapper label="Your Message" icon={MessageSquare} error={errors.message}>
-            <textarea
-              name="message"
-              value={formData.message}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full bg-transparent border-none py-3 px-2 text-white placeholder:text-white/30 text-sm focus:outline-none transition-all resize-none"
-              placeholder="Tell us what you need help with..."
-            />
-          </InputWrapper>
-
-          <div className="pt-4">
-            <PremiumButton 
-              text={isSubmitting ? "Sending..." : "Send Message"}
-              icon={Send}
-              className="w-full"
-              isLoading={isSubmitting}
-            />
-          </div>
-        </form>
-      )}
+            <div className="pt-2 flex justify-center">
+              <PremiumButton 
+                text={isSubmitting ? "Transmitting..." : "Send Request"}
+                icon={isSubmitting ? Loader2 : Send}
+                className={cn(
+                  "w-full sm:w-auto px-12 h-14 text-sm transition-all",
+                  isSubmitting && "opacity-50 grayscale"
+                )}
+                isLoading={isSubmitting}
+              />
+            </div>
+            
+            <p className="text-center text-[9px] font-bold uppercase tracking-[0.4em] text-white/10">
+              End-to-End Encrypted Transmission
+            </p>
+          </form>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
