@@ -14,6 +14,11 @@ export interface SvgPatch {
     newValue: any;
 }
 
+export interface MismatchReport {
+    unmatchedNew: { baseId: string, tag: string }[]; // elements in new SVG with no old match
+    unmatchedOld: { baseId: string, tag: string }[]; // baseIds from old elements not found in new SVG
+}
+
 interface SvgStore {
     // Data
     originalSvg: string;
@@ -29,7 +34,7 @@ interface SvgStore {
     historyIndex: number;
 
     // Actions
-    setInitialSvg: (svg: string, preserveFrom?: Record<string, SvgElement>) => void;
+    setInitialSvg: (svg: string, preserveFrom?: Record<string, SvgElement>, manualMap?: Record<string, string>) => MismatchReport | null;
     updateElement: (id: string, updates: Partial<SvgElement>, undoable?: boolean) => void;
     commitChanges: (immediate?: boolean) => void; // Bake elements into workingSvg
     selectElement: (id: string | null) => void;
@@ -63,7 +68,7 @@ export const useSvgStore = create<SvgStore>()(
         history: [],
         historyIndex: -1,
 
-        setInitialSvg: (svg, preserveFrom) => {
+        setInitialSvg: (svg, preserveFrom, manualMap) => {
             const parser = new DOMParser();
             const svgDoc = parser.parseFromString(svg.trim(), "image/svg+xml");
             const allElements = Array.from(svgDoc.querySelectorAll("*")).filter(el => el.tagName.toLowerCase() !== "svg");
@@ -72,6 +77,8 @@ export const useSvgStore = create<SvgStore>()(
             const order: string[] = [];
             const idCount: Record<string, number> = {};
             const claimedPreserveIds = new Set<string>();
+            const claimedOldBaseIds = new Set<string>();
+            const unmatchedNew: { baseId: string, tag: string }[] = [];
 
             allElements.forEach((domEl) => {
                 const tag = domEl.tagName.toLowerCase();
@@ -92,36 +99,60 @@ export const useSvgStore = create<SvgStore>()(
 
                 if (!isInteresting) return;
 
+                const originalFileId = domEl.getAttribute("id");
                 const internalIdAttr = domEl.getAttribute("data-internal-id");
-                let baseId = id || internalIdAttr || `el-${tag}`;
+                
+                let finalId: string | undefined = undefined;
+                let baseIdForInternal: string = "";
 
-                // --- EDIT PRESERVATION (Fuzzy Match) ---
+                // --- 1. PRESERVATION FIRST ---
+                let matchFound = false;
                 if (preserveFrom) {
-                    // Find matching element by Base ID (everything before the first dot)
-                    const cleanBaseId = baseId.split('.')[0];
+                    const cleanBaseId = (originalFileId || internalIdAttr || `el-${tag}`).split('.')[0];
                     const match = Object.values(preserveFrom).find(el => {
-                        if (!el.id || claimedPreserveIds.has(el.id)) return false; // Skip if already claimed
+                        if (!el.id || claimedPreserveIds.has(el.id)) return false;
                         const elBaseId = (el.originalId || el.id || "").split('.')[0];
                         return elBaseId === cleanBaseId;
                     });
 
-                    if (match) {
-                        const preservedId = match.id;
-                        // For re-uploads, we want to keep the NEW SVG attributes (like x/y positions)
-                        // but carry over the ADMIN edits (like fills, colors, etc.)
-                        // Actually, for now let's just preserve the ID extensions
-                        if (preservedId) {
-                            domEl.setAttribute('id', preservedId);
-                            baseId = preservedId;
-                            claimedPreserveIds.add(preservedId); // Claim this ID
-                        }
+                    if (match?.id) {
+                        finalId = match.id;
+                        console.log(`[Store] PRESERVED: "${cleanBaseId}" -> "${finalId}"`);
+                        matchFound = true;
+                        claimedPreserveIds.add(finalId);
+                        claimedOldBaseIds.add((match.originalId || match.id || "").split('.')[0]);
+                    } else {
+                        // Check manual overrides
+                        const manualMatchId = manualMap?.[cleanBaseId];
+                        if (manualMatchId) {
+                            console.log(`[Store] MANUAL: "${cleanBaseId}" -> "${manualMatchId}"`);
+                            finalId = manualMatchId;
+                            matchFound = true;
+                        } 
                     }
                 }
 
-                idCount[baseId] = (idCount[baseId] || 0) + 1;
-                const internalId = idCount[baseId] > 1 ? `${baseId}_${idCount[baseId]}` : baseId;
+                // --- 2. FALLBACK TO FILE ID ---
+                if (!matchFound) {
+                    finalId = originalFileId || undefined;
+                    if (originalFileId) {
+                        unmatchedNew.push({ baseId: originalFileId.split('.')[0], tag });
+                    }
+                }
+
+                // --- 3. APPLY TO DOM & COMPUTE INTERNAL ID ---
+                if (finalId) {
+                    domEl.setAttribute('id', finalId);
+                    baseIdForInternal = finalId;
+                } else {
+                    baseIdForInternal = internalIdAttr || `el-${tag}`;
+                }
+
+                idCount[baseIdForInternal] = (idCount[baseIdForInternal] || 0) + 1;
+                const internalId = idCount[baseIdForInternal] > 1 ? `${baseIdForInternal}_${idCount[baseIdForInternal]}` : baseIdForInternal;
 
                 domEl.setAttribute('data-internal-id', internalId);
+                console.log(`[Store] ELEMENT CREATED: internalId="${internalId}" assignedId="${finalId || "none"}"`);
 
                 const attributes = Object.fromEntries(
                     Array.from(domEl.attributes).map(attr => [attr.name, attr.value])
@@ -147,8 +178,8 @@ export const useSvgStore = create<SvgStore>()(
 
                 const element: SvgElement = {
                     tag,
-                    id: domEl.getAttribute("id") || undefined,
-                    originalId: id || undefined,
+                    id: finalId,
+                    originalId: originalFileId || undefined,
                     internalId: internalId,
                     attributes,
                     innerText: innerText || undefined
@@ -173,6 +204,25 @@ export const useSvgStore = create<SvgStore>()(
                 historyIndex: -1,
                 selectedElementId: newSelectedId
             });
+
+            let mismatchReport: MismatchReport | null = null;
+            if (preserveFrom) {
+                const oldBaseIds = Object.values(preserveFrom)
+                    .filter(el => el.id)
+                    .map(el => ({ 
+                        baseId: (el.originalId || el.id || "").split('.')[0],
+                        tag: el.tag
+                    }));
+                
+                // Deduplicate oldBaseIds
+                const uniqueOld = Array.from(new Map(oldBaseIds.map(o => [o.baseId, o])).values());
+                
+                const unmatchedOld = uniqueOld.filter(o => !claimedOldBaseIds.has(o.baseId));
+                if (unmatchedNew.length > 0 || unmatchedOld.length > 0) {
+                    mismatchReport = { unmatchedNew, unmatchedOld };
+                }
+            }
+            return mismatchReport;
         },
 
         updateElement: (id, updates, undoable = true) => {
@@ -422,3 +472,14 @@ export const useSvgStore = create<SvgStore>()(
         }
     }))
 );
+
+/**
+ * Utility to strip internal data attributes from an SVG string
+ */
+export function stripInternalIds(svg: string): string {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svg, "image/svg+xml");
+    const elements = doc.querySelectorAll("[data-internal-id]");
+    elements.forEach(el => el.removeAttribute("data-internal-id"));
+    return new XMLSerializer().serializeToString(doc);
+}

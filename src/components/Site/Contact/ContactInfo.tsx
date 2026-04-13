@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Mail, Send, Bell, ShieldCheck, Twitter, Instagram, MessageCircle, Music2 } from "lucide-react";
+import { Mail, Send, ShieldCheck, Twitter, Instagram, MessageCircle, Music2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings } from "@/api/apiEndpoints";
 import type { SiteSettings } from "@/types";

@@ -132,6 +132,7 @@ export default function SvgTemplateEditor() {
   const [svgContent, setSvgContent] = useState<string>("");
   const [isFetchingSvg, setIsFetchingSvg] = useState(false);
   const [isReplaced, setIsReplaced] = useState(false);
+  const [syncToken, setSyncToken] = useState(0);
   const lastLoadedBaseUrl = useRef<string | null>(null);
   const baseSvgText = useRef<string | null>(null);
 
@@ -203,7 +204,13 @@ export default function SvgTemplateEditor() {
         
         if (isReplaced) {
           console.log('[SaveMutation] SVG was REPLACED. Baking patches and sending full SVG.');
-          let bakedSvg = templateData.svg || svgContent;
+          // Ensure we use the freshly applied IDs version if provided, fallback to raw upload
+          let bakedSvg = templateData.svg && templateData.svg.trim().length > 0 
+            ? templateData.svg 
+            : svgContent;
+            
+          console.log(`[SaveMutation] Target SVG content length: ${bakedSvg?.length || 0}`);
+          
           if (hasPatches) {
             try {
               bakedSvg = applySvgPatches(bakedSvg, patches);
@@ -242,7 +249,8 @@ export default function SvgTemplateEditor() {
 
           // SEND SVG ONLY IF REPLACED
           if (isReplaced && finalSvg) {
-            formData.append('svg', finalSvg);
+            const svgFile = new File([finalSvg], 'template.svg', { type: 'image/svg+xml' });
+            formData.append('svg', svgFile);
           }
           
           // ALWAYS SEND PATCHES (empty if replaced/baked)
@@ -283,30 +291,32 @@ export default function SvgTemplateEditor() {
     onSuccess: async (updatedTemplate: Template) => {
       toast.success('Template saved successfully!');
 
-      // For SVG replacement: bake patches into the local svgContent so the store re-parses from the correct base.
-      // For patch-only saves: leave svgContent unchanged — the store already reflects the edits,
-      // so we avoid triggering setInitialSvg which would re-parse and lose the current selection.
-      if (isReplaced && patches.length > 0) {
-        setSvgContent((prev) => applySvgPatches(prev, patches));
+      // For SVG replacement: update local content with the one we just saved (which has IDs/patches baked)
+      if (isReplaced) {
+        // If we have any pending patches at this exact moment (rare but possible), apply them
+        setSvgContent((prev) => {
+           const base = svgEditorRef.current?.handleSave ? useSvgStore.getState().workingSvg : prev;
+           return patches.length > 0 ? applySvgPatches(base, patches) : base;
+        });
       }
       // Reinsert server's merged patches so the dialog reflects committed state immediately
       setPatches(updatedTemplate.svg_patches || []);
       setIsReplaced(false);
       setIsDirty(false);
 
-      // Update the React Query cache with the new template data (includes new svg_patches)
+      // Update the React Query cache with the new template data
       queryClient.setQueryData(["template", id], (old: Template | undefined) => {
         if (!old) return updatedTemplate;
         return {
           ...old,
-          ...updatedTemplate, // This will have the merged svg_patches from the backend
+          ...updatedTemplate,
           fonts: updatedTemplate.fonts || old.fonts,
           tutorial: updatedTemplate.tutorial || old.tutorial,
         };
       });
 
-      // Refresh other templates lists
-      await queryClient.invalidateQueries({ queryKey: ["templates"] });
+      setSyncToken(prev => prev + 1);
+      await queryClient.invalidateQueries({ queryKey: ["admin_templates"] });
     },
     onError: (error: any) => {
       console.error('Save template error:', error);
@@ -490,6 +500,7 @@ export default function SvgTemplateEditor() {
             onPatchUpdate={(patch) => { setIsDirty(true); addPatch(patch); }}
             onImportPatches={setPatches}
             patches={patches}
+            syncToken={syncToken}
             onSvgReplace={(svg) => {
               console.log('[TemplateEditor] SVG replaced - marking as REPLACED');
               setSvgContent(svg);
@@ -499,7 +510,7 @@ export default function SvgTemplateEditor() {
             banner={data.banner}
             hot={data.hot}
             isActive={data.is_active}
-            tool={typeof data.tool === 'object' ? data.tool.id : data.tool}
+            tool={data.tool != null && typeof data.tool === 'object' ? data.tool.id : data.tool ?? undefined}
             tutorial={data.tutorial}
             keywords={data.keywords}
             isLoading={saveMutation.isPending}

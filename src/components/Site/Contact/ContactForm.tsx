@@ -137,7 +137,7 @@ export default function ContactForm() {
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
-              whileActive={{ scale: 0.95 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setSubmitted(false)}
               className="mt-12 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-primary transition-colors cursor-pointer"
             >

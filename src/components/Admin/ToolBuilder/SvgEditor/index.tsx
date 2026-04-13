@@ -29,7 +29,8 @@ import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Tutorial, Font, SvgPatch } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
 
-import { useSvgStore } from "@/store/useSvgStore";
+import { useSvgStore, type MismatchReport, stripInternalIds } from "@/store/useSvgStore";
+import { ManualMismatchDialog } from "./ManualMismatchDialog";
 import { getAdaptiveStaleTime } from "@/lib/utils/deviceDetection";
 
 
@@ -53,6 +54,7 @@ interface SvgEditorProps {
   patches?: SvgPatch[];
   onImportPatches?: (patches: SvgPatch[]) => void;
   hasUnsavedChanges?: boolean;
+  syncToken?: number;
 }
 
 export interface SvgEditorRef {
@@ -81,7 +83,16 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     patches = [],
     onImportPatches,
     hasUnsavedChanges = false,
+    syncToken = 0,
   } = props;
+  // Reset replacement status after a successful save (triggered by parent syncToken)
+  useEffect(() => {
+    if (syncToken > 0) {
+      setIsReplaced(false);
+      isReplacedRef.current = false;
+      setOldElementsForPreservation(null);
+    }
+  }, [syncToken]);
   const {
     setInitialSvg,
     elements: elementsMap,
@@ -100,7 +111,9 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [activeTab, setActiveTab] = useState("layers");
   const [showPreserveDialog, setShowPreserveDialog] = useState(false);
   const [pendingSvgContent, setPendingSvgContent] = useState<string | null>(null);
-  const [fieldStats, setFieldStats] = useState({ total: 0, invalid: 0, duplicates: 0 });
+  const [showMismatchDialog, setShowMismatchDialog] = useState(false);
+  const [mismatchReport, setMismatchReport] = useState<MismatchReport | null>(null);
+  const [oldElementsForPreservation, setOldElementsForPreservation] = useState<Record<string, SvgElement> | null>(null);
 
   const elements = useMemo(() => elementOrder.map(id => elementsMap[id]), [elementOrder, elementsMap]);
   const selectedElementIndex = useMemo(() =>
@@ -121,6 +134,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   const [showPatchManager, setShowPatchManager] = useState(false);
 
   const svgUploadRef = useRef<import("./sections/SvgUpload").SvgUploadRef>(null);
+  const isReplacedRef = useRef(false);
 
   // Navigation Intercept State
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
@@ -178,7 +192,10 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
   // Reset replaced state when receiving new base SVG from backend (after save)
   useEffect(() => {
     if (svgRaw) {
-      setIsReplaced(false);
+      // Only reset replacement status if we are NOT currently in the middle of a replacement flow
+      if (!isReplacedRef.current) {
+        setIsReplaced(false);
+      }
     }
   }, [svgRaw]);
 
@@ -188,7 +205,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
   // Sync SVG with prop — re-initialize store when prop changes (e.g. after save)
   useEffect(() => {
-    if (svgRaw && svgRaw !== originalSvg) {
+    if (svgRaw && svgRaw !== originalSvg && !isReplacedRef.current) {
       setInitialSvg(svgRaw);
     }
   }, [svgRaw, originalSvg, setInitialSvg]);
@@ -330,7 +347,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
 
     onSave({
       name: name.trim(),
-      svg: isReplaced ? workingSvg : "", // Bake edits directly into the SVG if it was replaced/newly uploaded
+      svg: isReplaced ? stripInternalIds(workingSvg) : "", // Strip internal IDs before saving
       banner: bannerFile,
       hot: isHot,
       isActive: isActiveState,
@@ -362,9 +379,6 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         return;
       }
 
-      const stats = getFieldStats(content);
-      setFieldStats(stats);
-
       // --- NEW FLOW: ASK TO PRESERVE EDITS ---
       const hasExistingEdits = patches.length > 0;
       
@@ -377,8 +391,9 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         // Normal upload (first time)
         setInitialSvg(content);
         setIsReplaced(true);
+        isReplacedRef.current = true;
         if (onSvgReplace) onSvgReplace(content);
-        showUploadToasts(stats);
+        showUploadToasts(getFieldStats(content));
       }
     };
     reader.readAsText(file);
@@ -437,26 +452,59 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     }
   };
 
+  const completeReplacement = (content: string, stats: { total: number, invalid: number, duplicates: number }) => {
+    setIsReplaced(true);
+    isReplacedRef.current = true;
+    if (onSvgReplace) onSvgReplace(content);
+    showUploadToasts(stats);
+    setShowPreserveDialog(false);
+    setPendingSvgContent(null);
+  };
+
   const handleConfirmPreserve = (preserve: boolean) => {
     if (!pendingSvgContent) return;
     
-    let finalStats = fieldStats;
     if (preserve) {
-        setInitialSvg(pendingSvgContent, elementsMap);
-        finalStats = getFieldStats(pendingSvgContent, elementsMap);
+        // Capture current elements for matching (both automatic and manual steps)
+        const currentElements = { ...elementsMap };
+        setOldElementsForPreservation(currentElements);
+        
+        const report = setInitialSvg(pendingSvgContent, currentElements);
+        if (report && (report.unmatchedNew.length > 0 || report.unmatchedOld.length > 0)) {
+            setMismatchReport(report);
+            setShowMismatchDialog(true);
+            
+            // Still signal parent that replacement happened (partial state is already in store)
+            setIsReplaced(true);
+            isReplacedRef.current = true;
+            if (onSvgReplace) onSvgReplace(pendingSvgContent);
+            
+            setShowPreserveDialog(false);
+            return; 
+        }
+        
+        const stats = getFieldStats(pendingSvgContent, currentElements);
         toast.success("SVG replaced · Existing edits preserved!");
+        completeReplacement(pendingSvgContent, stats);
     } else {
         setInitialSvg(pendingSvgContent);
-        finalStats = getFieldStats(pendingSvgContent);
-        toast.info("SVG replaced · Starting fresh.");
+        const stats = getFieldStats(pendingSvgContent);
+        toast.info("SVG replaced · Edits reset.");
+        completeReplacement(pendingSvgContent, stats);
     }
-    
-    setIsReplaced(true);
-    if (onSvgReplace) onSvgReplace(pendingSvgContent);
-    showUploadToasts(finalStats);
-    
-    setPendingSvgContent(null);
-    setShowPreserveDialog(false);
+  };
+
+  const handleManualMapConfirm = (manualMap: Record<string, string>) => {
+    if (pendingSvgContent) {
+      setInitialSvg(pendingSvgContent, oldElementsForPreservation || undefined, manualMap);
+      
+      const stats = getFieldStats(pendingSvgContent, oldElementsForPreservation || undefined);
+      toast.success("SVG replaced · Manual mappings applied!");
+      
+      setShowMismatchDialog(false);
+      completeReplacement(pendingSvgContent, stats);
+      setOldElementsForPreservation(null);
+    }
   };
 
   const handleTabChange = useCallback((newTab: string) => {
@@ -804,6 +852,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ManualMismatchDialog 
+          open={showMismatchDialog}
+          onOpenChange={setShowMismatchDialog}
+          report={mismatchReport}
+          onConfirm={handleManualMapConfirm}
+      />
 
       <PatchManager
         open={showPatchManager}
