@@ -380,9 +380,10 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       }
 
       // --- NEW FLOW: ASK TO PRESERVE EDITS ---
-      const hasExistingEdits = patches.length > 0;
+      // We ask if either they have active patches OR if they have existing elements (to preserve IDs)
+      const hasExistingContent = patches.length > 0 || Object.keys(elementsMap).length > 0;
       
-      if (hasExistingEdits) {
+      if (hasExistingContent) {
         setPendingSvgContent(content);
         setShowPreserveDialog(true);
         // We only show a simple "File read" toast here, the detailed stats come after the choice

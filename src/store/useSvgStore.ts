@@ -143,16 +143,6 @@ export const useSvgStore = create<SvgStore>()(
                 // --- 3. APPLY TO DOM & COMPUTE INTERNAL ID ---
                 if (finalId) {
                     domEl.setAttribute('id', finalId);
-                    
-                    // --- PRESERVE VISUAL TRANSFORMATIONS ---
-                    if (matchFound && preserveFrom) {
-                        const matchedEl = Object.values(preserveFrom).find(el => el.id === finalId);
-                        if (matchedEl?.attributes.transform) {
-                            console.log(`[Store] Preserving transform for "${finalId}"`);
-                            domEl.setAttribute('transform', matchedEl.attributes.transform);
-                        }
-                    }
-
                     baseIdForInternal = finalId;
                 } else {
                     baseIdForInternal = internalIdAttr || `el-${tag}`;
