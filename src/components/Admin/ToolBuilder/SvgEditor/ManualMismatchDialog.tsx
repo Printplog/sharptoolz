@@ -64,23 +64,21 @@ export const ManualMismatchDialog: React.FC<ManualMismatchDialogProps> = ({
                                 <div className="space-y-2">
                                     {report.unmatchedNew.map((item) => (
                                         <div 
-                                            key={item.baseId} 
+                                            key={item.id} 
                                             className="flex items-center gap-4 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06] transition-all hover:bg-white/[0.05]"
                                         >
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <Tag className="h-3 w-3 text-white/40" />
-                                                    <span className="text-xs font-mono text-white/80 truncate">{item.baseId}</span>
+                                                    <span className="text-xs font-mono text-white/80 truncate">{item.id}</span>
                                                 </div>
                                                 <div className="text-[10px] text-white/30 uppercase font-bold">{item.tag} element</div>
                                             </div>
-
                                             <ArrowRight className="h-4 w-4 text-white/20 shrink-0" />
-
                                             <div className="w-56 shrink-0">
                                                 <Select 
-                                                    value={manualMap[item.baseId] || "skip"} 
-                                                    onValueChange={(val) => handleMap(item.baseId, val)}
+                                                    value={manualMap[item.id] || "skip"} 
+                                                    onValueChange={(val) => handleMap(item.id, val)}
                                                 >
                                                     <SelectTrigger className="h-9 bg-white/5 border-white/10 text-xs">
                                                         <SelectValue placeholder="Select ID to apply..." />
@@ -88,8 +86,8 @@ export const ManualMismatchDialog: React.FC<ManualMismatchDialogProps> = ({
                                                     <SelectContent className="bg-[#151515] border-white/10 text-white">
                                                         <SelectItem value="skip" className="text-white/40">Keep Current ID</SelectItem>
                                                         {report.unmatchedOld.map(old => (
-                                                            <SelectItem key={old.baseId} value={old.baseId}>
-                                                                <span className="text-xs font-mono">{old.baseId}</span>
+                                                            <SelectItem key={old.id} value={old.id}>
+                                                                <span className="text-xs font-mono">{old.id}</span>
                                                                 <span className="ml-2 text-[10px] text-white/30 uppercase">({old.tag})</span>
                                                             </SelectItem>
                                                         ))}

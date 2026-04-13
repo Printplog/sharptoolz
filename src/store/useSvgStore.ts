@@ -15,8 +15,8 @@ export interface SvgPatch {
 }
 
 export interface MismatchReport {
-    unmatchedNew: { baseId: string, tag: string }[]; // elements in new SVG with no old match
-    unmatchedOld: { baseId: string, tag: string }[]; // baseIds from old elements not found in new SVG
+    unmatchedNew: { id: string, tag: string }[]; // elements in new SVG with no old match
+    unmatchedOld: { id: string, tag: string }[]; // full IDs from old elements not found in new SVG
 }
 
 interface SvgStore {
@@ -136,13 +136,23 @@ export const useSvgStore = create<SvgStore>()(
                 if (!matchFound) {
                     finalId = originalFileId || undefined;
                     if (originalFileId) {
-                        unmatchedNew.push({ baseId: originalFileId.split('.')[0], tag });
+                        unmatchedNew.push({ id: originalFileId, tag });
                     }
                 }
 
                 // --- 3. APPLY TO DOM & COMPUTE INTERNAL ID ---
                 if (finalId) {
                     domEl.setAttribute('id', finalId);
+                    
+                    // --- PRESERVE VISUAL TRANSFORMATIONS ---
+                    if (matchFound && preserveFrom) {
+                        const matchedEl = Object.values(preserveFrom).find(el => el.id === finalId);
+                        if (matchedEl?.attributes.transform) {
+                            console.log(`[Store] Preserving transform for "${finalId}"`);
+                            domEl.setAttribute('transform', matchedEl.attributes.transform);
+                        }
+                    }
+
                     baseIdForInternal = finalId;
                 } else {
                     baseIdForInternal = internalIdAttr || `el-${tag}`;
@@ -207,17 +217,14 @@ export const useSvgStore = create<SvgStore>()(
 
             let mismatchReport: MismatchReport | null = null;
             if (preserveFrom) {
-                const oldBaseIds = Object.values(preserveFrom)
+                const oldIds = Object.values(preserveFrom)
                     .filter(el => el.id)
                     .map(el => ({ 
-                        baseId: (el.originalId || el.id || "").split('.')[0],
+                        id: el.id as string,
                         tag: el.tag
                     }));
                 
-                // Deduplicate oldBaseIds
-                const uniqueOld = Array.from(new Map(oldBaseIds.map(o => [o.baseId, o])).values());
-                
-                const unmatchedOld = uniqueOld.filter(o => !claimedOldBaseIds.has(o.baseId));
+                const unmatchedOld = oldIds.filter(o => !claimedPreserveIds.has(o.id));
                 if (unmatchedNew.length > 0 || unmatchedOld.length > 0) {
                     mismatchReport = { unmatchedNew, unmatchedOld };
                 }

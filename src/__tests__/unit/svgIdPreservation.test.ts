@@ -64,10 +64,38 @@ describe('SVG ID Preservation', () => {
 
     expect(report).toBeDefined();
     // unmatchedOld: "unrelated" should be missing in new SVG
-    expect(report?.unmatchedOld.map(o => o.baseId)).toContain('unrelated');
+    expect(report?.unmatchedOld.map(o => o.id)).toContain('unrelated');
     
     // unmatchedNew: "newPath" should be new in new SVG
-    expect(report?.unmatchedNew.map(n => n.baseId)).toContain('newPath');
+    expect(report?.unmatchedNew.map(n => n.id)).toContain('newPath');
+  });
+
+  it('should preserve transformations during ID preservation', () => {
+    // 1. Old state with transformed element
+    const transformSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <rect id="rect1.text" x="10" y="10" width="50" height="50" transform="rotate(45 35 35)" />
+      </svg>
+    `;
+    useSvgStore.getState().setInitialSvg(transformSvg);
+    const oldElems = useSvgStore.getState().elements;
+
+    // 2. New SVG where the element has NO transform
+    const untransformedSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <rect id="rect1" x="10" y="10" width="50" height="50" />
+      </svg>
+    `;
+
+    // 3. Preservation
+    useSvgStore.getState().setInitialSvg(untransformedSvg, oldElems);
+
+    const finalElements = useSvgStore.getState().elements;
+    const finalWorkingSvg = useSvgStore.getState().workingSvg;
+
+    const match = Object.values(finalElements).find(el => el.originalId === 'rect1');
+    expect(match?.attributes.transform).toBe('rotate(45 35 35)');
+    expect(finalWorkingSvg).toContain('transform="rotate(45 35 35)"');
   });
 
   it('should handle edited IDs correctly (e.g. text -> textarea)', () => {
