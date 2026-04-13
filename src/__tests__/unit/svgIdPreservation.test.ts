@@ -160,4 +160,47 @@ describe('SVG ID Preservation', () => {
     expect(finalWorkingSvg).toContain('id="Address.textarea"');
     expect(finalWorkingSvg).not.toContain('id="Address.text"');
   });
+
+  it('should successfully re-apply existing patches after SVG replacement', () => {
+    // 1. Setup initial SVG
+    const initialSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <rect id="rect1.text" x="10" y="10" width="100" height="100" />
+      </svg>
+    `;
+    useSvgStore.getState().setInitialSvg(initialSvg);
+    const oldElements = useSvgStore.getState().elements;
+
+    // 2. Define a transformation patch for "rect1.text"
+    const patches: any[] = [
+      { id: 'rect1.text', attribute: 'attributes', subKey: 'transform', newValue: 'rotate(90)' }
+    ];
+
+    // 3. New SVG where the rect is called "rect1" (matching "rect1.text")
+    const newSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <rect id="rect1" x="20" y="20" width="100" height="100" />
+      </svg>
+    `;
+
+    // 4. Perform replacement with logical ID preservation
+    useSvgStore.getState().setInitialSvg(newSvg, oldElements);
+    
+    // 5. Verify ID was preserved but visual state matches raw new SVG
+    let elements = useSvgStore.getState().elements;
+    let rectId = Object.keys(elements)[0];
+    let rect = elements[rectId];
+    expect(rect.id).toBe('rect1.text');
+    expect(rect.attributes.transform).toBeUndefined(); // Raw new file has no transform
+
+    // 6. Manually replay the patches (this is what SvgEditor will do)
+    useSvgStore.getState().applyPatches(patches);
+
+    // 7. Verify visual configuration was restored
+    elements = useSvgStore.getState().elements;
+    rect = elements[rectId];
+    expect(rect.id).toBe('rect1.text');
+    expect(rect.attributes.transform).toBe('rotate(90)');
+    expect(useSvgStore.getState().workingSvg).toContain('transform="rotate(90)"');
+  });
 });

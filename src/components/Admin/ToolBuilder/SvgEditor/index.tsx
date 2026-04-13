@@ -105,7 +105,8 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     deleteElement,
     duplicateElement,
     originalSvg,
-    workingSvg
+    workingSvg,
+    applyPatches
   } = useSvgStore();
 
   const [activeTab, setActiveTab] = useState("layers");
@@ -486,6 +487,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         
         const stats = getFieldStats(pendingSvgContent, currentElements);
         toast.success("SVG replaced · Existing edits preserved!");
+        applyPatches(patches); // RE-APPLY USER EDITS TO NEW SVG
         completeReplacement(pendingSvgContent, stats);
     } else {
         setInitialSvg(pendingSvgContent);
@@ -502,6 +504,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       const stats = getFieldStats(pendingSvgContent, oldElementsForPreservation || undefined);
       toast.success("SVG replaced · Manual mappings applied!");
       
+      applyPatches(patches); // RE-APPLY USER EDITS TO NEW SVG
       setShowMismatchDialog(false);
       completeReplacement(pendingSvgContent, stats);
       setOldElementsForPreservation(null);

@@ -3,8 +3,9 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { type SvgElement } from '@/lib/utils/parseSvgElements';
 import { regenerateSvg } from '@/components/Admin/ToolBuilder/SvgEditor/utils/regenerateSvg';
 import { getAdaptiveDebounce } from '@/lib/utils/deviceDetection';
+import { type SvgPatch as ExternalPatch } from '@/types';
 
-export interface SvgPatch {
+export interface HistoryPatch {
     id: string;
     attribute: string;
     subKey?: string;
@@ -30,7 +31,7 @@ interface SvgStore {
     commitTimeout: ReturnType<typeof setTimeout> | null;
 
     // Undo/Redo
-    history: SvgPatch[][];
+    history: HistoryPatch[][];
     historyIndex: number;
 
     // Actions
@@ -51,6 +52,9 @@ interface SvgStore {
 
     // Reset
     reset: () => void;
+
+    // Patches
+    applyPatches: (patches: ExternalPatch[]) => void;
 
     // Getters
     getOrderedElements: () => SvgElement[];
@@ -227,7 +231,7 @@ export const useSvgStore = create<SvgStore>()(
             const currentElement = elements[id];
             if (!currentElement) return;
 
-            const patches: SvgPatch[] = [];
+            const patches: HistoryPatch[] = [];
 
             if (undoable) {
                 (Object.keys(updates) as (keyof SvgElement)[]).forEach((key) => {
@@ -308,7 +312,7 @@ export const useSvgStore = create<SvgStore>()(
             const { elementOrder, history, historyIndex } = get();
             const newState: Partial<SvgStore> = { elementOrder: newOrder };
             if (undoable) {
-                const patches: SvgPatch[] = [{ id: 'global', attribute: 'reorder', oldValue: elementOrder, newValue: newOrder }];
+                const patches: HistoryPatch[] = [{ id: 'global', attribute: 'reorder', oldValue: elementOrder, newValue: newOrder }];
                 const newHistory = history.slice(0, historyIndex + 1);
                 newHistory.push(patches);
                 newState.history = newHistory;
@@ -397,7 +401,7 @@ export const useSvgStore = create<SvgStore>()(
             const newState: Partial<SvgStore> = { elements: newElements, elementOrder: newOrder, selectedElementId: null };
 
             if (undoable) {
-                const patches: SvgPatch[] = [{
+                const patches: HistoryPatch[] = [{
                     id: 'global',
                     attribute: 'delete',
                     oldValue: { id, element, orderIndex: elementOrder.indexOf(id) },
@@ -438,7 +442,7 @@ export const useSvgStore = create<SvgStore>()(
             const newState: Partial<SvgStore> = { elements: newElements, elementOrder: newOrder, selectedElementId: newId };
 
             if (undoable) {
-                const patches: SvgPatch[] = [{
+                const patches: HistoryPatch[] = [{
                     id: 'global',
                     attribute: 'add',
                     oldValue: null,
@@ -462,6 +466,39 @@ export const useSvgStore = create<SvgStore>()(
             history: [],
             historyIndex: -1
         }),
+
+        applyPatches: (patches: ExternalPatch[]) => {
+            const { elements, elementOrder } = get();
+            const newElements = { ...elements };
+            let hasChanged = false;
+
+            patches.forEach(patch => {
+                // Find internal ID by the stable ID in the patch
+                const internalId = elementOrder.find(id => elements[id].id === patch.id);
+                if (!internalId) return;
+
+                const el = newElements[internalId];
+                if (!el) return;
+
+                hasChanged = true;
+                if (patch.attribute === 'attributes' && (patch as any).subKey) {
+                    newElements[internalId] = {
+                        ...el,
+                        attributes: { ...el.attributes, [(patch as any).subKey]: patch.value }
+                    };
+                } else if (patch.attribute === 'innerText') {
+                    newElements[internalId] = { ...el, innerText: String(patch.value) };
+                } else {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    newElements[internalId] = { ...el, [patch.attribute]: patch.value } as any;
+                }
+            });
+
+            if (hasChanged) {
+                set({ elements: newElements });
+                get().commitChanges(true); // Commit immediately for visual sync
+            }
+        },
 
         getOrderedElements: () => {
             const { elements, elementOrder } = get();
