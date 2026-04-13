@@ -171,9 +171,9 @@ describe('SVG ID Preservation', () => {
     useSvgStore.getState().setInitialSvg(initialSvg);
     const oldElements = useSvgStore.getState().elements;
 
-    // 2. Define a transformation patch for "rect1.text"
+    // 2. Define a transformation patch for "rect1.text" (Actual UI format)
     const patches: any[] = [
-      { id: 'rect1.text', attribute: 'attributes', subKey: 'transform', newValue: 'rotate(90)' }
+      { id: 'rect1.text', attribute: 'transform', value: 'rotate(90)' }
     ];
 
     // 3. New SVG where the rect is called "rect1" (matching "rect1.text")

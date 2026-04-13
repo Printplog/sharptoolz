@@ -472,6 +472,8 @@ export const useSvgStore = create<SvgStore>()(
             const newElements = { ...elements };
             let hasChanged = false;
 
+            const rootProperties = ['id', 'innerText', 'tag', 'originalId', 'internalId'];
+
             patches.forEach(patch => {
                 // Find internal ID by the stable ID in the patch
                 const internalId = elementOrder.find(id => elements[id].id === patch.id);
@@ -481,16 +483,24 @@ export const useSvgStore = create<SvgStore>()(
                 if (!el) return;
 
                 hasChanged = true;
+                
                 if (patch.attribute === 'attributes' && (patch as any).subKey) {
+                    // Handle legacy subKey format if it somehow appears
                     newElements[internalId] = {
                         ...el,
                         attributes: { ...el.attributes, [(patch as any).subKey]: patch.value }
                     };
-                } else if (patch.attribute === 'innerText') {
-                    newElements[internalId] = { ...el, innerText: String(patch.value) };
-                } else {
+                } else if (rootProperties.includes(patch.attribute)) {
+                    // Apply to root properties
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     newElements[internalId] = { ...el, [patch.attribute]: patch.value } as any;
+                } else {
+                    // Everything else is an attribute (transform, fill, x, y, style, etc.)
+                    // Ensure the value is stringified for the attributes map
+                    newElements[internalId] = {
+                        ...el,
+                        attributes: { ...el.attributes, [patch.attribute]: String(patch.value ?? "") }
+                    };
                 }
             });
 
