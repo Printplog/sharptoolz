@@ -203,4 +203,44 @@ describe('SVG ID Preservation', () => {
     expect(rect.attributes.transform).toBe('rotate(90)');
     expect(useSvgStore.getState().workingSvg).toContain('transform="rotate(90)"');
   });
+
+  it('should preserve live session state (transform/text) during re-upload without using patches', () => {
+    // 1. Setup initial SVG
+    const initialSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <text id="field1.text" x="10" y="10">Old Text</text>
+      </svg>
+    `;
+    useSvgStore.getState().setInitialSvg(initialSvg);
+    
+    // 2. Simulate "Live" edits in the store (no patches involved here)
+    const internalId = useSvgStore.getState().elementOrder[0];
+    useSvgStore.getState().updateElement(internalId, {
+      attributes: { transform: 'rotate(45)', style: 'transform-origin: center' },
+      innerText: 'Live Edited Text'
+    });
+
+    const oldElements = useSvgStore.getState().elements;
+
+    // 3. New SVG where the field is raw
+    const newSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <text id="field1" x="20" y="20">New Text From File</text>
+      </svg>
+    `;
+
+    // 4. Perform replacement with logical ID preservation
+    useSvgStore.getState().setInitialSvg(newSvg, oldElements);
+    
+    // 5. Verify the "Live Transplant"
+    const elements = useSvgStore.getState().elements;
+    const newId = useSvgStore.getState().elementOrder[0];
+    const el = elements[newId];
+
+    expect(el.id).toBe('field1.text'); // ID Preserved
+    expect(el.innerText).toBe('Live Edited Text'); // Text Preserved from Live Session
+    expect(el.attributes.transform).toBe('rotate(45)'); // Transformation Preserved from Live Session
+    expect(el.attributes.style).toContain('transform-origin: center'); // Style Preserved
+    expect(el.attributes.x).toBe('20'); // Geometry taken from NEW file
+  });
 });

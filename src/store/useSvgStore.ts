@@ -189,6 +189,30 @@ export const useSvgStore = create<SvgStore>()(
                     innerText: innerText || undefined
                 };
 
+                // --- 4. LIVE ATTRIBUTE TRANSPLANT ---
+                // If we found a match from the current session, carry over user-controlled attributes
+                if (matchFound && preserveFrom) {
+                    const cleanBaseId = (originalFileId || internalIdAttr || `el-${tag}`).split('.')[0];
+                    const match = Object.values(preserveFrom).find(el => {
+                        const elBaseId = (el.originalId || el.id || "").split('.')[0];
+                        return elBaseId === cleanBaseId && el.id === finalId;
+                    });
+
+                    if (match) {
+                        // Carry over text
+                        if (match.innerText) element.innerText = match.innerText;
+                        
+                        // Carry over transformations (absolute)
+                        if (match.attributes.transform) {
+                            element.attributes.transform = match.attributes.transform;
+                        }
+                        // Carry over styling (contains transform-origin, colors, etc.)
+                        if (match.attributes.style) {
+                            element.attributes.style = match.attributes.style;
+                        }
+                    }
+                }
+
                 elementsMap[internalId] = element;
                 order.push(internalId);
             });
