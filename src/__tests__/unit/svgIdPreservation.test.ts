@@ -242,5 +242,11 @@ describe('SVG ID Preservation', () => {
     expect(el.attributes.transform).toBe('rotate(45)'); // Transformation Preserved from Live Session
     expect(el.attributes.style).toContain('transform-origin: center'); // Style Preserved
     expect(el.attributes.x).toBe('20'); // Geometry taken from NEW file
+
+    // 6. Verify "Cooking" (Actually in the SVG string)
+    const workingSvg = useSvgStore.getState().workingSvg;
+    expect(workingSvg).toContain('transform="rotate(45)"');
+    expect(workingSvg).toContain('style="transform-origin: center"');
+    expect(workingSvg).toContain('Live Edited Text');
   });
 });

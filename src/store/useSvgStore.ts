@@ -200,15 +200,20 @@ export const useSvgStore = create<SvgStore>()(
 
                     if (match) {
                         // Carry over text
-                        if (match.innerText) element.innerText = match.innerText;
+                        if (match.innerText) {
+                            element.innerText = match.innerText;
+                            domEl.textContent = match.innerText;
+                        }
                         
                         // Carry over transformations (absolute)
                         if (match.attributes.transform) {
                             element.attributes.transform = match.attributes.transform;
+                            domEl.setAttribute('transform', match.attributes.transform);
                         }
                         // Carry over styling (contains transform-origin, colors, etc.)
                         if (match.attributes.style) {
                             element.attributes.style = match.attributes.style;
+                            domEl.setAttribute('style', match.attributes.style);
                         }
                     }
                 }
