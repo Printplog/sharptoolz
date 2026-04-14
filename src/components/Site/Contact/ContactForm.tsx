@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, CheckCircle2, User, Mail, MessageSquare, HelpCircle, Loader2 } from "lucide-react";
 import { PremiumButton } from "@/components/ui/PremiumButton";
@@ -6,7 +7,15 @@ import { submitContactForm } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const InputWrapper = ({ label, icon: Icon, children, error, rootClassName }: any) => (
+type InputWrapperProps = {
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  children: ReactNode;
+  error?: string;
+  rootClassName?: string;
+};
+
+const InputWrapper = ({ label, icon: Icon, children, error, rootClassName }: InputWrapperProps) => (
   <div className="space-y-2 group">
     <div className="flex items-center justify-between px-2">
       <div className="flex items-center gap-2">
