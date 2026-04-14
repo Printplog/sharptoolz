@@ -6,6 +6,38 @@ import { submitContactForm } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+const InputWrapper = ({ label, icon: Icon, children, error, rootClassName }: any) => (
+  <div className="space-y-2 group">
+    <div className="flex items-center justify-between px-2">
+      <div className="flex items-center gap-2">
+         <Icon className="w-3.5 h-3.5 text-white/20 group-focus-within:text-primary transition-all group-focus-within:scale-110" />
+         <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] group-focus-within:text-white transition-colors">
+          {label}
+         </span>
+      </div>
+      <AnimatePresence>
+        {error && (
+          <motion.span 
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="text-[9px] font-bold text-red-500 uppercase tracking-widest"
+          >
+            {error}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </div>
+    <div className={cn(
+      "relative overflow-hidden bg-white/2 border border-white/5 group-focus-within:border-primary/30 group-focus-within:bg-white/[0.04] transition-all duration-300",
+      rootClassName || "rounded-full"
+    )}>
+      {children}
+      <div className="absolute inset-x-0 bottom-0 h-[2px] bg-primary/0 group-focus-within:bg-primary/50 transition-all scale-x-0 group-focus-within:scale-x-100 duration-500 origin-left" />
+    </div>
+  </div>
+);
+
 export default function ContactForm() {
   const [formData, setFormData] = useState({
     name: "",
@@ -69,38 +101,6 @@ export default function ContactForm() {
       setIsSubmitting(false);
     }
   };
-
-  const InputWrapper = ({ label, icon: Icon, children, error, rootClassName }: any) => (
-    <div className="space-y-2 group">
-      <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-2">
-           <Icon className="w-3.5 h-3.5 text-white/20 group-focus-within:text-primary transition-all group-focus-within:scale-110" />
-           <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] group-focus-within:text-white transition-colors">
-            {label}
-           </span>
-        </div>
-        <AnimatePresence>
-          {error && (
-            <motion.span 
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              className="text-[9px] font-bold text-red-500 uppercase tracking-widest"
-            >
-              {error}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </div>
-      <div className={cn(
-        "relative overflow-hidden bg-white/2 border border-white/5 group-focus-within:border-primary/30 group-focus-within:bg-white/[0.04] transition-all duration-300",
-        rootClassName || "rounded-full"
-      )}>
-        {children}
-        <div className="absolute inset-x-0 bottom-0 h-[2px] bg-primary/0 group-focus-within:bg-primary/50 transition-all scale-x-0 group-focus-within:scale-x-100 duration-500 origin-left" />
-      </div>
-    </div>
-  );
 
   return (
     <motion.div 
