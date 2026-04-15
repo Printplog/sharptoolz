@@ -11,45 +11,45 @@ export default function ContactInfo() {
   });
 
   const socialPlatforms = [
-    { 
+    {
       id: "telegram",
       key: "telegram_link",
       title: "Telegram Community",
       icon: Send,
       label: "Official Channel",
-      color: "text-[#0088cc]"
+      color: "#0088cc"
     },
-    { 
+    {
       id: "twitter",
       key: "twitter_link",
       title: "Twitter (X)",
       icon: Twitter,
       label: "Latest News",
-      color: "text-white"
+      color: "#1DA1F2"
     },
-    { 
+    {
       id: "instagram",
       key: "instagram_link",
       title: "Instagram",
       icon: Instagram,
       label: "Visual Updates",
-      color: "text-[#E1306C]"
+      color: "#E1306C"
     },
-    { 
+    {
       id: "whatsapp",
       key: "whatsapp_community_link",
       title: "WhatsApp Hub",
       icon: MessageCircle,
       label: "Direct Community",
-      color: "text-[#25D366]"
+      color: "#25D366"
     },
-    { 
+    {
       id: "tiktok",
       key: "tiktok_link",
       title: "TikTok",
       icon: Music2,
       label: "Tool Hacks",
-      color: "text-[#00f2ea]"
+      color: "#00f2ea"
     }
   ];
 
@@ -95,8 +95,15 @@ export default function ContactInfo() {
               className="group relative bg-white/[0.02] backdrop-blur-xl border border-white/5 hover:border-white/20 rounded-2xl p-6 transition-all duration-500 overflow-hidden"
             >
               <div className="flex items-center gap-5 relative z-10">
-                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-white/10 transition-all">
-                  <Icon className={`w-5 h-5 ${platform.color} opacity-100 transition-all`} />
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110"
+                  style={{
+                    background: `linear-gradient(135deg, ${platform.color}20, ${platform.color}08)`,
+                    border: `1px solid ${platform.color}30`,
+                    color: platform.color,
+                  }}
+                >
+                  <Icon className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
