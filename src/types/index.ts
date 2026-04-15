@@ -244,6 +244,8 @@ export type DownloadData = {
 
 export type AdminOverview = {
   total_users: number;
+  regular_users: number;
+  staff_users: number;
   total_templates: number;
   total_purchased_docs: number;
   total_downloads: number;
@@ -263,6 +265,8 @@ export type AdminOverview = {
 
 export type AdminUsers = {
   all_users: number;
+  regular_users: number;
+  staff_users: number;
   new_users: {
     today: number;
     past_7_days: number;

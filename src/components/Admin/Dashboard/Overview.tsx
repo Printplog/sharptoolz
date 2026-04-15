@@ -46,11 +46,11 @@ export default function Overview({ data, isLoading }: OverviewProps) {
             Total Documents
           </p>
           <p className="text-2xl font-black text-white">{data?.total_purchased_docs || 0}</p>
-          <p className="text-xs text-white/40 mt-1">Architectural tools</p>
+          <p className="text-xs text-white/40 mt-1">Paid purchases</p>
         </div>
       </div>
 
-      {/* Active Users - Visible to Admin & Staff */}
+      {/* Regular Users - Visible to Admin & Staff */}
       {isAdminOrStaff(user?.role) && (
         <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/5 border-blue-500/20 border rounded-2xl p-6 backdrop-blur-md hover:border-white/20 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
@@ -59,9 +59,9 @@ export default function Overview({ data, isLoading }: OverviewProps) {
             </div>
           </div>
           <div>
-            <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-1">Active Users</p>
-            <p className="text-2xl font-black text-white">{data?.total_users || 0}</p>
-            <p className="text-xs text-white/40 mt-1">Total user accounts</p>
+            <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-1">Real Users</p>
+            <p className="text-2xl font-black text-white">{data?.regular_users ?? 0}</p>
+            <p className="text-xs text-white/40 mt-1">Non-staff accounts</p>
           </div>
         </div>
       )}
@@ -82,7 +82,7 @@ export default function Overview({ data, isLoading }: OverviewProps) {
         </div>
       )}
 
-      {/* Restricted Cards - Admin Only */}
+      {/* Wallet Balance (users only) - Admin Only */}
       {isAdmin && (
         <div className="bg-gradient-to-br from-green-500/20 to-green-600/5 border-green-500/20 border rounded-2xl p-6 backdrop-blur-md hover:border-white/20 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
@@ -92,10 +92,10 @@ export default function Overview({ data, isLoading }: OverviewProps) {
           </div>
           <div>
             <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-1">
-              Wallet Balance
+              User Wallets
             </p>
             <p className="text-2xl font-black text-white">${data?.total_wallet_balance || '0.00'}</p>
-            <p className="text-xs text-white/40 mt-1">Total user funds</p>
+            <p className="text-xs text-white/40 mt-1">Excl. admin balances</p>
           </div>
         </div>
       )}

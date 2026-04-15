@@ -49,10 +49,10 @@ export default function Sidebar() {
   const handlePrefetch = (to: string) => {
     switch (to) {
       case "/admin/dashboard":
-        queryClient.prefetchQuery({ queryKey: ["adminOverview"], queryFn: adminOverview });
+        queryClient.prefetchQuery({ queryKey: ["adminOverview"], queryFn: () => adminOverview() });
         break;
       case "/admin/analytics":
-        queryClient.prefetchQuery({ queryKey: ["adminAnalytics"], queryFn: getAdminAnalytics });
+        queryClient.prefetchQuery({ queryKey: ["adminAnalytics"], queryFn: () => getAdminAnalytics() });
         break;
       case "/admin/users":
         queryClient.prefetchQuery({
