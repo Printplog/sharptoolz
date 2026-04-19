@@ -3,16 +3,9 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Download, Search, Filter, DollarSign, ArrowUpRight, ArrowDownRight, Activity, Calendar, Clock } from 'lucide-react';
+import { Download, ArrowUpRight, ArrowDownRight, Activity, Calendar, Clock, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -78,10 +71,10 @@ export default function TransactionsPage() {
       value: stats?.total_count.toLocaleString() ?? '0',
       label: 'All time',
       icon: Activity,
-      gradient: 'from-primary/20 to-primary/5',
-      borderColor: 'border-primary/20',
-      iconBg: 'bg-primary/10',
-      iconColor: 'text-primary',
+      gradient: 'from-blue-500/20 to-blue-600/5',
+      borderColor: 'border-blue-500/20',
+      iconBg: 'bg-blue-500/10',
+      iconColor: 'text-blue-400',
     },
     {
       title: 'Total Volume',
@@ -91,27 +84,27 @@ export default function TransactionsPage() {
       gradient: 'from-green-500/20 to-green-600/5',
       borderColor: 'border-green-500/20',
       iconBg: 'bg-green-500/10',
-      iconColor: 'text-green-500',
+      iconColor: 'text-green-400',
     },
     {
       title: 'This Month',
       value: stats?.month_count.toLocaleString() ?? '0',
       label: 'Recent activity',
       icon: Calendar,
-      gradient: 'from-blue-500/20 to-blue-600/5',
-      borderColor: 'border-blue-500/20',
-      iconBg: 'bg-blue-500/10',
-      iconColor: 'text-blue-500',
+      gradient: 'from-orange-500/20 to-orange-600/5',
+      borderColor: 'border-orange-500/20',
+      iconBg: 'bg-orange-500/10',
+      iconColor: 'text-orange-400',
     },
     {
       title: 'Pending',
       value: stats?.pending_count.toLocaleString() ?? '0',
       label: 'Awaiting processing',
       icon: Clock,
-      gradient: 'from-orange-500/20 to-orange-600/5',
-      borderColor: 'border-orange-500/20',
-      iconBg: 'bg-orange-500/10',
-      iconColor: 'text-orange-500',
+      gradient: 'from-red-500/20 to-red-600/5',
+      borderColor: 'border-red-500/20',
+      iconBg: 'bg-red-500/10',
+      iconColor: 'text-red-400',
     },
   ];
 
@@ -206,9 +199,9 @@ export default function TransactionsPage() {
       cell: ({ row }) => (
         <div className="text-right pr-2">
           <Button
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white hover:bg-white/5 h-8 w-8 p-0 rounded-xl"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 rounded-full border-white/10 bg-white/5 text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20"
             onClick={(e) => {
               e.stopPropagation();
               setSelectedTransaction(row.original);
@@ -258,83 +251,48 @@ export default function TransactionsPage() {
       {/* Stats Cards */}
       <StatsCards stats={statsCards} isLoading={isLoading} />
 
-      {/* Transactions Table using DataTable with integrated toolbar */}
-      <div className="space-y-4">
-        <DataTable
-          columns={columns}
-          data={filteredTransactions ?? []}
-          isLoading={isLoading}
-          onRowClick={(txn) => {
-            setSelectedTransaction(txn);
-            setShowDetails(true);
-          }}
-          emptyMessage="No transactions found."
-          hideColumnToggle
-          enableSelection={false}
-          className="rounded-3xl border-none shadow-none"
-          toolbarActions={() => (
-            <div className="flex items-center gap-3 w-full">
-              {/* Search Integrated */}
-              <div className="relative flex-1 max-w-sm group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search ledger..."
-                  className="pl-10 bg-white/3 border-white/5 text-white placeholder:text-white/20 h-10 rounded-xl focus-visible:ring-primary/20 focus-visible:border-primary/30 transition-all text-sm"
-                />
-              </div>
-
-              {/* Filters Integrated */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-10 gap-2 border-white/5 bg-white/3 text-white/60 hover:bg-white/6 hover:text-white rounded-xl px-4 font-bold text-[10px] uppercase tracking-widest">
-                    <DollarSign className="w-3.5 h-3.5 text-primary" />
-                    Type: {typeFilter}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-[#121212] border-white/10 rounded-xl p-1.5 min-w-[140px]">
-                  {['all', 'credit', 'debit'].map((t) => (
-                    <DropdownMenuItem 
-                      key={t}
-                      onClick={() => setTypeFilter(t as any)} 
-                      className={cn(
-                        "text-[10px] font-bold uppercase tracking-widest rounded-lg p-2.5 focus:bg-primary focus:text-black transition-colors",
-                        typeFilter === t ? "bg-primary/10 text-primary" : "text-white/60"
-                      )}
-                    >
-                      {t}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-10 gap-2 border-white/5 bg-white/3 text-white/60 hover:bg-white/6 hover:text-white rounded-xl px-4 font-bold text-[10px] uppercase tracking-widest">
-                    <Filter className="w-3.5 h-3.5 text-primary" />
-                    Status: {statusFilter}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-[#121212] border-white/10 rounded-xl p-1.5 min-w-[140px]">
-                  {['all', 'completed', 'pending', 'failed'].map((s) => (
-                    <DropdownMenuItem 
-                      key={s}
-                      onClick={() => setStatusFilter(s as any)} 
-                      className={cn(
-                        "text-[10px] font-bold uppercase tracking-widest rounded-lg p-2.5 focus:bg-primary focus:text-black transition-colors",
-                        statusFilter === s ? "bg-primary/10 text-primary" : "text-white/60"
-                      )}
-                    >
-                      {s}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-        />
-      </div>
+      <DataTable
+        columns={columns}
+        data={filteredTransactions ?? []}
+        isLoading={isLoading}
+        onRowClick={(txn) => {
+          setSelectedTransaction(txn);
+          setShowDetails(true);
+        }}
+        emptyMessage="No transactions found."
+        hideColumnToggle
+        enableSelection={false}
+        searchValue={search}
+        onSearchChange={(v) => setSearch(String(v))}
+        searchPlaceholder="Search by user, description..."
+        filters={[
+          {
+            key: 'type',
+            label: 'Type',
+            value: typeFilter,
+            onChange: (v) => setTypeFilter(v as typeof typeFilter),
+            options: [
+              { label: 'All types', value: 'all' },
+              { label: 'Credit', value: 'credit' },
+              { label: 'Debit', value: 'debit' },
+            ],
+            placeholder: 'Type',
+          },
+          {
+            key: 'status',
+            label: 'Status',
+            value: statusFilter,
+            onChange: (v) => setStatusFilter(v as typeof statusFilter),
+            options: [
+              { label: 'All statuses', value: 'all' },
+              { label: 'Completed', value: 'completed' },
+              { label: 'Pending', value: 'pending' },
+              { label: 'Failed', value: 'failed' },
+            ],
+            placeholder: 'Status',
+          },
+        ]}
+      />
 
       {/* Transaction Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>

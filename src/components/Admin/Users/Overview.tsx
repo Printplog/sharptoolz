@@ -182,7 +182,7 @@ export default function UsersOverview({ data, isLoading }: UsersOverviewProps) {
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">
-                Account Breakdown
+                Users Count
               </p>
               <Select value={accountType} onValueChange={(v) => setAccountType(v as AccountType)}>
                 <SelectTrigger className="h-7 w-fit bg-white/10 border-white/10 text-[10px] text-white/70 rounded-full px-3 py-0 focus:ring-0">

@@ -156,13 +156,14 @@ export default function AdminTools() {
         return (
           <div className="flex items-center justify-end gap-2">
             <Link to={`/admin/tools/${row.original.id}/templates`}>
-              <Button variant="outline" size="icon" title="View templates">
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-white/10 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20" title="View templates">
                 <Eye className="w-4 h-4" />
               </Button>
             </Link>
             <Button
               variant="outline"
               size="icon"
+              className="h-9 w-9 rounded-full border-white/10 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20"
               onClick={() => handleEditTool(row.original)}
               title="Edit tool"
             >
@@ -176,7 +177,7 @@ export default function AdminTools() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="text-red-400 hover:text-red-300"
+                  className="h-9 w-9 rounded-full border-red-500/20 bg-red-500/5 text-red-400 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/30"
                   title="Delete tool"
                   disabled={isDeleting}
                 >

@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Calendar, Tag, Hash } from "lucide-react";
+import { formatAdminDateTime } from "@/lib/utils/adminDate";
 
 interface PurchaseHistoryProps {
   purchases: Array<{
@@ -23,16 +24,6 @@ interface PurchaseHistoryProps {
 }
 
 export default function PurchaseHistory({ purchases }: PurchaseHistoryProps) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   const getStatusColor = (status?: string) => {
     switch ((status ?? "").toLowerCase()) {
       case 'completed':
@@ -106,7 +97,7 @@ export default function PurchaseHistory({ purchases }: PurchaseHistoryProps) {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-white text-sm">{formatDate(purchase.created_at)}</span>
+                        <span className="text-white text-sm">{formatAdminDateTime(purchase.created_at)} UTC</span>
                       </div>
                     </TableCell>
                   </TableRow>

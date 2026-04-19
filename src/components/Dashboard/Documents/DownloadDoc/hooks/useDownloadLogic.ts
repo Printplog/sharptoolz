@@ -4,7 +4,7 @@ import { generatePdf, generatePng, triggerDownload, isOperaMini } from "@/lib/ut
 import type { GenerateOptions } from "@/lib/utils/clientDownload";
 import { injectFontsIntoSVG } from "@/lib/utils/fontInjector";
 import { injectImagesIntoSVG } from "@/lib/utils/imageInjector";
-import { getPurchasedTemplate } from "@/api/apiEndpoints";
+import { getPurchasedTemplate, incrementDownloads } from "@/api/apiEndpoints";
 import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
 import { addWatermarkToSvg } from "@/lib/utils/svgWatermark";
@@ -142,6 +142,7 @@ export const useDownloadLogic = ({
                 : `document${sideSuffix}.${type}`;
 
             triggerDownload(blob, filename);
+            incrementDownloads().catch(() => {});
 
             setProgressStep('complete');
             toast.success("Download complete");

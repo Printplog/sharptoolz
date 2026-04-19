@@ -1,14 +1,10 @@
-import { useState } from 'react';
-import { Search, Filter, MoreVertical, Eye, Edit, Ban, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useMemo, useState } from 'react';
+import type { ColumnDef } from '@tanstack/react-table';
+import { Ban, CheckCircle } from 'lucide-react';
+import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { formatAdminDate, formatAdminTime } from '@/lib/utils/adminDate';
 
 interface UserWallet {
   id: string;
@@ -19,7 +15,8 @@ interface UserWallet {
   };
   balance: number;
   status: 'active' | 'blocked';
-  createdAt: string;
+  createdAt?: string;
+  created_at?: string;
 }
 
 interface WalletTableProps {
@@ -29,6 +26,14 @@ interface WalletTableProps {
   onBlockWallet: (wallet: UserWallet) => void;
 }
 
+type BalanceFilter = 'all' | 'positive' | 'zero' | '100plus' | '1000plus';
+type JoinedFilter = 'all' | '7' | '30' | '180' | '365';
+type SortOption = 'balance-desc' | 'balance-asc' | 'recent' | 'oldest' | 'name';
+
+function getWalletCreatedAt(wallet: UserWallet) {
+  return wallet.createdAt || wallet.created_at || '';
+}
+
 export default function WalletTable({
   wallets,
   onAdjustBalance,
@@ -36,180 +41,176 @@ export default function WalletTable({
   onBlockWallet,
 }: WalletTableProps) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'blocked'>('all');
+  const [balanceFilter, setBalanceFilter] = useState<BalanceFilter>('all');
+  const [joinedFilter, setJoinedFilter] = useState<JoinedFilter>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('balance-desc');
 
-  const filteredWallets = wallets.filter((wallet) => {
-    const matchesSearch =
-      wallet.user.email.toLowerCase().includes(search.toLowerCase()) ||
-      wallet.user.username.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || wallet.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredWallets = useMemo(() => {
+    const now = Date.now();
+
+    const filtered = wallets.filter((wallet) => {
+      const createdAt = getWalletCreatedAt(wallet);
+      const createdAtMs = createdAt ? new Date(createdAt).getTime() : 0;
+      const normalizedSearch = search.trim().toLowerCase();
+
+      const matchesSearch =
+        !normalizedSearch ||
+        wallet.user.email.toLowerCase().includes(normalizedSearch) ||
+        wallet.user.username.toLowerCase().includes(normalizedSearch);
+
+      const matchesBalance =
+        balanceFilter === 'all' ||
+        (balanceFilter === 'positive' && wallet.balance > 0) ||
+        (balanceFilter === 'zero' && wallet.balance === 0) ||
+        (balanceFilter === '100plus' && wallet.balance >= 100) ||
+        (balanceFilter === '1000plus' && wallet.balance >= 1000);
+
+      const matchesJoined =
+        joinedFilter === 'all' ||
+        (createdAtMs > 0 && createdAtMs >= now - Number(joinedFilter) * 24 * 60 * 60 * 1000);
+
+      return matchesSearch && matchesBalance && matchesJoined;
+    });
+
+    return filtered.sort((left, right) => {
+      switch (sortBy) {
+        case 'balance-asc':
+          return left.balance - right.balance;
+        case 'recent':
+          return new Date(getWalletCreatedAt(right)).getTime() - new Date(getWalletCreatedAt(left)).getTime();
+        case 'oldest':
+          return new Date(getWalletCreatedAt(left)).getTime() - new Date(getWalletCreatedAt(right)).getTime();
+        case 'name':
+          return left.user.username.localeCompare(right.user.username);
+        case 'balance-desc':
+        default:
+          return right.balance - left.balance;
+      }
+    });
+  }, [wallets, search, balanceFilter, joinedFilter, sortBy]);
+
+  const columns = useMemo<ColumnDef<UserWallet>[]>(
+    () => [
+      {
+        accessorKey: 'user.username',
+        header: 'User',
+        cell: ({ row }) => (
+          <div>
+            <p className="font-semibold text-white">{row.original.user.username}</p>
+            <p className="text-xs text-white/40">{row.original.user.email}</p>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'balance',
+        header: 'Balance',
+        cell: ({ row }) => (
+          <p className="font-bold text-white">
+            ${row.original.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          </p>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => (
+          <Badge
+            variant={row.original.status === 'active' ? 'default' : 'destructive'}
+            className={
+              row.original.status === 'active'
+                ? 'bg-green-500/20 text-green-500 border-green-500/30'
+                : 'bg-red-500/20 text-red-500 border-red-500/30'
+            }
+          >
+            {row.original.status === 'active' ? (
+              <>
+                <CheckCircle className="w-3 h-3 mr-1" />
+                Active
+              </>
+            ) : (
+              <>
+                <Ban className="w-3 h-3 mr-1" />
+                Blocked
+              </>
+            )}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: 'createdAt',
+        header: 'Joined',
+        cell: ({ row }) => {
+          const createdAt = getWalletCreatedAt(row.original);
+          return (
+            <div className="flex flex-col">
+              <span className="text-sm text-white">{formatAdminDate(createdAt)}</span>
+              <span className="text-[11px] text-white/35">{formatAdminTime(createdAt)} UTC</span>
+            </div>
+          );
+        },
+      },
+    ],
+    [onAdjustBalance, onBlockWallet, onViewDetails]
+  );
+
+  const filters = [
+    {
+      key: 'balance',
+      label: 'Balance',
+      value: balanceFilter,
+      onChange: (value: string) => setBalanceFilter(value as BalanceFilter),
+      options: [
+        { label: 'All balances', value: 'all' },
+        { label: 'Positive only', value: 'positive' },
+        { label: 'Zero balance', value: 'zero' },
+        { label: '$100 and above', value: '100plus' },
+        { label: '$1,000 and above', value: '1000plus' },
+      ],
+      placeholder: 'Balance',
+    },
+    {
+      key: 'joined',
+      label: 'Joined',
+      value: joinedFilter,
+      onChange: (value: string) => setJoinedFilter(value as JoinedFilter),
+      options: [
+        { label: 'Any join date', value: 'all' },
+        { label: 'Last 7 days', value: '7' },
+        { label: 'Last 30 days', value: '30' },
+        { label: 'Last 6 months', value: '180' },
+        { label: 'Last 12 months', value: '365' },
+      ],
+      placeholder: 'Joined',
+    },
+  ];
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-md">
-      {/* Header */}
-      <div className="p-6 border-b border-white/10">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-bold text-white mb-1">User Wallets</h2>
-            <p className="text-xs text-white/40">Manage user wallet balances</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search users..."
-                className="pl-10 w-64 bg-white/5 border-white/10 text-white placeholder:text-white/30"
-              />
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 border-white/10 bg-white/5 text-white hover:bg-white/10">
-                  <Filter className="w-4 h-4" />
-                  Filter
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-[#1a1a1a] border-white/10">
-                <DropdownMenuItem
-                  onClick={() => setStatusFilter('all')}
-                  className="text-white focus:bg-white/10"
-                >
-                  All Status
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setStatusFilter('active')}
-                  className="text-white focus:bg-white/10"
-                >
-                  Active
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setStatusFilter('blocked')}
-                  className="text-white focus:bg-white/10"
-                >
-                  Blocked
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+    <DataTable
+      columns={columns}
+      data={filteredWallets}
+      searchValue={search}
+      onSearchChange={(value) => setSearch(String(value))}
+      searchPlaceholder="Search by username or email..."
+      filters={filters}
+      emptyMessage="No wallets match the current filters."
+      hideColumnToggle
+      enableSelection={false}
+      toolbarActions={() => (
+        <div className="flex items-center gap-3">
+          <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+            <SelectTrigger className="h-11 bg-white/5 border-white/10 text-white">
+              <SelectValue placeholder="Sort wallets" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#121212] border-white/10 text-white">
+              <SelectItem value="balance-desc">Highest balance</SelectItem>
+              <SelectItem value="balance-asc">Lowest balance</SelectItem>
+              <SelectItem value="recent">Newest users</SelectItem>
+              <SelectItem value="oldest">Oldest users</SelectItem>
+              <SelectItem value="name">Alphabetical</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-white/10 bg-white/[0.02]">
-              <th className="text-left py-4 px-6 text-xs font-bold text-white/40 uppercase tracking-wider">
-                User
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-bold text-white/60 uppercase tracking-wider">
-                Balance
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-bold text-white/60 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-bold text-white/60 uppercase tracking-wider">
-                Created
-              </th>
-              <th className="text-right py-4 px-6 text-xs font-bold text-white/60 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {filteredWallets.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="py-12 text-center text-white/40">
-                  No wallets found
-                </td>
-              </tr>
-            ) : (
-              filteredWallets.map((wallet) => (
-                <tr
-                  key={wallet.id}
-                  className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
-                >
-                  <td className="py-4 px-6">
-                    <div>
-                      <p className="font-semibold text-white">{wallet.user.username}</p>
-                      <p className="text-xs text-white/40">{wallet.user.email}</p>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <p className="font-bold text-white">
-                      ${wallet.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </p>
-                  </td>
-                  <td className="py-4 px-6">
-                    <Badge
-                      variant={wallet.status === 'active' ? 'default' : 'destructive'}
-                      className={
-                        wallet.status === 'active'
-                          ? 'bg-green-500/20 text-green-500 border-green-500/30'
-                          : 'bg-red-500/20 text-red-500 border-red-500/30'
-                      }
-                    >
-                      {wallet.status === 'active' ? (
-                        <>
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Active
-                        </>
-                      ) : (
-                        <>
-                          <Ban className="w-3 h-3 mr-1" />
-                          Blocked
-                        </>
-                      )}
-                    </Badge>
-                  </td>
-                  <td className="py-4 px-6 text-xs text-white/40">
-                    {new Date(wallet.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-white/40 hover:text-white hover:bg-white/10"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-[#1a1a1a] border-white/10">
-                        <DropdownMenuItem
-                          onClick={() => onViewDetails(wallet)}
-                          className="text-white focus:bg-white/10"
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onAdjustBalance(wallet)}
-                          className="text-white focus:bg-white/10"
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Adjust Balance
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onBlockWallet(wallet)}
-                          className="text-white focus:bg-white/10"
-                        >
-                          <Ban className="w-4 h-4 mr-2" />
-                          {wallet.status === 'active' ? 'Block Wallet' : 'Unblock Wallet'}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      )}
+    />
   );
 }

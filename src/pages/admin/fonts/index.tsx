@@ -109,7 +109,7 @@ export default function AdminFontsPage() {
             <div className="flex items-center justify-end gap-2">
               {row.original.font_url && (
                 <a href={row.original.font_url} download>
-                  <Button variant="outline" size="icon" className="h-8 w-8">
+                  <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-white/10 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20">
                     <Download className="h-4 w-4" />
                   </Button>
                 </a>
@@ -122,7 +122,7 @@ export default function AdminFontsPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 text-red-400 hover:text-red-200"
+                    className="h-9 w-9 rounded-full border-red-500/20 bg-red-500/5 text-red-400 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/30"
                     disabled={isDeleting}
                   >
                     {isDeleting ? (

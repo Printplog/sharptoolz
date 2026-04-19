@@ -28,9 +28,10 @@ interface TopPagesChartProps {
     path: string
     visits: number
   }> | undefined
+  rangeLabel?: string
 }
 
-export default function TopPagesChart({ data }: TopPagesChartProps) {
+export default function TopPagesChart({ data, rangeLabel }: TopPagesChartProps) {
   if (!data || data.length === 0) return null
 
   // Format data
@@ -44,7 +45,7 @@ export default function TopPagesChart({ data }: TopPagesChartProps) {
     <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-white">Top Pages</CardTitle>
-        <CardDescription className="text-white/60">Most visited paths</CardDescription>
+        <CardDescription className="text-white/60">Most visited paths for {rangeLabel?.toLowerCase() || "the selected range"}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>

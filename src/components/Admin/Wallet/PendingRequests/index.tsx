@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { formatAdminDateTime } from '@/lib/utils/adminDate';
 
 interface FundingRequest {
   id: string;
@@ -37,7 +38,8 @@ export default function PendingRequests({ requests, onApprove, onReject }: Pendi
   const [actionType, setActionType] = useState<'approve' | 'reject'>('approve');
   const [notes, setNotes] = useState('');
 
-  const handleAction = (type: 'approve' | 'reject') => {
+  const handleAction = (request: FundingRequest, type: 'approve' | 'reject') => {
+    setSelectedRequest(request);
     setActionType(type);
     setShowDialog(true);
   };
@@ -98,7 +100,7 @@ export default function PendingRequests({ requests, onApprove, onReject }: Pendi
                     +${request.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </p>
                   <p className="text-xs text-white/40">
-                    {new Date(request.requestedAt).toLocaleString()}
+                    {formatAdminDateTime(request.requestedAt)} UTC
                   </p>
                 </div>
 
@@ -118,7 +120,7 @@ export default function PendingRequests({ requests, onApprove, onReject }: Pendi
                   <Button
                     size="sm"
                     className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => handleAction('approve')}
+                    onClick={() => handleAction(request, 'approve')}
                   >
                     <CheckCircle className="w-4 h-4 mr-1" />
                     Approve
@@ -127,7 +129,7 @@ export default function PendingRequests({ requests, onApprove, onReject }: Pendi
                     size="sm"
                     variant="outline"
                     className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-                    onClick={() => handleAction('reject')}
+                    onClick={() => handleAction(request, 'reject')}
                   >
                     <XCircle className="w-4 h-4 mr-1" />
                     Reject

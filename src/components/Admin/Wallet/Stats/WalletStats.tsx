@@ -1,10 +1,14 @@
-import { DollarSign, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { ArrowLeftRight, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { StatsCards, type StatData } from '@/components/Admin/Shared/StatsCards';
 
 interface WalletStatsProps {
   totalBalance: number;
-  pendingFunds: number;
-  monthCredit: number;
-  monthDebit: number;
+  totalInflow: number;
+  totalOutflow: number;
+  netFlow: number;
+  transactionCount: number;
+  fundedWallets: number;
+  rangeLabel: string;
 }
 
 interface Stat {
@@ -19,12 +23,26 @@ interface Stat {
   iconColor: string;
 }
 
-export default function WalletStats({ totalBalance, pendingFunds, monthCredit, monthDebit }: WalletStatsProps) {
+function formatCurrency(value: number) {
+  return `$${Math.abs(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+}
+
+export default function WalletStats({
+  totalBalance,
+  totalInflow,
+  totalOutflow,
+  netFlow,
+  transactionCount,
+  fundedWallets,
+  rangeLabel,
+}: WalletStatsProps) {
+  const netPositive = netFlow >= 0;
+
   const stats: Stat[] = [
     {
       title: 'Total Balance',
-      value: `$${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-      label: 'Total user funds',
+      value: formatCurrency(totalBalance),
+      label: 'Current funds across user wallets',
       icon: Wallet,
       color: 'text-blue-400',
       bgColor: 'bg-blue-500/10',
@@ -33,20 +51,9 @@ export default function WalletStats({ totalBalance, pendingFunds, monthCredit, m
       iconColor: 'text-blue-400',
     },
     {
-      title: 'Pending Funds',
-      value: `$${pendingFunds.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-      label: 'Awaiting approval',
-      icon: DollarSign,
-      color: 'text-orange-400',
-      bgColor: 'bg-orange-500/10',
-      gradient: 'from-orange-500/20 to-orange-600/5',
-      borderColor: 'border-orange-500/20',
-      iconColor: 'text-orange-400',
-    },
-    {
-      title: 'This Month Credited',
-      value: `$${monthCredit.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-      label: 'Total inflow',
+      title: 'Money In',
+      value: formatCurrency(totalInflow),
+      label: `${rangeLabel} • ${fundedWallets} wallets funded`,
       icon: TrendingUp,
       color: 'text-green-400',
       bgColor: 'bg-green-500/10',
@@ -55,9 +62,9 @@ export default function WalletStats({ totalBalance, pendingFunds, monthCredit, m
       iconColor: 'text-green-400',
     },
     {
-      title: 'This Month Debited',
-      value: `$${monthDebit.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-      label: 'Total outflow',
+      title: 'Money Out',
+      value: formatCurrency(totalOutflow),
+      label: `${rangeLabel} • ${transactionCount} completed transactions`,
       icon: TrendingDown,
       color: 'text-red-400',
       bgColor: 'bg-red-500/10',
@@ -65,29 +72,29 @@ export default function WalletStats({ totalBalance, pendingFunds, monthCredit, m
       borderColor: 'border-red-500/20',
       iconColor: 'text-red-400',
     },
+    {
+      title: 'Net Flow',
+      value: `${netPositive ? '+' : '-'}${formatCurrency(netFlow)}`,
+      label: `${rangeLabel} cash movement`,
+      icon: ArrowLeftRight,
+      color: netPositive ? 'text-emerald-400' : 'text-amber-300',
+      bgColor: netPositive ? 'bg-emerald-500/10' : 'bg-amber-500/10',
+      gradient: netPositive ? 'from-emerald-500/20 to-emerald-600/5' : 'from-amber-500/20 to-amber-600/5',
+      borderColor: netPositive ? 'border-emerald-500/20' : 'border-amber-500/20',
+      iconColor: netPositive ? 'text-emerald-400' : 'text-amber-300',
+    },
   ];
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {stats.map((stat) => (
-        <div
-          key={stat.title}
-          className={`bg-gradient-to-br ${stat.gradient} ${stat.borderColor} border rounded-2xl p-6 backdrop-blur-md hover:border-white/20 transition-all duration-300`}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-              <stat.icon className={`w-6 h-6 ${stat.color}`} />
-            </div>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-1">
-              {stat.title}
-            </p>
-            <p className="text-2xl font-black text-white">{stat.value}</p>
-            <p className="text-xs text-white/40 mt-1">{stat.label}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const statItems: StatData[] = stats.map((stat) => ({
+    title: stat.title,
+    value: stat.value,
+    label: stat.label,
+    icon: stat.icon,
+    gradient: stat.gradient,
+    borderColor: stat.borderColor,
+    iconBg: stat.bgColor,
+    iconColor: stat.iconColor,
+  }));
+
+  return <StatsCards stats={statItems} />;
 }

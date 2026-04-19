@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/chart"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { formatAdminDate } from "@/lib/utils/adminDate"
 
 const chartConfig = {
   visits: {
@@ -36,9 +37,10 @@ interface VisitorChartProps {
     unique_visitors: number
   }> | undefined
   isLoading?: boolean
+  rangeLabel?: string
 }
 
-export default function VisitorChart({ data, isLoading }: VisitorChartProps) {
+export default function VisitorChart({ data, isLoading, rangeLabel }: VisitorChartProps) {
   if (isLoading) {
     return (
       <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
@@ -74,7 +76,7 @@ export default function VisitorChart({ data, isLoading }: VisitorChartProps) {
 
   // Format data
   const chartData = data.map((item) => ({
-    date: new Date(item.date).toLocaleDateString("en-US", {
+    date: formatAdminDate(item.date, {
       month: "short",
       day: "numeric",
     }),
@@ -87,7 +89,7 @@ export default function VisitorChart({ data, isLoading }: VisitorChartProps) {
       <CardHeader>
         <CardTitle className="text-white">Visitor Traffic</CardTitle>
         <CardDescription className="text-white/60">
-          Daily active users and total page views
+          Page views and unique visitors for {rangeLabel?.toLowerCase() || "the selected range"}
         </CardDescription>
       </CardHeader>
       <CardContent>
