@@ -3,6 +3,8 @@
  * Refactored for modularity and browser compatibility.
  */
 
+import { ROLES } from '@/lib/constants/roles';
+
 export interface SecurityOptions {
     disableRightClick?: boolean;
     disableTextSelection?: boolean;
@@ -17,6 +19,8 @@ export interface SecurityOptions {
     disablePrintScreen?: boolean;
     aggressiveDetection?: boolean;
 }
+
+export type SecurityCleanup = () => void;
 
 export const isSafari = () => {
     if (typeof window === 'undefined') return false;
@@ -42,17 +46,17 @@ export const isAdminUser = () => {
         const authData = localStorage.getItem('auth-storage');
         if (!authData) return false;
         const parsed = JSON.parse(authData);
-        // User structure from authStore: { state: { user: { role: string, is_staff: boolean } } }
-        // Check both role-based (ADMIN/STAFF) and is_staff flag
         const user = parsed?.state?.user;
         if (!user) return false;
 
-        // Check role codes
-        if (user.role === 'ZK7T-93XY' || user.role === 'S9K3-41TV') return true;
-
-        // Fallback to is_staff flag
-        return user.is_staff === true;
+        return user.role === ROLES.ADMIN;
     } catch {
         return false;
     }
+};
+
+export const combineCleanups = (...cleanups: Array<SecurityCleanup | void>): SecurityCleanup => {
+    return () => {
+        cleanups.forEach(cleanup => cleanup?.());
+    };
 };

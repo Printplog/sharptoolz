@@ -1,14 +1,15 @@
-import { isAdminRoute, isOperaMini, isAdminUser } from './helpers';
+import type { SecurityCleanup } from './helpers';
+import { combineCleanups, isOperaMini, isAdminUser } from './helpers';
 
 const redirect = () => {
-    if (isAdminRoute() || isAdminUser() || isOperaMini()) return;
+    if (isAdminUser() || isOperaMini()) return;
     window.location.replace('about:blank');
 };
 
 // Store original console methods to allow restoration for admins
 const originalMethods: Record<string, any> = {};
 
-export function disableConsole() {
+export function disableConsole(): SecurityCleanup {
     const methods = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd'];
     
     methods.forEach(method => {
@@ -20,13 +21,22 @@ export function disableConsole() {
         
         // Replace with a conditional wrapper
         consoleObj[method] = (...args: any[]) => {
-            if (isAdminRoute() || isAdminUser()) {
+            if (isAdminUser()) {
                 if (typeof originalMethods[method] === 'function') {
                     originalMethods[method].apply(consoleObj, args);
                 }
             }
         };
     });
+
+    return () => {
+        const consoleObj = window.console as any;
+        methods.forEach(method => {
+            if (originalMethods[method]) {
+                consoleObj[method] = originalMethods[method];
+            }
+        });
+    };
 }
 
 const createTracker = (callback: () => void) => {
@@ -44,10 +54,10 @@ const createTracker = (callback: () => void) => {
     return element;
 };
 
-export function detectDevTools() {
-    if (isOperaMini()) return;
-    setInterval(() => {
-        if (isAdminRoute() || isAdminUser()) return;
+export function detectDevTools(): SecurityCleanup {
+    if (isOperaMini()) return () => {};
+    const intervalId = window.setInterval(() => {
+        if (isAdminUser()) return;
         try {
             // Using a more reliable detection method that doesn't trigger on every render
             // This is a common trick: some browsers lag when devtools is open
@@ -62,12 +72,16 @@ export function detectDevTools() {
             // ignore
         }
     }, 2000);
+
+    return () => {
+        window.clearInterval(intervalId);
+    };
 }
 
-export function detectDebugger() {
-    if (isOperaMini()) return;
-    setInterval(() => {
-        if (isAdminRoute() || isAdminUser()) return;
+export function detectDebugger(): SecurityCleanup {
+    if (isOperaMini()) return () => {};
+    const intervalId = window.setInterval(() => {
+        if (isAdminUser()) return;
         const start = performance.now();
         try {
             // Only execute debugger if we are NOT in production usually, 
@@ -84,20 +98,27 @@ export function detectDebugger() {
             redirect();
         }
     }, 1000);
+
+    return () => {
+        window.clearInterval(intervalId);
+    };
 }
 
-export function aggressiveDevToolsDetection() {
-    if (isOperaMini()) return;
+export function aggressiveDevToolsDetection(): SecurityCleanup {
+    if (isOperaMini()) return () => {};
 
     // REMOVED MutationObserver: It triggers on every React render/DOM change,
     // which effectively bricks the app. 
 
-    detectDevTools();
-    detectDebugger();
+    return combineCleanups(detectDevTools(), detectDebugger());
 }
 
-export function clearConsolePeriodically() {
-    setInterval(() => {
-        if (!isAdminRoute() && !isAdminUser()) console.clear();
+export function clearConsolePeriodically(): SecurityCleanup {
+    const intervalId = window.setInterval(() => {
+        if (!isAdminUser()) console.clear();
     }, 2000);
+
+    return () => {
+        window.clearInterval(intervalId);
+    };
 }
