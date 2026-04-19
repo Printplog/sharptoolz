@@ -41,6 +41,7 @@ export default function Sidebar() {
   const { isCollapsed, toggleCollapsed } = useSidebarStore();
 
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const defaultDays = 1;
 
   const toggleMenu = (menu: string) => {
     setExpandedMenus((prev: Record<string, boolean>) => ({ ...prev, [menu]: !prev[menu] }));
@@ -49,10 +50,10 @@ export default function Sidebar() {
   const handlePrefetch = (to: string) => {
     switch (to) {
       case "/admin/dashboard":
-        queryClient.prefetchQuery({ queryKey: ["adminOverview"], queryFn: adminOverview });
+        queryClient.prefetchQuery({ queryKey: ["adminOverview", defaultDays], queryFn: () => adminOverview(defaultDays) });
         break;
       case "/admin/analytics":
-        queryClient.prefetchQuery({ queryKey: ["adminAnalytics"], queryFn: getAdminAnalytics });
+        queryClient.prefetchQuery({ queryKey: ["adminAnalytics", defaultDays], queryFn: () => getAdminAnalytics(defaultDays) });
         break;
       case "/admin/users":
         queryClient.prefetchQuery({

@@ -78,7 +78,7 @@ export default function Templates() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/10 pb-8">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
-            Document <span className="text-primary">Templates</span>
+            <span className="text-primary">Templates</span>
           </h1>
           <p className="text-white/40 text-sm mt-1 font-medium italic">Architecting the foundation of your document toolz</p>
         </div>
@@ -94,7 +94,7 @@ export default function Templates() {
           </div>
           <Link
             to="?dialog=toolBuilder"
-            className="group flex items-center gap-3 bg-primary text-black px-6 py-3.5 rounded-2xl font-black hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-primary/20"
+            className="group flex items-center gap-3 bg-primary text-black px-6 py-3.5 rounded-full font-black hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-primary/20"
           >
             <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
             <span className="uppercase tracking-widest text-[10px]">New Template</span>

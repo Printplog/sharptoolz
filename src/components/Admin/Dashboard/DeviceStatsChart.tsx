@@ -43,9 +43,10 @@ interface DeviceStatsChartProps {
     count: number
   }> | undefined
   isLoading?: boolean
+  rangeLabel?: string
 }
 
-export default function DeviceStatsChart({ data, isLoading }: DeviceStatsChartProps) {
+export default function DeviceStatsChart({ data, isLoading, rangeLabel }: DeviceStatsChartProps) {
   const totalVisitors = React.useMemo(() => {
     return data?.reduce((acc, curr) => acc + curr.count, 0) || 0
   }, [data])
@@ -83,7 +84,7 @@ export default function DeviceStatsChart({ data, isLoading }: DeviceStatsChartPr
       <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
         <CardHeader className="items-center pb-0">
           <CardTitle className="text-white">Traffic Sources</CardTitle>
-          <CardDescription className="text-white/60">Device Breakdown</CardDescription>
+          <CardDescription className="text-white/60">Device mix for {rangeLabel?.toLowerCase() || "the selected range"}</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 flex items-center justify-center pb-0 text-white/40">
           No data available
@@ -96,7 +97,7 @@ export default function DeviceStatsChart({ data, isLoading }: DeviceStatsChartPr
     <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
       <CardHeader className="items-center pb-0">
         <CardTitle className="text-white">Traffic Sources</CardTitle>
-        <CardDescription className="text-white/60">Device Breakdown</CardDescription>
+        <CardDescription className="text-white/60">Device mix for {rangeLabel?.toLowerCase() || "the selected range"}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer

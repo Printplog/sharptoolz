@@ -13,20 +13,25 @@ import { isAdmin as checkAdmin, isAdminOrStaff } from "@/lib/constants/roles";
 export default function Dashboard() {
   const { user } = useAuthStore();
   const isAdmin = checkAdmin(user?.role);
+  const defaultDays = 1;
 
   const { data: overviewData, isLoading: isOverviewLoading } = useQuery<AdminOverview>({
-    queryFn: () => adminOverview(),
-    queryKey: ["adminOverview"],
+    queryFn: () => adminOverview(defaultDays),
+    queryKey: ["adminOverview", defaultDays],
   });
 
   const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery({
-    queryFn: () => getAdminAnalytics(),
-    queryKey: ["adminAnalytics"],
+    queryFn: () => getAdminAnalytics(defaultDays),
+    queryKey: ["adminAnalytics", defaultDays],
     enabled: isAdminOrStaff(user?.role),
   });
 
   return (
-    <div className="dashboard-content space-y-6">
+    <div className="dashboard-content space-y-6 p-6">
+      <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+        Admin <span className="text-primary">Dashboard</span>
+      </h1>
+
       {/* Analytics Cards */}
       <Overview data={overviewData} isLoading={isOverviewLoading} />
 
@@ -39,11 +44,11 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Wallet / Money Inflow - Admin Only */}
             {isAdmin && (
-              <WalletFlowChart data={analyticsData?.chart_data} isLoading={isAnalyticsLoading} />
+              <WalletFlowChart data={analyticsData?.chart_data} isLoading={isAnalyticsLoading} rangeLabel={analyticsData?.range_label || "Today"} />
             )}
 
             {/* Visitor Traffic - Visible to Staff & Admin */}
-            <VisitorChart data={analyticsData?.chart_data} isLoading={isAnalyticsLoading} />
+            <VisitorChart data={analyticsData?.chart_data} isLoading={isAnalyticsLoading} rangeLabel={analyticsData?.range_label || "Today"} />
           </div>
 
           <div className="flex justify-end">

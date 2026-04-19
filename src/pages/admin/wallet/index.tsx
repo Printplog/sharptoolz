@@ -12,6 +12,14 @@ import { getApi, postApi } from '@/api/walletApi';
 // Backend endpoints (no /api/ prefix - apiClient handles baseURL)
 const API_BASE = '/admin';
 
+const RANGE_OPTIONS = [
+  { label: '1D', days: 1 },
+  { label: '7D', days: 7 },
+  { label: '30D', days: 30 },
+  { label: '6M', days: 180 },
+  { label: '1Y', days: 365 },
+] as const;
+
 interface UserWallet {
   id: string;
   user: {
@@ -21,7 +29,8 @@ interface UserWallet {
   };
   balance: number;
   status: 'active' | 'blocked';
-  createdAt: string;
+  createdAt?: string;
+  created_at?: string;
 }
 
 interface FundingRequest {
@@ -39,20 +48,25 @@ interface FundingRequest {
 
 interface WalletStats {
   totalBalance: number;
-  pendingFunds: number;
-  monthCredit: number;
-  monthDebit: number;
+  totalInflow: number;
+  totalOutflow: number;
+  netFlow: number;
+  transactionCount: number;
+  fundedWallets: number;
+  rangeDays: number;
+  rangeLabel: string;
 }
 
 export default function WalletManagementPage() {
   const queryClient = useQueryClient();
   const [selectedWallet, setSelectedWallet] = useState<UserWallet | null>(null);
   const [showAdjustDialog, setShowAdjustDialog] = useState(false);
+  const [days, setDays] = useState(1);
 
   // Fetch wallet stats
   const { data: stats, isLoading: statsLoading } = useQuery<WalletStats>({
-    queryKey: ['admin-wallet-stats'],
-    queryFn: () => getApi(`${API_BASE}/wallet/stats`),
+    queryKey: ['admin-wallet-stats', days],
+    queryFn: () => getApi(`${API_BASE}/wallet/stats/?days=${days}`),
   });
 
   // Fetch user wallets
@@ -150,6 +164,22 @@ export default function WalletManagementPage() {
           </h1>
           <p className="text-white/40 text-sm mt-1 font-medium italic">Manage user wallets, balances, and funding requests</p>
         </div>
+
+        <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
+          {RANGE_OPTIONS.map((option) => (
+            <button
+              key={option.days}
+              onClick={() => setDays(option.days)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                days === option.days
+                  ? 'bg-primary text-black shadow'
+                  : 'text-white/50 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Stats */}
@@ -171,9 +201,12 @@ export default function WalletManagementPage() {
       ) : stats ? (
         <WalletStats
           totalBalance={stats.totalBalance}
-          pendingFunds={stats.pendingFunds}
-          monthCredit={stats.monthCredit}
-          monthDebit={stats.monthDebit}
+          totalInflow={stats.totalInflow}
+          totalOutflow={stats.totalOutflow}
+          netFlow={stats.netFlow}
+          transactionCount={stats.transactionCount}
+          fundedWallets={stats.fundedWallets}
+          rangeLabel={stats.rangeLabel}
         />
       ) : null}
 

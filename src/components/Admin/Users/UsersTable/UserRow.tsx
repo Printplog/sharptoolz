@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ROLES } from "@/lib/constants/roles";
 import { motion } from "framer-motion";
+import { formatAdminDate } from "@/lib/utils/adminDate";
 
 interface UserData {
     pk: number;
@@ -75,7 +76,7 @@ export default function UserRow({ user, index, onPrefetch }: UserRowProps) {
                     </div>
                     <div className="flex items-center gap-1.5 text-[10px] font-medium text-white/20">
                         <Calendar className="w-3 h-3" />
-                        <span>Joined {new Date(user.date_joined).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        <span>Joined {formatAdminDate(user.date_joined)}</span>
                     </div>
                 </div>
             </td>

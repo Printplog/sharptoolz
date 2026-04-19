@@ -163,6 +163,10 @@ export const cancelCryptoPayment = async (id: string): Promise<CryptoPaymentData
   return res.data;
 };
 
+export const incrementDownloads = async (): Promise<void> => {
+  await apiClient.post('/increment-downloads/');
+};
+
 export const downloadDoc = async (data: DownloadData) => {
   const res = await apiClient.post('/download-doc/', data, {
     responseType: "blob",
@@ -170,13 +174,15 @@ export const downloadDoc = async (data: DownloadData) => {
   return res.data;
 };
 
-export const adminOverview = async () => {
-  const res = await apiClient.get('/admin/overview/');
+export const adminOverview = async (days?: number) => {
+  const params = days ? `?days=${days}` : '';
+  const res = await apiClient.get(`/admin/overview/${params}`);
   return res.data;
 };
 
-export const getAdminAnalytics = async () => {
-  const res = await apiClient.get('/analytics/dashboard/');
+export const getAdminAnalytics = async (days?: number) => {
+  const params = days ? `?days=${days}` : '';
+  const res = await apiClient.get(`/analytics/dashboard/${params}`);
   return res.data;
 };
 

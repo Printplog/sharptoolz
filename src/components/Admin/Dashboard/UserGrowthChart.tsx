@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/chart"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { formatAdminDate } from "@/lib/utils/adminDate"
 
 const chartConfig = {
   users: {
@@ -31,9 +32,10 @@ interface UserGrowthChartProps {
     users: number
   }> | undefined
   isLoading?: boolean
+  rangeLabel?: string
 }
 
-export default function UserGrowthChart({ data, isLoading }: UserGrowthChartProps) {
+export default function UserGrowthChart({ data, isLoading, rangeLabel }: UserGrowthChartProps) {
   if (isLoading) {
     return (
       <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
@@ -79,7 +81,7 @@ export default function UserGrowthChart({ data, isLoading }: UserGrowthChartProp
 
   // Format data
   const chartData = data.map((item) => ({
-    date: new Date(item.date).toLocaleDateString("en-US", {
+    date: formatAdminDate(item.date, {
       month: "short",
       day: "numeric",
     }),
@@ -91,7 +93,7 @@ export default function UserGrowthChart({ data, isLoading }: UserGrowthChartProp
       <CardHeader>
         <CardTitle className="text-white">User Growth</CardTitle>
         <CardDescription className="text-white/60">
-          Cumulative registration trend
+          Registration growth across {rangeLabel?.toLowerCase() || "the selected range"}
         </CardDescription>
       </CardHeader>
       <CardContent>

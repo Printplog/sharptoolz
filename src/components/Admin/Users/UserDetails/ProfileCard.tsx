@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Mail, Shield, Wallet, Activity, Calendar, Fingerprint } from "lucide-react";
 import type { AdminUserDetails } from "@/types";
 import { cn } from "@/lib/utils";
+import { formatAdminDate } from "@/lib/utils/adminDate";
 
 interface ProfileCardProps {
     user: AdminUserDetails["user"];
@@ -41,7 +42,7 @@ export default function ProfileCard({ user }: ProfileCardProps) {
         { label: "Account Role", value: user.role || "User", icon: Shield },
         { label: "Wallet Balance", value: `$${user.wallet_balance}`, icon: Wallet },
         { label: "Account Status", value: user.is_active ? "Active" : "Inactive", icon: Activity, active: user.is_active },
-        { label: "Date Joined", value: new Date(user.date_joined).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), icon: Calendar },
+        { label: "Date Joined", value: formatAdminDate(user.date_joined, { month: 'long', day: 'numeric', year: 'numeric' }), icon: Calendar },
         { label: "User ID", value: `#${user.pk}`, icon: Fingerprint },
     ];
 

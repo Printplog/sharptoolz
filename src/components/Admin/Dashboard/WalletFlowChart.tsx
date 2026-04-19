@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/chart"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { formatAdminDate } from "@/lib/utils/adminDate"
 
 const chartConfig = {
   revenue: {
@@ -31,9 +32,10 @@ interface WalletFlowChartProps {
     total_revenue: number
   }> | undefined
   isLoading?: boolean
+  rangeLabel?: string
 }
 
-export default function WalletFlowChart({ data, isLoading }: WalletFlowChartProps) {
+export default function WalletFlowChart({ data, isLoading, rangeLabel }: WalletFlowChartProps) {
   if (isLoading) {
     return (
       <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
@@ -68,7 +70,7 @@ export default function WalletFlowChart({ data, isLoading }: WalletFlowChartProp
 
   // Format data
   const chartData = data.map((item) => ({
-    date: new Date(item.date).toLocaleDateString("en-US", {
+    date: formatAdminDate(item.date, {
       month: "short",
       day: "numeric",
     }),
@@ -78,9 +80,9 @@ export default function WalletFlowChart({ data, isLoading }: WalletFlowChartProp
   return (
     <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-white">Wallet Inflow</CardTitle>
+        <CardTitle className="text-white">Revenue Flow</CardTitle>
         <CardDescription className="text-white/60">
-          Total money inflow over the last 30 days
+          Completed purchase revenue for {rangeLabel?.toLowerCase() || "the selected range"}
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Calendar, ArrowUpRight, ArrowDownLeft, Hash, MapPin } from "lucide-react";
+import { formatAdminDateTime } from "@/lib/utils/adminDate";
 
 interface TransactionHistoryProps {
   transactions: Array<{
@@ -23,16 +24,6 @@ interface TransactionHistoryProps {
 }
 
 export default function TransactionHistory({ transactions }: TransactionHistoryProps) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'completed':
@@ -140,7 +131,7 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-white text-sm">{formatDate(transaction.created_at)}</span>
+                        <span className="text-white text-sm">{formatAdminDateTime(transaction.created_at)} UTC</span>
                       </div>
                     </TableCell>
                   </TableRow>

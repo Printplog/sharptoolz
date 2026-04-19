@@ -116,7 +116,7 @@ export default function UserDetailsPage() {
             </Button>
           </Link>
           <div className="flex flex-col gap-1">
-            <h1 className="text-3xl font-black text-white tracking-tighter">
+            <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
               {user.username}
             </h1>
             <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
