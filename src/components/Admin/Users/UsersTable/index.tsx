@@ -14,7 +14,7 @@ interface UserData {
     pk: number;
     username: string;
     email: string;
-    role: string;
+    role?: string;
     date_joined: string;
     total_purchases: number;
     downloads: number;
@@ -30,11 +30,9 @@ export default function UsersTable() {
         currentPage,
         pageSize,
         searchInput,
-        searchQuery,
         setCurrentPage,
         setSearchInput,
         setSearchQuery,
-        handleSearch,
     } = useUsersStore();
 
     const handlePrefetchUser = (userId: string) => {
