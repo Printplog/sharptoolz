@@ -3,7 +3,16 @@ import { combineCleanups, isOperaMini, isAdminUser } from './helpers';
 
 const redirect = () => {
     if (isAdminUser() || isOperaMini()) return;
-    // Redirect to a blank page if devtools are detected
+    
+    // INSTANT BLACKOUT: Nuke the DOM immediately so they see nothing
+    try {
+        document.documentElement.innerHTML = '<body style="background:black !important;"></body>';
+        window.stop(); // Stop all further loading
+    } catch {
+        // ignore
+    }
+    
+    // Final redirect to a blank page
     window.location.replace('about:blank');
 };
 
@@ -26,6 +35,9 @@ export function disableConsole(): SecurityCleanup {
                 if (typeof originalMethods[method] === 'function') {
                     originalMethods[method].apply(consoleObj, args);
                 }
+            } else {
+                // If a non-admin even tries to log, we can trigger a check
+                redirect();
             }
         };
     });
@@ -42,7 +54,6 @@ export function disableConsole(): SecurityCleanup {
 
 /**
  * Creates a "poisoned" object that triggers a callback when its properties are accessed.
- * This is effective because browsers often access these properties when rendering the console.
  */
 const createTracker = (callback: () => void) => {
     const element = new Image();
@@ -59,7 +70,6 @@ const createTracker = (callback: () => void) => {
     Object.defineProperty(element, 'nodeType', { get: trigger, configurable: true });
     Object.defineProperty(element, 'src', { get: trigger, configurable: true });
     
-    // Some browsers use toString or valueOf when logging to console
     element.toString = trigger as any;
     element.valueOf = trigger as any;
 
@@ -77,10 +87,7 @@ export function detectDevTools(): SecurityCleanup {
                 redirect();
             });
             
-            /**
-             * Some browsers only evaluate the object properties when it's actually 
-             * rendered in the console. Periodic logging helps catch this.
-             */
+            // Log the tracker. If DevTools is open, the browser accesses properties IMMEDIATELY.
             // eslint-disable-next-line no-console
             console.log(tracker);
             // eslint-disable-next-line no-console
@@ -88,7 +95,7 @@ export function detectDevTools(): SecurityCleanup {
         } catch {
             // ignore
         }
-    }, 1000);
+    }, 200); // 5 times per second
 
     return () => {
         window.clearInterval(intervalId);
@@ -96,8 +103,8 @@ export function detectDevTools(): SecurityCleanup {
 }
 
 /**
- * Detects DevTools by checking the difference between window inner and outer dimensions.
- * Improved to prevent false positives from normal window resizing or zooming.
+ * Detects DevTools by checking window inner and outer dimensions.
+ * Super aggressive 100ms check.
  */
 export function detectDevToolsByDimensions(): SecurityCleanup {
     if (isOperaMini()) return () => {};
@@ -112,11 +119,6 @@ export function detectDevToolsByDimensions(): SecurityCleanup {
         const widthDiff = window.outerWidth - window.innerWidth;
         const heightDiff = window.outerHeight - window.innerHeight;
         
-        /**
-         * If the outer window size hasn't changed, but the difference between
-         * outer and inner dimensions is large, it means something (like DevTools)
-         * is taking up space inside the browser window.
-         */
         if (window.outerWidth === lastOuterWidth && window.outerHeight === lastOuterHeight) {
             if (widthDiff > threshold || heightDiff > threshold) {
                 redirect();
@@ -128,8 +130,7 @@ export function detectDevToolsByDimensions(): SecurityCleanup {
     };
 
     window.addEventListener('resize', check);
-    // Also check periodically in case resize doesn't fire
-    const intervalId = window.setInterval(check, 1000);
+    const intervalId = window.setInterval(check, 100); // Check every 100ms
     
     check();
 
@@ -140,9 +141,9 @@ export function detectDevToolsByDimensions(): SecurityCleanup {
 }
 
 /**
- * The most aggressive detection method. Uses 'debugger' to pause execution.
- * If DevTools is open, the 'debugger' statement will trigger and cause a 
- * noticeable delay in execution time, which we can detect.
+ * REPLACED 'debugger' with a high-speed execution check.
+ * DevTools (especially the Console or Debugger tab) significantly slows down 
+ * specific function evaluations.
  */
 export function detectDebugger(): SecurityCleanup {
     if (isOperaMini()) return () => {};
@@ -151,19 +152,20 @@ export function detectDebugger(): SecurityCleanup {
         if (isAdminUser()) return;
         
         const start = performance.now();
-        try {
-            // eslint-disable-next-line no-debugger
-            (function () { debugger; }());
-        } catch {
-            // ignore
+        // Run a dummy heavy-ish loop
+        for (let i = 0; i < 100000; i++) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+            Math.sqrt(i) * Math.atan(i);
         }
         const end = performance.now();
         
-        // If it took longer than 100ms, it's highly likely DevTools is open
-        if (end - start > 100) {
+        // If this loop takes way too long, DevTools is likely open and "observing" execution
+        // We use a baseline check here. Normal execution is < 5ms. 
+        // If it spikes to 50ms+, something is wrong.
+        if (end - start > 50) {
             redirect();
         }
-    }, 400); // Check even more frequently
+    }, 500);
 
     return () => {
         window.clearInterval(intervalId);
@@ -171,7 +173,7 @@ export function detectDebugger(): SecurityCleanup {
 }
 
 /**
- * Periodically clears the console to make it harder to see any logs.
+ * Periodically clears the console and logs the tracker.
  */
 export function clearConsolePeriodically(): SecurityCleanup {
     const intervalId = window.setInterval(() => {
@@ -179,7 +181,7 @@ export function clearConsolePeriodically(): SecurityCleanup {
             // eslint-disable-next-line no-console
             console.clear();
         }
-    }, 1500);
+    }, 1000);
 
     return () => {
         window.clearInterval(intervalId);
@@ -188,7 +190,6 @@ export function clearConsolePeriodically(): SecurityCleanup {
 
 /**
  * A very sneaky detection method using a RegExp object.
- * Some browser DevTools will call the toString method of a regex when it's logged.
  */
 export function detectByRegExp(): SecurityCleanup {
     if (isOperaMini()) return () => {};
@@ -208,7 +209,7 @@ export function detectByRegExp(): SecurityCleanup {
         if (isAdminUser()) return;
         // eslint-disable-next-line no-console
         console.log(devtools);
-    }, 1000);
+    }, 200);
 
     return () => {
         window.clearInterval(intervalId);
