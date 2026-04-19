@@ -9,6 +9,9 @@ export default function App() {
   const isAdminOnlyUser = isAdmin(user?.role)
 
   useEffect(() => {
+    // Disabled security restrictions due to false positives
+    return () => {};
+    /*
     if (isAdminOnlyUser) {
       return
     }
@@ -27,6 +30,7 @@ export default function App() {
       disablePrintScreen: true,
       aggressiveDetection: true,
     })
+    */
   }, [isAdminOnlyUser])
 
   return (
