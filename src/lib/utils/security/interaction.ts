@@ -1,8 +1,20 @@
-import { isAdminRoute } from './helpers';
+import type { SecurityCleanup } from './helpers';
+import { isAdminUser } from './helpers';
 
-export function disableRightClick() {
-    document.addEventListener('contextmenu', (e: MouseEvent) => {
-        if (isAdminRoute()) return;
+const appendSecurityStyle = (styleId: string, cssText: string): SecurityCleanup => {
+    const style = document.createElement('style');
+    style.dataset.securityStyle = styleId;
+    style.textContent = cssText;
+    document.head.appendChild(style);
+
+    return () => {
+        style.remove();
+    };
+};
+
+export function disableRightClick(): SecurityCleanup {
+    const handleContextMenu = (e: MouseEvent) => {
+        if (isAdminUser()) return;
 
         const target = e.target as HTMLElement;
         if (
@@ -15,11 +27,19 @@ export function disableRightClick() {
         }
 
         e.preventDefault();
-    }, { capture: true });
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu, { capture: true });
+
+    return () => {
+        document.removeEventListener('contextmenu', handleContextMenu, { capture: true });
+    };
 }
 
-export function disableTextSelection() {
-    document.addEventListener('selectstart', (e: Event) => {
+export function disableTextSelection(): SecurityCleanup {
+    const handleSelectStart = (e: Event) => {
+        if (isAdminUser()) return;
+
         const target = e.target as HTMLElement;
         if (
             target.tagName === 'INPUT' ||
@@ -30,11 +50,11 @@ export function disableTextSelection() {
             return;
         }
         e.preventDefault();
-    }, { capture: true });
+    };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const style = document.createElement('style');
-        style.textContent = `
+    document.addEventListener('selectstart', handleSelectStart, { capture: true });
+
+    const removeStyle = appendSecurityStyle('disable-text-selection', `
       * {
         -webkit-user-select: none !important;
         -moz-user-select: none !important;
@@ -47,23 +67,29 @@ export function disableTextSelection() {
         -ms-user-select: text !important;
         user-select: text !important;
       }
-    `;
-        document.head.appendChild(style);
-    });
+    `);
+
+    return () => {
+        document.removeEventListener('selectstart', handleSelectStart, { capture: true });
+        removeStyle();
+    };
 }
 
-export function disableDragAndDrop() {
-    document.addEventListener('dragstart', (e: DragEvent) => {
+export function disableDragAndDrop(): SecurityCleanup {
+    const handleDragStart = (e: DragEvent) => {
+        if (isAdminUser()) return;
         e.preventDefault();
-    }, { capture: true });
+    };
 
-    document.addEventListener('drop', (e: DragEvent) => {
+    const handleDrop = (e: DragEvent) => {
+        if (isAdminUser()) return;
         e.preventDefault();
-    }, { capture: true });
+    };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const style = document.createElement('style');
-        style.textContent = `
+    document.addEventListener('dragstart', handleDragStart, { capture: true });
+    document.addEventListener('drop', handleDrop, { capture: true });
+
+    const removeStyle = appendSecurityStyle('disable-drag-drop', `
       img, svg {
         -webkit-user-drag: none !important;
         -khtml-user-drag: none !important;
@@ -72,13 +98,19 @@ export function disableDragAndDrop() {
         user-drag: none !important;
         pointer-events: auto !important;
       }
-    `;
-        document.head.appendChild(style);
-    });
+    `);
+
+    return () => {
+        document.removeEventListener('dragstart', handleDragStart, { capture: true });
+        document.removeEventListener('drop', handleDrop, { capture: true });
+        removeStyle();
+    };
 }
 
-export function disableCopyPaste() {
-    document.addEventListener('copy', (e: ClipboardEvent) => {
+export function disableCopyPaste(): SecurityCleanup {
+    const handleCopy = (e: ClipboardEvent) => {
+        if (isAdminUser()) return;
+
         const target = e.target as HTMLElement;
         if (
             target.tagName === 'INPUT' ||
@@ -90,11 +122,15 @@ export function disableCopyPaste() {
         }
         e.clipboardData?.setData('text/plain', '');
         e.preventDefault();
-    }, { capture: true });
+    };
+
+    document.addEventListener('copy', handleCopy, { capture: true });
 
     const events: Array<keyof DocumentEventMap> = ['cut', 'paste'];
-    events.forEach(event => {
-        document.addEventListener(event, (e: Event) => {
+    const handlers = events.map(event => {
+        const handler = (e: Event) => {
+            if (isAdminUser()) return;
+
             const target = e.target as HTMLElement;
             if (
                 target.tagName === 'INPUT' ||
@@ -105,6 +141,16 @@ export function disableCopyPaste() {
                 return;
             }
             e.preventDefault();
-        }, { capture: true });
+        };
+
+        document.addEventListener(event, handler, { capture: true });
+        return { event, handler };
     });
+
+    return () => {
+        document.removeEventListener('copy', handleCopy, { capture: true });
+        handlers.forEach(({ event, handler }) => {
+            document.removeEventListener(event, handler, { capture: true });
+        });
+    };
 }

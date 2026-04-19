@@ -1,8 +1,9 @@
 import type { SecurityOptions } from './helpers';
 import {
     isDevelopment,
-    isAdminRoute,
-    isAdminUser
+    isAdminUser,
+    combineCleanups,
+    type SecurityCleanup,
 } from './helpers';
 
 import {
@@ -28,8 +29,10 @@ export * from './interaction';
 export * from './shortcuts';
 export * from './detection';
 
-export function initSecurity(options: SecurityOptions = {}) {
-    if (isDevelopment || isAdminRoute() || isAdminUser()) return;
+export function initSecurity(options: SecurityOptions = {}): SecurityCleanup {
+    if (isDevelopment || isAdminUser()) {
+        return () => {};
+    }
 
     const {
         disableRightClick: enableRightClickBlock = true,
@@ -45,15 +48,23 @@ export function initSecurity(options: SecurityOptions = {}) {
         aggressiveDetection: enableAggressiveDetection = true,
     } = options;
 
-    if (enableAggressiveDetection) aggressiveDevToolsDetection();
-    if (enableRightClickBlock) disableRightClick();
-    if (enableTextSelectionBlock) disableTextSelection();
-    if (enableShortcutsBlock) disableDevToolsShortcuts();
-    if (enableDevToolsDetection) detectDevTools();
-    if (enableConsoleDisable) disableConsole();
-    if (enableConsoleClear) clearConsolePeriodically();
-    if (enableDragDropBlock) disableDragAndDrop();
-    if (enableCopyPasteBlock) disableCopyPaste();
-    if (enableDebuggerDetection) detectDebugger();
-    if (enablePrintScreenBlock) disablePrintScreen();
+    const cleanups: SecurityCleanup[] = [];
+
+    if (enableRightClickBlock) cleanups.push(disableRightClick());
+    if (enableTextSelectionBlock) cleanups.push(disableTextSelection());
+    if (enableShortcutsBlock) cleanups.push(disableDevToolsShortcuts());
+    if (enableConsoleDisable) cleanups.push(disableConsole());
+    if (enableConsoleClear) cleanups.push(clearConsolePeriodically());
+    if (enableDragDropBlock) cleanups.push(disableDragAndDrop());
+    if (enableCopyPasteBlock) cleanups.push(disableCopyPaste());
+    if (enablePrintScreenBlock) cleanups.push(disablePrintScreen());
+
+    if (enableAggressiveDetection) {
+        cleanups.push(aggressiveDevToolsDetection());
+    } else {
+        if (enableDevToolsDetection) cleanups.push(detectDevTools());
+        if (enableDebuggerDetection) cleanups.push(detectDebugger());
+    }
+
+    return combineCleanups(...cleanups);
 }

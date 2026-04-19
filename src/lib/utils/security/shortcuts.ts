@@ -1,7 +1,11 @@
 
+import type { SecurityCleanup } from './helpers';
+import { isAdminUser } from './helpers';
 
-export function disableDevToolsShortcuts() {
+export function disableDevToolsShortcuts(): SecurityCleanup {
     const blockShortcut = (e: Event) => {
+        if (isAdminUser()) return;
+
         const kbEvent = e as KeyboardEvent;
         const target = kbEvent.target as HTMLElement;
         const isField =
@@ -30,13 +34,28 @@ export function disableDevToolsShortcuts() {
         document.addEventListener(type, blockShortcut, { capture: true, passive: false });
         window.addEventListener(type, blockShortcut, { capture: true, passive: false });
     });
+
+    return () => {
+        events.forEach(type => {
+            document.removeEventListener(type, blockShortcut, { capture: true });
+            window.removeEventListener(type, blockShortcut, { capture: true });
+        });
+    };
 }
 
-export function disablePrintScreen() {
-    document.addEventListener('keyup', (e) => {
+export function disablePrintScreen(): SecurityCleanup {
+    const handlePrintScreen = (e: KeyboardEvent) => {
+        if (isAdminUser()) return;
+
         if (e.key === 'PrintScreen') {
             e.preventDefault();
             alert('Screenshots are not allowed for security reasons.');
         }
-    }, { capture: true });
+    };
+
+    document.addEventListener('keyup', handlePrintScreen, { capture: true });
+
+    return () => {
+        document.removeEventListener('keyup', handlePrintScreen, { capture: true });
+    };
 }
