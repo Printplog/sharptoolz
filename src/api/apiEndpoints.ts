@@ -136,10 +136,21 @@ export const deletePurchasedTemplate = async (id: string): Promise<unknown> => {
   return res.data;
 }
 
-export const getPurchasedTemplates = async (): Promise<PurchasedTemplate[]> => {
-  const res = await apiClient.get(`/purchased-templates/`);
+export const getPurchasedTemplates = async (params?: { page?: number; search?: string; page_size?: number }): Promise<{
+  results: PurchasedTemplate[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}> => {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append('page', params.page.toString());
+  if (params?.search) searchParams.append('search', params.search);
+  if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
+
+  const res = await apiClient.get(`/purchased-templates/?${searchParams.toString()}`);
   return res.data;
 }
+
 
 export const getPurchasedTemplate = async (id: string): Promise<PurchasedTemplate> => {
   const res = await apiClient.get(`/purchased-templates/${id}/`);

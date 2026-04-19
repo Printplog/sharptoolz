@@ -2,25 +2,65 @@ import { getPurchasedTemplates } from "@/api/apiEndpoints";
 import DocumentCard from "@/components/Dashboard/Documents/DocumentCard";
 import ToolGridSkeleton from "@/components/ToolGridSkeleton";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Documents() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["purchased-templates"],
-    queryFn: getPurchasedTemplates,
-    staleTime: 60 * 1000,
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError
+  } = useInfiniteQuery({
+    queryKey: ["purchased-templates", debouncedSearch],
+    queryFn: ({ pageParam = 1 }) => getPurchasedTemplates({ page: pageParam, search: debouncedSearch }),
+    getNextPageParam: (lastPage, allPages) => {
+      // If there's a next URL, we have a next page
+      if (lastPage.next) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    staleTime: 0,
+    gcTime: 0,
+    initialPageParam: 1,
   });
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const documents = Array.isArray(data) ? data : [];
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 }
+    );
 
-  const filteredDocuments = documents.filter((doc) =>
-    doc.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const documents = data?.pages?.flatMap((page) => page?.results ?? []).filter(Boolean) ?? [];
+  const totalCount = data?.pages?.[0]?.count ?? 0;
+
+
 
   return (
     <div className="dashboard-content space-y-10 animate-in fade-in duration-700 w-full">
@@ -31,7 +71,7 @@ export default function Documents() {
       </div>
 
       <div className="space-y-8 w-full">
-        {!isLoading && documents.length > 0 && (
+        {(!isLoading || documents.length > 0) && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="relative flex-1 max-w-md group w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
@@ -44,32 +84,57 @@ export default function Documents() {
               />
             </div>
             <div className="text-white/40 text-[11px] font-black uppercase tracking-widest shrink-0">
-              {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''} Found
+              {totalCount} document{totalCount !== 1 ? 's' : ''} Found
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
-          {filteredDocuments.map((doc) => (
-            <div className="" key={doc.id}>
-              <DocumentCard doc={doc} />
+        {isLoading && documents.length === 0 ? (
+          <ToolGridSkeleton />
+        ) : isError ? (
+          <div className="text-center py-12 border border-red-500/20 rounded-2xl bg-red-500/[0.02] flex flex-col items-center gap-4">
+            <p className="text-red-400 italic text-sm">Failed to load documents. Please try refreshing.</p>
+            <Button onClick={() => window.location.reload()} className="h-9 px-6 rounded-full text-[10px] uppercase tracking-widest font-bold bg-red-500 text-white hover:bg-red-600">
+              Retry
+            </Button>
+          </div>
+        ) : documents.length > 0 ? (
+
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+              {documents.map((doc) => doc && (
+                <div className="" key={doc.id}>
+                  <DocumentCard doc={doc} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        {!isLoading && filteredDocuments.length === 0 && (
-          <div className="text-center py-20 border border-white/5 rounded-2xl bg-white/[0.02] flex flex-col items-center gap-5">
-            <p className="text-white/40 italic">No documents found.</p>
-            {documents.length === 0 && (
+
+            {/* sentinel for infinite scroll */}
+            <div ref={observerTarget} className="h-4 flex items-center justify-center w-full">
+              {isFetchingNextPage && (
+                <div className="flex items-center gap-2 text-white/40 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Loading more...</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : !isLoading && (
+          <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02] flex flex-col items-center gap-4">
+            <p className="text-white/40 italic text-sm">No documents found.</p>
+            {searchQuery === "" && (
               <Link to="/tools">
-                <Button className="mt-2">
+                <Button className="h-9 px-6 rounded-full text-[10px] uppercase tracking-widest font-bold">
                   Browse Toolz
                 </Button>
               </Link>
             )}
           </div>
         )}
-        {isLoading && <ToolGridSkeleton />}
+
+
       </div>
     </div>
   );
 }
+
