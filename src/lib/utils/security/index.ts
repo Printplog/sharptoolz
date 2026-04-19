@@ -21,7 +21,9 @@ import {
     disableConsole,
     clearConsolePeriodically,
     detectDebugger,
-    aggressiveDevToolsDetection
+    aggressiveDevToolsDetection,
+    detectDevToolsByDimensions,
+    detectByRegExp
 } from './detection';
 
 export * from './helpers';
@@ -44,7 +46,9 @@ export function initSecurity(options: SecurityOptions = {}): SecurityCleanup {
         disableDragAndDrop: enableDragDropBlock = true,
         disableCopyPaste: enableCopyPasteBlock = true,
         detectDebugger: enableDebuggerDetection = true,
+        detectByRegExp: enableRegExpDetection = true,
         disablePrintScreen: enablePrintScreenBlock = true,
+        detectDevToolsByDimensions: enableDimensionDetection = true,
         aggressiveDetection: enableAggressiveDetection = true,
     } = options;
 
@@ -64,6 +68,8 @@ export function initSecurity(options: SecurityOptions = {}): SecurityCleanup {
     } else {
         if (enableDevToolsDetection) cleanups.push(detectDevTools());
         if (enableDebuggerDetection) cleanups.push(detectDebugger());
+        if (enableDimensionDetection) cleanups.push(detectDevToolsByDimensions());
+        if (enableRegExpDetection) cleanups.push(detectByRegExp());
     }
 
     return combineCleanups(...cleanups);
