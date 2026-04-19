@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Ban, CheckCircle } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
+import type { DataTableControlChangeContext } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatAdminDate, formatAdminTime } from '@/lib/utils/adminDate';
@@ -21,6 +22,19 @@ interface UserWallet {
 
 interface WalletTableProps {
   wallets: UserWallet[];
+  search: string;
+  balanceFilter: BalanceFilter;
+  joinedFilter: JoinedFilter;
+  sortBy: SortOption;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalItems: number;
+  onSearchChange: (value: string) => void;
+  onBalanceFilterChange: (value: BalanceFilter) => void;
+  onJoinedFilterChange: (value: JoinedFilter) => void;
+  onSortChange: (value: SortOption) => void;
+  onPageChange: (page: number) => void;
   onAdjustBalance: (wallet: UserWallet) => void;
   onViewDetails: (wallet: UserWallet) => void;
   onBlockWallet: (wallet: UserWallet) => void;
@@ -36,59 +50,23 @@ function getWalletCreatedAt(wallet: UserWallet) {
 
 export default function WalletTable({
   wallets,
+  search,
+  balanceFilter,
+  joinedFilter,
+  sortBy,
+  currentPage,
+  pageSize,
+  totalPages,
+  totalItems,
+  onSearchChange,
+  onBalanceFilterChange,
+  onJoinedFilterChange,
+  onSortChange,
+  onPageChange,
   onAdjustBalance,
   onViewDetails,
   onBlockWallet,
 }: WalletTableProps) {
-  const [search, setSearch] = useState('');
-  const [balanceFilter, setBalanceFilter] = useState<BalanceFilter>('all');
-  const [joinedFilter, setJoinedFilter] = useState<JoinedFilter>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('balance-desc');
-
-  const filteredWallets = useMemo(() => {
-    const now = Date.now();
-
-    const filtered = wallets.filter((wallet) => {
-      const createdAt = getWalletCreatedAt(wallet);
-      const createdAtMs = createdAt ? new Date(createdAt).getTime() : 0;
-      const normalizedSearch = search.trim().toLowerCase();
-
-      const matchesSearch =
-        !normalizedSearch ||
-        wallet.user.email.toLowerCase().includes(normalizedSearch) ||
-        wallet.user.username.toLowerCase().includes(normalizedSearch);
-
-      const matchesBalance =
-        balanceFilter === 'all' ||
-        (balanceFilter === 'positive' && wallet.balance > 0) ||
-        (balanceFilter === 'zero' && wallet.balance === 0) ||
-        (balanceFilter === '100plus' && wallet.balance >= 100) ||
-        (balanceFilter === '1000plus' && wallet.balance >= 1000);
-
-      const matchesJoined =
-        joinedFilter === 'all' ||
-        (createdAtMs > 0 && createdAtMs >= now - Number(joinedFilter) * 24 * 60 * 60 * 1000);
-
-      return matchesSearch && matchesBalance && matchesJoined;
-    });
-
-    return filtered.sort((left, right) => {
-      switch (sortBy) {
-        case 'balance-asc':
-          return left.balance - right.balance;
-        case 'recent':
-          return new Date(getWalletCreatedAt(right)).getTime() - new Date(getWalletCreatedAt(left)).getTime();
-        case 'oldest':
-          return new Date(getWalletCreatedAt(left)).getTime() - new Date(getWalletCreatedAt(right)).getTime();
-        case 'name':
-          return left.user.username.localeCompare(right.user.username);
-        case 'balance-desc':
-        default:
-          return right.balance - left.balance;
-      }
-    });
-  }, [wallets, search, balanceFilter, joinedFilter, sortBy]);
-
   const columns = useMemo<ColumnDef<UserWallet>[]>(
     () => [
       {
@@ -158,7 +136,10 @@ export default function WalletTable({
       key: 'balance',
       label: 'Balance',
       value: balanceFilter,
-      onChange: (value: string) => setBalanceFilter(value as BalanceFilter),
+      onChange: (value: string, context: DataTableControlChangeContext) => {
+        onBalanceFilterChange(value as BalanceFilter);
+        onPageChange(context.nextPage);
+      },
       options: [
         { label: 'All balances', value: 'all' },
         { label: 'Positive only', value: 'positive' },
@@ -172,7 +153,10 @@ export default function WalletTable({
       key: 'joined',
       label: 'Joined',
       value: joinedFilter,
-      onChange: (value: string) => setJoinedFilter(value as JoinedFilter),
+      onChange: (value: string, context: DataTableControlChangeContext) => {
+        onJoinedFilterChange(value as JoinedFilter);
+        onPageChange(context.nextPage);
+      },
       options: [
         { label: 'Any join date', value: 'all' },
         { label: 'Last 7 days', value: '7' },
@@ -187,17 +171,33 @@ export default function WalletTable({
   return (
     <DataTable
       columns={columns}
-      data={filteredWallets}
+      data={wallets}
       searchValue={search}
-      onSearchChange={(value) => setSearch(String(value))}
+      onSearchChange={(value, context: DataTableControlChangeContext) => {
+        onSearchChange(String(value));
+        onPageChange(context.nextPage);
+      }}
       searchPlaceholder="Search by username or email..."
       filters={filters}
       emptyMessage="No wallets match the current filters."
       hideColumnToggle
       enableSelection={false}
+      pagination={{
+        page: currentPage,
+        pageSize,
+        totalItems,
+        totalPages,
+        onPageChange,
+      }}
       toolbarActions={() => (
         <div className="flex items-center gap-3">
-          <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+          <Select
+            value={sortBy}
+            onValueChange={(value) => {
+              onSortChange(value as SortOption);
+              onPageChange(1);
+            }}
+          >
             <SelectTrigger className="h-11 bg-white/5 border-white/10 text-white">
               <SelectValue placeholder="Sort wallets" />
             </SelectTrigger>

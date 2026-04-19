@@ -33,6 +33,15 @@ interface UserWallet {
   created_at?: string;
 }
 
+interface WalletListResponse {
+  results: UserWallet[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+  current_page: number;
+  total_pages: number;
+}
+
 interface FundingRequest {
   id: string;
   user: {
@@ -62,6 +71,12 @@ export default function WalletManagementPage() {
   const [selectedWallet, setSelectedWallet] = useState<UserWallet | null>(null);
   const [showAdjustDialog, setShowAdjustDialog] = useState(false);
   const [days, setDays] = useState(1);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [balanceFilter, setBalanceFilter] = useState<'all' | 'positive' | 'zero' | '100plus' | '1000plus'>('all');
+  const [joinedFilter, setJoinedFilter] = useState<'all' | '7' | '30' | '180' | '365'>('all');
+  const [sortBy, setSortBy] = useState<'balance-desc' | 'balance-asc' | 'recent' | 'oldest' | 'name'>('balance-desc');
+  const WALLET_PAGE_SIZE = 10;
 
   // Fetch wallet stats
   const { data: stats, isLoading: statsLoading } = useQuery<WalletStats>({
@@ -70,9 +85,18 @@ export default function WalletManagementPage() {
   });
 
   // Fetch user wallets
-  const { data: wallets, isLoading: walletsLoading } = useQuery<UserWallet[]>({
-    queryKey: ['admin-wallets'],
-    queryFn: () => getApi(`${API_BASE}/wallet`),
+  const { data: walletsData, isLoading: walletsLoading } = useQuery<WalletListResponse>({
+    queryKey: ['admin-wallets', { page, search, balanceFilter, joinedFilter, sortBy }],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('page_size', String(WALLET_PAGE_SIZE));
+      if (search) params.set('search', search);
+      if (balanceFilter !== 'all') params.set('balance', balanceFilter);
+      if (joinedFilter !== 'all') params.set('joined', joinedFilter);
+      if (sortBy !== 'balance-desc') params.set('sort', sortBy);
+      return getApi(`${API_BASE}/wallet/?${params.toString()}`);
+    },
   });
 
   // Fetch pending requests
@@ -240,9 +264,22 @@ export default function WalletManagementPage() {
             </div>
           </div>
         </div>
-      ) : wallets ? (
+      ) : walletsData ? (
         <WalletTable
-          wallets={wallets}
+          wallets={walletsData.results}
+          search={search}
+          balanceFilter={balanceFilter}
+          joinedFilter={joinedFilter}
+          sortBy={sortBy}
+          currentPage={walletsData.current_page}
+          pageSize={WALLET_PAGE_SIZE}
+          totalPages={walletsData.total_pages}
+          totalItems={walletsData.count}
+          onSearchChange={setSearch}
+          onBalanceFilterChange={setBalanceFilter}
+          onJoinedFilterChange={setJoinedFilter}
+          onSortChange={setSortBy}
+          onPageChange={setPage}
           onAdjustBalance={handleAdjustBalance}
           onViewDetails={handleViewDetails}
           onBlockWallet={handleBlockWallet}
