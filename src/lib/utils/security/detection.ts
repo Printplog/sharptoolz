@@ -142,30 +142,38 @@ export function detectDevToolsByDimensions(): SecurityCleanup {
 
 /**
  * REPLACED 'debugger' with a high-speed execution check.
- * DevTools (especially the Console or Debugger tab) significantly slows down 
- * specific function evaluations.
+ * Improved to prevent false positives on slower devices.
  */
 export function detectDebugger(): SecurityCleanup {
     if (isOperaMini()) return () => {};
+    
+    let failCount = 0;
     
     const intervalId = window.setInterval(() => {
         if (isAdminUser()) return;
         
         const start = performance.now();
-        // Run a dummy heavy-ish loop
-        for (let i = 0; i < 100000; i++) {
+        // A smaller, more stable loop
+        for (let i = 0; i < 50000; i++) {
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             Math.sqrt(i) * Math.atan(i);
         }
         const end = performance.now();
         
-        // If this loop takes way too long, DevTools is likely open and "observing" execution
-        // We use a baseline check here. Normal execution is < 5ms. 
-        // If it spikes to 50ms+, something is wrong.
-        if (end - start > 50) {
+        // On most devices, this takes < 2ms. 
+        // DevTools "observation" usually slows this down by 10x-50x.
+        // We use 150ms as a safe threshold for slow devices.
+        if (end - start > 150) {
+            failCount++;
+        } else {
+            failCount = 0; // Reset on success
+        }
+
+        // Only redirect if we see 3 consecutive slow-downs
+        if (failCount > 3) {
             redirect();
         }
-    }, 500);
+    }, 1000); // Check every second instead of 500ms to reduce CPU load
 
     return () => {
         window.clearInterval(intervalId);
