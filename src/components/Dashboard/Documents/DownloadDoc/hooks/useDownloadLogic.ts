@@ -7,11 +7,13 @@ import { injectImagesIntoSVG } from "@/lib/utils/imageInjector";
 import { getPurchasedTemplate, incrementDownloads } from "@/api/apiEndpoints";
 import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import updateSvgFromFormData from "@/lib/utils/updateSvgFromFormData";
-import { addWatermarkToSvg } from "@/lib/utils/svgWatermark";
+import { addWatermarkToSvg, applyMaskedTestContentToSvg } from "@/lib/utils/svgWatermark";
 import { BASE_URL } from "@/api/apiClient";
 import type { FormField } from "@/types";
 
 export type ProgressStep = 'idle' | 'fetching' | 'processing-patches' | 'processing-fonts' | 'processing-images' | 'rendering' | 'generating' | 'complete';
+
+const TEST_DOWNLOAD_QUALITY_FACTOR = 0.1;
 
 interface UseDownloadLogicProps {
     purchasedTemplateId?: string;
@@ -19,6 +21,7 @@ interface UseDownloadLogicProps {
     templateName?: string;
     hasSplitDownload: boolean;
     splitInfo: { enabled: boolean; direction: "horizontal" | "vertical" };
+    fields?: FormField[];
     isTest?: boolean;
 }
 
@@ -28,6 +31,7 @@ export const useDownloadLogic = ({
     templateName,
     hasSplitDownload,
     splitInfo,
+    fields = [],
     isTest = false,
 }: UseDownloadLogicProps) => {
     const [isGenerating, setIsGenerating] = React.useState(false);
@@ -103,6 +107,7 @@ export const useDownloadLogic = ({
             // 1.5 Apply watermark if this is a test document
             // If purchasedTemplateId exists, we can also check the data we might have fetched
             if (isTest) {
+                workingSvg = applyMaskedTestContentToSvg(workingSvg, fields);
                 workingSvg = addWatermarkToSvg(workingSvg);
             }
 
@@ -116,6 +121,11 @@ export const useDownloadLogic = ({
                     direction: splitInfo.direction,
                     side: side
                 };
+            }
+
+            if (isTest) {
+                options.renderScaleMultiplier = TEST_DOWNLOAD_QUALITY_FACTOR;
+                options.jpegQuality = TEST_DOWNLOAD_QUALITY_FACTOR;
             }
 
             let blob: Blob;

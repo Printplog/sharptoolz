@@ -245,8 +245,11 @@ const FormPanel = React.memo(function FormPanel({
       fields?.find((field) => field.isTrackingId) ||
       fields?.find((field) => field.id === "Tracking_ID");
     const tracking_id = trackingField ? getFieldValue(trackingField.id) : undefined;
-    const toastMessage =
-      test === isTest ? "Document updated successfully" : "Document is now watermark free";
+    const toastMessage = isTest
+      ? "Test document saved. Downloads are low quality until you remove the watermark."
+      : test === isTest
+        ? "Document updated successfully"
+        : "Document is now watermark free";
 
     // Build normalized field map for generation (selects use display text / label instead of raw id)
     const allFieldValues: Record<string, string | number | boolean> = {};

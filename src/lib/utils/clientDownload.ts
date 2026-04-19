@@ -7,6 +7,8 @@ import { jsPDF } from 'jspdf';
 export interface GenerateOptions {
     filename?: string;
     quality?: number;
+    renderScaleMultiplier?: number;
+    jpegQuality?: number;
     split?: {
         direction: 'horizontal' | 'vertical';
         side: 'front' | 'back';
@@ -63,6 +65,28 @@ function getSvgDimensions(doc: Document): { width: number, height: number } {
     };
 }
 
+function getOutputDimensions(svg: string, options?: GenerateOptions): { width: number; height: number } {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svg, 'image/svg+xml');
+    const { width: fullWidth, height: fullHeight } = getSvgDimensions(doc);
+
+    if (!options?.split) {
+        return { width: fullWidth, height: fullHeight };
+    }
+
+    return {
+        width: options.split.direction === 'vertical' ? fullWidth / 2 : fullWidth,
+        height: options.split.direction === 'horizontal' ? fullHeight / 2 : fullHeight,
+    };
+}
+
+function getRenderScale(options?: GenerateOptions): number {
+    const baseScale = options?.quality === 1 ? 3 : 2;
+    const multiplier = options?.renderScaleMultiplier ?? 1;
+
+    return Math.max(0.1, baseScale * multiplier);
+}
+
 /**
  * Converts an SVG string to a Canvas element using native browser rendering.
  * Supports split cropping via options.
@@ -84,11 +108,15 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
     const { width: fullWidth, height: fullHeight } = getSvgDimensions(doc);
 
     // High quality scaling (3x for print-ready quality if possible, otherwise 2x)
-    const scale = options?.quality === 1 ? 3 : 2;
+    const renderScale = getRenderScale(options);
+    const canvasWidth = Math.max(1, Math.round(fullWidth * renderScale));
+    const canvasHeight = Math.max(1, Math.round(fullHeight * renderScale));
+    const scaleX = canvasWidth / fullWidth;
+    const scaleY = canvasHeight / fullHeight;
 
     const fullCanvas = document.createElement('canvas');
-    fullCanvas.width = fullWidth * scale;
-    fullCanvas.height = fullHeight * scale;
+    fullCanvas.width = canvasWidth;
+    fullCanvas.height = canvasHeight;
 
     const ctx = fullCanvas.getContext('2d', { alpha: true });
     if (!ctx) throw new Error('Could not get canvas context');
@@ -96,7 +124,7 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
     fullCanvas.style.width = `${fullWidth}px`;
     fullCanvas.style.height = `${fullHeight}px`;
 
-    ctx.scale(scale, scale);
+    ctx.scale(scaleX, scaleY);
 
     // Fill with white background to prevent black transparency in JPEG/PDF
     ctx.fillStyle = 'white';
@@ -136,20 +164,20 @@ async function svgToCanvas(svg: string, options?: GenerateOptions): Promise<HTML
         const targetHeight = direction === 'horizontal' ? fullHeight / 2 : fullHeight;
 
         const targetCanvas = document.createElement('canvas');
-        targetCanvas.width = targetWidth * scale;
-        targetCanvas.height = targetHeight * scale;
+        targetCanvas.width = Math.max(1, Math.round(targetWidth * scaleX));
+        targetCanvas.height = Math.max(1, Math.round(targetHeight * scaleY));
 
         const targetCtx = targetCanvas.getContext('2d');
         if (!targetCtx) throw new Error('Could not get target canvas context');
 
         let sx = 0, sy = 0;
-        if (direction === 'vertical' && side === 'back') sx = (fullWidth / 2) * scale;
-        if (direction === 'horizontal' && side === 'back') sy = (fullHeight / 2) * scale;
+        if (direction === 'vertical' && side === 'back') sx = Math.round((fullWidth / 2) * scaleX);
+        if (direction === 'horizontal' && side === 'back') sy = Math.round((fullHeight / 2) * scaleY);
 
         targetCtx.drawImage(
             fullCanvas,
-            sx, sy, targetWidth * scale, targetHeight * scale, // source
-            0, 0, targetWidth * scale, targetHeight * scale    // destination
+            sx, sy, targetCanvas.width, targetCanvas.height, // source
+            0, 0, targetCanvas.width, targetCanvas.height    // destination
         );
 
         return targetCanvas;
@@ -176,12 +204,11 @@ export async function generatePng(svg: string, options?: GenerateOptions): Promi
  */
 export async function generatePdf(svg: string, options?: GenerateOptions): Promise<Blob> {
     const canvas = await svgToCanvas(svg, options);
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const jpegQuality = options?.jpegQuality ?? 0.95;
+    const imgData = canvas.toDataURL('image/jpeg', jpegQuality);
 
     // Create PDF with target dimensions
-    const scale = options?.quality === 1 ? 3 : 2;
-    const width = canvas.width / scale; // back to original units
-    const height = canvas.height / scale;
+    const { width, height } = getOutputDimensions(svg, options);
 
     const orientation = width > height ? 'l' : 'p';
     const pdf = new jsPDF({

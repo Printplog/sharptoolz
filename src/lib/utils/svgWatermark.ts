@@ -1,3 +1,7 @@
+import type { FormField } from "@/types";
+import { extractFromDependency } from "./fieldExtractor";
+import updateSvgFromFormData from "./updateSvgFromFormData";
+
 /**
  * Frontend SVG Watermark Utility
  *
@@ -8,6 +12,100 @@
  * - Non-purchased template (browsing /tools/:id): always apply watermark
  * - Purchased template (/documents/:id): only apply if `test === true`
  */
+
+const NON_MASKABLE_FIELD_TYPES = new Set([
+    "upload",
+    "file",
+    "sign",
+    "checkbox",
+    "color",
+    "range",
+    "hide",
+    "status",
+]);
+
+function looksLikeImageValue(value: string): boolean {
+    return value.startsWith("data:image/") || value.startsWith("blob:");
+}
+
+function getFieldDisplayValue(field: FormField): string {
+    if (field.options && field.options.length > 0) {
+        const selected = field.options.find(
+            (option) => String(option.value) === String(field.currentValue)
+        );
+
+        return String(
+            selected?.displayText ??
+            selected?.label ??
+            field.currentValue ??
+            ""
+        );
+    }
+
+    return String(field.currentValue ?? "");
+}
+
+function shouldMaskField(field: FormField, resolvedValue: string): boolean {
+    const type = (field.type || "text").toLowerCase();
+
+    if (field.options && field.options.length > 0) return false;
+    if (NON_MASKABLE_FIELD_TYPES.has(type)) return false;
+    if (!resolvedValue.trim()) return false;
+    if (looksLikeImageValue(resolvedValue)) return false;
+
+    return true;
+}
+
+export function maskTestTextValue(value: string): string {
+    if (!value) return value;
+
+    let revealNext = true;
+
+    return Array.from(value).map((char) => {
+        if (!/[a-z0-9]/i.test(char)) {
+            revealNext = true;
+            return char;
+        }
+
+        const maskedChar = revealNext ? char : "*";
+        revealNext = !revealNext;
+        return maskedChar;
+    }).join("");
+}
+
+export function applyMaskedTestContentToSvg(svgContent: string, fields: FormField[] = []): string {
+    if (!svgContent || fields.length === 0) return svgContent;
+
+    const maskedFieldValues: Record<string, string | number | boolean | unknown> = {};
+
+    fields.forEach((field) => {
+        const displayValue = getFieldDisplayValue(field);
+        maskedFieldValues[field.id] = shouldMaskField(field, displayValue)
+            ? maskTestTextValue(displayValue)
+            : displayValue;
+    });
+
+    const maskedFields = fields.flatMap((field) => {
+        const resolvedValue = field.dependsOn
+            ? extractFromDependency(field.dependsOn, maskedFieldValues)
+            : String(maskedFieldValues[field.id] ?? "");
+
+        if (!shouldMaskField(field, resolvedValue)) {
+            return [];
+        }
+
+        return [{
+            ...field,
+            currentValue: resolvedValue,
+            dependsOn: undefined,
+            options: undefined,
+        }];
+    });
+
+    if (maskedFields.length === 0) return svgContent;
+
+    return updateSvgFromFormData(svgContent, maskedFields) as string;
+}
 
 export function addWatermarkToSvg(svgContent: string): string {
     if (!svgContent || !svgContent.includes("</svg>")) return svgContent;

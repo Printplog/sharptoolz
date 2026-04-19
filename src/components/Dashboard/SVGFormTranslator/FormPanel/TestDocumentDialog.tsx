@@ -166,7 +166,7 @@ export function TestDocumentDialog({
                     </div>
                     <div className="flex-1">
                       <h3 className="text-white/90 font-medium">Test Document</h3>
-                      <p className="text-white/30 text-xs">Watermarked version for preview</p>
+                      <p className="text-white/30 text-xs">Low-quality download</p>
                     </div>
                   </button>
 
@@ -180,7 +180,7 @@ export function TestDocumentDialog({
                     </div>
                     <div className="flex-1">
                       <h3 className="text-primary font-semibold">Premium Document</h3>
-                      <p className="text-primary/50 text-xs">Watermark-free • ${price}</p>
+                      <p className="text-primary/50 text-xs">Remove watermark • High quality • ${price}</p>
                     </div>
                   </button>
                 </div>
@@ -204,4 +204,3 @@ export function TestDocumentDialog({
     </Dialog>
   );
 }
-

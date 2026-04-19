@@ -90,7 +90,7 @@ export default function DocumentCard({ doc }: Props) {
           <Link to={!isPending ? `/documents/${doc.id}` : "#"} className="flex-1">
             <Button
               disabled={isPending || !svgLoaded}
-              className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-white/5"
+              className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-white/5"
             >
               <Eye className="h-3.5 w-3.5 mr-2" />
               View Document
@@ -101,7 +101,7 @@ export default function DocumentCard({ doc }: Props) {
               <Button
                 variant="outline"
                 disabled={isPending}
-                className="h-11 w-11 p-0 bg-red-500/5 border-red-500 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-colors"
+                className="h-11 w-11 p-0 bg-red-500/5 border-red-500 text-red-500 hover:bg-red-500 hover:text-white rounded-full transition-colors"
               >
                 {isPending ? (
                   <Loader className="h-4 w-4 animate-spin" />

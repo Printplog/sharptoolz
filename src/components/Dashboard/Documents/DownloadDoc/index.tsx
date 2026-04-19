@@ -31,6 +31,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
     templateName,
     keywords = [],
     dialogName = "download-doc",
+    fields = [],
     isTest = false,
 }) => {
     // 1. Identify split download capability
@@ -61,6 +62,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
         templateName,
         hasSplitDownload: splitInfo.enabled,
         splitInfo,
+        fields,
         isTest,
     });
 
@@ -81,6 +83,17 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
 
                 <div className="flex-1 overflow-y-auto px-6 py-2 min-h-0">
                     <div className="space-y-6">
+                        {isTest && (
+                            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-300">
+                                    Test Download Notice
+                                </p>
+                                <p className="mt-2 text-xs leading-relaxed text-amber-100/80">
+                                    Test downloads are low quality. Remove the watermark to download in high quality.
+                                </p>
+                            </div>
+                        )}
+
                         {isOperaMini() && (
                             <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-amber-500 text-[10px] flex items-start gap-2 mb-2">
                                 <span>⚠️</span>
