@@ -16,6 +16,7 @@ export interface SecurityOptions {
     disableDragAndDrop?: boolean;
     disableCopyPaste?: boolean;
     detectDebugger?: boolean;
+    detectByRegExp?: boolean;
     disablePrintScreen?: boolean;
     aggressiveDetection?: boolean;
 }
