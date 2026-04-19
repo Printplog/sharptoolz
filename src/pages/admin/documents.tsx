@@ -10,11 +10,14 @@ import {
     DollarSign,
     TrendingUp,
     Clock,
+    Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 import type { ColumnDef } from '@tanstack/react-table';
 import type { DataTableControlChangeContext } from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 type AdminDoc = {
     id: string;
@@ -55,6 +58,7 @@ export default function AdminDocumentsPage() {
             type: typeFilter,
         }),
         staleTime: 30_000,
+        placeholderData: (previousData) => previousData,
     });
 
     const docs = data?.results ?? [];
@@ -178,6 +182,23 @@ export default function AdminDocumentsPage() {
                         day: "numeric",
                     })}
                 </span>
+            ),
+        },
+        {
+            id: 'actions',
+            header: 'Actions',
+            cell: ({ row }) => (
+                <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="h-9 rounded-full border-white/10 bg-white/5 px-4 text-white hover:bg-white/10"
+                >
+                    <Link to={`/documents/${row.original.id}`} target="_blank" rel="noreferrer">
+                        <Eye className="h-3.5 w-3.5" />
+                        View
+                    </Link>
+                </Button>
             ),
         },
     ], []);
