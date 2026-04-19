@@ -47,6 +47,9 @@ interface TransactionStats {
 
 interface TransactionsResponse {
   transactions: Transaction[];
+  count: number;
+  total_pages: number;
+  current_page: number;
   stats: TransactionStats;
 }
 
@@ -54,15 +57,27 @@ export default function TransactionsPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'credit' | 'debit'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending' | 'failed'>('all');
+  const [page, setPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const PAGE_SIZE = 20;
 
   const { data, isLoading } = useQuery<TransactionsResponse>({
-    queryKey: ['admin-wallet-transactions'],
-    queryFn: () => getApi('/admin/wallet/transactions'),
+    queryKey: ['admin-wallet-transactions', { page, search, typeFilter, statusFilter }],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('page_size', String(PAGE_SIZE));
+      if (search) params.set('search', search);
+      if (typeFilter !== 'all') params.set('type', typeFilter);
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      return getApi(`/admin/wallet/transactions/?${params.toString()}`);
+    },
   });
 
   const transactions = data?.transactions;
+  const totalCount = data?.count ?? 0;
+  const totalPages = data?.total_pages ?? 1;
   const stats = data?.stats;
 
   const statsCards: StatData[] = [
@@ -215,16 +230,6 @@ export default function TransactionsPage() {
     },
   ], []);
 
-  const filteredTransactions = transactions?.filter((txn: Transaction) => {
-    const matchesSearch =
-      txn.user.email.toLowerCase().includes(search.toLowerCase()) ||
-      txn.user.username.toLowerCase().includes(search.toLowerCase()) ||
-      txn.description.toLowerCase().includes(search.toLowerCase());
-    const matchesType = typeFilter === 'all' || txn.type === typeFilter;
-    const matchesStatus = statusFilter === 'all' || txn.status === statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
-  });
-
   const handleExport = () => {
     toast.info('Export functionality coming soon');
   };
@@ -253,7 +258,7 @@ export default function TransactionsPage() {
 
       <DataTable
         columns={columns}
-        data={filteredTransactions ?? []}
+        data={transactions ?? []}
         isLoading={isLoading}
         onRowClick={(txn) => {
           setSelectedTransaction(txn);
@@ -263,14 +268,20 @@ export default function TransactionsPage() {
         hideColumnToggle
         enableSelection={false}
         searchValue={search}
-        onSearchChange={(v) => setSearch(String(v))}
+        onSearchChange={(value, context) => {
+          setSearch(String(value));
+          setPage(context.nextPage);
+        }}
         searchPlaceholder="Search by user, description..."
         filters={[
           {
             key: 'type',
             label: 'Type',
             value: typeFilter,
-            onChange: (v) => setTypeFilter(v as typeof typeFilter),
+            onChange: (value, context) => {
+              setTypeFilter(value as typeof typeFilter);
+              setPage(context.nextPage);
+            },
             options: [
               { label: 'All types', value: 'all' },
               { label: 'Credit', value: 'credit' },
@@ -282,7 +293,10 @@ export default function TransactionsPage() {
             key: 'status',
             label: 'Status',
             value: statusFilter,
-            onChange: (v) => setStatusFilter(v as typeof statusFilter),
+            onChange: (value, context) => {
+              setStatusFilter(value as typeof statusFilter);
+              setPage(context.nextPage);
+            },
             options: [
               { label: 'All statuses', value: 'all' },
               { label: 'Completed', value: 'completed' },
@@ -292,6 +306,13 @@ export default function TransactionsPage() {
             placeholder: 'Status',
           },
         ]}
+        pagination={{
+          page,
+          pageSize: PAGE_SIZE,
+          totalItems: totalCount,
+          totalPages,
+          onPageChange: setPage,
+        }}
       />
 
       {/* Transaction Details Dialog */}

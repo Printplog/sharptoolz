@@ -74,14 +74,14 @@ export default function TermsAgreementDialog() {
                             onClick={handleAccept}
                             className="w-full sm:w-48 bg-primary text-primary-foreground font-bold tracking-wider py-6 text-base rounded-full uppercase transition-all"
                         >
-                            YES, I AM
+                            YES, I DO
                         </Button>
                         <Button
                             onClick={handleReject}
                             variant="destructive"
                             className="w-full sm:w-48 font-bold tracking-wider py-6 text-base rounded-full uppercase transition-all"
                         >
-                            NO, I AM NOT
+                            NO, I DO NOT
                         </Button>
                     </div>
                 </div>

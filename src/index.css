@@ -128,9 +128,7 @@
     max-width: 100%;
   }
 
-  button,
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
-  textarea,
   select {
     border-radius: 9999px !important;
   }

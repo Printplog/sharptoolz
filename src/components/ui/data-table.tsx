@@ -59,14 +59,23 @@ export interface DataTableFilterOption {
   value: string;
 }
 
+export interface DataTableControlChangeContext {
+  nextPage: number;
+  shouldResetPage: boolean;
+}
+
 export interface DataTableFilter {
   key: string;
   label?: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (
+    value: string,
+    context: DataTableControlChangeContext
+  ) => void;
   options: DataTableFilterOption[];
   placeholder?: string;
   className?: string;
+  resetValue?: string;
 }
 
 export interface DataTablePagination {
@@ -76,6 +85,8 @@ export interface DataTablePagination {
   totalPages: number;
   onPageChange: (page: number) => void;
 }
+
+type PaginationItem = number | "ellipsis-start" | "ellipsis-end";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -94,7 +105,10 @@ interface DataTableProps<TData, TValue> {
     table: TanstackTable<TData>
   ) => React.ReactNode;
   searchValue?: string;
-  onSearchChange?: (value: string) => void;
+  onSearchChange?: (
+    value: string,
+    context: DataTableControlChangeContext
+  ) => void;
   searchDebounce?: number;
   filters?: DataTableFilter[];
   pagination?: DataTablePagination;
@@ -205,6 +219,32 @@ export function DataTable<TData, TValue>({
   const canNextPage = pagination
     ? currentPage < totalPages
     : table.getCanNextPage();
+  const paginationItems = useMemo<PaginationItem[]>(() => {
+    const sidePages = 3;
+    const startPage = Math.max(1, currentPage - sidePages);
+    const endPage = Math.min(totalPages, currentPage + sidePages);
+    const items: PaginationItem[] = [];
+
+    if (startPage > 1) {
+      items.push(1);
+      if (startPage > 2) {
+        items.push("ellipsis-start");
+      }
+    }
+
+    for (let page = startPage; page <= endPage; page += 1) {
+      items.push(page);
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        items.push("ellipsis-end");
+      }
+      items.push(totalPages);
+    }
+
+    return items;
+  }, [currentPage, totalPages]);
   const activeServerSearch = (searchValue ?? "").trim().length > 0;
   const activeFiltersCount = filters.filter(
     (filter) => filter.value && filter.value !== "all"
@@ -216,13 +256,45 @@ export function DataTable<TData, TValue>({
     toolbarActions ||
     !hideColumnToggle;
 
+  const getControlChangeContext = (): DataTableControlChangeContext => ({
+    nextPage: pagination ? 1 : currentPage,
+    shouldResetPage: Boolean(pagination && currentPage !== 1),
+  });
+
+  const handleSearchChange = (value: string) => {
+    onSearchChange?.(value, getControlChangeContext());
+  };
+
+  const handleFilterChange = (filter: DataTableFilter, value: string) => {
+    filter.onChange(value, getControlChangeContext());
+  };
+
+  const handlePageChange = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages);
+
+    if (nextPage === currentPage) {
+      return;
+    }
+
+    if (pagination) {
+      pagination.onPageChange(nextPage);
+      return;
+    }
+
+    table.setPageIndex(nextPage - 1);
+  };
+
   const clearFilters = () => {
+    const context = getControlChangeContext();
+
     if (filterColumn) {
       filterColumn.setFilterValue("");
     }
 
-    onSearchChange?.("");
-    filters.forEach((filter) => filter.onChange("all"));
+    onSearchChange?.("", context);
+    filters.forEach((filter) =>
+      filter.onChange(filter.resetValue ?? "all", context)
+    );
   };
 
   return (
@@ -242,7 +314,7 @@ export function DataTable<TData, TValue>({
                   {usesServerSearch ? (
                     <DebouncedInput
                       value={searchValue ?? ""}
-                      onChange={(value) => onSearchChange?.(String(value))}
+                      onChange={(value) => handleSearchChange(String(value))}
                       debounce={searchDebounce}
                       placeholder={searchPlaceholder}
                       className="h-11 border-white/10 bg-white/5 pl-11 text-white placeholder:text-white/25 focus-visible:border-white/20 focus-visible:ring-white/10"
@@ -265,7 +337,10 @@ export function DataTable<TData, TValue>({
                   key={filter.key}
                   className={cn("min-w-[180px] xl:w-auto", filter.className)}
                 >
-                  <Select value={filter.value} onValueChange={filter.onChange}>
+                  <Select
+                    value={filter.value}
+                    onValueChange={(value) => handleFilterChange(filter, value)}
+                  >
                     <SelectTrigger className="h-11 w-full border-white/10 bg-white/5 text-white focus-visible:border-white/20 focus-visible:ring-white/10">
                       <div className="flex items-center gap-2 truncate">
                         <SlidersHorizontal className="h-3.5 w-3.5 text-white/35" />
@@ -429,28 +504,45 @@ export function DataTable<TData, TValue>({
           <span className="text-sm text-white/45">
             Page {currentPage} of {totalPages}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button
               variant="outline"
               size="icon"
-              onClick={() =>
-                pagination
-                  ? pagination.onPageChange(currentPage - 1)
-                  : table.previousPage()
-              }
+              onClick={() => handlePageChange(currentPage - 1)}
               disabled={!canPreviousPage}
               className="h-10 w-10 border-white/10 bg-white/5 text-white/65 hover:bg-white/10 hover:text-white disabled:opacity-35"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
+            {paginationItems.map((item) =>
+              typeof item === "number" ? (
+                <Button
+                  key={item}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(item)}
+                  className={cn(
+                    "h-10 min-w-10 border-white/10 px-3 text-sm",
+                    item === currentPage
+                      ? "border-primary/10 bg-primary/5 text-primary hover:border-primary/20 hover:bg-primary/10 hover:text-primary"
+                      : "bg-white/5 text-white/65 hover:bg-white/10 hover:text-white"
+                  )}
+                >
+                  {item}
+                </Button>
+              ) : (
+                <span
+                  key={item}
+                  className="flex h-10 min-w-10 items-center justify-center text-sm text-white/30"
+                >
+                  ...
+                </span>
+              )
+            )}
             <Button
               variant="outline"
               size="icon"
-              onClick={() =>
-                pagination
-                  ? pagination.onPageChange(currentPage + 1)
-                  : table.nextPage()
-              }
+              onClick={() => handlePageChange(currentPage + 1)}
               disabled={!canNextPage}
               className="h-10 w-10 border-white/10 bg-white/5 text-white/65 hover:bg-white/10 hover:text-white disabled:opacity-35"
             >

@@ -195,11 +195,12 @@ export const logVisit = async (path: string): Promise<void> => {
   await apiClient.post('/analytics/log-visit/', { path });
 };
 
-export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string }) => {
+export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string; role?: string }) => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
   if (params?.search) searchParams.append('search', params.search);
+  if (params?.role && params.role !== 'all') searchParams.append('role', params.role);
 
   const res = await apiClient.get(`/admin/users/?${searchParams.toString()}`);
   return res.data;
@@ -215,11 +216,12 @@ export const updateAdminUser = async (userId: string, data: { role?: string; is_
   return res.data;
 };
 
-export const adminDocuments = async (params?: { page?: number; page_size?: number; search?: string }) => {
+export const adminDocuments = async (params?: { page?: number; page_size?: number; search?: string; type?: string }) => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
   if (params?.search) searchParams.append('search', params.search);
+  if (params?.type && params.type !== 'all') searchParams.append('type', params.type);
   const res = await apiClient.get(`/admin/documents/?${searchParams.toString()}`);
   return res.data;
 };

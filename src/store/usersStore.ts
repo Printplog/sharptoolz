@@ -15,12 +15,14 @@ interface UsersState {
   // Search
   searchQuery: string;
   searchInput: string;
+  roleFilter: 'all' | 'admin' | 'staff' | 'user';
   
   // Actions
   setCurrentPage: (page: number) => void;
   setPageSize: (size: number) => void;
   setSearchQuery: (query: string) => void;
   setSearchInput: (input: string) => void;
+  setRoleFilter: (role: 'all' | 'admin' | 'staff' | 'user') => void;
   fetchUsers: () => Promise<void>;
   handleSearch: () => void;
   resetSearch: () => void;
@@ -36,6 +38,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   pageSize: 10,
   searchQuery: '',
   searchInput: '',
+  roleFilter: 'all',
 
   // Actions
   setCurrentPage: (page: number) => {
@@ -49,15 +52,21 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   },
 
   setSearchQuery: (query: string) => {
-    set({ searchQuery: query });
+    set({ searchQuery: query, currentPage: 1 });
+    get().fetchUsers();
   },
 
   setSearchInput: (input: string) => {
     set({ searchInput: input });
   },
 
+  setRoleFilter: (role: 'all' | 'admin' | 'staff' | 'user') => {
+    set({ roleFilter: role, currentPage: 1 });
+    get().fetchUsers();
+  },
+
   fetchUsers: async () => {
-    const { currentPage, pageSize, searchQuery } = get();
+    const { currentPage, pageSize, searchQuery, roleFilter } = get();
     
     set({ isLoading: true, error: null });
     
@@ -66,6 +75,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
         page: currentPage,
         page_size: pageSize,
         search: searchQuery,
+        role: roleFilter,
       });
       set({ data, isLoading: false });
     } catch (error) {
@@ -78,8 +88,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
 
   handleSearch: () => {
     const { searchInput } = get();
-    set({ searchQuery: searchInput, currentPage: 1 });
-    get().fetchUsers();
+    get().setSearchQuery(searchInput);
   },
 
   resetSearch: () => {
@@ -96,6 +105,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
       pageSize: 10,
       searchQuery: '',
       searchInput: '',
+      roleFilter: 'all',
     });
   },
 }));

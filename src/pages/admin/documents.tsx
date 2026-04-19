@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 import type { ColumnDef } from '@tanstack/react-table';
+import type { DataTableControlChangeContext } from "@/components/ui/data-table";
 
 type AdminDoc = {
     id: string;
@@ -46,19 +47,17 @@ export default function AdminDocumentsPage() {
     const PAGE_SIZE = 20;
 
     const { data, isLoading } = useQuery<AdminDocsResponse>({
-        queryKey: ["adminDocuments", { page, search: searchQuery }],
-        queryFn: () => adminDocuments({ page, page_size: PAGE_SIZE, search: searchQuery }),
+        queryKey: ["adminDocuments", { page, search: searchQuery, type: typeFilter }],
+        queryFn: () => adminDocuments({
+            page,
+            page_size: PAGE_SIZE,
+            search: searchQuery,
+            type: typeFilter,
+        }),
         staleTime: 30_000,
     });
 
     const docs = data?.results ?? [];
-    const filteredDocs = useMemo(
-        () =>
-            docs.filter((doc) =>
-                typeFilter === 'all' ? true : typeFilter === 'paid' ? !doc.test : doc.test
-            ),
-        [docs, typeFilter]
-    );
     const totalPages = data?.total_pages ?? 1;
     const totalCount = data?.count ?? 0;
     const stats = data?.stats;
@@ -188,9 +187,9 @@ export default function AdminDocumentsPage() {
             key: 'type',
             label: 'Type',
             value: typeFilter,
-            onChange: (value: string) => {
+            onChange: (value: string, context: DataTableControlChangeContext) => {
                 setTypeFilter(value as 'all' | 'paid' | 'test');
-                setPage(1);
+                setPage(context.nextPage);
             },
             options: [
                 { label: 'All types', value: 'all' },
@@ -214,12 +213,12 @@ export default function AdminDocumentsPage() {
 
             <DataTable
                 columns={columns}
-                data={filteredDocs}
+                data={docs}
                 isLoading={isLoading}
                 searchValue={searchQuery}
-                onSearchChange={(value) => {
+                onSearchChange={(value, context: DataTableControlChangeContext) => {
                     setSearchQuery(String(value));
-                    setPage(1);
+                    setPage(context.nextPage);
                 }}
                 searchPlaceholder="Search by name, user, template, tracking..."
                 filters={filters}

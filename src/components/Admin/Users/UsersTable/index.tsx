@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useUsersStore } from '@/store/usersStore';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
@@ -9,12 +9,13 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ROLES } from '@/lib/constants/roles';
 import type { ColumnDef } from '@tanstack/react-table';
+import type { DataTableControlChangeContext } from '@/components/ui/data-table';
 
 interface UserData {
     pk: number;
     username: string;
     email: string;
-    role: string;
+    role?: string;
     date_joined: string;
     total_purchases: number;
     downloads: number;
@@ -30,11 +31,11 @@ export default function UsersTable() {
         currentPage,
         pageSize,
         searchInput,
-        searchQuery,
+        roleFilter,
         setCurrentPage,
         setSearchInput,
         setSearchQuery,
-        handleSearch,
+        setRoleFilter,
     } = useUsersStore();
 
     const handlePrefetchUser = (userId: string) => {
@@ -44,20 +45,7 @@ export default function UsersTable() {
         });
     };
 
-    const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'staff' | 'user'>('all');
-
     const users = data?.users?.results || [];
-    const filteredUsers = useMemo(
-        () =>
-            users.filter((user) =>
-                roleFilter === 'all'
-                    ? true
-                    : roleFilter === 'user'
-                    ? user.role !== 'admin' && user.role !== 'staff'
-                    : user.role === roleFilter
-            ),
-        [users, roleFilter]
-    );
 
     const totalPages = data?.users?.total_pages || 1;
     const totalUsers = data?.users?.count || 0;
@@ -97,19 +85,14 @@ export default function UsersTable() {
                 cell: ({ row }) => (
                     <div className="flex flex-col gap-1.5">
                         <div className={cn(
-                            'px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-[0.05em] w-fit uppercase flex items-center gap-1.5',
+                            'px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-[0.05em] w-fit uppercase',
                             row.original.role === ROLES.ADMIN ? 'bg-primary/10 text-primary border border-primary/20' :
                             row.original.role === ROLES.STAFF ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
                             'bg-white/5 text-white/50 border border-white/10'
                         )}>
-                            <div className={cn('w-1.5 h-1.5 rounded-full',
-                                row.original.role === ROLES.ADMIN ? 'bg-primary' :
-                                row.original.role === ROLES.STAFF ? 'bg-amber-500' :
-                                'bg-white/20'
-                            )} />
-                            {row.original.role === ROLES.ADMIN ? 'Admin Access' :
-                             row.original.role === ROLES.STAFF ? 'Staff Member' :
-                             'Standard User'}
+                            {row.original.role === ROLES.ADMIN ? 'Admin' :
+                             row.original.role === ROLES.STAFF ? 'Staff' :
+                             'User'}
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] font-medium text-white/20">
                             <Calendar className="w-3 h-3" />
@@ -186,12 +169,12 @@ export default function UsersTable() {
             key: 'role',
             label: 'Role',
             value: roleFilter,
-            onChange: (value: string) => setRoleFilter(value as 'all' | 'admin' | 'staff' | 'user'),
+            onChange: (value: string, _context: DataTableControlChangeContext) => setRoleFilter(value as 'all' | 'admin' | 'staff' | 'user'),
             options: [
                 { label: 'All roles', value: 'all' },
                 { label: 'Admin', value: 'admin' },
                 { label: 'Staff', value: 'staff' },
-                { label: 'Standard user', value: 'user' },
+                { label: 'User', value: 'user' },
             ],
             placeholder: 'Role',
         },
@@ -199,7 +182,6 @@ export default function UsersTable() {
 
     const handleSearchInput = (value: string) => {
         setSearchInput(value);
-        setCurrentPage(1);
         setSearchQuery(value);
     };
 
@@ -219,22 +201,12 @@ export default function UsersTable() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                    <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/20 rounded-full hidden md:block" />
-                    <h2 className="text-xl font-semibold text-white">All users</h2>
-                    <span className="px-3 py-1 rounded-full bg-white/10 text-white/60 text-xs font-bold tracking-tight">
-                        {totalUsers} total
-                    </span>
-                </div>
-            </div>
-
             <DataTable
                 columns={columns}
-                data={filteredUsers}
+                data={users}
                 isLoading={isLoading}
                 searchValue={searchInput}
-                onSearchChange={(value) => handleSearchInput(String(value))}
+                onSearchChange={(value, _context: DataTableControlChangeContext) => handleSearchInput(String(value))}
                 searchPlaceholder="Filter by name or email..."
                 filters={filters}
                 emptyMessage="No users found."

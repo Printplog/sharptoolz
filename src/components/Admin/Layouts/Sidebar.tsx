@@ -191,7 +191,7 @@ export default function Sidebar() {
                       "w-full transition-all duration-300 py-2 flex items-center text-sm",
                       isCollapsed ? "justify-center px-0" : "justify-between px-6",
                       pathname.startsWith(item.to)
-                        ? "bg-primary/10 text-primary hover:bg-primary/10"
+                        ? "!rounded-none bg-primary/10 text-primary hover:bg-primary/10"
                         : "text-white/60 hover:bg-white/5 hover:text-white"
                     )}
                     title={isCollapsed ? item.label : ""}
@@ -219,7 +219,7 @@ export default function Sidebar() {
                             className={cn(
                               "w-full justify-start transition-colors py-1.5 px-4 flex items-center text-xs",
                               pathname === subitem.to
-                                ? "text-primary"
+                                ? "!rounded-none text-primary"
                                 : "text-white/60 hover:text-white"
                             )}
                           >
@@ -240,7 +240,7 @@ export default function Sidebar() {
                       "w-full transition-all duration-300 py-2 flex items-center text-sm relative group",
                       isCollapsed ? "justify-center px-0" : "justify-start px-6",
                       isActive
-                        ? "bg-primary/10 text-primary hover:bg-primary/10"
+                        ? "!rounded-none bg-primary/10 text-primary hover:bg-primary/10"
                         : "text-white/60 hover:bg-white/5 hover:text-white"
                     )}
                     title={isCollapsed ? item.label : ""}

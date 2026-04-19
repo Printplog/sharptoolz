@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Clock3, Globe2, Route, ShieldCheck, UserRound } from "lucide-react";
+import { Activity, Clock3, ShieldCheck, UserRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,17 +39,27 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
           </div>
           <Skeleton className="h-8 w-28 rounded-full bg-white/10" />
         </CardHeader>
-        <CardContent className="grid gap-4 lg:grid-cols-2">
+        <CardContent className="space-y-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-4 w-24 bg-white/10" />
-                <Skeleton className="h-6 w-20 rounded-full bg-white/10" />
-              </div>
-              <Skeleton className="h-5 w-3/4 bg-white/10" />
-              <div className="grid grid-cols-2 gap-2">
-                <Skeleton className="h-14 bg-white/10 rounded-xl" />
-                <Skeleton className="h-14 bg-white/10 rounded-xl" />
+            <div key={index} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-2xl bg-white/10" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32 bg-white/10" />
+                    <Skeleton className="h-3 w-24 bg-white/10" />
+                  </div>
+                </div>
+                <div className="min-w-0 flex-[1.4] space-y-2">
+                  <Skeleton className="h-3 w-20 bg-white/10" />
+                  <Skeleton className="h-4 w-full bg-white/10" />
+                </div>
+                <div className="flex flex-wrap gap-2 lg:justify-end">
+                  <Skeleton className="h-7 w-18 rounded-full bg-white/10" />
+                  <Skeleton className="h-7 w-16 rounded-full bg-white/10" />
+                  <Skeleton className="h-7 w-24 rounded-full bg-white/10" />
+                  <Skeleton className="h-7 w-28 rounded-full bg-white/10" />
+                </div>
               </div>
             </div>
           ))}
@@ -84,78 +94,57 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
           {data.length} unique visitors
         </Badge>
       </CardHeader>
-      <CardContent className="grid gap-4 lg:grid-cols-2">
+      <CardContent className="space-y-3">
         {data.map((visitor, index) => (
           <div
             key={`${visitor.ip_address || "guest"}-${visitor.timestamp}-${index}`}
             className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:bg-white/[0.05]"
           >
-            <div className="flex flex-col gap-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70">
-                      {visitor.user__username ? <ShieldCheck className="h-4 w-4" /> : <UserRound className="h-4 w-4" />}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-white">
-                        {visitor.user__username || "Guest visitor"}
-                      </p>
-                      <p className="truncate text-xs text-white/35">
-                        {visitor.ip_address || "Unknown IP"}
-                      </p>
-                    </div>
-                  </div>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/70">
+                  {visitor.user__username ? <ShieldCheck className="h-4 w-4" /> : <UserRound className="h-4 w-4" />}
                 </div>
-
-                <div className="text-right">
-                  <p className="text-xs font-semibold text-white/70">
-                    {formatAdminRelativeTime(visitor.timestamp)}
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-white">
+                    {visitor.user__username || "Guest visitor"}
                   </p>
-                  <p className="text-[11px] text-white/35">
-                    {formatAdminDateTime(visitor.timestamp)} UTC
+                  <p className="truncate text-xs text-white/35">
+                    {visitor.ip_address || "Unknown IP"}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-                <div className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/35">
-                  <Route className="h-3 w-3" />
-                  Last Path
-                </div>
+              <div className="min-w-0 flex-[1.4]">
+                <p className="mb-1 text-[11px] uppercase tracking-[0.18em] text-white/35">
+                  Last path
+                </p>
                 <p className="truncate text-sm text-white" title={visitor.path}>
                   {visitor.path}
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                  <p className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/35">
-                    <Activity className="h-3 w-3" />
-                    Hits
-                  </p>
-                  <p className="text-lg font-bold text-white">{visitor.visit_count}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                  <p className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/35">
-                    <Clock3 className="h-3 w-3" />
-                    Method
-                  </p>
-                  <Badge className={`border ${getMethodClass(visitor.method)}`}>
-                    {visitor.method}
-                  </Badge>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                  <p className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/35">
-                    <Globe2 className="h-3 w-3" />
-                    Type
-                  </p>
-                  <p className="text-sm font-semibold text-white">
-                    {visitor.user__username ? "Signed in" : "Guest"}
-                  </p>
-                </div>
+              <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                <Badge className={`border ${getMethodClass(visitor.method)}`}>
+                  {visitor.method}
+                </Badge>
+                <Badge className="border-white/10 bg-white/5 text-white/75">
+                  <Activity className="mr-1 h-3 w-3" />
+                  {visitor.visit_count} hits
+                </Badge>
+                <Badge className="border-white/10 bg-white/5 text-white/75">
+                  {visitor.user__username ? "Signed in" : "Guest"}
+                </Badge>
+                <Badge className="border-white/10 bg-white/5 text-white/70">
+                  <Clock3 className="mr-1 h-3 w-3" />
+                  {formatAdminRelativeTime(visitor.timestamp)}
+                </Badge>
               </div>
             </div>
+
+            <p className="mt-3 text-[11px] text-white/35 lg:text-right">
+              {formatAdminDateTime(visitor.timestamp)} UTC
+            </p>
           </div>
         ))}
       </CardContent>

@@ -119,7 +119,7 @@ export default function Sidebar() {
                 className={cn(
                   "w-full justify-start transition-colors py-2 px-4 flex items-center text-sm rounded-lg",
                   isActive
-                    ? "bg-primary/10 text-primary border-r-2 border-primary"
+                    ? "!rounded-none bg-primary/10 text-primary border-r-2 border-primary"
                     : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
                 )}
               >
@@ -159,7 +159,7 @@ export default function Sidebar() {
                     className={cn(
                       "w-full text-left py-2 px-4 flex items-center text-xs rounded-lg transition-all group",
                       currentSessionId === session.id
-                        ? "bg-primary/10 text-primary"
+                        ? "!rounded-none bg-primary/10 text-primary"
                         : "text-foreground/60 hover:bg-white/5 hover:text-foreground"
                     )}
                   >
