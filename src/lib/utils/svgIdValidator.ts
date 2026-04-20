@@ -26,22 +26,28 @@ export function validateSvgId(id: string): ValidationResult {
   let cleanId = id;
   let hasLinkWithUrl = false;
 
-  if (id.includes(".link_\"")) {
+  if (id.includes(".link_")) {
+    if (!id.includes(".link_\"")) {
+      return { valid: false, error: "❌ Use quotes for links: .link_\"https://...\"", parts: [], baseId: id };
+    }
+
     const linkIndex = id.indexOf(".link_\"");
     const urlStart = linkIndex + 7; // len(".link_\"")
     const urlEnd = id.indexOf("\"", urlStart);
 
-    if (urlEnd !== -1) {
-      const linkValue = id.substring(urlStart, urlEnd);
-      hasLinkWithUrl = linkValue.length > 0;
-      // Remove the link portion .link_"URL"
-      cleanId = id.substring(0, linkIndex) + id.substring(urlEnd + 1);
+    if (urlEnd === -1) {
+      return { valid: false, error: "❌ Missing closing quote for .link_\"...\"", parts: [], baseId: id };
     }
-  } else if (id.includes(".link_")) {
-    const linkIndex = id.indexOf(".link_");
-    const linkValue = id.substring(linkIndex + 6); // URL after '.link_'
-    hasLinkWithUrl = linkValue.length > 0; // Must have URL after .link_
-    cleanId = id.substring(0, linkIndex); // Remove .link_ and URL for validation
+
+    // Check if there's non-quote content between link_ and "
+    if (id[linkIndex + 6] !== "\"") {
+      return { valid: false, error: "❌ Use quotes immediately after .link_: .link_\"https://...\"", parts: [], baseId: id };
+    }
+
+    const linkValue = id.substring(urlStart, urlEnd);
+    hasLinkWithUrl = linkValue.length > 0;
+    // Remove the link portion .link_"URL"
+    cleanId = id.substring(0, linkIndex) + id.substring(urlEnd + 1);
   }
 
   // 1. Mandatory Extension Rule
