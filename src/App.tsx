@@ -28,8 +28,7 @@ export default function App() {
       disableCopyPaste: true,
       detectDebugger: true,
       disablePrintScreen: true,
-      aggressiveDetection: true,
-      detectDevToolsByDimensions: true,
+      aggressiveDetection: true
     })
   }, [isAdminOnlyUser])
 
