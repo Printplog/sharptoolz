@@ -294,7 +294,7 @@ export default function ReviewsSection() {
           </h2>
           <p className="text-white/40 max-w-2xl mx-auto text-lg leading-relaxed font-medium">
             Join thousands of people generating professional-grade documents 
-            through the Form Studio platform. Real feedback from our community.
+            through the SharpToolz platform. Real feedback from our community.
           </p>
         </div>
 

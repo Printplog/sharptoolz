@@ -31,21 +31,36 @@ export default function AuthLayout() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center px-6 py-10">
+      <div className="flex-1 flex flex-col items-center justify-start lg:justify-center px-6 pt-12 pb-20 relative overflow-hidden">
+        {/* Mobile Background Grid Pattern (Top & Bottom) */}
+        <div 
+          className="lg:hidden absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, rgba(255,255,255,0.2) 1.5px, transparent 1.5px),
+              linear-gradient(to bottom, rgba(255,255,255,0.2) 1.5px, transparent 1.5px)
+            `,
+            backgroundSize: "50px 50px",
+            maskImage: "linear-gradient(to bottom, black 0%, transparent 25%, transparent 70%, black 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 25%, transparent 70%, black 100%)",
+            opacity: 0.25
+          }}
+        />
+
         <motion.main
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
-          className="w-full max-w-sm text-white"
+          className="w-full max-w-sm text-white relative z-10"
         >
           <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/")}
-            className="flex items-center gap-1.5 mb-10 text-sm text-white/40 hover:text-white/70 transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-white/10 bg-white/5 mb-10 text-white/40 hover:text-white hover:border-white/20 transition-all shadow-lg"
+            title="Go back"
           >
-            <ArrowLeft size={15} />
-            Back
+            <ArrowLeft size={18} />
           </motion.button>
 
           <motion.div

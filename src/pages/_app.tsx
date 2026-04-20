@@ -3,6 +3,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import ScrollToTop from '@/components/ScrollToTop'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import SEO from '@/components/SEO'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 export default function App() {
   return (
@@ -10,7 +11,9 @@ export default function App() {
       <SEO />
       <ScrollToTop />
       <WhatsAppButton />
-      <Outlet />
+      <ErrorBoundary>
+        <Outlet />
+      </ErrorBoundary>
     </HelmetProvider>
   )
 }

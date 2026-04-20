@@ -6,7 +6,7 @@ import type { SiteSettings } from "@/types";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../Logo";
 import { useAuthStore } from "@/store/authStore";
-import { User, ArrowRight, X, ArrowUpRight, ExternalLink } from "lucide-react";
+import { User, ArrowRight, X, ArrowUpRight } from "lucide-react";
 import { PremiumButton } from "../ui/PremiumButton";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 
@@ -145,18 +145,18 @@ export default function Navbar() {
             
             <SectionPadding className="min-h-screen py-10 flex flex-col">
               {/* Overlay Top Bar */}
-              <div className="flex justify-between items-center mb-16 relative z-10">
+              <div className="flex justify-between items-center mb-12 relative z-10">
                 <Logo />
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="w-14 h-14 flex items-center justify-center rounded-3xl bg-white/5 border border-white/10 hover:border-primary/40 hover:rotate-90 transition-all duration-500"
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:border-primary/40 hover:rotate-90 transition-all duration-500"
                 >
-                  <X className="w-6 h-6 text-white" />
+                  <X className="w-5 h-5 text-white" />
                 </button>
               </div>
 
               {/* Navigation Links */}
-              <div className="flex flex-col gap-6 relative z-10 mb-16">
+              <div className="flex flex-col gap-4 relative z-10 mb-12">
                 {navLinks.map((link, index) => (
                   <motion.div
                     key={index}
@@ -168,61 +168,56 @@ export default function Navbar() {
                       to={link.href}
                       target={link.isExternal ? "_blank" : "_self"}
                       onClick={() => setIsMenuOpen(false)}
-                      className="group flex items-center justify-between py-2 border-b border-white/5"
+                      className="group flex items-center justify-between py-1.5 border-b border-white/5"
                     >
-                      <h2 className={`text-4xl font-fancy font-medium uppercase italic tracking-tighter ${
+                      <h2 className={`text-2xl font-fancy font-medium uppercase italic tracking-tighter ${
                         link.href === pathname ? "text-primary" : "text-white/40 group-hover:text-white"
                       }`}>
                         {link.label}
                       </h2>
-                      <ArrowUpRight className={`w-8 h-8 ${link.href === pathname ? "text-primary" : "text-white/10 group-hover:text-primary"} transition-all group-hover:rotate-45`} />
+                      <ArrowUpRight className={`w-5 h-5 ${link.href === pathname ? "text-primary" : "text-white/10 group-hover:text-primary"} transition-all group-hover:rotate-45`} />
                     </Link>
                   </motion.div>
                 ))}
               </div>
 
               {/* Auth Footer Actions */}
-              <div className="mt-auto pt-10 border-t border-white/5 flex flex-col gap-6 relative z-10">
+              <div className="mt-auto pt-8 border-t border-white/5 flex flex-col gap-3 relative z-10">
                 {isAuthenticated ? (
                   <PremiumButton 
                     text="Access Dashboard" 
                     icon={User} 
                     href="/dashboard" 
                     variant="ghost" 
-                    className="w-full h-16 text-lg font-medium"
+                    className="w-full h-12 text-xs font-bold uppercase tracking-widest"
                     noShadow={true}
                     onClick={() => setIsMenuOpen(false)}
                   />
                 ) : (
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-3">
                     <PremiumButton 
-                      text="Launch Session" 
+                      text="Register" 
                       icon={ArrowRight} 
                       href="/auth/register" 
                       variant="primary" 
-                      className="w-full h-16 text-lg font-medium"
+                      className="w-full h-12 text-xs font-bold uppercase tracking-widest"
                       noShadow={true}
                       onClick={() => setIsMenuOpen(false)}
                     />
-                    <div className="flex gap-4">
-                      <PremiumButton 
-                        text="Login" 
-                        icon={ArrowRight} 
-                        href="/auth/login" 
-                        variant="ghost" 
-                        className="flex-1 h-16 bg-white/5 border border-white/10"
-                        noShadow={true}
-                        onClick={() => setIsMenuOpen(false)}
-                      />
-                      <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
-                        <ExternalLink className="w-6 h-6 text-white/20" />
-                      </div>
-                    </div>
+                    <PremiumButton 
+                      text="Login" 
+                      icon={ArrowRight} 
+                      href="/auth/login" 
+                      variant="ghost" 
+                      className="w-full h-12 text-xs font-bold uppercase tracking-widest bg-white/5 border border-white/10"
+                      noShadow={true}
+                      onClick={() => setIsMenuOpen(false)}
+                    />
                   </div>
                 )}
                 
                 <p className="text-center text-white/10 font-bold uppercase tracking-[0.3em] text-[10px] mt-8">
-                  Form Studio - Premium Workflow
+                  SharpToolz - Premium Workflow
                 </p>
               </div>
             </SectionPadding>

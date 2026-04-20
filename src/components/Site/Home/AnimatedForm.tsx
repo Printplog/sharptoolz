@@ -186,7 +186,7 @@ export default function AnimatedFormSection() {
           </div>
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/30 font-medium text-[10px] uppercase tracking-[0.2em]">
             <Sparkles className="w-3 h-3" />
-            Form Studio
+            SharpToolz
           </div>
         </div>
 
@@ -391,7 +391,7 @@ export default function AnimatedFormSection() {
              </div>
              <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px]">
                 <Sparkles className="w-3 h-3" />
-                Form Studio
+                SharpToolz
              </div>
           </div>
         </div>
