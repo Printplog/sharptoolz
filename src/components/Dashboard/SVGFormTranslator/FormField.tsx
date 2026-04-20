@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -468,16 +469,18 @@ const FormFieldComponent: React.FC<{
 
       case "checkbox":
         return (
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id={field.id}
-              checked={value as boolean}
-              onCheckedChange={handleChange}
-              className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black"
-              disabled={isFieldDisabled}
-            />
-            <label htmlFor={field.id} className="text-sm font-medium text-white flex items-center">
+          <div
+            onClick={() => !isFieldDisabled && handleChange(!value)}
+            className={cn(
+              "flex items-center justify-between px-6 py-4 rounded-full border border-white/10",
+              "bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 group",
+              isFieldDisabled && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">
               {field.name}
+            </span>
+            <div className="flex items-center gap-3">
               {field.helperText && (
                 <FieldHelper
                   fieldName={field.name}
@@ -485,23 +488,39 @@ const FormFieldComponent: React.FC<{
                   tutorialUrl={tutorial?.url}
                 />
               )}
-            </label>
+              <Checkbox
+                id={field.id}
+                checked={value as boolean}
+                onCheckedChange={handleChange}
+                className="size-5 border-white/20 data-[state=checked]:bg-primary data-[state=checked]:text-black"
+                onClick={(e) => e.stopPropagation()}
+                disabled={isFieldDisabled}
+              />
+            </div>
           </div>
         );
 
       case "hide":
         return (
-          <div className="flex items-center space-x-2">
+          <div
+            onClick={() => !isFieldDisabled && handleChange(!value)}
+            className={cn(
+              "flex items-center justify-between px-6 py-4 rounded-full border border-white/10",
+              "bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 group",
+              isFieldDisabled && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">
+              {field.name}
+            </span>
             <Checkbox
               id={field.id}
               checked={value as boolean}
               onCheckedChange={handleChange}
-              className="border-white/20 data-[state=checked]:bg-white data-[state=checked]:text-black"
+              className="size-5 border-white/20 data-[state=checked]:bg-primary data-[state=checked]:text-black"
+              onClick={(e) => e.stopPropagation()}
               disabled={isFieldDisabled}
             />
-            <label htmlFor={field.id} className="text-sm font-medium text-white">
-              {`${field.name}`}
-            </label>
           </div>
         );
 
