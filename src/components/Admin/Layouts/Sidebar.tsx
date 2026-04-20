@@ -17,6 +17,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -26,6 +27,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useSidebarStore } from "@/store/sidebarStore";
 import { ROLES } from "@/lib/constants/roles";
 import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavigationItem {
   icon: React.ReactNode;
@@ -38,7 +40,7 @@ export default function Sidebar() {
   const { pathname } = useLocation();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const { isCollapsed, toggleCollapsed } = useSidebarStore();
+  const { isCollapsed, toggleCollapsed, isOpen, close } = useSidebarStore();
 
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const defaultDays = 1;
@@ -137,19 +139,26 @@ export default function Sidebar() {
     },
   ];
 
-  return (
-    <aside
-      className={cn(
-        "bg-white/5 border-r border-white/10 h-full lg:flex hidden flex-col py-10 z-10 transition-all duration-500 ease-in-out relative",
-        isCollapsed ? "w-20" : "w-64"
-      )}
-    >
-      {/* Collapse Toggle Button */}
+  const sidebarContent = (
+    <>
+      {/* Mobile Close Button - Only visible on mobile header area */}
+      <div className="lg:hidden absolute right-4 top-10 z-[52]">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={close}
+          className="size-10 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white"
+        >
+          <X className="size-5" />
+        </Button>
+      </div>
+
+      {/* Collapse Toggle Button - Desktop Only */}
       <Button
         variant="ghost"
         size="icon"
         onClick={toggleCollapsed}
-        className="absolute -right-3 top-12 size-6 rounded-full border border-white/10 bg-[#0A0A0B] text-white/60 hover:text-white hover:bg-white/10 z-20 transition-all duration-300"
+        className="hidden lg:flex absolute -right-3 top-12 size-6 rounded-full border border-white/10 bg-[#121214] text-white/60 hover:text-white hover:bg-white/10 z-20 transition-all duration-300"
       >
         {isCollapsed ? <ChevronRight className="size-3" /> : <ChevronLeft className="size-3" />}
       </Button>
@@ -224,8 +233,8 @@ export default function Sidebar() {
                             className={cn(
                               "w-full justify-start transition-colors py-1.5 px-4 flex items-center text-xs",
                               pathname === subitem.to
-                                ? "!rounded-none text-primary"
-                                : "text-white/60 hover:text-white"
+                                ? "rounded-r-full text-primary"
+                                : "text-white/60 hover:text-white hover:rounded-r-full"
                             )}
                           >
                             {subitem.label}
@@ -238,6 +247,9 @@ export default function Sidebar() {
               ) : (
                 <Link
                   to={item.to}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) close();
+                  }}
                   onMouseEnter={() => handlePrefetch(item.to)}
                 >
                   <button
@@ -245,8 +257,8 @@ export default function Sidebar() {
                       "w-full transition-all duration-300 py-2 flex items-center text-sm relative group",
                       isCollapsed ? "justify-center px-0" : "justify-start px-6",
                       isActive
-                        ? "!rounded-none bg-primary/10 text-primary hover:bg-primary/10"
-                        : "text-white/60 hover:bg-white/5 hover:text-white"
+                        ? "rounded-r-full bg-primary/10 text-primary hover:bg-primary/10"
+                        : "text-white/60 hover:bg-white/5 hover:text-white hover:rounded-r-full"
                     )}
                     title={isCollapsed ? item.label : ""}
                   >
@@ -268,6 +280,51 @@ export default function Sidebar() {
           );
         })}
       </nav>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      <AnimatePresence>
+        {/* Mobile Sidebar */}
+        {isOpen && (
+          <>
+            {/* Mobile Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] lg:hidden"
+              onClick={close}
+            />
+
+            {/* Mobile Sidebar Content */}
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ 
+                delay: 0.1, 
+                duration: 0.2, 
+                ease: [0.4, 0, 0.2, 1] 
+              }}
+              className="fixed inset-y-0 left-0 w-64 bg-background border-r border-white/10 h-full flex flex-col py-10 z-[41] lg:hidden"
+            >
+              {sidebarContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Sidebar */}
+      <aside
+        className={cn(
+          "border-r border-white/10 h-full hidden lg:flex flex-col py-10 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] relative bg-white/5",
+          isCollapsed ? "w-20" : "w-64"
+        )}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

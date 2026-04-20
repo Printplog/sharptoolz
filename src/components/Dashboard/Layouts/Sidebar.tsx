@@ -117,12 +117,15 @@ export default function Sidebar() {
             <Link to={item.to} key={item.to} className="block">
               <button
                 className={cn(
-                  "w-full justify-start transition-colors py-2 px-4 flex items-center text-sm rounded-lg",
+                  "w-full justify-start transition-colors py-2 px-4 flex items-center text-sm relative overflow-hidden",
                   isActive
-                    ? "!rounded-none bg-primary/10 text-primary border-r-2 border-primary"
-                    : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
+                    ? "rounded-r-full bg-primary/10 text-primary"
+                    : "text-foreground/70 hover:bg-white/5 hover:text-foreground hover:rounded-r-full"
                 )}
               >
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] animate-in fade-in duration-500" />
+                )}
                 {item.icon}
                 <span className="ml-2">{item.label}</span>
               </button>
@@ -157,12 +160,15 @@ export default function Sidebar() {
                     key={session.id}
                     onClick={() => handleSessionClick(session)}
                     className={cn(
-                      "w-full text-left py-2 px-4 flex items-center text-xs rounded-lg transition-all group",
+                      "w-full text-left py-2 px-4 flex items-center text-xs transition-all group relative overflow-hidden",
                       currentSessionId === session.id
-                        ? "!rounded-none bg-primary/10 text-primary"
-                        : "text-foreground/60 hover:bg-white/5 hover:text-foreground"
+                        ? "rounded-r-full bg-primary/10 text-primary"
+                        : "text-foreground/60 hover:bg-white/5 hover:text-foreground hover:rounded-r-full"
                     )}
                   >
+                    {currentSessionId === session.id && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] animate-in fade-in duration-500" />
+                    )}
                     <MessageSquare className={cn(
                       "h-3 w-3 mr-2 shrink-0",
                       currentSessionId === session.id ? "text-primary" : "text-foreground/30 group-hover:text-foreground/60"

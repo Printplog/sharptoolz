@@ -1,4 +1,3 @@
-import BottomBar from "@/components/Admin/Layouts/BottomBar";
 import Navbar from "@/components/Admin/Layouts/Navbar";
 import Sidebar from "@/components/Admin/Layouts/Sidebar";
 import GlobalAnnouncement from "@/components/Dashboard/Layouts/GlobalAnnouncement";
@@ -46,7 +45,6 @@ export default function AdminLayout() {
           </div>
         </main>
         <BuilderDialog />
-        <BottomBar />
       </div>
     </ProtectedLayout>
   );

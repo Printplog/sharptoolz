@@ -76,7 +76,7 @@ export default function AdminSvgFormTranslator({
         onClick={() => {
           toast.info("Create Document feature is available in the Editor tab");
         }}
-        className="py-6 px-10 hover:bg-black/50 hover:text-white"
+        className="py-6 px-10 hover:bg-black/50 hover:text-white rounded-full"
       >
         <>
           Create Document
@@ -91,7 +91,7 @@ export default function AdminSvgFormTranslator({
             downloadButton.click();
           }
         }}
-        className="py-6 px-10 bg-primary/90 text-black hover:bg-primary hover:text-black w-full sm:w-auto"
+        className="py-6 px-10 bg-primary/90 text-black hover:bg-primary hover:text-black w-full sm:w-auto rounded-full"
       >
         <>
           Download Document

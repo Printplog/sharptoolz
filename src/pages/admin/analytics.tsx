@@ -127,8 +127,8 @@ export default function Analytics() {
 
   return (
     <div className="dashboard-content space-y-6 text-white">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+        <div className="space-y-4">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
               Platform <span className="text-primary">Analytics</span>
@@ -138,16 +138,16 @@ export default function Analytics() {
             </p>
           </div>
           
-          {/* Live Badge */}
-          <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full animate-pulse">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+          {/* Live Badge - Now under title */}
+          <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full animate-pulse whitespace-nowrap w-fit">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)] shrink-0" />
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest leading-none">
               {summary?.online_now ?? 0} Live
             </span>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-3">
           {/* Date Picker */}
           <div className="relative group">
             <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />
@@ -162,7 +162,7 @@ export default function Analytics() {
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
+          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 overflow-x-auto custom-scrollbar no-scrollbar">
             {RANGES.map((r) => (
               <button
                 key={r.days}
@@ -170,7 +170,7 @@ export default function Analytics() {
                   setDays(r.days);
                   setDate("");
                 }}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${
                   days === r.days
                     ? "bg-primary text-black shadow"
                     : "text-white/50 hover:text-white hover:bg-white/5"

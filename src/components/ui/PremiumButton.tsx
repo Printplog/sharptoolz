@@ -30,7 +30,7 @@ const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonProps>(
           </span>
           <div className={cn(
             "flex items-center justify-center w-8 h-8 rounded-full bg-transparent transition-colors duration-300",
-            isPrimary ? "border border-black/20" : "border border-white/30",
+            isPrimary ? "border border-black/40" : "border border-white/60",
             !showIconBorder && "border-none"
           )}>
             {isLoading ? (

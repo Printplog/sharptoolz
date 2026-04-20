@@ -110,7 +110,7 @@ export default function ToolCard({ tool }: Props) {
             <div className="flex-1">
               <Button
                 onClick={handleModifyClick}
-                className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+                className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-full font-black text-[10px] uppercase tracking-widest transition-all"
               >
                 <Pencil className="h-3.5 w-3.5 mr-2" />
                 Modify Template
@@ -126,7 +126,7 @@ export default function ToolCard({ tool }: Props) {
                   <Button
                     disabled={isPending}
                     variant="ghost"
-                    className="h-11 w-11 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl"
+                    className="h-11 w-11 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-full"
                   >
                     {isPending ? (
                       <Loader className="h-4 w-4 animate-spin" />

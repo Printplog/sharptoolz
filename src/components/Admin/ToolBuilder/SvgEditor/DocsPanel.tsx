@@ -119,7 +119,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
           <span>{example.title}</span>
           <button
             onClick={handleCopy}
-            className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white/60 hover:text-white"
+            className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-white/60 hover:text-white"
             title="Copy code"
           >
             <Copy className="w-3.5 h-3.5" />
@@ -203,7 +203,7 @@ export default function DocsPanel({ activeSection }: DocsPanelProps) {
               variant="ghost"
               size="icon"
               onClick={() => setSearchQuery("")}
-              className="hover:bg-white/10"
+              className="hover:bg-white/10 rounded-full"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 6 6 18" /><path d="m6 6 12 12" />

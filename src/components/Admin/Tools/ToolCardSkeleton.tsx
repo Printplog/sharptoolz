@@ -25,10 +25,9 @@ export default function ToolCardSkeleton() {
 
                 {/* Bottom Action Area */}
                 <div className="flex items-center justify-between gap-4 pt-4 border-t border-white/10">
-                    <Skeleton className="h-11 flex-1 bg-white/10 rounded-xl" />
-                    <Skeleton className="h-11 w-11 bg-white/5 rounded-xl shrink-0" />
-                </div>
-            </div>
+                  <Skeleton className="h-11 flex-1 bg-white/10 rounded-full" />
+                  <Skeleton className="h-11 w-11 bg-white/5 rounded-full shrink-0" />
+                </div>            </div>
         </Card>
     );
 }

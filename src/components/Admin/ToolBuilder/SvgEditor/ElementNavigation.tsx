@@ -102,7 +102,7 @@ const SortableElementButton = memo(({
         onClick={() => onElementClick(originalIndex)}
         variant={isSelected ? "default" : "outline"}
         size="sm"
-        className={`text-xs h-8 w-full px-1 flex items-center gap-1 justify-start transition-all ${isOver ? 'border-primary border-2 shadow-lg shadow-primary/50' : ''
+        className={`text-xs h-8 w-full px-1 flex items-center gap-1 justify-start transition-all rounded-full ${isOver ? 'border-primary border-2 shadow-lg shadow-primary/50' : ''
           } ${extraClasses}`}
         title={`${element.tag} element${element.id ? ` (ID: ${element.id})` : ''} - Position ${originalIndex + 1}`}
       >
@@ -239,7 +239,7 @@ function GroupButton({
         onClick={onToggle}
         variant={isExpanded ? "default" : "outline"}
         size="sm"
-        className="text-xs h-8 w-full px-1 flex items-center gap-1 justify-start"
+        className="text-xs h-8 w-full px-1 flex items-center gap-1 justify-start rounded-full"
       >
         <span
           className="cursor-grab hover:bg-white/10 px-1 py-1 rounded text-xs leading-none"
@@ -432,7 +432,7 @@ function ElementNavigationComponent({
           <DragOverlay dropAnimation={null}>
             {activeElementId && draggedElement ? (
               <div className="opacity-90 cursor-grabbing">
-                <Button variant="default" size="sm" className="h-8 gap-2 shadow-2xl border-2 border-primary/50 ring-4 ring-primary/20">
+                <Button variant="default" size="sm" className="h-8 gap-2 shadow-2xl border-2 border-primary/50 ring-4 ring-primary/20 rounded-full">
                   <span className="text-xs">⋮⋮</span>
                   <span className="truncate max-w-[150px]">{draggedElement.id || draggedElement.tag}</span>
                 </Button>

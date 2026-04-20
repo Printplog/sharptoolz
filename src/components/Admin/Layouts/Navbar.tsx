@@ -5,35 +5,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
-import { LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
+import { LogOut, LayoutDashboard, ChevronDown, AlignLeft } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { ROLES, getRoleLabel } from "@/lib/constants/roles";
 import { useLogout } from "@/hooks/useLogout";
+import { useSidebarStore } from "@/store/sidebarStore";
+import { Button } from "@/components/ui/button";
 
 export default function Navbar() {
   const { user } = useAuthStore()
   const { logout, isPending } = useLogout();
+  const { toggle } = useSidebarStore();
 
 
   return (
     <header className="flex items-center justify-between py-5 border-b border-white/10 bg-white/5 px-5 sticky top-0 backdrop-blur-2xl z-[9]">
-      {/* Left Side - Title */}
+      {/* Left Side - Title & Mobile Menu Toggle */}
       <div className="flex items-center gap-5">
-        <h2 className="text-lg font-semibold">Hey {user?.username?.toUpperCase()} 👋</h2>
-
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggle}
+          className="lg:hidden h-10 w-10 rounded-full border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 transition-all"
+        >
+          <AlignLeft className="h-5 w-5" />
+        </Button>
+        <h2 className="text-lg font-semibold lg:block hidden">Hey {user?.username?.toUpperCase()} 👋</h2>
+        <h2 className="text-sm font-semibold lg:hidden block">Hey {user?.username?.split(' ')[0].toUpperCase()} 👋</h2>
       </div>
       {/* Right Side - User Menu */}
       <div className="flex items-center gap-4">
-        {/* Role Badge */}
-        {user?.role && (
-          <div className={
-            user.role === ROLES.ADMIN ? "bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" :
-              user.role === ROLES.STAFF ? "bg-amber-500/20 text-amber-500 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" :
-                "bg-white/10 text-white/50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
-          }>
-            {getRoleLabel(user.role)}
-          </div>
-        )}
 
         {/* Dropdown Menu for User Actions */}
         <DropdownMenu>

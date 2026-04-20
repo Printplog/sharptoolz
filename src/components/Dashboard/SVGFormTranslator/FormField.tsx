@@ -332,7 +332,7 @@ const FormFieldComponent: React.FC<{
                 <Button
                   type="button"
                   onClick={() => handleChange(generateFieldValue())}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full"
                   disabled={isFieldDisabled}
                   title="Regenerate value"
                 >
@@ -574,7 +574,7 @@ const FormFieldComponent: React.FC<{
                   <Button
                     type="button"
                     onClick={() => dateInputRef.current?.showPicker()}
-                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full"
                     disabled={isFieldDisabled}
                   >
                     <Calendar className="w-4 h-4" />
@@ -685,7 +685,7 @@ const FormFieldComponent: React.FC<{
               <Button
                 type="button"
                 onClick={() => handleChange(generateFieldValue())}
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full"
                 disabled={isFieldDisabled}
                 title="Regenerate value"
               >

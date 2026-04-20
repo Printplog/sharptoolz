@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SettingsSkeleton() {
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-pulse">
+        <div className="dashboard-content space-y-8 animate-pulse">
             <div className="flex items-center justify-between">
                 <div className="space-y-2">
                     <Skeleton className="h-10 w-64 bg-white/10 rounded-xl" />

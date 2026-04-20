@@ -498,7 +498,7 @@ const FormPanel = React.memo(function FormPanel({
             <Button
               asChild
               variant="outline"
-              className="w-full hover:bg-black/50 hover:text-white"
+              className="w-full hover:bg-black/50 hover:text-white rounded-full"
             >
               <a
                 href={tutorial.url}

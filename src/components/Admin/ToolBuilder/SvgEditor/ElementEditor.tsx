@@ -55,7 +55,7 @@ const VariableDropdown = ({
         <Button
           variant="glass"
           size="icon"
-          className="h-8 w-8 text-white/40 hover:text-white transition-all duration-300"
+          className="h-8 w-8 text-white/40 hover:text-white transition-all duration-300 rounded-full"
           title={`Save or apply ${category} variable`}
         >
           <Bookmark className="w-3.5 h-3.5 group-hover:text-primary transition-colors" />
@@ -86,7 +86,7 @@ const VariableDropdown = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-white/10 hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-all"
+                  className="h-7 w-7 text-white/10 hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-all rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteMutation.mutate(v.id);
@@ -114,7 +114,7 @@ const VariableDropdown = ({
             <Button
               size="icon"
               variant="vibrant"
-              className="h-8 w-8 shrink-0"
+              className="h-8 w-8 shrink-0 rounded-full"
               disabled={!variableName || saveMutation.isPending}
               onClick={() => {
                 saveMutation.mutate({
@@ -455,7 +455,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                 currentFieldValues={currentFieldValues}
                 defaultTextContent={localElement.innerText || ""}
                 trigger={
-                  <Button variant="outline" className="shrink-0 bg-white/5 border-white/20 hover:bg-white/10 gap-2">
+                  <Button variant="outline" className="shrink-0 bg-white/5 border-white/20 hover:bg-white/10 gap-2 rounded-full">
                     <Wand2 className="w-3.5 h-3.5 text-purple-400" />
                     <span className="text-xs">Builder</span>
                   </Button>
@@ -518,7 +518,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                       variant="glass" 
                       size="sm" 
                       onClick={() => document.getElementById(`image-upload-${index}`)?.click()}
-                      className="h-8 text-[10px] font-bold"
+                      className="h-8 text-[10px] font-bold rounded-full"
                     >
                       <ImageIcon className="w-3 h-3 mr-2" />
                       Replace
@@ -527,7 +527,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                       variant="ghost" 
                       size="icon" 
                       onClick={() => handleLocalUpdate({ attributes: { ...localElement.attributes, href: "", 'xlink:href': "" } })}
-                      className="h-8 w-8 text-white/50 hover:text-red-400 hover:bg-red-400/10"
+                      className="h-8 w-8 text-white/50 hover:text-red-400 hover:bg-red-400/10 rounded-full"
                     >
                       <X className="w-3.5 h-3.5" />
                     </Button>
@@ -582,7 +582,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="glass" size="icon" className="h-8 w-8" onClick={() => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', (currentTransform as Record<string, number>)[t.key] - (t.step || 1))}>
+                    <Button variant="glass" size="icon" className="h-8 w-8 rounded-full" onClick={() => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', (currentTransform as Record<string, number>)[t.key] - (t.step || 1))}>
                       <Minus className="w-3 h-3" />
                     </Button>
                     <DebouncedInput
@@ -592,7 +592,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                       onChange={(val) => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', parseFloat(String(val)) || 0)}
                       className="h-8 bg-white/5 text-xs text-center border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
                     />
-                    <Button variant="glass" size="icon" className="h-8 w-8" onClick={() => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', (currentTransform as Record<string, number>)[t.key] + (t.step || 1))}>
+                    <Button variant="glass" size="icon" className="h-8 w-8 rounded-full" onClick={() => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', (currentTransform as Record<string, number>)[t.key] + (t.step || 1))}>
                       <Plus className="w-3 h-3" />
                     </Button>
                   </div>

@@ -23,6 +23,7 @@ export type Path =
   | `/admin/user-activity`
   | `/admin/users`
   | `/admin/users/:id`
+  | `/admin/waitlist`
   | `/admin/wallet`
   | `/all-tools`
   | `/all-tools/:id`

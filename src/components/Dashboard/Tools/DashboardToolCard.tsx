@@ -1,4 +1,4 @@
-import { Eye, Layout } from "lucide-react";
+import { Zap, Layout } from "lucide-react";
 import type { Template } from "@/types";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
@@ -90,7 +90,7 @@ export default function DashboardToolCard({ template, delay = 0 }: Props) {
                     <div className="flex items-center gap-3">
                         <PremiumButton
                             text="Use Template"
-                            icon={Eye}
+                            icon={Zap}
                             onClick={handleActionClick}
                             variant="primary"
                             className="w-full text-[10px] tracking-widest uppercase italic"

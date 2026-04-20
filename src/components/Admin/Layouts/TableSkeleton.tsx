@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TableSkeleton() {
     return (
-        <div className="space-y-4 w-full">
+        <div className="dashboard-content space-y-4 w-full">
             <div className="flex items-center justify-between mb-8">
                 <div className="space-y-2">
                     <Skeleton className="h-8 w-48 bg-white/10" />

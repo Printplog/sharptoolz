@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AnalyticsSkeleton() {
   return (
-    <div className="space-y-8 w-full p-6">
+    <div className="dashboard-content space-y-8 w-full p-6">
       {/* Page Header Skeleton */}
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <Skeleton className="h-10 w-64 bg-white/10" />

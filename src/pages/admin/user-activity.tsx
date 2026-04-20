@@ -298,20 +298,20 @@ function UserActivityCard({ session, isOnline }: { session: ActivityLog; isOnlin
 
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                        <h4 className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">
+                        <h4 className="text-sm font-bold text-white truncate group-hover:text-primary transition-colors flex-1">
                             {session.username || "Anonymous Guest"}
                         </h4>
                         
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
                             {isOnline ? (
-                                <div className="flex items-center gap-1 group/online">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)] animate-pulse" />
-                                    <span className="text-[8px] font-black uppercase text-emerald-400">Live</span>
+                                <div className="flex items-center gap-1 group/online whitespace-nowrap">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)] animate-pulse shrink-0" />
+                                    <span className="text-[8px] font-black uppercase text-emerald-400 tracking-wider">Live Now</span>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-1 opacity-40">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                                    <span className="text-[8px] font-black uppercase text-white/40">Recent</span>
+                                <div className="flex items-center gap-1 opacity-40 whitespace-nowrap">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-white/20 shrink-0" />
+                                    <span className="text-[8px] font-black uppercase text-white/40 tracking-wider">Recent</span>
                                 </div>
                             )}
                         </div>
@@ -321,7 +321,7 @@ function UserActivityCard({ session, isOnline }: { session: ActivityLog; isOnlin
                             {session.ip_address}
                         </p>
                         <div className={cn(
-                            "px-1 py-0.5 rounded text-[7px] font-black tracking-tighter border uppercase leading-none",
+                            "px-1 py-0.5 rounded text-[7px] font-black tracking-tighter border uppercase leading-none whitespace-nowrap shrink-0",
                             isError 
                             ? "bg-red-500/20 border-red-500/30 text-red-400" 
                             : "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"

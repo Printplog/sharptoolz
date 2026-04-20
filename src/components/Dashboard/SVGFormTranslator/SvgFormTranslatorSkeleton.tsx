@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SvgFormTranslatorSkeleton() {
   return (
-    <div>
+    <div className="dashboard-content">
       {/* Tabs skeleton */}
       <div className="flex gap-2 mb-6">
         <Skeleton className="h-10 w-24 bg-white/5 border border-white/10 animate-pulse" />

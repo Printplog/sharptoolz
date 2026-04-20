@@ -603,7 +603,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-white/10 text-white/60"
+              className="h-8 w-8 hover:bg-white/10 text-white/60 rounded-full"
               onClick={undo}
               title="Undo (Ctrl+Z)"
             >
@@ -614,7 +614,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-white/10 text-white/60"
+              className="h-8 w-8 hover:bg-white/10 text-white/60 rounded-full"
               onClick={redo}
               title="Redo (Ctrl+Y)"
             >
@@ -657,7 +657,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
               href={`/tools/${templateId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs font-bold h-9 px-4 gap-2 border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition-all"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-full text-xs font-bold h-9 px-4 gap-2 border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition-all"
             >
               <Eye className="h-3.5 w-3.5" />
               <span>Public View</span>
@@ -669,7 +669,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
             size="sm"
             onClick={handleDownloadSvg}
             disabled={!workingSvg}
-            className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 hover:bg-white/10 hover:text-white transition-all rounded-lg shadow-sm"
+            className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 hover:bg-white/10 hover:text-white transition-all rounded-full shadow-sm"
           >
             <Download className="h-3.5 w-3.5" />
             <span>Download SVG</span>
@@ -679,7 +679,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
             variant="outline"
             size="sm"
             onClick={() => setShowPatchManager(true)}
-            className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 hover:bg-white/10 hover:text-white transition-all rounded-lg shadow-sm relative"
+            className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 hover:bg-white/10 hover:text-white transition-all rounded-full shadow-sm relative"
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -697,7 +697,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
               <Button
                 onClick={handleSave}
                 disabled={!name.trim() || isLoading}
-                className="h-9 px-6 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-lg hover:scale-105 transition-all shadow-lg shadow-primary/20"
+                className="h-9 px-6 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-full hover:scale-105 transition-all shadow-lg shadow-primary/20"
               >
                 {isLoading ? "Saving..." : "Save Changes"}
               </Button>
@@ -741,14 +741,14 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
         <aside className="w-[420px] shrink-0 flex flex-col overflow-hidden bg-white/5 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
             <div className="px-5 pt-5 pb-0">
-              <TabsList className="w-full bg-black/40 border border-white/5 h-11 p-1 rounded-xl">
-                <TabsTrigger value="layers" className="flex-1 rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
+              <TabsList className="w-full bg-black/40 border border-white/5 h-11 p-1 rounded-full">
+                <TabsTrigger value="layers" className="flex-1 rounded-full font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
                   Layers
                 </TabsTrigger>
-                <TabsTrigger value="inspector" className="flex-1 rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                <TabsTrigger value="inspector" className="flex-1 rounded-full font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
                   Inspector
                 </TabsTrigger>
-                <TabsTrigger value="docs" className="flex-1 rounded-lg font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                <TabsTrigger value="docs" className="flex-1 rounded-full font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
                   Docs
                 </TabsTrigger>
               </TabsList>
@@ -791,14 +791,14 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleNavigate('prev')}
-                          className="h-7 w-7 rounded-lg flex items-center justify-center bg-white/5 border border-white/10 text-white/60 hover:bg-white/15 hover:text-white transition-all"
+                          className="h-7 w-7 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/60 hover:bg-white/15 hover:text-white transition-all"
                           title="Previous element"
                         >
                           <ChevronLeft className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => handleNavigate('next')}
-                          className="h-7 w-7 rounded-lg flex items-center justify-center bg-white/5 border border-white/10 text-white/60 hover:bg-white/15 hover:text-white transition-all"
+                          className="h-7 w-7 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/60 hover:bg-white/15 hover:text-white transition-all"
                           title="Next element"
                         >
                           <ChevronRight className="h-3.5 w-3.5" />
@@ -850,13 +850,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
           <AlertDialogFooter>
             <AlertDialogCancel 
               onClick={() => handleConfirmPreserve(false)}
-              className="bg-white/5 text-white hover:bg-white/10 hover:text-white border-0"
+              className="bg-white/5 text-white hover:bg-white/10 hover:text-white border-0 rounded-full"
             >
               Start Fresh
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => handleConfirmPreserve(true)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 border-0 font-bold"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 border-0 font-bold rounded-full"
             >
               Yes, Preserve Edits
             </AlertDialogAction>
@@ -874,12 +874,12 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-white/5 text-white hover:bg-white/10 hover:text-white border-0">
+            <AlertDialogCancel className="bg-white/5 text-white hover:bg-white/10 hover:text-white border-0 rounded-full">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmNavigation}
-              className="bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 border-0"
+              className="bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 border-0 rounded-full"
             >
               Discard Changes
             </AlertDialogAction>

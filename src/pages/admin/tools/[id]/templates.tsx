@@ -83,7 +83,7 @@ export default function ToolTemplates() {
             </p>
           </div>
         </div>
-        <Link to="?dialog=toolBuilder" className="button rounded-none">
+        <Link to="?dialog=toolBuilder" className="button rounded-full">
           <Plus className="h-4 w-4" />
           New Template
         </Link>
@@ -98,7 +98,7 @@ export default function ToolTemplates() {
             placeholder="Search templates..."
             defaultValue={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
+            className="w-full bg-white/5 border border-white/10 rounded-full pl-10 pr-4 py-2.5 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
           />
           {searchQuery && (
             <button
@@ -149,7 +149,7 @@ export default function ToolTemplates() {
             This tool doesn't have any templates yet. Create first template for
             this tool.
           </p>
-          <Link to="?dialog=toolBuilder" className="button w-fit rounded-none">
+          <Link to="?dialog=toolBuilder" className="button w-fit rounded-full">
             <Plus className="h-4 w-4 mr-2" />
             Create Template
           </Link>
