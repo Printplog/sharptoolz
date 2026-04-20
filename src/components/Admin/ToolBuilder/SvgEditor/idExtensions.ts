@@ -97,6 +97,21 @@ export const FIELD_TYPES: ExtensionDefinition[] = [
     requiresValue: true,
     valuePlaceholder: "Enter option value",
   },
+  {
+    key: "hide",
+    label: "Hide (Hidden Default)",
+    helper: "Creates a checkbox to toggle visibility (hidden by default)",
+  },
+  {
+    key: "hide_checked",
+    label: "Hide (Visible Default)",
+    helper: "Creates a checkbox to toggle visibility (visible by default)",
+  },
+  {
+    key: "hide_unchecked",
+    label: "Hide (Hidden Default)",
+    helper: "Creates a checkbox to toggle visibility (hidden by default)",
+  },
 ].map(ft => ({ ...ft, isFieldType: true }));
 
 // Extensions that can come after field types
@@ -147,6 +162,9 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "status",
       "sign",
       "select",
+      "hide",
+      "hide_checked",
+      "hide_unchecked",
       "depends",
     ],
   },
@@ -182,7 +200,6 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "date_format",
       "gen_rule",
       "grayscale",
-      "hide",
       "depends",
       "showIf",
     ],
@@ -197,9 +214,9 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     key: "link",
     label: "Link",
     helper:
-      "Adds tracking link URL where the ID will be tracked (e.g., link_https://example.com). Only for tracking_id fields.",
+      "Adds tracking link URL where the ID will be tracked (e.g., link_\"https://example.com\"). Only for tracking_id fields. Use quotes!",
     requiresValue: true,
-    valuePlaceholder: "Enter URL (e.g., https://example.com)",
+    valuePlaceholder: '"https://example.com"',
     allowedAfter: ["tracking_id"],
   },
   {
@@ -237,26 +254,6 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     allowedAfter: ["upload", "file", "depends"],
   },
   {
-    key: "hide_checked",
-    label: "Hide Checked",
-    helper: "Hide field when checked (visible by default)",
-    allowedAfter: [
-      "text", "textarea", "gen", "email", "number", "date", "checkbox",
-      "upload", "tel", "password", "range", "color", "file", "status", "sign",
-      "select", "editable", "max", "min", "tracking_id", "link", "date_format", "gen_rule"
-    ],
-  },
-  {
-    key: "hide_unchecked",
-    label: "Hide Unchecked",
-    helper: "Hide field when unchecked (hidden by default)",
-    allowedAfter: [
-      "text", "textarea", "gen", "email", "number", "date", "checkbox",
-      "upload", "tel", "password", "range", "color", "file", "status", "sign",
-      "select", "editable", "max", "min", "tracking_id", "link", "date_format", "gen_rule"
-    ],
-  },
-  {
     key: "showIf",
     label: "Show If",
     helper: "Show this form field only when another field equals a specific value. Format: showIf_FieldId[Value] (e.g., showIf_Status[Error])",
@@ -265,6 +262,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     allowedAfter: [
       "text", "textarea", "gen", "email", "number", "date", "checkbox",
       "upload", "tel", "password", "range", "color", "file", "status", "sign",
+      "hide", "hide_checked", "hide_unchecked",
       "editable", "max", "min", "tracking_id", "date_format", "gen_rule", "select",
     ],
   },
@@ -347,9 +345,10 @@ export function parseId(id: string): { baseId: string; parts: string[]; url?: st
       cleanId = id.substring(0, linkIndex) + id.substring(urlEnd + 1);
     }
   } else if (id.includes(".link_")) {
+    // Treat unquoted as invalid for frontend parsing preview
     const linkIndex = id.indexOf(".link_");
-    url = id.substring(linkIndex + 6);
     cleanId = id.substring(0, linkIndex);
+    url = undefined; // Force undefined to indicate invalid state
   }
 
   const firstDotIndex = cleanId.indexOf(".");
