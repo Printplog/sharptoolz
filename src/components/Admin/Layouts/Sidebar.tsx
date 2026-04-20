@@ -76,6 +76,11 @@ export default function Sidebar() {
       to: "/admin/analytics",
     },
     {
+      icon: <Users className="h-4 w-4" />,
+      label: "User Activity",
+      to: "/admin/user-activity",
+    },
+    {
       icon: <ShieldAlert className="h-4 w-4" />,
       label: "Logs",
       to: "/admin/audit-logs",

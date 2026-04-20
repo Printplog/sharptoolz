@@ -191,9 +191,13 @@ export const adminOverview = async (days?: number) => {
   return res.data;
 };
 
-export const getAdminAnalytics = async (days?: number) => {
-  const params = days ? `?days=${days}` : '';
-  const res = await apiClient.get(`/analytics/dashboard/${params}`);
+export const getAdminAnalytics = async (days?: number, date?: string) => {
+  const params = new URLSearchParams();
+  if (days) params.append('days', days.toString());
+  if (date) params.append('date', date);
+  
+  const queryString = params.toString();
+  const res = await apiClient.get(`/analytics/dashboard/${queryString ? `?${queryString}` : ''}`);
   return res.data;
 };
 
@@ -204,6 +208,16 @@ export const getAuditLogs = async (): Promise<AuditLog[]> => {
 
 export const logVisit = async (path: string): Promise<void> => {
   await apiClient.post('/analytics/log-visit/', { path });
+};
+
+export const getUserActivity = async (params?: { page?: number; date?: string; search?: string }) => {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append('page', params.page.toString());
+  if (params?.date) searchParams.append('date', params.date);
+  if (params?.search) searchParams.append('search', params.search);
+
+  const res = await apiClient.get(`/analytics/user-activity/?${searchParams.toString()}`);
+  return res.data;
 };
 
 export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string; role?: string }) => {

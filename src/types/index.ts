@@ -164,6 +164,26 @@ export interface AuditLog {
   details: Record<string, unknown>;
 }
 
+export interface ActivityLog {
+  id: number;
+  user: number | null;
+  username: string | null;
+  ip_address: string | null;
+  session_key: string | null;
+  path: string;
+  method: string;
+  user_agent: string;
+  referrer: string;
+  timestamp: string;
+}
+
+export type UserActivityResponse = {
+  results: ActivityLog[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+};
+
 export type TemplateUpdatePayload = {
   name: string;
   banner?: File | null | string;
