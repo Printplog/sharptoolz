@@ -84,7 +84,7 @@ export default function AdminDocsPage() {
   };
 
   return (
-    <div className="dashboard-content flex flex-col gap-6 px-4 py-8 min-h-screen">
+    <div className="dashboard-content flex flex-col gap-6 py-8 min-h-screen">
       <div className="flex flex-col lg:flex-row gap-12">
         {/* Navigation Sidebar */}
         <aside className="w-full lg:w-72 shrink-0 lg:sticky lg:top-8 self-start space-y-8">

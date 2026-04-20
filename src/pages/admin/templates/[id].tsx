@@ -410,7 +410,7 @@ export default function SvgTemplateEditor() {
 
   return (
     <>
-      <div className="relative">
+      <div className="w-full space-y-6">
         <div className="w-full">
           {/* Navigation Header - Minimal */}
           {(prevTemplate || nextTemplate) && (

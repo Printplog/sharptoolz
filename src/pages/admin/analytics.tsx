@@ -126,7 +126,7 @@ export default function Analytics() {
   if (isAnalyticsLoading || isOverviewLoading) return <AnalyticsSkeleton />;
 
   return (
-    <div className="dashboard-content space-y-6 p-6">
+    <div className="dashboard-content space-y-6 text-white">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center gap-4">
           <div>

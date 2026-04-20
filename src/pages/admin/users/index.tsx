@@ -21,7 +21,7 @@ export default function Users() {
   }
 
   return (
-    <div className="dashboard-content space-y-6 p-6">
+    <div className="dashboard-content space-y-6">
       <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
         User <span className="text-primary">Management</span>
       </h1>

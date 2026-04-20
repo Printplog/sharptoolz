@@ -87,7 +87,7 @@ export default function UserActivity() {
   if (isLoading && !historicalData) return <UserActivitySkeleton />;
 
   return (
-    <div className="dashboard-content space-y-8 p-6 pb-24">
+    <div className="dashboard-content space-y-8 pb-24">
       {/* Page Header */}
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center gap-4">
