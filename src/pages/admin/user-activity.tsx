@@ -91,10 +91,19 @@ export default function UserActivity() {
   // Active Sessions calculation using TRUE Real-time presence
   // FILTERED TO SHOW ONLY ONLINE PEOPLE (as requested)
   const activeSessions = useMemo(() => {
-      return Array.from(new Map(displayLogs.map(l => [l.session_key || l.ip_address, l])).values())
-        .filter(session => onlineSessions.has(session.session_key || "")) // STRICT ONLINE FILTER
+      // Map logs to unique sessions (by key or IP)
+      const sessionMap = new Map<string, ActivityLog>();
+      
+      displayLogs.forEach(log => {
+          const key = log.session_key || log.ip_address || `unknown-${log.timestamp}`;
+          if (!sessionMap.has(key)) {
+              sessionMap.set(key, log);
+          }
+      });
+
+      return Array.from(sessionMap.values())
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [displayLogs, onlineSessions]);
+  }, [displayLogs]);
 
   const stats: StatData[] = [
     {
@@ -236,9 +245,9 @@ export default function UserActivity() {
         <div className="flex items-center justify-between px-2">
             <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/40 italic flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                Live Visitors
+                Recent Visitor Hits
             </h3>
-            <span className="text-[10px] font-mono text-white/20 uppercase">Displaying {activeSessions.length} currently online sessions</span>
+            <span className="text-[10px] font-mono text-white/20 uppercase">Displaying {activeSessions.length} recent unique sessions</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
@@ -252,6 +261,7 @@ export default function UserActivity() {
                     <UserActivityCard 
                         key={session.id || session.session_key || session.timestamp} 
                         session={session} 
+                        isOnline={onlineSessions.has(session.session_key || "")}
                     />
                 ))
             )}
@@ -261,7 +271,7 @@ export default function UserActivity() {
   );
 }
 
-function UserActivityCard({ session }: { session: ActivityLog }) {
+function UserActivityCard({ session, isOnline }: { session: ActivityLog; isOnline: boolean }) {
     const isError = session.status_code && session.status_code >= 400;
 
     return (
@@ -292,10 +302,17 @@ function UserActivityCard({ session }: { session: ActivityLog }) {
                         </h4>
                         
                         <div className="flex items-center gap-1.5">
-                            <div className="flex items-center gap-1 group/online">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)] animate-pulse" />
-                                <span className="text-[8px] font-black uppercase text-emerald-400">Live</span>
-                            </div>
+                            {isOnline ? (
+                                <div className="flex items-center gap-1 group/online">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.5)] animate-pulse" />
+                                    <span className="text-[8px] font-black uppercase text-emerald-400">Live</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1 opacity-40">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                                    <span className="text-[8px] font-black uppercase text-white/40">Recent</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
