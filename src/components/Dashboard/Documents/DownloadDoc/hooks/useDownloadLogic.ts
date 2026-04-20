@@ -13,7 +13,7 @@ import type { FormField } from "@/types";
 
 export type ProgressStep = 'idle' | 'fetching' | 'processing-patches' | 'processing-fonts' | 'processing-images' | 'rendering' | 'generating' | 'complete';
 
-const TEST_DOWNLOAD_QUALITY_FACTOR = 0.1;
+const TEST_DOWNLOAD_QUALITY_FACTOR = 0.4;
 
 interface UseDownloadLogicProps {
     purchasedTemplateId?: string;
