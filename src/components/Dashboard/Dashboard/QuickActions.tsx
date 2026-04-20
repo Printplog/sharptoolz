@@ -1,14 +1,26 @@
 import { Link } from "react-router-dom";
-import { FileText, Wallet, Settings, Package } from "lucide-react";
+import { FileText, Wallet, Settings, Package, ChevronRight, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface QuickAction {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  href: string;
+  gradient: string;
+  borderColor: string;
+  iconColor: string;
+}
 
 export default function QuickActions() {
-    const actions = [
+    const actions: QuickAction[] = [
         {
             title: "My Documents",
             description: "View and manage your documents",
             icon: FileText,
             href: "/documents",
-            color: "from-blue-500/20 to-blue-600/20",
+            gradient: "from-blue-500/20 to-blue-600/5",
+            borderColor: "border-blue-500/20",
             iconColor: "text-blue-400",
         },
         {
@@ -16,7 +28,8 @@ export default function QuickActions() {
             description: "Browse all available templates",
             icon: Package,
             href: "/all-tools",
-            color: "from-purple-500/20 to-purple-600/20",
+            gradient: "from-purple-500/20 to-purple-600/5",
+            borderColor: "border-purple-500/20",
             iconColor: "text-purple-400",
         },
         {
@@ -24,7 +37,8 @@ export default function QuickActions() {
             description: "Manage your balance",
             icon: Wallet,
             href: "/wallet",
-            color: "from-green-500/20 to-green-600/20",
+            gradient: "from-green-500/20 to-green-600/5",
+            borderColor: "border-green-500/20",
             iconColor: "text-green-400",
         },
         {
@@ -32,36 +46,57 @@ export default function QuickActions() {
             description: "Update your preferences",
             icon: Settings,
             href: "/settings",
-            color: "from-orange-500/20 to-orange-600/20",
+            gradient: "from-orange-500/20 to-orange-600/5",
+            borderColor: "border-orange-500/20",
             iconColor: "text-orange-400",
         },
     ];
 
     return (
-        <div className="space-y-5">
-            <h2 className="text-xl pb-3 border-b border-white/10">Quick Actions ⚡</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {actions.map((action) => {
-                    const Icon = action.icon;
-                    return (
-                        <Link
-                            key={action.href}
-                            to={action.href}
-                            className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 hover:border-white/20 hover:bg-white/10 transition-all duration-300"
-                        >
-                            <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                            <div className="relative z-10 flex flex-col gap-3">
-                                <div className={`w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center ${action.iconColor} group-hover:scale-110 transition-transform duration-300`}>
-                                    <Icon className="w-6 h-6" />
+        <div className="space-y-6">
+            <div>
+                <h2 className="text-xl font-bold text-white uppercase italic tracking-tighter">
+                    Quick <span className="text-primary">Actions</span> ⚡
+                </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {actions.map((action) => (
+                    <Link
+                        key={action.href}
+                        to={action.href}
+                        className={cn(
+                            "group relative overflow-hidden bg-gradient-to-br border rounded-2xl p-4 backdrop-blur-md transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-white/5",
+                            action.gradient,
+                            action.borderColor
+                        )}
+                    >
+                        {/* Background Decorative Icon */}
+                        <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none">
+                            <action.icon size={60} />
+                        </div>
+
+                        <div className="relative z-10 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 min-w-0">
+                                <div className={cn(
+                                    "w-10 h-10 rounded-xl bg-white/10 border border-white/10 shadow-inner flex items-center justify-center transition-transform group-hover:scale-110 shrink-0",
+                                    action.iconColor
+                                )}>
+                                    <action.icon className="h-4 w-4" />
                                 </div>
-                                <div>
-                                    <h3 className="text-white font-semibold text-lg">{action.title}</h3>
-                                    <p className="text-white/60 text-sm mt-1">{action.description}</p>
+                                
+                                <div className="truncate">
+                                    <h3 className="text-white font-bold text-sm tracking-tight">{action.title}</h3>
+                                    <p className="text-white/40 text-[10px] mt-0.5 font-medium leading-tight truncate">
+                                        {action.description}
+                                    </p>
                                 </div>
                             </div>
-                        </Link>
-                    );
-                })}
+
+                            <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+                        </div>
+                    </Link>
+                ))}
             </div>
         </div>
     );

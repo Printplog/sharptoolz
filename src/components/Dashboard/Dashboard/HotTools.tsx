@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { getTemplates } from "@/api/apiEndpoints";
 import ToolsList from "../Tools/ToolsList";
+import type { Template } from "@/types";
 
 export default function HotTools() {
-  const { data: templates, isLoading } = useQuery({
+  const { data: templates, isLoading } = useQuery<Template[]>({
     queryKey: ["tools", "hot"],
     queryFn: () => getTemplates(true),
     staleTime: 5 * 60 * 1000,
@@ -15,8 +16,12 @@ export default function HotTools() {
   }
 
   return (
-    <div className="space-y-5">
-      <h2 className="text-xl pb-3 border-b border-white/10 ">Hot Tools <span role="img" aria-label="fire">🔥</span></h2>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-white uppercase italic tracking-tighter">
+          Hot <span className="text-primary">Tools</span> 🔥
+        </h2>
+      </div>
       <ToolsList hot />
     </div>
   )

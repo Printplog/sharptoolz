@@ -2,7 +2,8 @@ import HotTools from "@/components/Dashboard/Dashboard/HotTools";
 import QuickActions from "@/components/Dashboard/Dashboard/QuickActions";
 import { useAuthStore } from "@/store/authStore";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
-import { FileText, Wallet, CloudDownload } from "lucide-react";
+import { FileText, Wallet, CloudDownload, Users, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 
 export default function Dashboard() {
@@ -38,6 +39,22 @@ export default function Dashboard() {
       borderColor: "border-violet-500/20",
       iconBg: "bg-violet-500/10",
       iconColor: "text-violet-400",
+    },
+    {
+      title: "Referral Program",
+      value: "Coming Soon",
+      label: "Affiliate System",
+      icon: Users,
+      gradient: "from-white/5 to-white/[0.02]",
+      borderColor: "border-white/10",
+      iconBg: "bg-white/5",
+      iconColor: "text-white/20",
+      isComingSoon: true,
+      action: {
+        label: "Refer Now",
+        icon: Plus,
+        onClick: () => toast.info("Referral program is coming soon!")
+      }
     }
   ];
 
@@ -45,12 +62,9 @@ export default function Dashboard() {
     <div className="dashboard-content space-y-8">
       {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
-          User <span className="text-primary">Dashboard</span>
+        <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic italic-primary">
+          Welcome <span className="text-primary">Back</span>, {user?.first_name || user?.username || "Value Visitor"} 👋
         </h1>
-        <p className="mt-1 text-sm font-medium text-white/40 italic">
-          Welcome back, {user?.first_name || user?.username || "Value Visitor"}
-        </p>
       </div>
 
       {/* Analytics Cards */}

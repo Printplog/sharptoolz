@@ -9,17 +9,25 @@ import { LogOut, LayoutDashboard } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useLogout } from "@/hooks/useLogout";
 
+import Logo from "@/components/Logo";
+
 export default function Navbar() {
   const { user } = useAuthStore();
   const { logout, isPending } = useLogout();
 
 
   return (
-    <header className="flex items-center justify-between py-3 md:py-5 border-b border-white/10 bg-white/5 px-4 md:px-5 sticky top-0 backdrop-blur-2xl z-[9]">
-      {/* Left Side - Title */}
+    <header className="flex items-center justify-between py-3 md:py-4 border-b border-white/5 bg-white/[0.02] px-4 md:px-5 sticky top-0 backdrop-blur-2xl z-[9]">
+      {/* Left Side - Logo (mobile) / Greeting (desktop) */}
       <div className="flex items-center gap-5">
-        <h2 className="text-lg md:text-xl font-semibold">Hey {user?.username?.toUpperCase()} 👋</h2>
-
+        <div className="md:hidden">
+          <Logo size={28} showText={false} />
+        </div>
+        <div className="hidden md:block">
+          <h2 className="text-xl font-bold text-white tracking-tight italic uppercase italic-primary">
+            Hey <span className="text-primary">{user?.username || "Value Visitor"}</span> 👋
+          </h2>
+        </div>
       </div>
       {/* Right Side - User Menu */}
       <div className="flex items-center gap-4">

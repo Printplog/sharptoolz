@@ -3,8 +3,11 @@ import { useEffect } from 'react'
 import { initSecurity } from '@/lib/utils/security'
 import { useAuthStore } from '@/store/authStore'
 import { isAdmin } from '@/lib/constants/roles'
+import { usePresence } from '@/hooks/usePresence'
 
 export default function App() {
+  usePresence()
+
   const user = useAuthStore((state) => state.user)
   const isAdminOnlyUser = isAdmin(user?.role)
 
@@ -26,6 +29,7 @@ export default function App() {
       detectDebugger: true,
       disablePrintScreen: true,
       aggressiveDetection: true,
+      detectDevToolsByDimensions: true,
     })
   }, [isAdminOnlyUser])
 
