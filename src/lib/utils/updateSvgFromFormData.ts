@@ -271,7 +271,32 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
           finalValue = selected?.displayText ?? selected?.label ?? value;
         }
 
-        // 1. IMAGE-LIKE TAGS: <image> or <use>
+        // 1. VISIBILITY SPECIAL CASES (apply to any tag)
+        if (fieldType === "hide" || fieldType === "status") {
+          let isVisible = false;
+          // Inverted logic: hide_checked means it hides WHEN checked.
+          // So if inverted is true, isVisible = !value.
+          const isInverted = field.inverted === true;
+
+          if (typeof value === 'boolean') {
+            isVisible = isInverted ? !value : value;
+          } else if (typeof value === 'string') {
+            const valueStr = value.toLowerCase();
+            const boolValue = valueStr === "true" || valueStr === "1";
+            isVisible = isInverted ? !boolValue : boolValue;
+          }
+
+          el.setAttribute("opacity", isVisible ? "1" : "0");
+          el.setAttribute("visibility", isVisible ? "visible" : "hidden");
+          if (isVisible) {
+            el.removeAttribute("display");
+          } else {
+            el.setAttribute("display", "none");
+          }
+          return; // Skip other updates for visibility fields
+        }
+
+        // 2. IMAGE-LIKE TAGS: <image> or <use>
         if (isImageTag) {
           // Only allow image updates if the field is an image field, a dependency field,
           // or if the value itself clearly looks like an image (backward compatibility).
@@ -307,29 +332,6 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
               }
               el.setAttribute('filter', `url(#${filterId})`);
             }
-          }
-        }
-        // 2. VISIBILITY SPECIAL CASES
-        else if (fieldType === "hide" || fieldType === "status") {
-          let isVisible = false;
-          // Inverted logic: hide_checked means it hides WHEN checked.
-          // So if inverted is true, isVisible = !value.
-          const isInverted = field.inverted === true;
-
-          if (typeof value === 'boolean') {
-            isVisible = isInverted ? !value : value;
-          } else if (typeof value === 'string') {
-            const valueStr = value.toLowerCase();
-            const boolValue = valueStr === "true" || valueStr === "1";
-            isVisible = isInverted ? !boolValue : boolValue;
-          }
-
-          el.setAttribute("opacity", isVisible ? "1" : "0");
-          el.setAttribute("visibility", isVisible ? "visible" : "hidden");
-          if (isVisible) {
-            el.removeAttribute("display");
-          } else {
-            el.setAttribute("display", "none");
           }
         }
         // 3. TEXT-LIKE TAGS: <text>, <tspan>, etc.
