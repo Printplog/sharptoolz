@@ -102,8 +102,9 @@ export default function UserActivity() {
       });
 
       return Array.from(sessionMap.values())
+        .filter(session => onlineSessions.has(session.session_key || "")) // RESTORED STRICT ONLINE FILTER
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [displayLogs]);
+  }, [displayLogs, onlineSessions]);
 
   const stats: StatData[] = [
     {
@@ -245,9 +246,9 @@ export default function UserActivity() {
         <div className="flex items-center justify-between px-2">
             <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/40 italic flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                Recent Visitor Hits
+                Live Visitors
             </h3>
-            <span className="text-[10px] font-mono text-white/20 uppercase">Displaying {activeSessions.length} recent unique sessions</span>
+            <span className="text-[10px] font-mono text-white/20 uppercase">Displaying {activeSessions.length} currently online sessions</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
