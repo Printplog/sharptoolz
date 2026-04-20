@@ -20,6 +20,7 @@ export type Path =
   | `/admin/tools`
   | `/admin/tools/:id/templates`
   | `/admin/transactions`
+  | `/admin/user-activity`
   | `/admin/users`
   | `/admin/users/:id`
   | `/admin/wallet`

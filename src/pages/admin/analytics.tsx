@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, Eye, HandCoins, Users } from "lucide-react";
+import { DollarSign, Eye, HandCoins, Users, Calendar as CalendarIcon } from "lucide-react";
 import { getAdminAnalytics, adminOverview } from "@/api/apiEndpoints";
 import WalletFlowChart from "@/components/Admin/Dashboard/WalletFlowChart";
 import VisitorChart from "@/components/Admin/Dashboard/VisitorChart";
@@ -46,6 +46,7 @@ interface AnalyticsResponse {
     visits: number;
   }>;
   summary: {
+    online_now: number;
     total_visits: number;
     unique_visitors: number;
     authenticated_visits: number;
@@ -59,15 +60,17 @@ interface AnalyticsResponse {
 }
 
 export default function Analytics() {
-  const [days, setDays] = useState(1);
+  const [days, setDays] = useState<number | null>(1);
+  const [date, setDate] = useState<string>("");
 
   const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery<AnalyticsResponse>({
-    queryFn: () => getAdminAnalytics(days),
-    queryKey: ["adminAnalytics", days],
+    queryFn: () => getAdminAnalytics(days || 1, date),
+    queryKey: ["adminAnalytics", days, date],
+    refetchInterval: 30000, // Refetch every 30s for "Live" feel
   });
 
   const { data: overviewData, isLoading: isOverviewLoading } = useQuery<AdminOverview>({
-    queryFn: () => adminOverview(days),
+    queryFn: () => adminOverview(days || 1),
     queryKey: ["adminOverview", days],
   });
 
@@ -113,10 +116,10 @@ export default function Analytics() {
       value: `$${(summary?.total_revenue ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
       label: `${summary?.guest_visits ?? 0} guest visits`,
       icon: DollarSign,
-      gradient: "from-amber-500/20 to-amber-600/5",
-      borderColor: "border-amber-500/20",
-      iconBg: "bg-amber-500/10",
-      iconColor: "text-amber-200",
+      gradient: "from-rose-500/20 to-rose-600/5",
+      borderColor: "border-rose-500/20",
+      iconBg: "bg-rose-500/10",
+      iconColor: "text-rose-300",
     },
   ];
 
@@ -125,29 +128,58 @@ export default function Analytics() {
   return (
     <div className="dashboard-content space-y-6 p-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
-            Platform <span className="text-primary">Analytics</span>
-          </h1>
-          <p className="mt-1 text-sm font-medium text-white/40 italic">
-            Focused performance signals for {rangeLabel.toLowerCase()}
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+              Platform <span className="text-primary">Analytics</span>
+            </h1>
+            <p className="mt-1 text-sm font-medium text-white/40 italic">
+              Focused performance signals for {rangeLabel.toLowerCase()}
+            </p>
+          </div>
+          
+          {/* Live Badge */}
+          <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full animate-pulse">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+              {summary?.online_now ?? 0} Live
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
-          {RANGES.map((r) => (
-            <button
-              key={r.days}
-              onClick={() => setDays(r.days)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
-                days === r.days
-                  ? "bg-primary text-black shadow"
-                  : "text-white/50 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Date Picker */}
+          <div className="relative group">
+            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => {
+                setDate(e.target.value);
+                setDays(null);
+              }}
+              className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-full text-xs font-bold uppercase tracking-wider text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
+            />
+          </div>
+
+          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
+            {RANGES.map((r) => (
+              <button
+                key={r.days}
+                onClick={() => {
+                  setDays(r.days);
+                  setDate("");
+                }}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                  days === r.days
+                    ? "bg-primary text-black shadow"
+                    : "text-white/50 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
