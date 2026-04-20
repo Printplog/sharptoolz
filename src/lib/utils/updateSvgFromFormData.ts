@@ -312,11 +312,16 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
         // 2. VISIBILITY SPECIAL CASES
         else if (fieldType === "hide" || fieldType === "status") {
           let isVisible = false;
+          // Inverted logic: hide_checked means it hides WHEN checked.
+          // So if inverted is true, isVisible = !value.
+          const isInverted = field.inverted === true;
+
           if (typeof value === 'boolean') {
-            isVisible = value;
+            isVisible = isInverted ? !value : value;
           } else if (typeof value === 'string') {
             const valueStr = value.toLowerCase();
-            isVisible = valueStr === "true" || valueStr === "1";
+            const boolValue = valueStr === "true" || valueStr === "1";
+            isVisible = isInverted ? !boolValue : boolValue;
           }
 
           el.setAttribute("opacity", isVisible ? "1" : "0");
