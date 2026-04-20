@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import type { Tutorial, Font, SvgPatch } from "@/types";
 import { isImageElement, isTextElement } from "./utils/svgUtils";
 
@@ -371,6 +371,25 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     reader.onload = (e) => setBannerImage(e.target?.result as string);
     reader.readAsDataURL(file);
   };
+
+  const handleDownloadSvg = useCallback(() => {
+    if (!workingSvg) return;
+    
+    // Clean the SVG before download (same logic as saving)
+    const cleanSvg = stripInternalIds(workingSvg);
+    const blob = new Blob([cleanSvg], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${name || "template"}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success("SVG downloaded successfully");
+  }, [workingSvg, name]);
+
   const handleSvgUpload = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -644,6 +663,17 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
               <span>Public View</span>
             </a>
           )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadSvg}
+            disabled={!workingSvg}
+            className="gap-2 h-9 text-xs font-bold border-white/10 bg-white/5 hover:bg-white/10 hover:text-white transition-all rounded-lg shadow-sm"
+          >
+            <Download className="h-3.5 w-3.5" />
+            <span>Download SVG</span>
+          </Button>
 
           <Button
             variant="outline"
