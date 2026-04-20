@@ -95,6 +95,7 @@ export interface FormField {
   touched?: boolean; // Frontend-only flag to know if user modified the field
   rotation?: number; // Rotation in degrees for image fields (applied via transform)
   attributes?: Record<string, string>; // Store additional SVG attributes like data-max-width
+  inverted?: boolean; // Whether visibility logic is inverted (Checked = Hidden)
 } // Updated for signature fields, date formatting, generation/extraction, and helper text
 
 export type FieldUpdate = {
