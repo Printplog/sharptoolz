@@ -1,6 +1,7 @@
 // src/hooks/useActivitySocket.ts
 import { useCallback, useState } from "react";
 import { useWebSocketClient } from "./useWebSocketClient";
+import { useAuthStore } from "@/store/authStore";
 
 export type ActivityLog = {
   id: number;
@@ -30,6 +31,7 @@ export type OnlineListUpdate = {
 }
 
 export function useActivitySocket() {
+  const { user } = useAuthStore();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [presenceUpdate, setPresenceUpdate] = useState<PresenceUpdate | null>(null);
   const [initialOnlineList, setInitialOnlineList] = useState<string[]>([]);
@@ -56,6 +58,7 @@ export function useActivitySocket() {
     onMessage: handleMessage,
     reconnectAttempts: 10,
     reconnectInterval: 3000,
+    dependencies: [user?.pk], // Force reconnect on login/logout
   });
 
   return { logs, presenceUpdate, initialOnlineList, sendMessage, reconnect: connect };

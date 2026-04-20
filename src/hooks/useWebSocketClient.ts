@@ -13,6 +13,7 @@ type UseWebSocketClientOptions<T> = {
   protocols?: string | string[];
   reconnectAttempts?: number;
   reconnectInterval?: number;
+  dependencies?: any[]; // New: dependencies to trigger reconnection
 };
 
 export function useWebSocketClient<T = unknown>({
@@ -24,6 +25,7 @@ export function useWebSocketClient<T = unknown>({
   protocols,
   reconnectAttempts = 3,
   reconnectInterval = 1000,
+  dependencies = [], // New
 }: UseWebSocketClientOptions<T>) {
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectCountRef = useRef(0);
@@ -119,11 +121,11 @@ export function useWebSocketClient<T = unknown>({
       
       // Close the socket with code 1000 (normal closure) to prevent reconnection
       if (socketRef.current) {
-        socketRef.current.close(1000, 'Component unmounting');
+        socketRef.current.close(1000, 'Component unmounting or dependency change');
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connect]);
+  }, [connect, ...dependencies]);
 
   return { sendMessage, connect };
 }
