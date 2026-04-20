@@ -25,7 +25,10 @@ const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonProps>(
     const innerContent = (
       <>
         <div className="relative z-10 flex items-center gap-6 w-full justify-between">
-          <span className="text-sm md:text-base whitespace-nowrap">
+          <span className={cn(
+            "whitespace-nowrap",
+            !className?.includes("text-") && "text-sm md:text-base"
+          )}>
             {isLoading ? "Please wait..." : text}
           </span>
           <div className={cn(
@@ -72,10 +75,12 @@ const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonProps>(
       !className?.includes("bg-") && (
         isPrimary 
           ? cn("bg-[#cee88c] text-black", !noShadow && "shadow-[#cee88c]/10") 
-          : cn("bg-white/5 border border-white/10 text-white", !noShadow && "shadow-white/5")
+          : cn("bg-white/5 border border-white/30 backdrop-blur-xl text-white hover:border-white/50", !noShadow && "shadow-white/5")
       ),
       className
     );
+
+    const isFullWidth = className?.includes("w-full");
 
     if (isExternal) {
       return (
@@ -85,7 +90,7 @@ const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonProps>(
           rel="noopener noreferrer"
           whileHover="hover"
           initial="initial"
-          className={cn(commonClasses, "inline-flex")}
+          className={cn(commonClasses, "inline-flex", isFullWidth && "w-full")}
           {...(props as any)}
         >
           {innerContent}
@@ -98,11 +103,11 @@ const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonProps>(
         <motion.div
           whileHover="hover"
           initial="initial"
-          className="inline-block"
+          className={cn(isFullWidth ? "w-full" : "inline-block")}
         >
           <Link 
             to={href} 
-            className={commonClasses}
+            className={cn(commonClasses, "border-white/20")}
             {...(props as any)}
           >
             {innerContent}
@@ -116,7 +121,7 @@ const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonProps>(
         ref={ref}
         whileHover={isLoading ? "" : "hover"}
         initial="initial"
-        className={commonClasses}
+        className={cn(commonClasses, isFullWidth && "w-full", "border-white/20")}
         disabled={isLoading || (props.disabled as boolean)}
         {...props}
       >

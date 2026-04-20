@@ -94,7 +94,7 @@ export default function ResetPasswordConfirm() {
 
           <Button
             type="submit"
-            className="w-full h-11 bg-[#cee88c] text-black font-medium hover:bg-[#cee88c]/90 transition-colors mt-2"
+            className="w-full h-12 bg-[#cee88c] text-black font-bold text-sm rounded-full hover:bg-[#cee88c]/90 border border-white/20 transition-all active:scale-[0.98] mt-2"
             disabled={isPending}
           >
             {isPending ? "Resetting..." : "Reset password"}

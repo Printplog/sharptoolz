@@ -1,10 +1,19 @@
 import Logo from "@/components/Logo";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function AuthLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine back destination based on current path
+  const getBackDestination = () => {
+    if (location.pathname === "/auth/forgot-password" || location.pathname === "/auth/reset-password") {
+      return "/auth/login";
+    }
+    return "/";
+  };
 
   return (
     <div className="min-h-screen flex bg-[#0F172A]">
@@ -32,20 +41,21 @@ export default function AuthLayout() {
 
       {/* Right form panel */}
       <div className="flex-1 flex flex-col items-center justify-start lg:justify-center px-6 pt-12 pb-20 relative overflow-hidden">
-        {/* Mobile Background Grid Pattern (Top & Bottom) */}
-        <div 
-          className="lg:hidden absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(255,255,255,0.2) 1.5px, transparent 1.5px),
-              linear-gradient(to bottom, rgba(255,255,255,0.2) 1.5px, transparent 1.5px)
-            `,
-            backgroundSize: "50px 50px",
-            maskImage: "linear-gradient(to bottom, black 0%, transparent 25%, transparent 70%, black 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 25%, transparent 70%, black 100%)",
-            opacity: 0.25
-          }}
-        />
+        {/* Premium Background Grid Effect (Edges only) */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div 
+            className="absolute inset-0 opacity-[0.55]"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgba(255,255,255,0.07) 1.5px, transparent 1.5px),
+                linear-gradient(to bottom, rgba(255,255,255,0.07) 1.5px, transparent 1.5px)
+              `,
+              backgroundSize: "48px 48px",
+              maskImage: "radial-gradient(circle at center, transparent 10%, black 90%)",
+              WebkitMaskImage: "radial-gradient(circle at center, transparent 10%, black 90%)",
+            }}
+          />
+        </div>
 
         <motion.main
           initial={{ opacity: 0, y: 16 }}
@@ -56,7 +66,7 @@ export default function AuthLayout() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/")}
+            onClick={() => navigate(getBackDestination())}
             className="flex items-center justify-center w-10 h-10 rounded-full border border-white/10 bg-white/5 mb-10 text-white/40 hover:text-white hover:border-white/20 transition-all shadow-lg"
             title="Go back"
           >

@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { forgotPassword } from "@/api/apiEndpoints";
-import { Mail } from "lucide-react";
+import { Mail, ArrowLeft } from "lucide-react";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -48,9 +48,10 @@ export default function ForgotPassword() {
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight">Forgot password?</h2>
-        <p className="text-sm text-white/35">We'll send you a link to reset it</p>
+      <div className="space-y-1">
+        <h2 className="text-3xl font-black tracking-tighter uppercase italic">
+          Reset <span className="text-[#cee88c]">Password</span>
+        </h2>
       </div>
 
       <Form {...form}>
@@ -60,17 +61,17 @@ export default function ForgotPassword() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs text-white/50 uppercase tracking-wider font-medium">
+                <FormLabel className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black">
                   Email address
                 </FormLabel>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none" />
                   <FormControl>
                     <Input
                       type="email"
                       placeholder="you@example.com"
                       {...field}
-                      className="border-white/10 bg-white/[0.03] pl-10 h-11 placeholder:text-white/20 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/10"
+                      className="border-white/5 bg-white/[0.02] pl-11 h-12 rounded-full placeholder:text-white/10 focus-visible:border-[#cee88c]/30 focus-visible:ring-[#cee88c]/5 transition-all"
                     />
                   </FormControl>
                 </div>
@@ -79,23 +80,25 @@ export default function ForgotPassword() {
             )}
           />
 
-          <Button
-            type="submit"
-            className="w-full h-11 bg-[#cee88c] text-black font-medium hover:bg-[#cee88c]/90 transition-colors mt-2"
-            disabled={isPending}
-          >
-            {isPending ? "Sending..." : "Send reset link"}
-          </Button>
+          <div className="flex gap-3 mt-2">
+            <PremiumButton 
+              text="I remember now"
+              icon={ArrowLeft}
+              href="/auth/login"
+              variant="outline"
+              className="flex-1 h-12 text-sm font-bold bg-white/5 border border-white/20 hover:bg-white/10"
+              noShadow={true}
+              iconRotation={0}
+            />
 
-          <p className="text-center text-sm text-white/35 pt-1">
-            Remember your password?{" "}
-            <Link
-              to="/auth/login"
-              className="text-[#cee88c]/80 hover:text-[#cee88c] transition-colors"
+            <Button
+              type="submit"
+              className="flex-1 h-12 bg-[#cee88c] text-black font-bold text-sm rounded-full hover:bg-[#cee88c]/90 border border-white/20 transition-all active:scale-[0.98]"
+              disabled={isPending}
             >
-              Sign in
-            </Link>
-          </p>
+              {isPending ? "Sending..." : "Send reset link"}
+            </Button>
+          </div>
         </form>
       </Form>
     </div>
