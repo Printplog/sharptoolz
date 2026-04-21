@@ -10,7 +10,9 @@ import {
   Headset,
   Send, 
   Twitter,
-  Instagram
+  Instagram,
+  Bell,
+  Megaphone
 } from "lucide-react";
 
 interface ActionItem {
@@ -83,6 +85,7 @@ const itemVariants: Variants = {
 export default function WhatsAppButton() {
   const { pathname } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [showAnnouncementCard, setShowAnnouncementCard] = useState(false);
 
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["siteSettings"],
@@ -248,6 +251,92 @@ export default function WhatsAppButton() {
           <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl -z-10" />
         )}
       </div>
+
+      {/* Global Announcement Jingle Bell & Floating Card */}
+      <AnimatePresence>
+        {settings?.enable_global_announcement && settings?.global_announcement_text && !isOpen && (
+          <div className={cn(
+            "fixed right-8 z-70 flex flex-col items-center",
+            isDashboardOrAdmin 
+              ? "bottom-38 lg:bottom-28" 
+              : "bottom-26"
+          )}>
+            {/* The Floating Announcement Card (Pops up like social icons) */}
+            <AnimatePresence>
+              {showAnnouncementCard && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.8, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: 20, scale: 0.8, filter: "blur(10px)" }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  className="mb-4 w-72 bg-[#0a0a0a]/90 backdrop-blur-2xl border border-primary/30 rounded-2xl p-5 shadow-[0_20px_50px_rgba(var(--primary),0.2)] relative group"
+                >
+                  <button 
+                    onClick={() => setShowAnnouncementCard(false)}
+                    className="absolute top-2 right-2 p-1 text-white/20 hover:text-white transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                  
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Megaphone className="w-5 h-5 text-primary animate-bounce shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
+                    </div>
+                    <h3 className="text-xs font-fancy italic-primary uppercase tracking-tighter">Site Update</h3>
+                    <p className="text-[13px] text-white/80 text-center leading-relaxed font-medium italic">
+                      "{settings.global_announcement_text}"
+                    </p>
+                    
+                    {settings.global_announcement_link && (
+                      <a 
+                        href={settings.global_announcement_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 text-[9px] font-black uppercase tracking-[0.2em] text-primary hover:text-white transition-all border-b border-primary/40 hover:border-white"
+                      >
+                        Read Full Story
+                      </a>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* The Bell Button with Enhanced Pulse */}
+            <motion.button
+              onClick={() => setShowAnnouncementCard(!showAnnouncementCard)}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ 
+                scale: [1, 1.15, 1], 
+                rotateZ: [0, -20, 20, -20, 20, -20, 0],
+                y: [0, -10, -15, -18, -15, -10, 0],
+                opacity: 1,
+              }}
+              transition={{
+                repeat: Infinity,
+                repeatDelay: 3,
+                duration: 0.9,
+                ease: "easeInOut",
+              }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-12 h-12 rounded-full bg-[#0a0a0a] border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_20px_rgba(var(--primary),0.3)] group relative"
+            >
+              <Bell className="w-6 h-6 fill-primary/10 group-hover:fill-primary/20 transition-all" />
+              
+              {/* Double Pulse Effect */}
+              <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping [animation-duration:2s]" />
+              <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping [animation-duration:3s] [animation-delay:0.5s]" />
+              
+              {/* Alert Badge */}
+              <span className="absolute top-0 right-0 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-primary border-2 border-[#0a0a0a]" />
+              </span>
+            </motion.button>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
