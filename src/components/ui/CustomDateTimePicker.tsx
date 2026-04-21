@@ -191,7 +191,7 @@ export default function CustomDateTimePicker({
               <SelectTrigger className="bg-white/10 border-white/20 text-white w-24">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[999999]">
+              <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[300]">
                 {yearOptions.map((y) => (
                   <SelectItem key={y} value={y.toString()} className="text-white hover:bg-white/10">
                     {y}
@@ -208,7 +208,7 @@ export default function CustomDateTimePicker({
               <SelectTrigger className="bg-white/10 border-white/20 text-white w-32">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-white/20 z-[999999]">
+              <SelectContent className="bg-gray-900 border-white/20 z-[300]">
                 {monthOptions.map((m) => (
                   <SelectItem key={m.value} value={m.value.toString()} className="text-white hover:bg-white/10">
                     {m.label}
@@ -225,7 +225,7 @@ export default function CustomDateTimePicker({
               <SelectTrigger className="bg-white/10 border-white/20 text-white w-20">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[999999]">
+              <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[300]">
                 {dayOptions.slice(0, daysInMonth).map((d) => (
                   <SelectItem key={d} value={d.toString()} className="text-white hover:bg-white/10">
                     {d.toString().padStart(2, '0')}
@@ -249,7 +249,7 @@ export default function CustomDateTimePicker({
             <SelectTrigger className="bg-white/10 border-white/20 text-white w-20">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[999999]">
+            <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[300]">
               {is12Hour ? (
                 // 12-hour format (1-12)
                 [...Array(12)].map((_, i) => {
@@ -285,7 +285,7 @@ export default function CustomDateTimePicker({
             <SelectTrigger className="bg-white/10 border-white/20 text-white w-20">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[999999]">
+            <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[300]">
               {[...Array(60)].map((_, i) => (
                 <SelectItem key={i} value={i.toString()} className="text-white hover:bg-white/10">
                   {i.toString().padStart(2, '0')}
@@ -308,7 +308,7 @@ export default function CustomDateTimePicker({
             <SelectTrigger className="bg-white/10 border-white/20 text-white w-20">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[999999]">
+            <SelectContent className="bg-gray-900 border-white/20 max-h-60 z-[300]">
               {[...Array(60)].map((_, i) => (
                 <SelectItem key={i} value={i.toString()} className="text-white hover:bg-white/10">
                   {i.toString().padStart(2, '0')}
@@ -327,7 +327,7 @@ export default function CustomDateTimePicker({
             <SelectTrigger className="bg-white/10 border-white/20 text-white w-20">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-white/20 z-[999999]">
+            <SelectContent className="bg-gray-900 border-white/20 z-[300]">
               <SelectItem value="AM" className="text-white hover:bg-white/10">AM</SelectItem>
               <SelectItem value="PM" className="text-white hover:bg-white/10">PM</SelectItem>
             </SelectContent>

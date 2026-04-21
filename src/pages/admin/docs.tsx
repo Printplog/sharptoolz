@@ -85,7 +85,7 @@ export default function AdminDocsPage() {
     <div className="dashboard-content flex flex-col gap-6 py-8 min-h-screen">
       <div className="flex flex-col lg:flex-row gap-12">
         {/* Navigation Sidebar */}
-        <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-24 self-start space-y-10 z-20">
+        <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-24 self-start space-y-10 z-[40]">
           <div className="space-y-6">
             <div className="flex items-center gap-3 px-1">
               <div className="w-8 h-8 rounded-xl bg-[#cee88c]/10 flex items-center justify-center border border-[#cee88c]/20 shadow-[0_0_15px_rgba(206,232,140,0.1)]">

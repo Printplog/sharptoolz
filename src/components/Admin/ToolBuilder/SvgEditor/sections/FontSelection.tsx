@@ -35,7 +35,7 @@ export default function FontSelection({
           <SelectTrigger className="w-full bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0">
             <SelectValue placeholder="Select fonts used in this template" />
           </SelectTrigger>
-          <SelectContent className="bg-background border border-white/10 z-[999999]">
+          <SelectContent className="bg-background border border-white/10 z-[300]">
             {fonts.length === 0 ? (
               <SelectItem value="none" disabled className="text-white/60 italic">
                 No fonts available. Upload a font first.

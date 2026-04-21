@@ -142,7 +142,7 @@ export default function Sidebar() {
   const sidebarContent = (
     <>
       {/* Mobile Close Button - Only visible on mobile header area */}
-      <div className="lg:hidden absolute right-4 top-10 z-[52]">
+      <div className="lg:hidden absolute right-4 top-10 z-[120]">
         <Button
           variant="ghost"
           size="icon"
@@ -158,7 +158,7 @@ export default function Sidebar() {
         variant="ghost"
         size="icon"
         onClick={toggleCollapsed}
-        className="hidden lg:flex absolute -right-3 top-12 size-6 rounded-full border border-white/10 bg-[#121214] text-white/60 hover:text-white hover:bg-white/10 z-20 transition-all duration-300"
+        className="hidden lg:flex absolute -right-3 top-12 size-6 rounded-full border border-white/10 bg-[#121214] text-white/60 hover:text-white hover:bg-white/10 z-[70] transition-all duration-300"
       >
         {isCollapsed ? <ChevronRight className="size-3" /> : <ChevronLeft className="size-3" />}
       </Button>
@@ -294,7 +294,7 @@ export default function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] lg:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] lg:hidden"
               onClick={close}
             />
 
@@ -308,7 +308,7 @@ export default function Sidebar() {
                 duration: 0.2, 
                 ease: [0.4, 0, 0.2, 1] 
               }}
-              className="fixed inset-y-0 left-0 w-64 bg-background border-r border-white/10 h-full flex flex-col py-10 z-[41] lg:hidden"
+              className="fixed inset-y-0 left-0 w-64 bg-background border-r border-white/10 h-full flex flex-col py-10 z-[110] lg:hidden"
             >
               {sidebarContent}
             </motion.aside>
@@ -316,10 +316,9 @@ export default function Sidebar() {
         )}
       </AnimatePresence>
 
-      {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "border-r border-white/10 h-full hidden lg:flex flex-col py-10 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] relative bg-white/5",
+          "border-r border-white/10 h-full hidden lg:flex flex-col py-10 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] relative bg-white/5 z-[60]",
           isCollapsed ? "w-20" : "w-64"
         )}
       >

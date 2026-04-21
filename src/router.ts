@@ -37,6 +37,7 @@ export type Path =
   | `/documents`
   | `/documents/:id`
   | `/privacy`
+  | `/referrals`
   | `/settings`
   | `/settings/api`
   | `/sharp-guy`

@@ -2,11 +2,12 @@ import HotTools from "@/components/Dashboard/Dashboard/HotTools";
 import QuickActions from "@/components/Dashboard/Dashboard/QuickActions";
 import { useAuthStore } from "@/store/authStore";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
-import { FileText, Wallet, CloudDownload, Users, Plus } from "lucide-react";
-import { toast } from "sonner";
+import { FileText, Wallet, CloudDownload, Users, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
 
   const userStats: StatData[] = [
@@ -42,7 +43,7 @@ export default function Dashboard() {
     },
     {
       title: "Referral Program",
-      value: "Coming Soon",
+      value: "Ongoing",
       label: "Affiliate System",
       icon: Users,
       gradient: "from-white/5 to-white/[0.02]",
@@ -52,8 +53,8 @@ export default function Dashboard() {
       isComingSoon: true,
       action: {
         label: "Refer Now",
-        icon: Plus,
-        onClick: () => toast.info("Referral program is coming soon!")
+        icon: ArrowRight,
+        onClick: () => navigate("/referrals")
       }
     }
   ];

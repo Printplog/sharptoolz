@@ -1,4 +1,4 @@
-import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, ArrowRight } from "lucide-react";
+import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, ArrowRight, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings } from "@/api/apiEndpoints";
 import { Link, useLocation } from "react-router-dom";
@@ -43,6 +43,11 @@ export default function BottomBar() {
       icon: <Wallet className="w-5 h-5 mb-[2px]" />,
       label: "Wallet",
       to: "/wallet",
+    },
+    {
+      icon: <Users className="w-5 h-5 mb-[2px]" />,
+      label: "Refer",
+      to: "/referrals",
     },
     {
       icon: <Settings className="w-5 h-5 mb-[2px]" />,

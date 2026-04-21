@@ -4,7 +4,7 @@ import type { HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { LoadingState } from "./LoadingState";
 
 interface PremiumButtonProps extends HTMLMotionProps<"button"> {
   text: string;
@@ -29,7 +29,9 @@ const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonProps>(
             "whitespace-nowrap",
             !className?.includes("text-") && "text-sm md:text-base"
           )}>
-            {isLoading ? "Please wait..." : text}
+            {isLoading ? (
+              <LoadingState size="sm" className="justify-start w-[60px]" />
+            ) : text}
           </span>
           <div className={cn(
             "flex items-center justify-center w-8 h-8 rounded-full bg-transparent transition-colors duration-300",
@@ -37,7 +39,7 @@ const PremiumButton = React.forwardRef<HTMLButtonElement, PremiumButtonProps>(
             !showIconBorder && "border-none"
           )}>
             {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shadow-[0_0_8px_rgba(currentColor,0.5)]" />
             ) : Icon && (
               <motion.div
                 variants={{

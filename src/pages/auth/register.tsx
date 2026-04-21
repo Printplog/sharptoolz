@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import type { LoginPayload, RegisterPayload } from "@/types";
 import { login, register } from "@/api/apiEndpoints";
@@ -30,6 +31,7 @@ const registerSchema = z
     email: z.string().email("Invalid email"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm your password"),
+    referred_by: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -49,6 +51,7 @@ const fields: {
   { name: "email", label: "Email", type: "email", placeholder: "you@example.com", icon: Mail },
   { name: "password", label: "Password", type: "password", placeholder: "••••••••", icon: Lock },
   { name: "confirmPassword", label: "Confirm Password", type: "password", placeholder: "••••••••", icon: Lock },
+  { name: "referred_by", label: "Referral Code (Optional)", placeholder: "Referrer's username", icon: User },
 ];
 
 interface Props {
@@ -58,6 +61,9 @@ interface Props {
 export default function Register({ dialog = false }: Props) {
   const navigate = useNavigate();
   const { setUser } = useAuthStore();
+  const [searchParams] = useSearchParams();
+  const refFromUrl = searchParams.get("ref");
+
   const form = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -65,8 +71,16 @@ export default function Register({ dialog = false }: Props) {
       email: "",
       password: "",
       confirmPassword: "",
+      referred_by: refFromUrl || "",
     },
   });
+
+  // Update field if URL param changes
+  useEffect(() => {
+    if (refFromUrl && !form.getValues("referred_by")) {
+      form.setValue("referred_by", refFromUrl);
+    }
+  }, [refFromUrl, form]);
 
   const { mutate: loginMutate, isPending: loginPending } = useMutation({
     mutationFn: (data: LoginPayload) => login(data),
@@ -99,8 +113,7 @@ export default function Register({ dialog = false }: Props) {
   });
 
   const onSubmit = async (values: RegisterSchema) => {
-    const referred_by = localStorage.getItem("referred_by") || undefined;
-    mutate({ ...values, referred_by });
+    mutate(values);
   };
 
   return (

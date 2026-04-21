@@ -17,7 +17,7 @@ export default function Navbar() {
 
 
   return (
-    <header className="flex items-center justify-between py-3 md:py-4 border-b border-white/10 bg-white/5 px-4 md:px-5 sticky top-0 backdrop-blur-2xl z-[9]">
+    <header className="flex items-center justify-between py-3 md:py-4 border-b border-white/10 bg-white/5 px-4 md:px-5 sticky top-0 backdrop-blur-2xl z-50">
       {/* Left Side - Logo (mobile) / Greeting (desktop) */}
       <div className="flex items-center gap-5">
         <div className="md:hidden">

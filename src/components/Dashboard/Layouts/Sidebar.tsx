@@ -10,7 +10,8 @@ import {
   Wallet,
   ArrowRight,
   MessageSquare,
-  Plus,
+  Users,
+  Plus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -65,6 +66,11 @@ export default function Sidebar() {
       to: "/wallet",
     },
     {
+      icon: <Users className="h-4 w-4" />,
+      label: "Refer & Earn",
+      to: "/referrals",
+    },
+    {
       icon: <Settings className="h-4 w-4" />,
       label: "Settings",
       to: "/settings",
@@ -95,7 +101,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "w-64 bg-white/5 border-r border-white/10 h-full lg:flex hidden flex-col py-10"
+        "w-64 bg-white/5 border-r border-white/10 h-full lg:flex hidden flex-col py-10 relative z-[60]"
       )}
     >
       {/* Header */}
