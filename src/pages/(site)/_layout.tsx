@@ -13,7 +13,6 @@ export default function Layout() {
   return (
     <div className="bg-background text-white min-h-screen overflow-x-hidden w-full relative">
       <SmoothScroll>
-        <GlobalAnnouncement />
         <Navbar />
         <BreadcrumbSEO />
         <main className="pt-26 md:pt-32 pb-20">

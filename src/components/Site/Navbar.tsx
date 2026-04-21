@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import { User, ArrowRight, X, ArrowUpRight } from "lucide-react";
 import { PremiumButton } from "../ui/PremiumButton";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
+import { Megaphone, ExternalLink } from "lucide-react";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,6 +21,19 @@ export default function Navbar() {
     queryKey: ["siteSettings"],
     queryFn: getSiteSettings,
   });
+
+  const [isAnnouncementVisible, setIsAnnouncementVisible] = useState(true);
+
+  // Re-show announcement when settings change
+  useEffect(() => {
+    if (settings?.enable_global_announcement) {
+      setIsAnnouncementVisible(true);
+    }
+  }, [settings?.enable_global_announcement, settings?.updated_at]);
+
+  const showAnnouncement = settings?.enable_global_announcement && 
+                          settings?.global_announcement_text && 
+                          isAnnouncementVisible;
 
   // Correct Scroll Logic: 
   // Scroll DOWN (latest > previous) -> HIDE
@@ -64,9 +78,50 @@ export default function Navbar() {
         }}
         animate={isHidden ? "hidden" : "visible"}
         transition={{ duration: 0.35, ease: "easeInOut" }}
-        className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-lg"
+        className="fixed top-0 left-0 right-0 z-[100]"
       >
-        <div className="relative">
+        {/* Global Announcement Banner Integration */}
+        <AnimatePresence>
+          {showAnnouncement && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="bg-[#0a0a0a] border-b border-primary/20 shadow-[0_4px_30px_rgba(var(--primary),0.1)] overflow-hidden"
+            >
+              <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 px-4 py-2 text-[11px] md:text-xs font-bold uppercase tracking-wider text-white">
+                <div className="flex items-center gap-2">
+                  <div className="bg-primary/20 p-1 rounded-md">
+                    <Megaphone className="w-3 h-3 text-primary" />
+                  </div>
+                  <p className="leading-tight">{settings.global_announcement_text}</p>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  {settings.global_announcement_link && (
+                    <a
+                      href={settings.global_announcement_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 bg-primary/20 hover:bg-primary/30 px-2 py-1 rounded-md transition-all text-[10px]"
+                    >
+                      INFO <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  )}
+                  <button
+                    onClick={() => setIsAnnouncementVisible(false)}
+                    className="text-white/40 hover:text-white p-1 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Navbar Layer */}
+        <div className="relative backdrop-blur-lg">
           <SectionPadding className="flex justify-between items-center py-4 lg:py-8">
             <Logo />
 
