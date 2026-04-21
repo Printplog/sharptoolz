@@ -28,6 +28,7 @@ export type RegisterPayload = {
   username: string;
   password: string;
   confirmPassword: string;
+  referred_by?: string;
 };
 
 export interface AuthDialogProps {
@@ -390,6 +391,11 @@ export type SiteSettings = {
   global_announcement_text: string;
   global_announcement_link: string;
   enable_global_announcement: boolean;
+  
+  // 5. Referral Program Configs
+  enable_referrals: boolean;
+  referral_reward_amount: string;
+  min_referral_deposit: string;
 
   enable_ai_features: boolean;
   manual_purchase_text: string;

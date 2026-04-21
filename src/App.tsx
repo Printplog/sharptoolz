@@ -8,6 +8,17 @@ import { usePresence } from '@/hooks/usePresence'
 export default function App() {
   usePresence()
 
+  useEffect(() => {
+    // Capture referral source from URL and persist it
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      localStorage.setItem('referred_by', ref);
+      // Clean up URL parameter to keep it clean (optional)
+      // window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const user = useAuthStore((state) => state.user)
   const isAdminOnlyUser = isAdmin(user?.role)
 

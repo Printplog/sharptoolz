@@ -11,8 +11,7 @@ import {
   Send, 
   Twitter,
   Instagram,
-  Bell,
-  Megaphone
+  Bell
 } from "lucide-react";
 
 interface ActionItem {

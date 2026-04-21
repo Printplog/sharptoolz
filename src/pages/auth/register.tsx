@@ -99,7 +99,8 @@ export default function Register({ dialog = false }: Props) {
   });
 
   const onSubmit = async (values: RegisterSchema) => {
-    mutate(values);
+    const referred_by = localStorage.getItem("referred_by") || undefined;
+    mutate({ ...values, referred_by });
   };
 
   return (
