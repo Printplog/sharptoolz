@@ -9,6 +9,7 @@ import { ConfirmAction } from "@/components/ConfirmAction";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { SiteSettings } from "@/types";
+import { QRCodeSVG } from 'qrcode.react';
 
 const PendingFundingNotice: React.FC = () => {
   const [copied, setCopied] = useState(false);
@@ -101,6 +102,18 @@ const PendingFundingNotice: React.FC = () => {
             </div>
           </div>
 
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="bg-white p-2 rounded-xl shadow-xl shadow-yellow-500/10 border border-white/10">
+              <QRCodeSVG 
+                value={address} 
+                size={140}
+                level="H"
+                includeMargin={false}
+                className="rounded-lg"
+              />
+            </div>
+          </div>
+
           <div className="flex items-center justify-between gap-4 bg-black/20 rounded-xl p-3 border border-white/5">
             <span className="text-white text-xs font-mono truncate">{address}</span>
             <button onClick={copyToClipboard} className="shrink-0 text-white/40 hover:text-white transition-colors">
@@ -117,7 +130,7 @@ const PendingFundingNotice: React.FC = () => {
       <div className="flex gap-3">
         <button
           onClick={() => setShowAmountDialog(true)}
-          className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+          className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
         >
           <MessageSquare className="w-3.5 h-3.5" />
           Pay on WhatsApp
@@ -129,7 +142,7 @@ const PendingFundingNotice: React.FC = () => {
           trigger={
             <button
               disabled={isPending}
-              className="px-6 flex items-center justify-center bg-white/5 text-white/40 border border-white/5 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 disabled:opacity-50"
+              className="px-6 flex items-center justify-center bg-white/5 text-white/40 border border-white/5 py-4 rounded-full font-black text-xs uppercase tracking-widest hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 disabled:opacity-50"
             >
               <XCircle className="w-3.5 h-3.5 mr-2" />
               {isPending ? "..." : "Cancel"}
@@ -181,7 +194,7 @@ const PendingFundingNotice: React.FC = () => {
             <button
               onClick={handleWhatsAppRedirect}
               disabled={!amountNaira || !!isBelowMin || rateLoading}
-              className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <MessageSquare className="w-4 h-4" />
               {rateLoading ? "Loading Rate..." : "Chat on WhatsApp"}

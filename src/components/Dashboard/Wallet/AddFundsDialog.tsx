@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import type { CryptoPaymentData, SiteSettings } from '@/types';
 import errorMessage from '@/lib/utils/errorMessage';
 
+import { QRCodeSVG } from 'qrcode.react';
+
 export default function AddFundsDialog({
   open,
   onOpenChange,
@@ -171,6 +173,18 @@ export default function AddFundsDialog({
               </div>
             ) : data?.payment_address ? (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="bg-white p-3 rounded-2xl shadow-xl shadow-primary/10 border border-white/10">
+                    <QRCodeSVG 
+                      value={data.payment_address} 
+                      size={180}
+                      level="H"
+                      includeMargin={false}
+                      className="rounded-lg"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-xs font-black uppercase tracking-widest text-white/40 ml-1">USDT BEP20 Address</label>
                   <div className="group relative bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:border-primary/30 transition-colors">
@@ -195,7 +209,7 @@ export default function AddFundsDialog({
 
                 <button
                   onClick={() => onOpenChange(false)}
-                  className="w-full bg-white text-black py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-white/5"
+                  className="w-full bg-white text-black py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-white/5"
                 >
                   Close & Proceed
                 </button>
@@ -277,7 +291,7 @@ export default function AddFundsDialog({
                       onOpenChange(false);
                     }}
                     disabled={!amountUsd || (amountUsd && usdToNgn && (parseFloat(amountUsd) / usdToNgn) < minTopup) || rateLoading}
-                    className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                    className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
                   >
                     <MessageSquare className="w-4 h-4" />
                     Chat with Vendor on WhatsApp
