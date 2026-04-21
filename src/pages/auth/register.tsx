@@ -13,9 +13,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { LoginPayload, RegisterPayload } from "@/types";
-import { login, register } from "@/api/apiEndpoints";
+import { login, register, getSiteSettings } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { useAuthStore } from "@/store/authStore";
@@ -118,6 +118,16 @@ export default function Register({ dialog = false }: Props) {
     mutate({ ...values, source });
   };
 
+  const { data: settings } = useQuery({
+    queryKey: ["siteSettings"],
+    queryFn: getSiteSettings,
+  });
+
+  const activeFields = fields.filter(f => {
+    if (f.name === "referred_by") return settings?.enable_referrals !== false;
+    return true;
+  });
+
   return (
     <div className="space-y-8">
       <div className="space-y-1">
@@ -128,7 +138,7 @@ export default function Register({ dialog = false }: Props) {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          {fields.map((f) => (
+          {activeFields.map((f) => (
             <FormField
               key={f.name}
               control={form.control}

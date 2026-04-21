@@ -83,7 +83,7 @@ function CreateCampaignDialog({ onSuccess }: { onSuccess: () => void }) {
           className="tracking-tight hover:scale-105 primary-glow"
         />
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-gray-900 border-white/20 rounded-[2rem] p-8 text-white">
+      <DialogContent className="sm:max-w-md p-8">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white tracking-tight">Create new source</DialogTitle>
         </DialogHeader>
@@ -228,7 +228,7 @@ Auto-customize your workflow in seconds!`;
                   <Share2 className="w-4 h-4" />
                 </button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md bg-gray-900 border-white/20 rounded-[2rem] text-white">
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle className="text-white text-center font-black uppercase italic tracking-tight">Share Tracking Link</DialogTitle>
                 </DialogHeader>
@@ -263,7 +263,7 @@ Auto-customize your workflow in seconds!`;
                   <Trash2 className="w-4 h-4" />
                 </button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="bg-gray-900 border-white/20 rounded-[2rem] text-white">
+              <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-white font-bold tracking-tight">Are you sure?</AlertDialogTitle>
                   <AlertDialogDescription className="text-white/40">

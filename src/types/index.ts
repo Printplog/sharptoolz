@@ -406,8 +406,9 @@ export type SiteSettings = {
   
   // 5. Referral Program Configs
   enable_referrals: boolean;
-  referral_reward_amount: string;
   min_referral_deposit: string;
+  referral_percentage: string;
+  min_withdrawal_threshold: string;
 
   enable_ai_features: boolean;
   manual_purchase_text: string;

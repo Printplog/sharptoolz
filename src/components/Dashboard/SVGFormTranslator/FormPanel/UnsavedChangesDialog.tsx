@@ -28,7 +28,7 @@ export function UnsavedChangesDialog({
 }: UnsavedChangesDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={(val) => !val && onStay()}>
-      <AlertDialogContent className="border-white/10 bg-background text-white">
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
           <AlertDialogDescription className="text-white/70">

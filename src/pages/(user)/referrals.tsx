@@ -10,7 +10,7 @@ import ReferralStats from "@/components/Site/Dashboard/Referrals/ReferralStats";
 import ReferralLink from "@/components/Site/Dashboard/Referrals/ReferralLink";
 import ReferralHistory from "@/components/Site/Dashboard/Referrals/ReferralHistory";
 import ReferralLeaderboard from "@/components/Site/Dashboard/Referrals/ReferralLeaderboard";
-import { Gift, Sparkles, ArrowRight, Copy, Check, Wallet, X, Loader2 } from "lucide-react";
+import { Gift, Sparkles, ArrowRight, Copy, Check, Wallet, X, Loader2, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -155,6 +155,26 @@ export default function ReferralsPage() {
 
   return (
     <div className="dashboard-content space-y-8 pb-10">
+      {stats && stats.enable_referrals === false && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden p-6 rounded-[2rem] bg-red-500/10 border border-red-500/20 flex items-center gap-4"
+        >
+          <div className="w-12 h-12 bg-red-500/20 rounded-2xl flex items-center justify-center border border-red-500/30 shrink-0">
+            <AlertTriangle className="w-6 h-6 text-red-500" />
+          </div>
+          <div>
+            <h4 className="text-white font-black uppercase italic tracking-tight text-lg leading-none">
+              Referral Program Currently <span className="text-red-500">Closed</span>
+            </h4>
+            <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">
+              The affiliate system is under scheduled maintenance. You can still view your stats and leaderboards.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Header Section */}
       <div className="relative overflow-hidden rounded-[2.5rem] bg-[#0a0a0a] border border-primary/20 p-8 md:p-12 group">
         {/* Animated Glow */}
@@ -187,7 +207,8 @@ export default function ReferralsPage() {
 
             <button 
               onClick={() => setIsWithdrawModalOpen(true)}
-              className="px-5 py-2.5 bg-white/5 border border-white/10 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95 flex items-center gap-2 backdrop-blur-sm"
+              disabled={stats?.enable_referrals === false}
+              className="px-5 py-2.5 bg-white/5 border border-white/10 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95 flex items-center gap-2 backdrop-blur-sm disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <Wallet className="w-3.5 h-3.5 text-primary" />
               <span>Withdraw</span>
@@ -202,8 +223,9 @@ export default function ReferralsPage() {
                   setTimeout(() => setCopiedHero(false), 2000);
                 }
               }}
-              className="w-10 h-10 bg-white/5 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-95 backdrop-blur-sm group/btn"
-              title="Copy referral link"
+              disabled={stats?.enable_referrals === false}
+              className="w-10 h-10 bg-white/5 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-95 backdrop-blur-sm group/btn disabled:opacity-30 disabled:cursor-not-allowed"
+              title={stats?.enable_referrals === false ? "Program Closed" : "Copy referral link"}
             >
               {copiedHero ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-white/40 group-hover:text-white" />}
             </button>
@@ -247,7 +269,7 @@ export default function ReferralsPage() {
                 </div>
                 <button 
                   onClick={() => remindMutation.mutate()}
-                  disabled={remindMutation.isPending}
+                  disabled={remindMutation.isPending || stats?.enable_referrals === false}
                   className="px-6 py-2.5 bg-amber-500 text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.3)] disabled:opacity-50 flex items-center gap-2"
                 >
                   {remindMutation.isPending ? (

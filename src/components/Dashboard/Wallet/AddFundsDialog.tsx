@@ -91,7 +91,7 @@ export default function AddFundsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0a0a0a] border-white/10 text-white rounded-[2rem] p-8 max-w-md overflow-hidden">
+      <DialogContent className="p-8 max-w-md overflow-hidden">
         {/* Background Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/20 rounded-full blur-[80px] -z-10" />
 

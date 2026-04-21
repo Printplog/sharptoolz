@@ -141,7 +141,7 @@ const PendingFundingNotice: React.FC = () => {
 
       {/* Amount Input Dialog */}
       <Dialog open={showAmountDialog} onOpenChange={setShowAmountDialog}>
-        <DialogContent className="bg-[#0a0a0a] border-white/10 text-white rounded-[2rem] p-8 max-w-sm">
+        <DialogContent className="p-8 max-w-sm">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl font-black text-white tracking-tighter uppercase italic flex items-center gap-3">
               <Wallet className="w-5 h-5 text-green-400" />

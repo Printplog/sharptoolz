@@ -60,7 +60,7 @@ export default function AdjustBalanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0B0B0F] border-white/20 max-w-lg rounded-[2rem] p-8 text-white">
+      <DialogContent className="max-w-lg p-8">
         <DialogHeader>
           <DialogTitle className="text-white">Adjust Wallet Balance</DialogTitle>
           <DialogDescription className="text-white/40">

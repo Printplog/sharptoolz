@@ -308,7 +308,7 @@ export default function SignatureField({
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg bg-[#0a0a0c] border-white/10 p-0 overflow-hidden shadow-2xl rounded-2xl">
+        <DialogContent className="max-w-lg p-0 overflow-hidden shadow-2xl">
           <div className="p-4 pb-0">
             <DialogHeader className="mb-3">
               <div className="flex items-center gap-2">

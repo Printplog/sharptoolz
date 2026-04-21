@@ -33,6 +33,7 @@ import {
   Zap,
   Lock,
   MessageCircle,
+  Gift,
   Link as LinkIcon
 } from "lucide-react";
 import { toast } from "sonner";
@@ -67,6 +68,10 @@ export default function AdminSettings() {
     show_twitter_on_hover: true,
     show_tiktok_on_hover: true,
     enable_ai_features: true,
+    enable_referrals: true,
+    referral_percentage: "",
+    min_referral_deposit: "",
+    min_withdrawal_threshold: "",
   });
 
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
@@ -106,6 +111,10 @@ export default function AdminSettings() {
         show_twitter_on_hover: settings.show_twitter_on_hover ?? true,
         show_tiktok_on_hover: settings.show_tiktok_on_hover ?? true,
         enable_ai_features: settings.enable_ai_features ?? true,
+        enable_referrals: settings.enable_referrals ?? true,
+        referral_percentage: settings.referral_percentage || "",
+        min_referral_deposit: settings.min_referral_deposit || "",
+        min_withdrawal_threshold: settings.min_withdrawal_threshold || "",
       });
     }
   }, [settings]);
@@ -190,6 +199,10 @@ export default function AdminSettings() {
           <TabsTrigger value="branding" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Flag className="w-4 h-4" />
             Branding Defaults
+          </TabsTrigger>
+          <TabsTrigger value="referrals" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
+            <Gift className="w-4 h-4" />
+            Referral Program
           </TabsTrigger>
         </TabsList>
 
@@ -560,11 +573,94 @@ export default function AdminSettings() {
             </CardContent>
           </Card>
         </TabsContent>
+ 
+        {/* 5. Referral Program Tab */}
+        <TabsContent value="referrals" className="space-y-6 focus:outline-none focus-visible:outline-none">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
+            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-2xl">
+                  <Gift className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold italic uppercase">Referral System</CardTitle>
+                  <CardDescription className="text-white/50">Manage affiliate rewards and withdrawal boundaries.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 p-8">
+              <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-bold text-white">Enable Referral Program</Label>
+                  <p className="text-sm text-white/50">Global toggle for the entire affiliate system.</p>
+                </div>
+                <Switch
+                  checked={formData.enable_referrals}
+                  onCheckedChange={(checked: boolean) => setFormData({ ...formData, enable_referrals: checked })}
+                />
+              </div>
+ 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="referral_percentage" className="text-white/70 text-xs font-black uppercase tracking-widest">Reward Percentage (%)</Label>
+                  </div>
+                  <Input
+                    id="referral_percentage"
+                    type="number"
+                    value={formData.referral_percentage}
+                    onChange={(e) => setFormData({ ...formData, referral_percentage: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono"
+                    placeholder="10.00"
+                    disabled={!formData.enable_referrals}
+                  />
+                  <p className="text-[11px] text-white/40 italic">Percentage of every deposit given to the referrer.</p>
+                </div>
+ 
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="min_referral_deposit" className="text-white/70 text-xs font-black uppercase tracking-widest">Trigger Deposit (USD)</Label>
+                  </div>
+                  <Input
+                    id="min_referral_deposit"
+                    type="number"
+                    value={formData.min_referral_deposit}
+                    onChange={(e) => setFormData({ ...formData, min_referral_deposit: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono"
+                    placeholder="6.00"
+                    disabled={!formData.enable_referrals}
+                  />
+                  <p className="text-[11px] text-white/40 italic">Min deposit required by invitee to trigger referral reward.</p>
+                </div>
+ 
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="min_withdrawal" className="text-white/70 text-xs font-black uppercase tracking-widest">Min Withdrawal (USD)</Label>
+                  </div>
+                  <Input
+                    id="min_withdrawal"
+                    type="number"
+                    value={formData.min_withdrawal_threshold}
+                    onChange={(e) => setFormData({ ...formData, min_withdrawal_threshold: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono"
+                    placeholder="10.00"
+                    disabled={!formData.enable_referrals}
+                  />
+                  <p className="text-[11px] text-white/40 italic">Minimum referral balance required to request a withdrawal.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Security Challenge Dialog */}
       <Dialog open={isChallengeOpen} onOpenChange={setIsChallengeOpen}>
-        <DialogContent className="bg-gray-900 border-white/20 text-white sm:max-w-[425px] rounded-[2rem] p-8">
+        <DialogContent className="sm:max-w-[425px] p-8">
           <DialogHeader className="mb-4">
             <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
               <ShieldCheck className="h-6 w-6 text-primary" />

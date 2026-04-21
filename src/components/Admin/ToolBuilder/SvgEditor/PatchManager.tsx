@@ -163,7 +163,7 @@ const PatchManager: React.FC<PatchManagerProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0B0B0F] border-white/20 text-white max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden shadow-2xl rounded-[2rem]">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden shadow-2xl">
         <DialogHeader className="p-7 pb-5 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -273,7 +273,7 @@ const PatchManager: React.FC<PatchManagerProps> = ({
         />
 
         <AlertDialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
-          <AlertDialogContent className="bg-gray-900 border-white/20 max-w-md rounded-[2rem] p-8 text-white">
+          <AlertDialogContent className="max-w-md p-8">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-white flex items-center gap-2 text-lg">
                 <AlertCircle className="h-5 w-5 text-yellow-500" />

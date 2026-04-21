@@ -37,7 +37,7 @@ const SuccessPaymentDialog = () => {
 
   return (
     <Dialog open={open} onOpenChange={closeDialog}>
-      <DialogContent className="border border-green-700/40 text-white">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-green-400">
             <CheckCircle className="w-5 h-5 text-green-400" />

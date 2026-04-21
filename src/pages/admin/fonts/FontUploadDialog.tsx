@@ -63,7 +63,7 @@ export default function FontUploadDialog({
                     icon={Upload}
                 />
             </DialogTrigger>
-            <DialogContent className="max-w-lg bg-[#0B0B0F] border-white/20 rounded-[2rem] text-white p-8">
+            <DialogContent className="max-w-lg p-8">
                 <DialogHeader>
                     <DialogTitle>Upload a new font</DialogTitle>
                     <DialogDescription>

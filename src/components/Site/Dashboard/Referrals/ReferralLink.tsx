@@ -115,7 +115,7 @@ Start creating in seconds here:`;
                       <Share2 className="w-4 h-4" />
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md bg-[#0a0a0a] border-white/10">
+                  <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                       <DialogTitle className="text-white text-center">Share Referral Link</DialogTitle>
                     </DialogHeader>

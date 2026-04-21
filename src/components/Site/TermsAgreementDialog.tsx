@@ -42,7 +42,7 @@ export default function TermsAgreementDialog() {
             setIsOpen(open);
         }}>
             <DialogContent
-                className="max-w-4xl bg-background border-white/10 p-8 rounded-xl shadow-2xl"
+                className="max-w-4xl p-8 shadow-2xl"
                 showCloseButton={false}
             >
                 <div className="flex flex-col items-center text-center space-y-6">

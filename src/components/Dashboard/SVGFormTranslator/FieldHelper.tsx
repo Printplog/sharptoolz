@@ -30,7 +30,7 @@ const FieldHelper: React.FC<FieldHelperProps> = ({
       />
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="bg-gray-900 border-white/20 text-white max-w-md">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-white">{fieldName} Help</DialogTitle>
           </DialogHeader>

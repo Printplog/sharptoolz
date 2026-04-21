@@ -75,7 +75,7 @@ export default function ToolDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-[#0B0B0F] border-white/20 rounded-[2rem] text-white p-8">
+      <DialogContent className="sm:max-w-[500px] p-8">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             🔧 {isEditing ? "Edit Tool" : "Add New Tool"}

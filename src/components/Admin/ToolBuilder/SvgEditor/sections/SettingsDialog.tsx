@@ -99,7 +99,7 @@ export default function SettingsDialog({
           icon={Settings}
         />
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-[#0B0B0F] border-white/20 rounded-[2rem] p-8 text-white">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-8">
         <DialogHeader>
           <DialogTitle>Template Configuration</DialogTitle>
         </DialogHeader>

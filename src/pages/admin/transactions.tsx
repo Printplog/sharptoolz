@@ -317,7 +317,7 @@ export default function TransactionsPage() {
 
       {/* Transaction Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="bg-gray-900 border-white/20 max-w-lg rounded-[2rem] p-8 shadow-2xl text-white">
+        <DialogContent className="max-w-lg p-8 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-white italic uppercase tracking-tighter">
               Transaction <span className="text-primary ml-1">#Details</span>

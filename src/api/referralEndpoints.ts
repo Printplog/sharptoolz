@@ -11,6 +11,7 @@ export interface ReferralStats {
   referral_link: string;
   reward_percentage: string;
   min_deposit_threshold: string;
+  enable_referrals: boolean;
 }
 
 export const requestWithdrawal = async (data: { amount: number; usdt_address: string }): Promise<{ detail: string }> => {

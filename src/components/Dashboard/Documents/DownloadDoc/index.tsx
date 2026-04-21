@@ -73,7 +73,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
 
     return (
         <CustomDialog dialogName={dialogName}>
-            <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col p-0 overflow-hidden border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
                 <DialogHeader className="p-6 pb-2">
                     <DialogTitle className="text-xl font-black tracking-tighter text-white">Download Document</DialogTitle>
                     <DialogDescription className="text-white/50 text-xs">

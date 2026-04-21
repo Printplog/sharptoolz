@@ -524,7 +524,7 @@ export default function SvgTemplateEditor() {
       </div>
 
       <AlertDialog open={showConfirmNav} onOpenChange={setShowConfirmNav}>
-        <AlertDialogContent className="bg-gray-900 border-white/20 rounded-[2rem] p-8 text-white">
+        <AlertDialogContent className="p-8">
           <AlertDialogHeader>
             <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4">
               <AlertTriangle className="h-6 w-6 text-yellow-500" />

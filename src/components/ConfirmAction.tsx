@@ -31,7 +31,7 @@ export const ConfirmAction: React.FC<ConfirmActionProps> = ({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
-      <AlertDialogContent className="bg-[#0B0B0F] border-white/20 rounded-[2rem] p-8 text-white">
+      <AlertDialogContent className="p-8">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>

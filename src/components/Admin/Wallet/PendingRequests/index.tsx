@@ -137,7 +137,7 @@ export default function PendingRequests({ requests, onApprove, onReject }: Pendi
 
       {/* Action Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="bg-[#0B0B0F] border-white/20 rounded-[2rem] p-8 text-white">
+        <DialogContent className="p-8">
           <DialogHeader>
             <DialogTitle className="text-white">
               {actionType === 'approve' ? 'Approve' : 'Reject'} Funding Request
