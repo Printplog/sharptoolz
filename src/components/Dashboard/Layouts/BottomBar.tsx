@@ -1,6 +1,7 @@
 import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, ArrowRight, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings } from "@/api/apiEndpoints";
+import { getReferralStats } from "@/api/referralEndpoints";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -13,6 +14,12 @@ export default function BottomBar() {
   const { data: settings } = useQuery({
     queryKey: ["siteSettings"],
     queryFn: getSiteSettings,
+  });
+
+  const { data: refStats } = useQuery({
+    queryKey: ["referralStats"],
+    queryFn: getReferralStats,
+    enabled: !!user,
   });
 
   const canAccessAdmin = isAdminOrStaff(user?.role);
@@ -87,7 +94,14 @@ export default function BottomBar() {
               isActive && "text-primary"
             )}
           >
-            {item.icon}
+            <div className="relative">
+              {item.icon}
+              {item.to === "/referrals" && refStats && refStats.pending_referrals > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary text-[8px] font-black text-black animate-pulse">
+                  {refStats.pending_referrals}
+                </span>
+              )}
+            </div>
             {item.label}
           </Link>
         );

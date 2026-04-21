@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings } from "@/api/apiEndpoints";
+import { getReferralStats } from "@/api/referralEndpoints";
 import {
   LayoutDashboard,
   Hammer,
@@ -28,6 +29,12 @@ export default function Sidebar() {
   const { data: settings } = useQuery({
     queryKey: ["siteSettings"],
     queryFn: getSiteSettings,
+  });
+  
+  const { data: refStats } = useQuery({
+    queryKey: ["referralStats"],
+    queryFn: getReferralStats,
+    enabled: !!user,
   });
 
   const canAccessAdmin = isAdminOrStaff(user?.role);
@@ -132,8 +139,15 @@ export default function Sidebar() {
                 {isActive && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] animate-in fade-in duration-500" />
                 )}
-                {item.icon}
-                <span className="ml-2">{item.label}</span>
+                <div className="flex items-center gap-2 flex-1">
+                   {item.icon}
+                   <span>{item.label}</span>
+                </div>
+                {item.to === "/referrals" && refStats && refStats.pending_referrals > 0 && (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-black text-black animate-pulse shrink-0">
+                    {refStats.pending_referrals}
+                  </span>
+                )}
               </button>
             </Link>
           );
