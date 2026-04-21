@@ -17,7 +17,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { TagInput } from "@/components/ui/tag-input";
 import {
   Select,
@@ -35,6 +36,7 @@ import errorMessage from "@/lib/utils/errorMessage";
 import { useEffect } from "react";
 import type { Tool, Font } from "@/types";
 import { LazyImage } from "@/components/LazyImage";
+import { FilePlus } from "lucide-react";
 
 // ------------------------
 // Validation Schema
@@ -229,7 +231,7 @@ export default function BuilderDialog() {
 
   return (
     <CustomDialog dialogName="toolBuilder">
-      <DialogContent className="bg-gray-900 border-white/20 text-white max-w-3xl w-full p-0 max-h-[90vh] flex flex-col overflow-hidden overflow-y-auto">
+      <DialogContent className="bg-[#0B0B0F] border-white/20 text-white max-w-3xl w-full p-0 max-h-[90vh] flex flex-col overflow-hidden overflow-y-auto rounded-[2rem] shadow-2xl">
         <DialogHeader className="p-6 pb-0 flex-shrink-0">
           <DialogTitle className="text-xl">Tool Builder</DialogTitle>
         </DialogHeader>
@@ -536,13 +538,12 @@ export default function BuilderDialog() {
 
               {/* Submit */}
               <div className="flex justify-end flex-shrink-0">
-                <Button
+                <PremiumButton
                   type="submit"
-                  className="text-sm font-medium"
-                  disabled={isPending || !form.formState.isDirty}
-                >
-                  {isPending ? "Creating..." : "Create Template"}
-                </Button>
+                  isLoading={isPending}
+                  text="Create Template"
+                  icon={FilePlus}
+                />
               </div>
             </div>
           </form>

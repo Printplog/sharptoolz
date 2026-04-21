@@ -21,6 +21,7 @@ import errorMessage from "@/lib/utils/errorMessage";
 import { useAuthStore } from "@/store/authStore";
 import { User, Mail, Lock } from "lucide-react";
 import { PremiumButton } from "@/components/ui/PremiumButton";
+import { sourceTracker } from "@/lib/utils/sourceTracker";
 
 const registerSchema = z
   .object({
@@ -113,7 +114,8 @@ export default function Register({ dialog = false }: Props) {
   });
 
   const onSubmit = async (values: RegisterSchema) => {
-    mutate(values);
+    const source = sourceTracker.getSource();
+    mutate({ ...values, source });
   };
 
   return (

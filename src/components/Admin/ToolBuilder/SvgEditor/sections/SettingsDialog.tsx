@@ -6,7 +6,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Settings, RefreshCw, AlertTriangle } from "lucide-react";
 import MetadataSection from "./MetadataSection";
 import FontSelection from "./FontSelection";
@@ -92,12 +93,13 @@ export default function SettingsDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <Settings className="h-4 w-4" />
-          Template Settings
-        </Button>
+        <PremiumButton 
+          variant="outline" 
+          text="Template Settings"
+          icon={Settings}
+        />
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-[#0B0B0F] border-white/20 rounded-[2rem] p-8 text-white">
         <DialogHeader>
           <DialogTitle>Template Configuration</DialogTitle>
         </DialogHeader>
@@ -153,16 +155,14 @@ export default function SettingsDialog({
                       Use this if you've updated the backend parser logic.
                     </p>
                   </div>
-                  <Button
+                  <PremiumButton
                     variant="outline"
-                    size="sm"
                     onClick={handleForceReparse}
-                    disabled={isReparsing}
-                    className="border-amber-500/30 hover:bg-amber-500/20 text-amber-500"
-                  >
-                    <RefreshCw className={`h-3.5 w-3.5 mr-2 ${isReparsing ? 'animate-spin' : ''}`} />
-                    {isReparsing ? 'Syncing...' : 'Force Re-Parse'}
-                  </Button>
+                    isLoading={isReparsing}
+                    text="Force Re-Parse"
+                    icon={RefreshCw}
+                    className="border-amber-500/30 text-amber-500"
+                  />
                 </div>
               </div>
             </div>

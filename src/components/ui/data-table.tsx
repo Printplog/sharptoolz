@@ -72,7 +72,7 @@ export interface DataTableFilter {
     value: string,
     context: DataTableControlChangeContext
   ) => void;
-  options: DataTableFilterOption[];
+  options?: DataTableFilterOption[];
   placeholder?: string;
   className?: string;
   resetValue?: string;
@@ -337,26 +337,38 @@ export function DataTable<TData, TValue>({
                   key={filter.key}
                   className={cn("min-w-[180px] xl:w-auto", filter.className)}
                 >
-                  <Select
-                    value={filter.value}
-                    onValueChange={(value) => handleFilterChange(filter, value)}
-                  >
-                    <SelectTrigger className="h-11 w-full border-white/10 bg-white/5 text-white focus-visible:border-white/20 focus-visible:ring-white/10">
-                      <div className="flex items-center gap-2 truncate">
-                        <SlidersHorizontal className="h-3.5 w-3.5 text-white/35" />
-                        <SelectValue
-                          placeholder={filter.placeholder ?? filter.label ?? "Select"}
-                        />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="border-white/10 bg-white/5 text-white">
-                      {filter.options.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {filter.options ? (
+                    <Select
+                      value={filter.value}
+                      onValueChange={(value) => handleFilterChange(filter, value)}
+                    >
+                      <SelectTrigger className="h-11 w-full border-white/10 bg-white/5 text-white focus-visible:border-white/20 focus-visible:ring-white/10">
+                        <div className="flex items-center gap-2 truncate">
+                          <SlidersHorizontal className="h-3.5 w-3.5 text-white/35" />
+                          <SelectValue
+                            placeholder={filter.placeholder ?? filter.label ?? "Select"}
+                          />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10 bg-white/5 text-white">
+                        {filter.options.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="relative">
+                      <SlidersHorizontal className="pointer-events-none absolute top-1/2 left-4 h-3.5 w-3.5 -translate-y-1/2 text-white/35" />
+                      <DebouncedInput
+                        value={filter.value}
+                        onChange={(value) => handleFilterChange(filter, String(value))}
+                        placeholder={filter.placeholder ?? filter.label ?? "Filter"}
+                        className="h-11 border-white/10 bg-white/5 pl-11 text-white placeholder:text-white/25 focus-visible:border-white/20 focus-visible:ring-white/10"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
 

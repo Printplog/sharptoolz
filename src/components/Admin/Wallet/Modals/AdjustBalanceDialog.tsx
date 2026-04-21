@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Save } from 'lucide-react';
+import { PremiumButton } from '@/components/ui/PremiumButton';
 
 interface UserWallet {
   id: string;
@@ -59,7 +60,7 @@ export default function AdjustBalanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1a1a1a] border-white/10 max-w-lg">
+      <DialogContent className="bg-[#0B0B0F] border-white/20 max-w-lg rounded-[2rem] p-8 text-white">
         <DialogHeader>
           <DialogTitle className="text-white">Adjust Wallet Balance</DialogTitle>
           <DialogDescription className="text-white/40">
@@ -173,21 +174,15 @@ export default function AdjustBalanceDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="border-white/10 text-white hover:bg-white/10"
+            className="rounded-full px-6 h-11 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
           >
             Cancel
           </Button>
-          <Button
+          <PremiumButton
             onClick={handleSubmit}
-            disabled={!amount || !reason}
-            className={
-              adjustmentType === 'credit'
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-red-600 hover:bg-red-700 text-white'
-            }
-          >
-            {adjustmentType === 'credit' ? 'Add Funds' : 'Remove Funds'}
-          </Button>
+            text={adjustmentType === 'credit' ? 'Add Funds' : 'Remove Funds'}
+            icon={adjustmentType === 'credit' ? TrendingUp : TrendingDown}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

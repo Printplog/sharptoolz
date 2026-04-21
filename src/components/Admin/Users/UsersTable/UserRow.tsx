@@ -1,7 +1,7 @@
 import { Mail, User as UserIcon, Download, HandCoins, ExternalLink, Shield, ShieldCheck, Wallet, Calendar } from "lucide-react";
-import { Link } from "react-router-dom";
+
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { ROLES } from "@/lib/constants/roles";
 import { motion } from "framer-motion";
 import { formatAdminDate } from "@/lib/utils/adminDate";
@@ -15,6 +15,7 @@ interface UserData {
     total_purchases: number;
     downloads: number;
     wallet_balance: string;
+    is_active: boolean;
 }
 
 interface UserRowProps {
@@ -49,9 +50,17 @@ export default function UserRow({ user, index, onPrefetch }: UserRowProps) {
                         <span className="font-bold text-white text-[13px] tracking-tight uppercase group-hover:text-primary transition-colors truncate">
                             {user.username}
                         </span>
-                        <div className="flex items-center gap-1.5 text-white/30 text-[11px] truncate">
-                            <Mail className="h-3 w-3 shrink-0" />
-                            <span className="truncate">{user.email}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className={cn(
+                                "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest",
+                                user.is_active ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-500 border border-red-500/20"
+                            )}>
+                                {user.is_active ? "Active" : "Restricted"}
+                            </span>
+                            <div className="flex items-center gap-1.5 text-white/30 text-[11px] truncate">
+                                <Mail className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{user.email}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -120,18 +129,14 @@ export default function UserRow({ user, index, onPrefetch }: UserRowProps) {
 
             {/* Options */}
             <td className="px-6 py-4 text-right min-w-[140px]">
-                <Link
-                    to={`/admin/users/${user.pk}`}
+                <PremiumButton
+                    href={`/admin/users/${user.pk}`}
                     onMouseEnter={() => onPrefetch(String(user.pk))}
-                >
-                    <Button
-                        variant="outline"
-                        className="h-10 px-5 rounded-xl border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-primary hover:border-primary hover:text-background font-bold group/btn transition-all active:scale-95"
-                    >
-                        <span>MANAGE</span>
-                        <ExternalLink className="ml-2 h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
-                    </Button>
-                </Link>
+                    variant="outline"
+                    text="MANAGE"
+                    icon={ExternalLink}
+                    className="border-white/10"
+                />
             </td>
         </motion.tr>
     );

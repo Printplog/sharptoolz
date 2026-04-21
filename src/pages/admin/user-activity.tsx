@@ -20,6 +20,7 @@ import {
   Wifi
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 import UserActivitySkeleton from "@/components/Admin/Layouts/UserActivitySkeleton";
 
@@ -181,18 +182,20 @@ export default function UserActivity() {
             </button>
             <button
                 onClick={() => setShowErrors(!showErrors)}
-                title="Toggle Error Logs"
+                title="Toggle Errors"
                 className={cn(
-                    "p-2 rounded-full transition-all flex items-center gap-2 px-3",
-                    showErrors ? "bg-red-500 text-white" : "text-white/20 hover:text-white"
+                    "px-3 py-1.5 rounded-full text-[10px] font-bold transition-all flex items-center gap-2",
+                    showErrors 
+                      ? "bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.3)]" 
+                      : "text-white/40 hover:text-white/60 hover:bg-white/5"
                 )}
             >
                 <AlertCircle className="w-3.5 h-3.5" />
-                <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Errors</span>
+                <span>Errors</span>
             </button>
           </div>
 
-          <button
+          <PremiumButton
             onClick={() => {
                 setIsLive(!isLive);
                 if (!isLive) {
@@ -200,16 +203,14 @@ export default function UserActivity() {
                     setSearch("");
                 }
             }}
+            variant={isLive ? "primary" : "outline"}
+            text={isLive ? "Live" : "Static"}
+            icon={isLive ? Pause : Play}
+            borderColor={isLive ? "border-green-500/30" : "border-white/10"}
             className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border shadow-sm",
-                isLive 
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                : "bg-white/5 border-white/10 text-white/40 hover:text-white"
+              isLive && "bg-green-500/5 text-green-500 hover:bg-green-500/10 shadow-none"
             )}
-          >
-            {isLive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-            {isLive ? "Live" : "Static"}
-          </button>
+          />
 
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />

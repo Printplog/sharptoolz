@@ -1,6 +1,7 @@
 // Tool Add/Edit Dialog Component
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Wrench, Plus, Check, Save } from "lucide-react";
 import type { Tool } from "@/types";
 
 interface ToolDialogProps {
@@ -73,7 +75,7 @@ export default function ToolDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-[#0B0B0F] border-white/20 rounded-[2rem] text-white p-8">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             🔧 {isEditing ? "Edit Tool" : "Add New Tool"}
@@ -150,23 +152,16 @@ export default function ToolDialog({
               variant="outline"
               onClick={handleClose}
               disabled={isLoading}
+              className="rounded-full px-6 h-11 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
             >
               Cancel
             </Button>
-            <Button
+            <PremiumButton
               type="submit"
-              disabled={!name.trim() || isLoading}
-              className="min-w-[100px]"
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  {isEditing ? "Updating..." : "Creating..."}
-                </div>
-              ) : (
-                isEditing ? "Update Tool" : "Create Tool"
-              )}
-            </Button>
+              isLoading={isLoading}
+              text={isEditing ? "Update Tool" : "Create Tool"}
+              icon={isEditing ? Save : Plus}
+            />
           </DialogFooter>
         </form>
       </DialogContent>

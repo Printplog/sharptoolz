@@ -9,6 +9,7 @@ import {
   Settings,
   ArrowLeft,
   LineChart,
+  Link as LinkIcon,
   ShieldAlert,
   FileText,
   Wallet,
@@ -78,6 +79,11 @@ export default function Sidebar() {
       to: "/admin/analytics",
     },
     {
+      icon: <LinkIcon className="h-4 w-4" />,
+      label: "Link Generator",
+      to: "/admin/link-generator",
+    },
+    {
       icon: <Users className="h-4 w-4" />,
       label: "User Activity",
       to: "/admin/user-activity",
@@ -135,7 +141,7 @@ export default function Sidebar() {
     {
       icon: <ArrowLeft className="h-4 w-4" />,
       label: "Switch to User",
-      to: "/dashboard",
+      to: "/dashboard?source=admin_link",
     },
   ];
 

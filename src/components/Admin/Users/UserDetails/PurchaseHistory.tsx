@@ -7,7 +7,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Calendar, Tag, Hash } from "lucide-react";
+import { FileText, Calendar,  Eye, Clock, FlaskConical, BadgeCheck } from "lucide-react";
+import { PremiumButton } from "@/components/ui/PremiumButton";
+import { cn } from "@/lib/utils";
 import { formatAdminDateTime } from "@/lib/utils/adminDate";
 
 interface PurchaseHistoryProps {
@@ -54,51 +56,79 @@ export default function PurchaseHistory({ purchases }: PurchaseHistoryProps) {
           <div className="rounded-md border border-white/10 overflow-y-auto overflow-x-hidden max-h-96">
             <Table>
               <TableHeader>
-                <TableRow className="border-white/10">
-                  <TableHead className="text-white">Template</TableHead>
-                  <TableHead className="text-white">Name</TableHead>
-                  <TableHead className="text-white">Type</TableHead>
-                  <TableHead className="text-white">Status</TableHead>
-                  <TableHead className="text-white">Tracking ID</TableHead>
-                  <TableHead className="text-white">Created</TableHead>
+                <TableRow className="border-white/5 bg-white/5 transition-colors">
+                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Template</TableHead>
+                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Name</TableHead>
+                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Type</TableHead>
+                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Status</TableHead>
+                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Tracking ID</TableHead>
+                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Created</TableHead>
+                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {purchases.map((purchase) => (
-                  <TableRow key={purchase.id} className="border-white/10 hover:bg-white/5">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-blue-400" />
-                        <span className="text-white font-medium">{purchase.template_name}</span>
+                  <TableRow key={purchase.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group">
+                    <TableCell className="py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                          <FileText className="h-4 w-4 text-blue-400" />
+                        </div>
+                        <span className="text-white font-bold text-sm tracking-tight">{purchase.template_name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-white">{purchase.name}</span>
+                      <span className="text-white/60 text-[13px]">{purchase.name}</span>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Tag className="h-4 w-4 text-muted-foreground" />
-                        <span className={`text-sm ${purchase.test ? 'text-orange-400' : 'text-green-400'}`}>
-                          {purchase.test ? 'Test' : 'Live'}
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                          purchase.test
+                            ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+                            : "bg-green-500/10 text-green-400 border border-green-500/20"
+                        )}
+                      >
+                        {purchase.test ? <FlaskConical className="h-3 w-3" /> : <BadgeCheck className="h-3 w-3" />}
+                        {purchase.test ? "Test" : "Paid"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", 
+                          purchase.status === "completed" ? "bg-green-500" : 
+                          purchase.status === "pending" ? "bg-yellow-500" : "bg-red-500"
+                        )} />
+                        <span className={cn("text-[11px] font-black uppercase tracking-widest", getStatusColor(purchase.status))}>
+                          {purchase.status}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className={`text-sm font-medium ${getStatusColor(purchase.status)}`}>
-                        {purchase.status}
-                      </span>
+                      <span className="text-white/30 text-[11px] font-mono tracking-tighter uppercase">{purchase.tracking_id}</span>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Hash className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-white text-sm font-mono">{purchase.tracking_id}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1.5 text-white/60 text-[13px]">
+                          <Calendar className="h-3 w-3" />
+                          <span>{formatAdminDateTime(purchase.created_at).split(',')[0]}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-white/20 text-[10px]">
+                          <Clock className="h-2.5 w-2.5" />
+                          <span>{formatAdminDateTime(purchase.created_at).split(',')[1]}</span>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-white text-sm">{formatAdminDateTime(purchase.created_at)} UTC</span>
-                      </div>
+                    <TableCell className="text-right">
+                      <PremiumButton
+                        href={`/documents/${purchase.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        variant="outline"
+                        text="VIEW"
+                        icon={Eye}
+                        className="border-white/10"
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

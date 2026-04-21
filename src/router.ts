@@ -13,6 +13,7 @@ export type Path =
   | `/admin/documents`
   | `/admin/fonts`
   | `/admin/fonts/FontUploadDialog`
+  | `/admin/link-generator`
   | `/admin/settings`
   | `/admin/svg-test-render`
   | `/admin/templates`

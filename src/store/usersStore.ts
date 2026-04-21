@@ -16,6 +16,7 @@ interface UsersState {
   searchQuery: string;
   searchInput: string;
   roleFilter: 'all' | 'admin' | 'staff' | 'user';
+  sourceFilter: string;
   
   // Actions
   setCurrentPage: (page: number) => void;
@@ -23,6 +24,7 @@ interface UsersState {
   setSearchQuery: (query: string) => void;
   setSearchInput: (input: string) => void;
   setRoleFilter: (role: 'all' | 'admin' | 'staff' | 'user') => void;
+  setSourceFilter: (source: string) => void;
   fetchUsers: () => Promise<void>;
   handleSearch: () => void;
   resetSearch: () => void;
@@ -39,6 +41,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   searchQuery: '',
   searchInput: '',
   roleFilter: 'all',
+  sourceFilter: '',
 
   // Actions
   setCurrentPage: (page: number) => {
@@ -65,8 +68,13 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     get().fetchUsers();
   },
 
+  setSourceFilter: (source: string) => {
+    set({ sourceFilter: source, currentPage: 1 });
+    get().fetchUsers();
+  },
+
   fetchUsers: async () => {
-    const { currentPage, pageSize, searchQuery, roleFilter } = get();
+    const { currentPage, pageSize, searchQuery, roleFilter, sourceFilter } = get();
     
     set({ isLoading: true, error: null });
     
@@ -76,6 +84,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
         page_size: pageSize,
         search: searchQuery,
         role: roleFilter,
+        source: sourceFilter,
       });
       set({ data, isLoading: false });
     } catch (error) {
@@ -92,7 +101,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   },
 
   resetSearch: () => {
-    set({ searchQuery: '', searchInput: '', currentPage: 1 });
+    set({ searchQuery: '', searchInput: '', currentPage: 1, sourceFilter: '' });
     get().fetchUsers();
   },
 
@@ -106,6 +115,7 @@ export const useUsersStore = create<UsersState>((set, get) => ({
       searchQuery: '',
       searchInput: '',
       roleFilter: 'all',
+      sourceFilter: '',
     });
   },
 }));

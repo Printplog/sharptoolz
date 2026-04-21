@@ -4,9 +4,14 @@ import { initSecurity } from '@/lib/utils/security'
 import { useAuthStore } from '@/store/authStore'
 import { isAdmin } from '@/lib/constants/roles'
 import { usePresence } from '@/hooks/usePresence'
+import { sourceTracker } from '@/lib/utils/sourceTracker'
 
 export default function App() {
   usePresence()
+
+  useEffect(() => {
+    sourceTracker.captureSource()
+  }, [])
 
   const user = useAuthStore((state) => state.user)
   const isAdminOnlyUser = isAdmin(user?.role)

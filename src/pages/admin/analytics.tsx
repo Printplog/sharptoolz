@@ -9,6 +9,7 @@ import DeviceStatsChart from "@/components/Admin/Dashboard/DeviceStatsChart";
 import UserGrowthChart from "@/components/Admin/Dashboard/UserGrowthChart";
 import DistributionChart from "@/components/Admin/Dashboard/DistributionChart";
 import TopPagesChart from "@/components/Admin/Dashboard/TopPagesChart";
+import SourceStatsChart from "@/components/Admin/Dashboard/SourceStatsChart";
 import type { AdminOverview } from "@/types";
 import AnalyticsSkeleton from "@/components/Admin/Layouts/AnalyticsSkeleton";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
@@ -44,6 +45,11 @@ interface AnalyticsResponse {
   top_pages: Array<{
     path: string;
     visits: number;
+  }>;
+  source_stats: Array<{
+    source: string;
+    visits: number;
+    unique_visitors: number;
   }>;
   summary: {
     online_now: number;
@@ -204,6 +210,10 @@ export default function Analytics() {
 
         <div className="h-[400px]">
           <TopPagesChart data={analyticsData?.top_pages} rangeLabel={rangeLabel} />
+        </div>
+
+        <div className="h-[400px]">
+          <SourceStatsChart data={analyticsData?.source_stats} rangeLabel={rangeLabel} />
         </div>
 
         <div className="h-[400px]">

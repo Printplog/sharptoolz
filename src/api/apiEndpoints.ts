@@ -1,5 +1,9 @@
 import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog } from "@/types";
 import { apiClient } from "./apiClient";
+export const getApi = apiClient.get;
+export const postApi = apiClient.post;
+export const patchApi = apiClient.patch;
+export const deleteApi = apiClient.delete;
 
 export const fetchCurrentUser = async (): Promise<User> => {
   const res = await apiClient.get('/accounts/user/');
@@ -220,12 +224,31 @@ export const getUserActivity = async (params?: { page?: number; date?: string; s
   return res.data;
 };
 
-export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string; role?: string }) => {
+// Campaigns API
+import type { Campaign, CampaignStatsResponse } from "@/types";
+
+export const getCampaignStats = async (): Promise<CampaignStatsResponse> => {
+  const res = await apiClient.get('/analytics/campaigns/stats/');
+  return res.data;
+};
+
+export const createCampaign = async (data: { name: string; description?: string; ref_code?: string }): Promise<Campaign> => {
+  const res = await apiClient.post('/analytics/campaigns/', data);
+  return res.data;
+};
+
+export const deleteCampaign = async (id: number): Promise<unknown> => {
+  const res = await apiClient.delete(`/analytics/campaigns/${id}/`);
+  return res.data;
+};
+
+export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string; role?: string; source?: string }) => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
   if (params?.search) searchParams.append('search', params.search);
   if (params?.role && params.role !== 'all') searchParams.append('role', params.role);
+  if (params?.source) searchParams.append('source', params.source);
 
   const res = await apiClient.get(`/admin/users/?${searchParams.toString()}`);
   return res.data;

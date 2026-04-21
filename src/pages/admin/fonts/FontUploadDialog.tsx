@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -57,12 +58,12 @@ export default function FontUploadDialog({
     return (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-                <Button className="inline-flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    Add Font
-                </Button>
+                <PremiumButton 
+                    text="Add Font"
+                    icon={Upload}
+                />
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg bg-[#0B0B0F] border-white/20 rounded-[2rem] text-white p-8">
                 <DialogHeader>
                     <DialogTitle>Upload a new font</DialogTitle>
                     <DialogDescription>
@@ -77,6 +78,7 @@ export default function FontUploadDialog({
                             placeholder="e.g., Inter Bold"
                             value={fontName}
                             onChange={(event) => setFontName(event.target.value)}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
                             disabled={uploadMutation.isPending}
                         />
                     </div>
@@ -89,6 +91,7 @@ export default function FontUploadDialog({
                             onChange={(event) => {
                                 setFontFile(event.target.files?.[0] || null);
                             }}
+                            className="bg-white/10 border-white/20 text-white file:text-white/50 file:border-0 file:bg-transparent outline-0"
                             disabled={uploadMutation.isPending}
                         />
                     </div>
@@ -98,21 +101,16 @@ export default function FontUploadDialog({
                             variant="outline"
                             onClick={resetForm}
                             disabled={uploadMutation.isPending}
+                            className="rounded-full px-6 h-11 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
                         >
                             Cancel
                         </Button>
-                        <Button
+                        <PremiumButton
                             type="submit"
-                            className="inline-flex items-center gap-2"
-                            disabled={uploadMutation.isPending}
-                        >
-                            {uploadMutation.isPending ? (
-                                <Loader className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Upload className="h-4 w-4" />
-                            )}
-                            Upload Font
-                        </Button>
+                            isLoading={uploadMutation.isPending}
+                            text="Upload Font"
+                            icon={Upload}
+                        />
                     </div>
                 </form>
             </DialogContent>

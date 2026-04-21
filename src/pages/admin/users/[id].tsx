@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminUserDetails, updateAdminUser } from "@/api/apiEndpoints";
 import type { AdminUserDetails } from "@/types";
 import { Button } from "@/components/ui/button";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { ArrowLeft, User, Wallet, History, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import UserDetailSkeleton from "@/components/Admin/Users/UserDetailSkeleton";
@@ -14,12 +15,15 @@ import StatsOverview from "@/components/Admin/Users/UserDetails/StatsOverview";
 import PurchaseHistory from "@/components/Admin/Users/UserDetails/PurchaseHistory";
 import TransactionHistory from "@/components/Admin/Users/UserDetails/TransactionHistory";
 import { CustomTabs, CustomTabsContent } from "@/components/ui/custom-tabs";
+import AdjustBalanceDialog from "@/components/Admin/Wallet/Modals/AdjustBalanceDialog";
+import { postApi } from "@/api/apiEndpoints";
 
 export default function UserDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showAdjustDialog, setShowAdjustDialog] = useState(false);
 
   const { data, isLoading, error } = useQuery<AdminUserDetails>({
     queryKey: ["adminUserDetails", id],
@@ -70,18 +74,40 @@ export default function UserDetailsPage() {
     }
   };
 
+  const handleAdjustBalance = async (walletId: string, type: 'credit' | 'debit', amount: number, reason: string) => {
+    if (!id) return;
+    
+    setIsUpdating(true);
+    try {
+      await postApi('/admin/wallet/adjust/', {
+        walletId,
+        type,
+        amount,
+        reason
+      });
+      
+      await queryClient.invalidateQueries({ queryKey: ["adminUserDetails", id] });
+      toast.success("Wallet balance adjusted successfully");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to adjust balance");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   if (isLoading) return <UserDetailSkeleton />;
 
   if (error || !data) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link to="/admin/users">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Users
-            </Button>
-          </Link>
+          <PremiumButton
+            href="/admin/users"
+            text="Back to Users"
+            icon={ArrowLeft}
+            variant="outline"
+            className="border-white/10"
+          />
         </div>
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6">
           <p className="text-red-400 text-center">
@@ -125,6 +151,16 @@ export default function UserDetailsPage() {
           </div>
         </div>
 
+        <div className="flex items-center gap-3">
+          <PremiumButton
+            onClick={() => setShowAdjustDialog(true)}
+            text="MANAGE FUNDS"
+            icon={Wallet}
+            variant="outline"
+            className="border-white/10"
+          />
+        </div>
+
         <CustomTabs
           tabs={tabs}
           activeTab={activeTab}
@@ -157,6 +193,22 @@ export default function UserDetailsPage() {
           <PurchaseHistory purchases={data.purchase_history} />
         </CustomTabsContent>
       </div>
+
+      <AdjustBalanceDialog
+        open={showAdjustDialog}
+        onOpenChange={setShowAdjustDialog}
+        wallet={data ? {
+          id: data.wallet.id,
+          balance: data.wallet.balance,
+          status: 'active',
+          user: {
+            id: String(data.user.pk),
+            username: data.user.username,
+            email: data.user.email
+          }
+        } : null}
+        onSubmit={handleAdjustBalance}
+      />
     </div>
   );
 }

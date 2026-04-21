@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Clock, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PremiumButton } from '@/components/ui/PremiumButton';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -105,35 +106,28 @@ export default function PendingRequests({ requests, onApprove, onReject }: Pendi
                 </div>
 
                 {request.proofUrl && (
-                  <Button
+                  <PremiumButton
                     variant="outline"
-                    size="sm"
-                    className="gap-2 border-white/10 bg-white/5 text-white hover:bg-white/10"
                     onClick={() => window.open(request.proofUrl, '_blank')}
-                  >
-                    <FileText className="w-4 h-4" />
-                    Proof
-                  </Button>
+                    text="Proof"
+                    icon={FileText}
+                    className="border-white/10"
+                  />
                 )}
 
                 <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                  <PremiumButton
                     onClick={() => handleAction(request, 'approve')}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                    text="Approve"
+                    icon={CheckCircle}
+                  />
+                  <PremiumButton
                     onClick={() => handleAction(request, 'reject')}
-                  >
-                    <XCircle className="w-4 h-4 mr-1" />
-                    Reject
-                  </Button>
+                    variant="outline"
+                    text="Reject"
+                    icon={XCircle}
+                    className="border-red-500/30 text-red-400"
+                  />
                 </div>
               </div>
             </div>
@@ -143,7 +137,7 @@ export default function PendingRequests({ requests, onApprove, onReject }: Pendi
 
       {/* Action Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="bg-[#1a1a1a] border-white/10">
+        <DialogContent className="bg-[#0B0B0F] border-white/20 rounded-[2rem] p-8 text-white">
           <DialogHeader>
             <DialogTitle className="text-white">
               {actionType === 'approve' ? 'Approve' : 'Reject'} Funding Request
@@ -174,24 +168,19 @@ export default function PendingRequests({ requests, onApprove, onReject }: Pendi
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-3 sm:gap-0 mt-6">
             <Button
               variant="outline"
               onClick={() => setShowDialog(false)}
-              className="border-white/10 text-white hover:bg-white/10"
+              className="rounded-full px-6 h-11 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
             >
               Cancel
             </Button>
-            <Button
+            <PremiumButton
               onClick={confirmAction}
-              className={
-                actionType === 'approve'
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-red-600 hover:bg-red-700 text-white'
-              }
-            >
-              {actionType === 'approve' ? 'Approve Request' : 'Reject Request'}
-            </Button>
+              text={actionType === 'approve' ? 'Approve Request' : 'Reject Request'}
+              icon={actionType === 'approve' ? CheckCircle : XCircle}
+            />
           </DialogFooter>
         </DialogContent>
       </Dialog>

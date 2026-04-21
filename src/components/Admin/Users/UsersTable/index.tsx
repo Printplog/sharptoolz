@@ -20,6 +20,7 @@ interface UserData {
     total_purchases: number;
     downloads: number;
     wallet_balance: string;
+    source?: string;
 }
 
 export default function UsersTable() {
@@ -32,10 +33,12 @@ export default function UsersTable() {
         pageSize,
         searchInput,
         roleFilter,
+        sourceFilter,
         setCurrentPage,
         setSearchInput,
         setSearchQuery,
         setRoleFilter,
+        setSourceFilter,
     } = useUsersStore();
 
     const handlePrefetchUser = (userId: string) => {
@@ -143,6 +146,23 @@ export default function UsersTable() {
                 ),
             },
             {
+                accessorKey: 'source',
+                header: 'Source',
+                cell: ({ row }) => (
+                    <div className="flex flex-col gap-1">
+                        <div className={cn(
+                            "px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-[0.05em] w-fit uppercase",
+                            row.original.source ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" : "bg-white/5 text-white/20 border border-white/10"
+                        )}>
+                            {row.original.source || 'Direct'}
+                        </div>
+                        {row.original.source === 'referral' && (
+                            <span className="text-[9px] text-primary font-bold italic tracking-tighter">Referral Link</span>
+                        )}
+                    </div>
+                ),
+            },
+            {
                 id: 'actions',
                 header: 'Options',
                 cell: ({ row }) => (
@@ -177,6 +197,13 @@ export default function UsersTable() {
                 { label: 'User', value: 'user' },
             ],
             placeholder: 'Role',
+        },
+        {
+            key: 'source',
+            label: 'Source',
+            value: sourceFilter,
+            onChange: (value: string, _context: DataTableControlChangeContext) => setSourceFilter(value),
+            placeholder: 'Source',
         },
     ];
 

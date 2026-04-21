@@ -4,11 +4,12 @@ import ToolGridSkeleton from "@/components/ToolGridSkeleton";
 import type { Template } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Layout, CheckCircle, XCircle, Flame, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import StatsSkeleton from "@/components/Admin/Templates/StatsSkeleton";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { cn } from "@/lib/utils";
 
 export default function Templates() {
@@ -92,13 +93,11 @@ export default function Templates() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Link
-            to="?dialog=toolBuilder"
-            className="group flex items-center gap-3 bg-primary text-black px-6 py-3.5 rounded-full font-black hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-primary/20"
-          >
-            <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
-            <span className="uppercase tracking-widest text-[10px]">New Template</span>
-          </Link>
+          <PremiumButton
+            href="?dialog=toolBuilder"
+            text="New Template"
+            icon={Plus}
+          />
         </div>
       </div>
 

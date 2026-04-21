@@ -31,17 +31,20 @@ export const ConfirmAction: React.FC<ConfirmActionProps> = ({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
-      <AlertDialogContent className="border-white/10">
+      <AlertDialogContent className="bg-[#0B0B0F] border-white/20 rounded-[2rem] p-8 text-white">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full px-6 h-11 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
+            {cancelText}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={async () => {
               await onConfirm();
             }}
+            className="rounded-full px-6 h-11 bg-[#cee88c] text-black font-bold hover:opacity-90 transition-all border-0 shadow-none"
           >
             {confirmText}
           </AlertDialogAction>

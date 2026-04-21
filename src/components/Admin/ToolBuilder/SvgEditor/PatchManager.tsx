@@ -1,5 +1,6 @@
 import React, { useRef, useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
+
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { FileJson, Download, Upload, AlertCircle, Layers, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { validateSvgId } from "@/lib/utils/svgIdValidator";
@@ -162,7 +163,7 @@ const PatchManager: React.FC<PatchManagerProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f0f12] border-white/10 text-white max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden shadow-2xl rounded-3xl">
+      <DialogContent className="bg-[#0B0B0F] border-white/20 text-white max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden shadow-2xl rounded-[2rem]">
         <DialogHeader className="p-7 pb-5 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -178,24 +179,18 @@ const PatchManager: React.FC<PatchManagerProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <PremiumButton 
                 onClick={handleImportClick}
-                className="h-8 bg-white/5 border-white/10 hover:bg-white/10 text-[9px] font-bold uppercase tracking-widest gap-2 rounded-xl px-3"
-              >
-                <Upload className="h-3 w-3" />
-                Import
-              </Button>
-              <Button 
-                variant="vibrant" 
-                size="sm" 
+                text="Import"
+                icon={Upload}
+                className="text-[9px]"
+              />
+              <PremiumButton 
                 onClick={handleExport}
-                className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 px-5 rounded-xl shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)]"
-              >
-                <Download className="h-3 w-3" />
-                Export
-              </Button>
+                text="Export"
+                icon={Download}
+                className="text-[9px]"
+              />
             </div>
           </div>
         </DialogHeader>
@@ -278,7 +273,7 @@ const PatchManager: React.FC<PatchManagerProps> = ({
         />
 
         <AlertDialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
-          <AlertDialogContent className="bg-[#111] border-white/10 max-w-md rounded-2xl">
+          <AlertDialogContent className="bg-gray-900 border-white/20 max-w-md rounded-[2rem] p-8 text-white">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-white flex items-center gap-2 text-lg">
                 <AlertCircle className="h-5 w-5 text-yellow-500" />
@@ -298,9 +293,9 @@ const PatchManager: React.FC<PatchManagerProps> = ({
                 ))}
               </div>
             </ScrollArea>
-            <AlertDialogFooter className="mt-6 flex gap-2">
-              <AlertDialogCancel onClick={() => setShowValidationDialog(false)} className="bg-white/5 text-white border-0 rounded-xl h-10">Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmImport} className="bg-yellow-600 text-white border-0 font-black uppercase tracking-widest rounded-xl h-10 text-[9px] flex-1">Import Anyway</AlertDialogAction>
+            <AlertDialogFooter className="mt-6 flex flex-row gap-3">
+              <AlertDialogCancel onClick={() => setShowValidationDialog(false)} className="bg-white/5 text-white border border-white/10 rounded-full h-11 px-6 flex-1 hover:bg-white/10 transition-all">Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmImport} className="bg-yellow-600 text-white border-0 font-black uppercase tracking-widest rounded-full h-11 text-[9px] flex-1 hover:opacity-90 transition-all">Import Anyway</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { PremiumButton } from '@/components/ui/PremiumButton';
 import { getApi } from '@/api/walletApi';
 import { StatsCards, type StatData } from '@/components/Admin/Shared/StatsCards';
 import { DataTable } from '@/components/ui/data-table';
@@ -244,13 +245,12 @@ export default function TransactionsPage() {
           </h1>
           <p className="text-white/40 text-sm mt-1 font-medium italic">Manage all financial activity logs</p>
         </div>
-        <Button
+        <PremiumButton
           onClick={handleExport}
-          className="gap-2 bg-primary text-black px-8 py-6 rounded-2xl font-black hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-primary/20"
-        >
-          <Download className="w-5 h-5" />
-          EXPORT LEDGER
-        </Button>
+          text="EXPORT LEDGER"
+          icon={Download}
+          className="mt-4"
+        />
       </div>
 
       {/* Stats Cards */}
@@ -317,7 +317,7 @@ export default function TransactionsPage() {
 
       {/* Transaction Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="bg-[#0a0a0a] border-white/10 max-w-lg rounded-4xl p-8 shadow-2xl">
+        <DialogContent className="bg-gray-900 border-white/20 max-w-lg rounded-[2rem] p-8 shadow-2xl text-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-white italic uppercase tracking-tighter">
               Transaction <span className="text-primary ml-1">#Details</span>

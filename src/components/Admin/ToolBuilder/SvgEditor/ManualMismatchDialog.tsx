@@ -9,9 +9,10 @@ import {
     DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { PremiumButton } from '@/components/ui/PremiumButton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, ArrowRight, Tag } from 'lucide-react';
+import { AlertCircle, ArrowRight, Tag, Check } from 'lucide-react';
 import { type MismatchReport } from '@/store/useSvgStore';
 
 interface ManualMismatchDialogProps {
@@ -43,7 +44,7 @@ export const ManualMismatchDialog: React.FC<ManualMismatchDialogProps> = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[#111] border-white/10 text-white max-w-2xl flex flex-col max-h-[85vh]">
+            <DialogContent className="bg-[#0B0B0F] border-white/20 text-white max-w-2xl flex flex-col max-h-[85vh] rounded-[2rem] p-8">
                 <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
                         <AlertCircle className="h-5 w-5 text-amber-500" />
@@ -117,16 +118,15 @@ export const ManualMismatchDialog: React.FC<ManualMismatchDialogProps> = ({
                     <Button
                         variant="ghost"
                         onClick={() => onOpenChange(false)}
-                        className="text-white/40 hover:text-white hover:bg-white/5"
+                        className="rounded-full px-6 h-11 text-white/40 hover:text-white hover:bg-white/5 transition-all"
                     >
                         Skip Manual Sync
                     </Button>
-                    <Button
+                    <PremiumButton
                         onClick={() => onConfirm(manualMap)}
-                        className="bg-vibrant hover:bg-vibrant/90 text-white font-bold px-8"
-                    >
-                        Apply Mappings
-                    </Button>
+                        text="Apply Mappings"
+                        icon={Check}
+                    />
                 </DialogFooter>
             </DialogContent>
         </Dialog>

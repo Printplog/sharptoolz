@@ -16,8 +16,9 @@ import { cn } from "@/lib/utils";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 import type { ColumnDef } from '@tanstack/react-table';
 import type { DataTableControlChangeContext } from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+
+import { PremiumButton } from "@/components/ui/PremiumButton";
+
 
 type AdminDoc = {
     id: string;
@@ -188,17 +189,15 @@ export default function AdminDocumentsPage() {
             id: 'actions',
             header: 'Actions',
             cell: ({ row }) => (
-                <Button
-                    asChild
-                    size="sm"
+                <PremiumButton
+                    href={`/documents/${row.original.id}`}
+                    target="_blank"
+                    rel="noreferrer"
                     variant="outline"
-                    className="h-9 rounded-full border-white/10 bg-white/5 px-4 text-white hover:bg-white/10"
-                >
-                    <Link to={`/documents/${row.original.id}`} target="_blank" rel="noreferrer">
-                        <Eye className="h-3.5 w-3.5" />
-                        View
-                    </Link>
-                </Button>
+                    text="View"
+                    icon={Eye}
+                    className="border-white/10"
+                />
             ),
         },
     ], []);

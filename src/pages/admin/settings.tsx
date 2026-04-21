@@ -4,6 +4,7 @@ import { getSiteSettings, updateSiteSettings, requestSettingsVerificationCode } 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   ShieldCheck,
-  Loader2,
+  
   Save,
   Headset,
   Wallet,
@@ -165,14 +166,11 @@ export default function AdminSettings() {
           </h1>
           <p className="text-white/50 text-sm mt-1">Configure your platform's global behavior</p>
         </div>
-        <Button
+        <PremiumButton
           onClick={handleSaveClick}
-          className="relative group overflow-hidden gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs px-8 py-6 rounded-full transition-all duration-500 shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] active:scale-95"
-        >
-          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-          <Save className="h-4 w-4 relative z-10" />
-          <span className="relative z-10">Save Configuration</span>
-        </Button>
+          text="Save Configuration"
+          icon={Save}
+        />
       </div>
 
       <Tabs defaultValue="support" className="space-y-4">
@@ -566,7 +564,7 @@ export default function AdminSettings() {
 
       {/* Security Challenge Dialog */}
       <Dialog open={isChallengeOpen} onOpenChange={setIsChallengeOpen}>
-        <DialogContent className="bg-[#0a0a0c] border border-white/10 text-white sm:max-w-[425px] rounded-[2rem] p-8">
+        <DialogContent className="bg-gray-900 border-white/20 text-white sm:max-w-[425px] rounded-[2rem] p-8">
           <DialogHeader className="mb-4">
             <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
               <ShieldCheck className="h-6 w-6 text-primary" />
@@ -610,18 +608,12 @@ export default function AdminSettings() {
             >
               Cancel
             </Button>
-            <Button
+            <PremiumButton
               onClick={handleConfirmUpdate}
-              disabled={updateMutation.isPending}
-              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 font-bold px-6"
-            >
-              {updateMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              Confirm Changes
-            </Button>
+              isLoading={updateMutation.isPending}
+              text="Confirm Changes"
+              icon={ShieldCheck}
+            />
           </DialogFooter>
         </DialogContent>
       </Dialog>

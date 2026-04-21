@@ -6,6 +6,7 @@ export type User = {
   total_purchases: number;
   downloads: number;
   wallet_balance: string;
+  source?: string;
   is_active: boolean;
   is_staff: boolean;
   date_joined: string;
@@ -29,6 +30,7 @@ export type RegisterPayload = {
   password: string;
   confirmPassword: string;
   referred_by?: string;
+  source?: string;
 };
 
 export interface AuthDialogProps {
@@ -272,6 +274,11 @@ export type AdminOverview = {
   total_purchased_docs: number;
   total_downloads: number;
   total_wallet_balance: number;
+  source_stats: Array<{
+    source: string;
+    visits: number;
+    unique_visitors: number;
+  }>;
   documents_chart: Array<{
     date: string;
     total: number;
@@ -340,6 +347,11 @@ export type AdminUserDetails = {
     total_downloads: number;
     days_since_joined: number;
   };
+  wallet: {
+    id: string;
+    balance: number;
+    status: string;
+  };
 };
 
 export interface DocSection {
@@ -404,6 +416,27 @@ export type SiteSettings = {
   updated_at: string;
   template_cache_version?: number;
 };
+
+export interface Campaign {
+  id: number;
+  name: string;
+  description: string | null;
+  ref_code: string | null;
+  created_at: string;
+  last_visit_at: string | null;
+}
+
+export interface CampaignWithStats extends Campaign {
+  visits: number;
+  users: number;
+}
+
+export interface CampaignStatsResponse {
+  total_sources: number;
+  total_traffic: number;
+  active_today: number;
+  campaigns: CampaignWithStats[];
+}
 
 export interface TransformVariable {
   id: number;

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { PremiumButton } from "@/components/ui/PremiumButton";
 
 import { ConfirmAction } from "@/components/ConfirmAction";
 import ToolDialog from "@/components/Admin/Tools/ToolDialog";
@@ -207,10 +208,12 @@ export default function AdminTools() {
             Manage tools to organize your templates
           </p>
         </div>
-        <Button onClick={handleAddTool} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Add Tool
-        </Button>
+        <PremiumButton 
+          onClick={handleAddTool} 
+          text="Add Tool"
+          icon={Plus}
+          className="h-11 px-6"
+        />
       </div>
 
       <DataTable
@@ -234,21 +237,20 @@ export default function AdminTools() {
                 tableInstance.resetRowSelection();
               }}
               trigger={
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="inline-flex items-center gap-2"
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? (
-                    <Loader className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Trash2 className="h-4 w-4" />
-                      Delete Selected
-                    </>
-                  )}
-                </Button>
+                <PremiumButton
+                  onClick={async () => {
+                    const ids = selectedTools.map((tool) => tool.id);
+                    for (const id of ids) {
+                      await deleteMutation.mutateAsync(id);
+                    }
+                    tableInstance.resetRowSelection();
+                  }}
+                  variant="outline"
+                  isLoading={deleteMutation.isPending}
+                  text="Delete Selected"
+                  icon={Trash2}
+                  className="h-9 px-4 border-red-500/20 text-red-400"
+                />
               }
             />
           );
