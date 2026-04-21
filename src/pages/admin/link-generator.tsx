@@ -16,7 +16,7 @@ import {
   Loader2,
   ExternalLink
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 import { PremiumButton } from "@/components/ui/PremiumButton";

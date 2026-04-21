@@ -11,7 +11,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Upload, Loader } from "lucide-react";
+import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import type { UseMutationResult } from "@tanstack/react-query";
 

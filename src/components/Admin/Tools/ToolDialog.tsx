@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Wrench, Plus, Check, Save } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import type { Tool } from "@/types";
 
 interface ToolDialogProps {
