@@ -3,6 +3,7 @@ import Hero from "@/components/Site/Home/Hero";
 import SocialsSection from "@/components/Site/Home/SocialsSection";
 import ReviewsSection from "@/components/Site/Home/ReviewsSection";
 import Tools from "@/components/Site/Home/Tools";
+import ReferralAnnouncement from "@/components/Site/Home/ReferralAnnouncement";
 import DisclaimerSection from "@/components/Site/Home/DisclaimerSection";
 import ApiComingSoon from "@/components/Site/Home/ApiComingSoon";
 import SEO from "@/components/SEO";
@@ -55,6 +56,7 @@ export default function Home() {
       </script>
       <Hero />
       <Tools />
+      <ReferralAnnouncement />
       <FeaturesSection />
       <ReviewsSection />
       <DisclaimerSection />
