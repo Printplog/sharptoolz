@@ -177,8 +177,10 @@ export interface ActivityLog {
   method: string;
   user_agent: string;
   referrer: string;
+  source?: string;
   timestamp: string;
 }
+
 
 export type UserActivityResponse = {
   results: ActivityLog[];

@@ -37,7 +37,9 @@ interface AnalyticsResponse {
     user__username: string | null;
     method: string;
     visit_count: number;
+    source: string | null;
   }>;
+
   device_stats: Array<{
     device: string;
     count: number;

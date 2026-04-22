@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatAdminDateTime, formatAdminRelativeTime } from "@/lib/utils/adminDate";
+import { cn } from "@/lib/utils";
+
 
 interface Visitor {
   ip_address: string | null;
@@ -13,7 +15,9 @@ interface Visitor {
   user__username: string | null;
   method: string;
   visit_count: number;
+  source: string | null;
 }
+
 
 interface RecentVisitorsProps {
   data: Visitor[] | undefined;
@@ -112,6 +116,16 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
                   <p className="truncate text-xs text-white/35">
                     {visitor.ip_address || "Unknown IP"}
                   </p>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className="text-[10px] items-center uppercase tracking-wider text-white/20 font-bold">Source:</span>
+                    <span className={cn(
+                      "text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md",
+                      visitor.source && visitor.source !== 'Organic' ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" : "bg-white/5 text-white/40 border border-white/10"
+                    )}>
+                      {visitor.source || 'Direct'}
+                    </span>
+                  </div>
+
                 </div>
               </div>
 

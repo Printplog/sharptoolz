@@ -226,9 +226,10 @@ export const getAuditLogs = async (): Promise<AuditLog[]> => {
   return res.data;
 };
 
-export const logVisit = async (path: string): Promise<void> => {
-  await apiClient.post('/analytics/log-visit/', { path });
+export const logVisit = async (path: string, source?: string): Promise<void> => {
+  await apiClient.post('/analytics/log-visit/', { path, source });
 };
+
 
 export const getUserActivity = async (params?: { page?: number; date?: string; search?: string }) => {
   const searchParams = new URLSearchParams();
