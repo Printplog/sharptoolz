@@ -30,6 +30,9 @@ interface GroupedTools {
 export default function ToolsList({ hot }: Props) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 300);
+  
+  // Use raw query immediately when empty to reset search instantly
+  const activeSearch = query === "" ? "" : debouncedQuery;
   const [selectedTool, setSelectedTool] = useState<string>("all");
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -50,10 +53,10 @@ export default function ToolsList({ hot }: Props) {
     isError,
     refetch
   } = useInfiniteQuery({
-    queryKey: ["tools", { hot, search: debouncedQuery, tool: selectedTool }],
+    queryKey: ["tools", { hot, search: activeSearch, tool: selectedTool }],
     queryFn: ({ pageParam = 1 }) => getTemplates({ 
       page: pageParam as number, 
-      search: debouncedQuery, 
+      search: activeSearch, 
       tool: selectedTool, 
       hot 
     }),

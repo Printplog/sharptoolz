@@ -85,7 +85,7 @@ export default function ToolsListHorizontal() {
           icon={ArrowRight} 
           href="/all-tools" 
           variant="ghost" 
-          className="min-w-[180px]"
+          className="w-fit"
           noShadow={true}
         />
       </div>
