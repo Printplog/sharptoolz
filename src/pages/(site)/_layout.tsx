@@ -10,7 +10,7 @@ import BreadcrumbSEO from '@/components/BreadcrumbSEO'
 export default function Layout() {
   useDialog()
   return (
-    <div className="bg-background text-white min-h-screen overflow-x-hidden w-full relative">
+    <div className="bg-background text-white min-h-screen w-full relative">
       <SmoothScroll>
         <Navbar />
         <BreadcrumbSEO />

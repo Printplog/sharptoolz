@@ -28,7 +28,7 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <SectionPadding className="py-24 relative overflow-hidden" id='why-us'>
+    <SectionPadding className="py-24 relative" id='why-us'>
       {/* Technical Background Pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(#ffffff05_1px,transparent_1px)] bg-size-[40px_40px] pointer-events-none" />
       <LightBlur className='right-[-150px] top-1/2 -translate-y-1/2 ' />

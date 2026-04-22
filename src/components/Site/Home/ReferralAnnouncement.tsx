@@ -1,261 +1,421 @@
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings } from "@/api/apiEndpoints";
 import SectionPadding from "@/layouts/SectionPadding";
-import { 
-  Gift, 
-  Users, 
-  TrendingUp, 
-  ArrowRight, 
-  Calculator,
-  Percent,
-  CircleDollarSign,
-  ChevronRight
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
+import { ArrowRight, Calculator, Plus, Minus } from "lucide-react";
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  useMotionValueEvent,
+  animate,
+  type MotionValue,
+} from "framer-motion";
+import { useState, useMemo, useEffect, useRef, useId } from "react";
 import { PremiumButton } from "@/components/ui/PremiumButton";
+import { cn } from "@/lib/utils";
 
-interface StepProps {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  index: number;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// SVGConnector — animated L-shaped signal path between step cards
+// ─────────────────────────────────────────────────────────────────────────────
 
-const Step = ({ icon: Icon, title, description, index }: StepProps) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay: index * 0.2 }}
-    className="relative p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-white/10 hover:border-primary/40 transition-all group z-10"
-  >
-    {/* Internal Gloss */}
-    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
-    
-    <div className="relative z-20">
-      <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 mb-6 group-hover:scale-110 transition-transform duration-500 shadow-[0_0_20px_rgba(206,232,140,0.1)]">
-        <Icon className="w-7 h-7 text-primary" />
-      </div>
-      
-      <h4 className="text-xl font-black text-white uppercase italic tracking-tight mb-3 flex items-center gap-2">
-        <span className="text-primary/20 not-italic text-sm">0{index + 1}</span>
-        {title}
-      </h4>
-      <p className="text-white/40 text-sm font-medium leading-relaxed">
-        {description}
-      </p>
-    </div>
+const SVGConnector = ({ progress, range, type, color = "#cee88c", colorEnd = "#cee88c" }: any) => {
+  const uid      = useId().replace(/:/g, "");
+  const wrapRef  = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<SVGPathElement>(null);
+  const drawRef  = useRef<SVGPathElement>(null);
+  const glowRef  = useRef<SVGCircleElement>(null);
+  const dotRef   = useRef<SVGCircleElement>(null);
+  const lengthRef = useRef(0);
+  const widthRef  = useRef(0);
 
-    {/* Pulse signal indicator */}
-    <div className="absolute -inset-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2.5rem] -z-10" />
-  </motion.div>
-);
+  // Responsive logic
+  const [height, setHeight] = useState(160);
+  const [isMobile, setIsMobile] = useState(false);
 
-export default function ReferralAnnouncement() {
-  const { data: settings } = useQuery({
-    queryKey: ["siteSettings"],
-    queryFn: getSiteSettings
+  useEffect(() => {
+    const update = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setHeight(mobile ? 120 : 160);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const CORNER = 36;
+
+  function makePath(w: number, h: number): string {
+    const cx = w / 2;
+    if (isMobile) {
+      // Straight vertical line for mobile
+      return `M ${cx} 0 L ${cx} ${h}`;
+    }
+    const offset = Math.min(w * 0.22, 120);
+    if (type === "top-right") {
+      const ex = cx + offset;
+      return [`M ${cx} 0`, `L ${ex - CORNER} 0`, `Q ${ex} 0 ${ex} ${CORNER}`, `L ${ex} ${h}`].join(" ");
+    }
+    const ex = cx - offset;
+    return [`M ${cx} 0`, `L ${ex + CORNER} 0`, `Q ${ex} 0 ${ex} ${CORNER}`, `L ${ex} ${h}`].join(" ");
+  }
+
+  useEffect(() => {
+    const sync = () => {
+      if (!wrapRef.current || !trackRef.current || !drawRef.current) return;
+      const w = wrapRef.current.offsetWidth;
+      if (w === widthRef.current) return;
+      widthRef.current = w;
+      const d = makePath(w, height);
+      trackRef.current.setAttribute("d", d);
+      drawRef.current.setAttribute("d", d);
+      const len = trackRef.current.getTotalLength();
+      lengthRef.current = len;
+      drawRef.current.style.strokeDasharray  = String(len);
+      drawRef.current.style.strokeDashoffset = String(len);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, [type, height, isMobile]);
+
+  const localT = useTransform(progress, range, [0, 1], { clamp: true });
+
+  useMotionValueEvent(localT, "change", (t) => {
+    const len = lengthRef.current;
+    if (!len || !trackRef.current || !drawRef.current || !dotRef.current || !glowRef.current) return;
+    const drawn = t * len;
+    drawRef.current.style.strokeDashoffset = String(len - drawn);
+    const pt = trackRef.current.getPointAtLength(drawn);
+    const cx = String(pt.x);
+    const cy = String(pt.y);
+    dotRef.current.setAttribute("cx", cx);
+    dotRef.current.setAttribute("cy", cy);
+    glowRef.current.setAttribute("cx", cx);
+    glowRef.current.setAttribute("cy", cy);
+    const fade = t < 0.08 ? t / 0.08 : t > 0.88 ? (1 - t) / 0.12 : 1;
+    dotRef.current.style.opacity  = String(fade);
+    glowRef.current.style.opacity = String(fade * 0.5);
   });
 
-  const [numFriends, setNumFriends] = useState<string>("10");
-  const [avgDeposit, setAvgDeposit] = useState<string>("50");
-  
-  const percentage = useMemo(() => {
-    return parseFloat(settings?.referral_percentage || "10");
-  }, [settings]);
+  const gradId   = `sg-${uid}`;
+  const filterId = `gf-${uid}`;
 
-  const potentialEarning = useMemo(() => {
-    const friends = parseFloat(numFriends) || 0;
-    const deposit = parseFloat(avgDeposit) || 0;
-    return (friends * deposit * (percentage / 100)).toFixed(2);
-  }, [numFriends, avgDeposit, percentage]);
+  return (
+    <div
+      ref={wrapRef}
+      className="w-full max-w-7xl mx-auto pointer-events-none"
+      style={{
+        height,
+        marginTop:    isMobile ? -20 : -(height / 2),
+        marginBottom: isMobile ? -20 : -(height / 2),
+        position: "relative",
+        zIndex: 5,
+      }}
+    >
+      <svg width="100%" height={height} style={{ overflow: "visible", position: "absolute", inset: 0 }}>
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2={isMobile ? "0%" : "100%"} y2="100%">
+            <stop offset="0%"   stopColor={color} />
+            <stop offset="100%" stopColor={colorEnd} />
+          </linearGradient>
+          <filter id={filterId} x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        <path ref={trackRef} d="" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path ref={drawRef}  d="" fill="none" stroke={`url(#${gradId})`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          style={{ filter: `drop-shadow(0 0 6px ${color})` }} />
+        <circle ref={glowRef} r={18} fill={color} opacity={0} style={{ filter: "blur(12px)" }} />
+        <circle ref={dotRef}  r={4.5} fill={color} opacity={0} filter={`url(#${filterId})`} />
+      </svg>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Themes
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface StepProps {
+  image: string;
+  title: string;
+  description: string;
+  progress: MotionValue<number>;
+  range: [number, number];
+  theme: { from: string; border: string; pulse: string; accent: string };
+  align?: "left" | "right";
+}
+
+const cardThemes = {
+  orange:  { from: "from-orange-500/20 to-orange-600/5",  border: "border-orange-500/20",  pulse: "via-orange-500/40",  accent: "text-orange-500"  },
+  blue:    { from: "from-blue-500/20 to-blue-600/5",      border: "border-blue-500/20",    pulse: "via-blue-500/40",    accent: "text-blue-500"    },
+  emerald: { from: "from-emerald-500/20 to-emerald-600/5",border: "border-emerald-500/20", pulse: "via-emerald-500/40", accent: "text-emerald-500" },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Step
+// ─────────────────────────────────────────────────────────────────────────────
+
+const Step = ({ image, title, description, progress, range, theme, align = "left" }: StepProps) => {
+  const isRight = align === "right";
+  const sweepY  = useTransform(progress, range, ["-100%", "100%"]);
+  const sweepOp = useTransform(progress, [range[0], range[0] + 0.05, range[1] - 0.05, range[1]], [0, 1, 1, 0]);
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Restore perfect desktop defaults
+  const imgVar = isMobile ? "clamp(15rem, 50vw, 25rem)" : "clamp(18rem, 30vw, 30rem)";
+
+  return (
+    <div
+      className={cn("relative w-full max-w-5xl mx-auto flex z-20", isRight ? "justify-end" : "justify-start")}
+      style={{ "--img": imgVar } as React.CSSProperties}
+    >
+      <div
+        className={cn(
+          "relative group overflow-visible w-full max-w-xl transition-all duration-500", 
+          isRight ? "pr-2 md:pr-8" : "pl-2 md:pl-8"
+        )}
+        // Desktop: original 0.08, Mobile: tighten to 0.10 for perfect gap
+        style={{ paddingTop: isMobile ? "calc(var(--img) * 0.10)" : "calc(var(--img) * 0.08)" }}
+      >
+
+        {/* ── Image ── always taller+wider than the card ── */}
+        <motion.div
+          initial={{ y: 0 }}
+          whileHover={{ y: -15, scale: 1.05 }}
+          className={cn(
+            "absolute bottom-0 z-30 pointer-events-none drop-shadow-[0_40px_80px_rgba(0,0,0,0.8)]",
+            isRight ? "right-0" : "left-0",
+          )}
+          style={{
+            width:  "var(--img)",
+            height: "var(--img)",
+            // Desktop: original -22%, Mobile: conservative -5%
+            marginRight: isRight ? (isMobile ? "calc(var(--img) * -0.05)" : "calc(var(--img) * -0.22)") : undefined,
+            marginLeft:  isRight ? undefined : (isMobile ? "calc(var(--img) * -0.05)" : "calc(var(--img) * -0.22)"),
+          }}
+        >
+          <img src={image} alt={title} className="w-full h-full object-contain" />
+        </motion.div>
+
+        {/* ── Animated border wrapper ── */}
+        <div className="relative p-[1px] rounded-[2rem] md:rounded-[4rem] overflow-hidden z-10">
+          <motion.div
+            style={{ y: sweepY, opacity: sweepOp }}
+            className="absolute inset-x-0 h-40 bg-gradient-to-b from-transparent via-primary/50 to-transparent blur-2xl z-0"
+          />
+
+          {/*
+            Card body:
+            - base padding: 1.5rem all sides (mobile)
+            - image-side padding = var(--img) * 0.72 so image always covers that side
+            - min-h scales with image so card is never taller than the image
+          */}
+          <div
+            className={cn(
+              "relative z-10 rounded-[2rem] md:rounded-[4rem] bg-gradient-to-br backdrop-blur-xl h-full flex flex-col justify-center transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-white/5 border",
+              theme.from,
+              theme.border,
+              isRight ? "items-start text-left" : "items-end text-right",
+            )}
+            style={{
+              // Uniform padding base
+              padding: "clamp(1rem, 3vw, 4rem)",
+              // Override the image side to be wider so text clears the image
+              ...(isRight
+                ? { paddingRight: "calc(var(--img) * 0.75)", paddingLeft: "clamp(1rem, 3vw, 3rem)" }
+                : { paddingLeft:  "calc(var(--img) * 0.75)", paddingRight: "clamp(1rem, 3vw, 3rem)" }),
+              // Card is always shorter than the image
+              minHeight: "calc(var(--img) * 0.65)",
+            }}
+          >
+            <div className="absolute inset-0 bg-[#070707]/60 z-0 rounded-[2rem] md:rounded-[4rem]" />
+            <div className="relative z-30 space-y-2 md:space-y-3">
+              <h4
+                className="font-black text-white uppercase italic tracking-tighter leading-none"
+                style={{ fontSize: "clamp(1.4rem, 4vw, 3rem)" }}
+              >
+                {title}
+              </h4>
+              <div className={cn("h-1 rounded-full", theme.accent.replace("text-", "bg-") + "/20")} style={{ width: "clamp(2.5rem, 6vw, 5rem)" }} />
+              <p
+                className="text-white/40 font-black uppercase leading-none"
+                style={{ fontSize: "clamp(0.5rem, 1.2vw, 0.75rem)", letterSpacing: "0.4em" }}
+              >
+                {description}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function ReferralAnnouncement() {
+  const { data: settings } = useQuery({ queryKey: ["siteSettings"], queryFn: getSiteSettings });
+
+  const progress = useMotionValue(0);
+  useEffect(() => {
+    const controls = animate(progress, 1, { duration: 5.0, repeat: Infinity, ease: "linear" });
+    return controls.stop;
+  }, [progress]);
+
+  const [numFriends, setNumFriends] = useState<number>(1);
+  const [avgDeposit, setAvgDeposit] = useState<number>(50);
+  const percentage       = useMemo(() => parseFloat(settings?.referral_percentage || "10"), [settings]);
+  const potentialEarning = useMemo(() => (numFriends * avgDeposit * (percentage / 100)).toFixed(0), [numFriends, avgDeposit, percentage]);
 
   if (settings?.enable_referrals === false) return null;
 
   return (
-    <SectionPadding id="referral-program" className="py-24 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 blur-[150px] rounded-full" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/5 blur-[150px] rounded-full" />
-      </div>
+    <SectionPadding id="referral-program" className="py-32 relative">
+      <div className="absolute top-0 left-1/4 w-1/2 h-1/2 bg-blue-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-1/2 h-1/2 bg-emerald-500/5 blur-[120px] pointer-events-none" />
 
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-7xl mx-auto px-4">
+
+        {/* Header */}
         <div className="flex flex-col items-center text-center mb-20">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            className="px-4 py-1.5 bg-primary/10 rounded-full border border-primary/20 flex items-center gap-2 mb-8"
-          >
-            <div className="relative">
-                <Gift className="w-4 h-4 text-primary" />
-                <span className="absolute inset-0 bg-primary/40 blur-sm animate-pulse rounded-full" />
-            </div>
-            <span className="text-[10px] font-black tracking-widest text-primary uppercase">Revenue Share Active</span>
-          </motion.div>
-          
-          <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase italic text-white leading-[0.85] mb-6">
-            Build Your <span className="text-primary">Empire</span>.<br/>
-            earn lifetime pay.
+          <h2 className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter uppercase italic text-white leading-[0.9] mb-10 max-w-3xl mx-auto">
+            Earn by referring <span className="text-primary">your friends</span>
           </h2>
-          <p className="text-white/40 max-w-2xl font-medium text-base md:text-lg leading-relaxed">
-            Invite friends and create a passive income stream. Gain <span className="text-white font-bold">{percentage}%</span> of every transaction your network makes, forever.
+          <p className="text-white/40 max-w-2xl font-medium text-lg md:text-xl leading-relaxed">
+            Earn <span className="text-white font-bold">{percentage}%</span> from every deposit your friends make.
+            You can withdraw your earnings as soon as you reach the minimum withdrawal threshold.
           </p>
         </div>
 
-        {/* Steps with Pulse Animation */}
-        <div className="relative mb-24 px-4">
-          {/* Connecting Line with Signal */}
-          <div className="absolute top-1/2 left-0 w-full h-[2px] bg-white/5 -translate-y-1/2 hidden md:block">
-            <motion.div 
-              initial={{ left: "-10%" }}
-              animate={{ left: "110%" }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="absolute top-1/2 -translate-y-1/2 w-32 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent"
-              style={{ boxShadow: "0 0 20px rgba(206,232,140,0.5)" }}
-            />
-          </div>
+        {/* Steps */}
+        <div className="flex flex-col items-center mb-40 relative z-10 w-full ">
+          <Step image="/refer/image1.webp" title="Join"  description="Acquire Link"   progress={progress} range={[0.0,  0.30]} theme={cardThemes.orange}  align="left"  />
+          <SVGConnector progress={progress} range={[0.30, 0.42]} type="top-right" color="#f97316" colorEnd="#3b82f6" />
+          <Step image="/refer/image2.webp" title="Share" description="Invite Network" progress={progress} range={[0.42, 0.65]} theme={cardThemes.blue}    align="right" />
+          <SVGConnector progress={progress} range={[0.65, 0.77]} type="top-left"  color="#3b82f6" colorEnd="#10b981" />
+          <Step image="/refer/image3.webp" title="Earn"  description="Extract Yield"  progress={progress} range={[0.77, 1.0]}  theme={cardThemes.emerald} align="left"  />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            <Step 
-              icon={Users}
-              title="Registration"
-              description="Sign up and access your dedicated affiliate dashboard and tracking tools."
-              index={0}
-            />
-            <Step 
-              icon={TrendingUp}
-              title="Propagation"
-              description="Deploy your links across your network using our pre-built high-converting assets."
-              index={1}
-            />
-            <Step 
-              icon={CircleDollarSign}
-              title="Accumulation"
-              description={`Harvest your ${percentage}% commissions in real-time as your network thrives.`}
-              index={2}
+        {/* ── Yield Estimator (MacOS Style) ────────────────────────────────── */}
+        <div className="flex flex-col items-center mt-20">
+          {/* Simplified Title (Smaller & Integrated) */}
+          <h4 className="text-xl md:text-2xl font-black text-white/80 uppercase italic tracking-tighter mb-8 text-center">
+            Calculate How Much <span className="text-primary">You Can Earn</span>
+          </h4>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="w-full max-w-3xl rounded-3xl border border-white/10 bg-[#0A0D11]/90 backdrop-blur-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] overflow-hidden relative"
+          >
+            {/* MacOS Title Bar */}
+            <div className="h-10 border-b border-white/5 flex items-center px-6 bg-white/5">
+              <div className="flex gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57] opacity-80" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E] opacity-80" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#28C840] opacity-80" />
+              </div>
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/20 font-black text-[9px] uppercase tracking-[0.2em]">
+                <Calculator className="w-3 h-3" />
+                Sharp Calculator
+              </div>
+            </div>
+
+            {/* Inner Content (Responsive Grid) */}
+            <div className="p-6 md:p-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-center">
+                
+                {/* Inputs Side */}
+                <div className="space-y-6 md:space-y-8 order-2 md:order-1">
+                  <div className="space-y-3">
+                    <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] px-1">Active Invitations</label>
+                    <div className="flex items-center gap-4 bg-white/5 rounded-full p-2 border border-white/5 group hover:border-emerald-500/20 transition-all">
+                      <button 
+                        onClick={() => setNumFriends(prev => Math.max(1, prev - 1))}
+                        className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors text-white/60 active:scale-90"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <div className="flex-1 text-center font-black text-2xl text-white">{numFriends}</div>
+                      <button 
+                        onClick={() => setNumFriends(prev => Math.min(100, prev + 1))}
+                        className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center hover:bg-emerald-500/30 transition-colors text-emerald-500 active:scale-90"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] px-1">Avg. Deposit ($)</label>
+                    <div className="relative h-14 group">
+                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-black text-lg">$</span>
+                      <input 
+                        type="number"
+                        value={avgDeposit}
+                        onChange={e => setAvgDeposit(Number(e.target.value))}
+                        className="w-full h-full bg-white/5 border border-white/5 rounded-full pl-12 pr-6 py-0 text-white font-black focus:outline-none focus:border-emerald-500/20 transition-all text-xl"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Result Side (Stat Card Style) */}
+                <div className="relative p-8 bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 rounded-[2rem] border border-emerald-500/20 text-center space-y-2 overflow-hidden group order-1 md:order-2 backdrop-blur-md transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-white/5">
+                  <div className="absolute inset-0 bg-emerald-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="relative z-10 space-y-0.5">
+                    <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.5em]">Potential Earning</span>
+                    <div className="flex items-baseline justify-center gap-2">
+                       <motion.span 
+                         key={potentialEarning}
+                         initial={{ opacity: 0, scale: 0.95 }}
+                         animate={{ opacity: 1, scale: 1 }}
+                         className="text-5xl md:text-6xl font-black text-emerald-500 tracking-tighter italic drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                       >
+                         ${potentialEarning}
+                       </motion.span>
+                    </div>
+                    <span className="text-[9px] font-bold text-white/10 uppercase italic tracking-widest">per cycle</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Window Status Bar */}
+            <div className="h-7 border-t border-white/5 bg-black/10 px-6 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-[7px] font-medium text-white/5 uppercase tracking-widest">
+                Optimized Yield Generation Core V2.4
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Register Button (Fit Content) */}
+          <div className="mt-10">
+            <PremiumButton
+              text="Get Started Now"
+              icon={ArrowRight}
+              href="/auth/register"
+              variant="primary"
+              className="h-12 rounded-full text-sm font-black shadow-[0_20px_40px_-10px_rgba(206,232,140,0.2)] whitespace-nowrap"
             />
           </div>
         </div>
-
-        {/* Calculator Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative overflow-hidden rounded-[3rem] bg-[#070707] border border-white/5 p-8 md:p-16"
-        >
-          {/* Glowing Accents */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 blur-[80px] rounded-full pointer-events-none" />
-          
-          <div className="relative z-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
-                <div className="max-w-md">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-primary/20 transition-colors">
-                            <Calculator className="w-6 h-6 text-white/60" />
-                        </div>
-                        <h3 className="text-3xl font-black text-white uppercase italic tracking-tight">Earnings Calculator</h3>
-                    </div>
-                    <p className="text-white/40 font-medium text-base">
-                        Simulate your potential monthly revenue based on your referral network activity.
-                    </p>
-                </div>
-                
-                <div className="flex flex-col items-center md:items-end">
-                    <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mb-2">Estimated Earnings</span>
-                    <div className="flex items-baseline gap-3">
-                        <span className="text-6xl md:text-8xl font-black text-primary tracking-tighter italic drop-shadow-[0_0_30px_rgba(206,232,140,0.2)]">
-                            ${potentialEarning}
-                        </span>
-                        <span className="text-2xl font-bold text-white/10 uppercase italic">/ cycle</span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-              <div className="space-y-10 bg-white/[0.02] border border-white/5 p-8 md:p-12 rounded-[2.5rem]">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center mb-4">
-                    <label className="text-[11px] font-black text-white/60 uppercase tracking-widest">
-                       Active Referrals
-                    </label>
-                    <span className="px-3 py-1 bg-white/5 rounded-full text-white font-black text-xs">{numFriends} users</span>
-                  </div>
-                  <input 
-                    type="range"
-                    min="1"
-                    max="100"
-                    value={numFriends}
-                    onChange={(e) => setNumFriends(e.target.value)}
-                    className="w-full accent-primary bg-white/10 h-1.5 rounded-full appearance-none cursor-pointer"
-                  />
-                  <div className="flex justify-between text-[10px] font-bold text-white/20 mt-2">
-                    <span>1 USER</span>
-                    <span>100 USERS</span>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[11px] font-black text-white/60 uppercase tracking-widest">
-                       Average User Deposit
-                    </label>
-                    <span className="text-primary font-black text-sm">${avgDeposit}</span>
-                  </div>
-                  <div className="relative">
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-bold">$</span>
-                    <input 
-                      type="number"
-                      value={avgDeposit}
-                      onChange={(e) => setAvgDeposit(e.target.value)}
-                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-2xl pl-12 pr-6 py-6 text-white font-black focus:outline-none focus:border-primary/50 transition-all text-2xl shadow-inner"
-                      placeholder="Amount"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="h-full flex flex-col gap-6">
-                <div className="flex-1 p-8 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 relative group">
-                    <div className="absolute top-6 right-6 opacity-20 group-hover:scale-110 transition-transform duration-500">
-                        <TrendingUp className="w-12 h-12 text-primary" />
-                    </div>
-                    <h4 className="text-lg font-black text-white uppercase italic tracking-tight mb-4">How it works</h4>
-                    <ul className="space-y-4">
-                        {[
-                            `You get ${percentage}% of every deposit.`,
-                            "Withdrawals processed in 24-48 hours.",
-                            "Direct USDT BEP20 payouts.",
-                            "Lifetime cookie tracking for referrals."
-                        ].map((text, i) => (
-                            <li key={i} className="flex items-center gap-3 text-sm font-medium text-white/50">
-                                <ChevronRight className="w-4 h-4 text-primary shrink-0" />
-                                {text}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <PremiumButton 
-                        text="Join Network" 
-                        icon={ArrowRight} 
-                        href="/auth/register" 
-                        variant="primary" 
-                        className="flex-1 py-6"
-                    />
-                    <button className="w-16 h-16 rounded-[1.5rem] bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors group">
-                        <Users className="w-6 h-6 text-white/40 group-hover:text-white transition-colors" />
-                    </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </SectionPadding>
   );
