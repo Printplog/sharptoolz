@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import ToolGridSkeleton from "../../ToolGridSkeleton";
 import DashboardToolCard from "./DashboardToolCard";
 import type { Template, Tool } from "@/types";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, X } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   Select,
@@ -29,7 +29,7 @@ interface GroupedTools {
 
 export default function ToolsList({ hot }: Props) {
   const [query, setQuery] = useState("");
-  const debouncedQuery = useDebounce(query, 500);
+  const debouncedQuery = useDebounce(query, 300);
   const [selectedTool, setSelectedTool] = useState<string>("all");
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -134,8 +134,16 @@ export default function ToolsList({ hot }: Props) {
                 placeholder="Search for tools..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-6 h-12 border-white/5 rounded-xl bg-white/[0.03] text-white placeholder:text-white/20 focus:border-primary/50 focus:ring-primary/20 transition-all text-sm"
+                className="w-full pl-12 pr-10 py-6 h-12 border-white/5 rounded-xl bg-white/[0.03] text-white placeholder:text-white/20 focus:border-primary/50 focus:ring-primary/20 transition-all text-sm"
               />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/20 hover:text-white/60 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
             <div className="w-full sm:w-auto flex gap-3">
               <Select value={selectedTool} onValueChange={setSelectedTool}>
