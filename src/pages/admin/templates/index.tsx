@@ -1,7 +1,7 @@
 import { getTemplatesForAdmin } from "@/api/apiEndpoints";
 import ToolCard from "@/components/Admin/Tools/ToolCard";
 import ToolGridSkeleton from "@/components/ToolGridSkeleton";
-import type { Template } from "@/types";
+
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Layout, CheckCircle, XCircle, Flame, Search } from "lucide-react";
 
@@ -15,20 +15,22 @@ import { cn } from "@/lib/utils";
 export default function Templates() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading } = useQuery<Template[]>({
-    queryFn: () => getTemplatesForAdmin(undefined),
+  const { data: templatesData, isLoading } = useQuery({
+    queryFn: () => getTemplatesForAdmin({ page_size: 100 }),
     queryKey: ["templates"]
   })
 
-  const filteredData = data?.filter(t =>
+  const data = templatesData?.results || [];
+
+  const filteredData = data.filter(t =>
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const total = data?.length || 0;
-  const active = data?.filter(t => t.is_active).length || 0;
-  const inactive = data?.filter(t => !t.is_active).length || 0;
-  const hotCount = data?.filter(t => t.hot).length || 0;
+  const total = data.length;
+  const active = data.filter(t => t.is_active).length;
+  const inactive = data.filter(t => !t.is_active).length;
+  const hotCount = data.filter(t => t.hot).length;
 
   const stats = [
     {

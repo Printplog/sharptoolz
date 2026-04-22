@@ -5,16 +5,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight } from "lucide-react";
 import DashboardToolCard from "./DashboardToolCard";
 import { PremiumButton } from "@/components/ui/PremiumButton";
-import type { Template } from "@/types";
+
 
 export default function ToolsListHorizontal() {
-  const { data: tools = [], isLoading } = useQuery<Template[]>({
+  const { data: toolsData, isLoading } = useQuery({
     queryKey: ["tools", "hot"],
-    queryFn: () => getTemplates(true),
+    queryFn: () => getTemplates({ hot: true }),
     staleTime: 5 * 60 * 1000,
   });
 
-  const hotTools = tools?.filter((tool) => tool.hot) || [];
+  const tools = toolsData?.results || [];
+  const hotTools = tools.filter((tool) => tool.hot) || [];
   const placeholdersCount = Math.max(0, 4 - hotTools.slice(0, 4).length);
   const placeholders = Array.from({ length: placeholdersCount });
 

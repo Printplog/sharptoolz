@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { getTemplates, getTools } from "@/api/apiEndpoints";
 import { Input } from "@/components/ui/input";
 import ToolGridSkeleton from "../../ToolGridSkeleton";
 import DashboardToolCard from "./DashboardToolCard";
 import type { Template, Tool } from "@/types";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Select,
   SelectContent,
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   hot?: boolean;
@@ -26,111 +28,159 @@ interface GroupedTools {
 }
 
 export default function ToolsList({ hot }: Props) {
-  const [tools, setTools] = useState<Template[]>([]);
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 500);
   const [selectedTool, setSelectedTool] = useState<string>("all");
+  const observerTarget = useRef<HTMLDivElement>(null);
 
-  const { data: templates, isLoading: templatesLoading } = useQuery({
-    queryKey: ["tools", `${hot && "hot"}`],
-    queryFn: () => getTemplates(hot),
-    staleTime: 5 * 60 * 1000,
-  });
-
+  // Categories for the filter dropdown
   const { data: toolCategories, isLoading: toolsLoading } = useQuery({
     queryKey: ["tool-categories"],
     queryFn: () => getTools(),
     staleTime: 10 * 60 * 1000,
   });
 
-  useEffect(() => {
-    if (templates) setTools(templates);
-  }, [templates]);
-
-  const filteredTools = tools.filter((tool) => {
-    const matchesQuery = tool.name.toLowerCase().includes(query.toLowerCase());
-    const matchesTool = selectedTool === "all" || tool.tool === selectedTool;
-    return matchesQuery && matchesTool;
+  // Infinite Query for templates with backend search and category filtering
+  const {
+    data: infiniteData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: templatesLoading,
+    isError,
+    refetch
+  } = useInfiniteQuery({
+    queryKey: ["tools", { hot, search: debouncedQuery, tool: selectedTool }],
+    queryFn: ({ pageParam = 1 }) => getTemplates({ 
+      page: pageParam as number, 
+      search: debouncedQuery, 
+      tool: selectedTool, 
+      hot 
+    }),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        const url = new URL(lastPage.next, window.location.origin);
+        const page = url.searchParams.get("page");
+        return page ? parseInt(page) : undefined;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const groupedTools: GroupedTools = {};
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 }
+    );
 
-  if (!hot && toolCategories && filteredTools.length > 0) {
-    filteredTools.forEach((template) => {
+    if (observerTarget.current) observer.observe(observerTarget.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Flatten templates from all pages
+  const templates = useMemo(() => 
+    infiniteData?.pages?.flatMap(page => page.results) ?? []
+  , [infiniteData]);
+
+  const totalCount = infiniteData?.pages?.[0]?.count ?? 0;
+
+  // Group templates by category for the regular view
+  const groupedTools = useMemo(() => {
+    const groups: GroupedTools = {};
+    if (hot || !toolCategories || templates.length === 0) return groups;
+
+    templates.forEach((template) => {
       const toolId = template.tool && typeof template.tool === 'object' ? template.tool.id : template.tool;
       if (toolId) {
         const toolCategory = toolCategories.find(t => t.id === toolId);
         if (toolCategory) {
-          if (!groupedTools[toolId]) {
-            groupedTools[toolId] = {
-              tool: toolCategory,
-              templates: []
-            };
+          if (!groups[toolId]) {
+            groups[toolId] = { tool: toolCategory, templates: [] };
           }
-          groupedTools[toolId].templates.push(template);
+          groups[toolId].templates.push(template);
         }
       } else {
-        if (!groupedTools['uncategorized']) {
-          groupedTools['uncategorized'] = {
+        if (!groups['uncategorized']) {
+          groups['uncategorized'] = {
             tool: { id: 'uncategorized', name: 'Other Templates', description: 'Miscellaneous templates without a specific category.', price: 0, created_at: new Date().toISOString() },
             templates: []
           };
         }
-        groupedTools['uncategorized'].templates.push(template);
+        groups['uncategorized'].templates.push(template);
       }
     });
-  }
+    return groups;
+  }, [hot, toolCategories, templates]);
 
-  const isLoading = templatesLoading || toolsLoading;
-
+  const isLoading = (templatesLoading && templates.length === 0) || toolsLoading;
 
   return (
     <div className="space-y-10">
-      {/* Search Box */}
+      {/* Search & Filter Box */}
       {!hot && (
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full bg-white/[0.02] border border-white/5 p-4 rounded-2xl backdrop-blur-md">
-          <div className="flex-1 relative w-full group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
-            <Input
-              type="text"
-              placeholder="Search for tools..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-6 h-12 border-white/5 rounded-xl bg-white/[0.03] text-white placeholder:text-white/20 focus:border-primary/50 focus:ring-primary/20 transition-all text-sm"
-            />
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full flex-1">
+            <div className="flex-1 relative w-full group max-w-md">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+              <Input
+                type="text"
+                placeholder="Search for tools..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-6 h-12 border-white/5 rounded-xl bg-white/[0.03] text-white placeholder:text-white/20 focus:border-primary/50 focus:ring-primary/20 transition-all text-sm"
+              />
+            </div>
+            <div className="w-full sm:w-auto flex gap-3">
+              <Select value={selectedTool} onValueChange={setSelectedTool}>
+                <SelectTrigger className="w-full sm:w-[200px] rounded-xl bg-white/[0.03] border-white/5 text-white h-12 text-sm focus:ring-primary/20">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-950 border-white/10 text-white">
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {toolCategories?.map((tool) => (
+                    <SelectItem key={tool.id} value={tool.id}>
+                      {tool.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="w-full sm:w-auto flex gap-3">
-            <Select value={selectedTool} onValueChange={setSelectedTool}>
-              <SelectTrigger className="w-full sm:w-[200px] rounded-xl bg-white/[0.03] border-white/5 text-white h-12 text-sm focus:ring-primary/20">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent className="bg-zinc-950 border-white/10 text-white">
-                <SelectItem value="all">All Categories</SelectItem>
-                {toolCategories?.map((tool) => (
-                  <SelectItem key={tool.id} value={tool.id}>
-                    {tool.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="text-white/40 text-[11px] font-black uppercase tracking-widest shrink-0 hidden md:block">
+            {totalCount} tool{totalCount !== 1 ? 's' : ''} Found
           </div>
         </div>
       )}
 
-      {/* Loading State */}
+      {/* Main Content */}
       {isLoading ? (
         <ToolGridSkeleton />
+      ) : isError ? (
+        <div className="text-center py-20 border border-red-500/20 rounded-xl bg-red-500/[0.02] flex flex-col items-center gap-4">
+          <p className="text-red-400 italic font-medium">Failed to load tools. Please try again.</p>
+          <Button onClick={() => refetch()} variant="outline" className="border-red-500/50 text-red-400 hover:bg-red-500/10">
+            Retry Loading
+          </Button>
+        </div>
       ) : (
         <>
-          {/* Hot Tools */}
-          {hot && filteredTools.length > 0 && (
+          {/* Hot Tools View (Flat Grid) */}
+          {hot && templates.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredTools.map((template) => (
+              {templates.map((template) => (
                 <DashboardToolCard key={template.id} template={template} />
               ))}
             </div>
           )}
 
-          {/* Regular Tools */}
+          {/* Regular Tools View (Grouped by Category) */}
           {!hot && Object.keys(groupedTools).length > 0 && (
             <div className="space-y-16">
               {Object.entries(groupedTools).map(([toolId, { tool, templates }]) => (
@@ -159,15 +209,24 @@ export default function ToolsList({ hot }: Props) {
             </div>
           )}
 
-          {/* No Match */}
-          {filteredTools.length === 0 && (
-            <div className="text-center py-20 border border-white/5 rounded-xl bg-white/2">
-              <p className="text-white/40 italic">No tools found matching your criteria.</p>
+          {/* Empty State */}
+          {templates.length === 0 && (
+            <div className="text-center py-20 border border-white/5 rounded-xl bg-white/[0.02] backdrop-blur-sm">
+              <p className="text-white/40 italic font-medium">No tools found matching your criteria.</p>
             </div>
           )}
+
+          {/* Infinite Scroll Sentinel */}
+          <div ref={observerTarget} className="h-10 flex items-center justify-center w-full mt-10">
+            {isFetchingNextPage && (
+              <div className="flex items-center gap-2 text-white/40 text-sm font-medium animate-pulse">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                <span>Loading more tools...</span>
+              </div>
+            )}
+          </div>
         </>
       )}
-
     </div>
   );
 }

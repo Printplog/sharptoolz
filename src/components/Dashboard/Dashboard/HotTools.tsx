@@ -1,14 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { getTemplates } from "@/api/apiEndpoints";
 import ToolsList from "../Tools/ToolsList";
-import type { Template } from "@/types";
+
 
 export default function HotTools() {
-  const { data: templates, isLoading } = useQuery<Template[]>({
+  const { data: templatesData, isLoading } = useQuery({
     queryKey: ["tools", "hot"],
-    queryFn: () => getTemplates(true),
+    queryFn: () => getTemplates({ hot: true }),
     staleTime: 5 * 60 * 1000,
   });
+
+  const templates = templatesData?.results || [];
 
   // Don't render the section at all if there are no hot tools
   if (!isLoading && (!templates || templates.length === 0)) {

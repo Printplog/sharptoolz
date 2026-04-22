@@ -1,7 +1,7 @@
 import { getTemplatesForAdmin, getTool } from "@/api/apiEndpoints";
 import ToolCard from "@/components/Admin/Tools/ToolCard";
 import ToolGridSkeleton from "@/components/ToolGridSkeleton";
-import type { Template, Tool } from "@/types";
+import type { Tool } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Search } from "lucide-react";
@@ -25,13 +25,15 @@ export default function ToolTemplates() {
   });
 
   // Fetch templates for this tool
-  const { data: templates, isLoading: templatesLoading } = useQuery<Template[]>(
+  const { data: templatesData, isLoading: templatesLoading } = useQuery(
     {
       queryKey: ["templates", "tool", id],
-      queryFn: () => getTemplatesForAdmin(false, id as string),
+      queryFn: () => getTemplatesForAdmin({ tool: id as string, page_size: 100 }),
       enabled: !!id,
     }
   );
+
+  const templates = templatesData?.results || [];
 
   const isLoading = toolLoading || templatesLoading;
 

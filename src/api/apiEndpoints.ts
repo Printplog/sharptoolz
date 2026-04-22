@@ -84,21 +84,37 @@ export const deleteTemplate = async (id: string): Promise<unknown> => {
   return res.data;
 }
 
-export const getTemplates = async (hot?: boolean, tool?: string): Promise<Template[]> => {
-  const params = new URLSearchParams();
-  if (hot) params.append('hot', 'true');
-  if (tool) params.append('tool', tool);
+export const getTemplates = async (params?: { page?: number; search?: string; tool?: string; hot?: boolean; page_size?: number }): Promise<{
+  results: Template[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}> => {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append('page', params.page.toString());
+  if (params?.search) searchParams.append('search', params.search);
+  if (params?.tool && params.tool !== 'all') searchParams.append('tool', params.tool);
+  if (params?.hot) searchParams.append('hot', 'true');
+  if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
 
-  const queryString = params.toString();
+  const queryString = searchParams.toString();
   const res = await apiClient.get(`/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
 }
-export const getTemplatesForAdmin = async (hot?: boolean, tool?: string): Promise<Template[]> => {
-  const params = new URLSearchParams();
-  if (hot) params.append('hot', 'true');
-  if (tool) params.append('tool', tool);
+export const getTemplatesForAdmin = async (params?: { page?: number; search?: string; tool?: string; hot?: boolean; page_size?: number }): Promise<{
+  results: Template[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}> => {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append('page', params.page.toString());
+  if (params?.search) searchParams.append('search', params.search);
+  if (params?.tool && params.tool !== 'all') searchParams.append('tool', params.tool);
+  if (params?.hot) searchParams.append('hot', 'true');
+  if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
 
-  const queryString = params.toString();
+  const queryString = searchParams.toString();
   const res = await apiClient.get(`/admin/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
 }

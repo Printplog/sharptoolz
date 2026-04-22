@@ -83,15 +83,17 @@ export default function SvgTemplateEditor() {
 
   // Fetch all templates for the switcher
 
-  const { data: siblings } = useQuery<Template[]>({
+  const { data: siblingsData } = useQuery({
     queryKey: ["templates-for-admin-all"],
-    queryFn: () => getTemplatesForAdmin(undefined, undefined),
+    queryFn: () => getTemplatesForAdmin({ page_size: 100 }),
     enabled: true,
   });
 
+  const siblings = siblingsData?.results || [];
+
 
   const { prevTemplate, nextTemplate } = useMemo(() => {
-    if (!siblings || !id) return { prevTemplate: null, nextTemplate: null };
+    if (!siblings || siblings.length === 0 || !id) return { prevTemplate: null, nextTemplate: null };
     const index = siblings.findIndex(t => t.id === id);
     if (index === -1) return { prevTemplate: null, nextTemplate: null };
     
