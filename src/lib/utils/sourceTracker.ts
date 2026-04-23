@@ -10,6 +10,8 @@ export type TrafficAttribution = {
   term?: string | null;
   content?: string | null;
   source_platform?: string | null;
+  gclid?: string | null;
+  fbclid?: string | null;
   initial_referrer?: string | null;
   channel_group?: string | null;
   is_custom_source?: boolean;
@@ -20,7 +22,7 @@ const cleanValue = (value?: string | null) => {
   return trimmed ? trimmed : undefined;
 };
 
-const deriveChannelGroup = (source?: string, medium?: string) => {
+const deriveChannelGroup = (source?: string, medium?: string, gclid?: string | null) => {
   const normalizedSource = (source || '').toLowerCase();
   const normalizedMedium = (medium || '').toLowerCase();
 
@@ -28,7 +30,7 @@ const deriveChannelGroup = (source?: string, medium?: string) => {
   if (normalizedMedium === 'organic') return 'Organic Search';
   if (normalizedMedium === 'social') return 'Organic Social';
   if (normalizedMedium === 'paid_social') return 'Paid Social';
-  if (['cpc', 'ppc', 'paid_search', 'paidsearch'].includes(normalizedMedium)) return 'Paid Search';
+  if (['cpc', 'ppc', 'paid_search', 'paidsearch'].includes(normalizedMedium) || gclid) return 'Paid Search';
   if (normalizedMedium === 'email') return 'Email';
   if (normalizedMedium === 'affiliate') return 'Affiliate';
   if (normalizedMedium === 'display') return 'Display';
@@ -116,18 +118,22 @@ export const sourceTracker = {
     const term = cleanValue(params.get('utm_term'));
     const content = cleanValue(params.get('utm_content'));
     const sourcePlatform = cleanValue(params.get('utm_source_platform'));
+    const gclid = cleanValue(params.get('gclid'));
+    const fbclid = cleanValue(params.get('fbclid'));
     const ref = params.get('ref');
 
     let attribution: TrafficAttribution | undefined;
 
-    if (source) {
+    if (source || gclid || fbclid) {
       attribution = {
-        source: source.toLowerCase(),
-        medium: (medium || (explicitSource ? 'custom' : '(not set)')).toLowerCase(),
+        source: (source || (gclid ? 'google' : (fbclid ? 'facebook' : 'direct'))).toLowerCase(),
+        medium: (medium || (gclid || fbclid ? 'cpc' : (explicitSource ? 'custom' : '(not set)'))).toLowerCase(),
         campaign: campaign || null,
         term: term || null,
         content: content || null,
         source_platform: sourcePlatform || null,
+        gclid: gclid || null,
+        fbclid: fbclid || null,
         initial_referrer: cleanValue(document.referrer) || null,
         is_custom_source: Boolean(explicitSource && !utmSource),
       };
@@ -156,7 +162,7 @@ export const sourceTracker = {
 
     if (!attribution) return;
 
-    attribution.channel_group = deriveChannelGroup(attribution.source, attribution.medium);
+    attribution.channel_group = deriveChannelGroup(attribution.source, attribution.medium, attribution.gclid);
 
     Cookies.set(SOURCE_COOKIE_KEY, attribution.source, { expires: 30, sameSite: 'lax' });
     Cookies.set(ATTRIBUTION_COOKIE_KEY, JSON.stringify(attribution), { expires: 30, sameSite: 'lax' });

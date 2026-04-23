@@ -35,7 +35,7 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const isPresenceUpdate = (value: unknown): value is PresenceUpdate =>
   isObject(value) &&
   value.type === "presence_update" &&
-  typeof value.session_key === "string" &&
+  typeof value.presence_key === "string" &&
   (value.status === "online" || value.status === "offline");
 
 const isOnlineListUpdate = (value: unknown): value is OnlineListUpdate =>
@@ -52,7 +52,7 @@ const isNewVisitMessage = (value: unknown): value is NewVisitMessage =>
 export type PresenceUpdate = {
   type: "presence_update";
   status: "online" | "offline";
-  session_key: string;
+  presence_key: string;
   username: string | null;
   ip_address?: string;
 };
