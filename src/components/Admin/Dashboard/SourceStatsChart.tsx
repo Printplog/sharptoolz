@@ -46,7 +46,7 @@ export default function SourceStatsChart({ data, rangeLabel }: SourceStatsChartP
   }
 
   const chartData = data.map((item) => ({
-    source: item.source === 'referral' ? 'Referer' : item.source,
+    source: item.source,
     visits: item.visits,
     unique_visitors: item.unique_visitors,
   }))
@@ -58,7 +58,7 @@ export default function SourceStatsChart({ data, rangeLabel }: SourceStatsChartP
         <div className="space-y-1">
           <CardTitle className="text-lg font-black italic uppercase tracking-tighter text-amber-400">Traffic <span className="text-white">Sources</span></CardTitle>
           <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-            Source Attribution for {rangeLabel?.toLowerCase() || "the selected range"}
+            Source / medium attribution for {rangeLabel?.toLowerCase() || "the selected range"}
           </CardDescription>
         </div>
 
@@ -114,4 +114,3 @@ export default function SourceStatsChart({ data, rangeLabel }: SourceStatsChartP
     </Card>
   )
 }
-

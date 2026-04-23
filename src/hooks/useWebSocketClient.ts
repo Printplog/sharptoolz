@@ -1,6 +1,6 @@
 
 // src/hooks/useWebSocketClient.ts
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 type Listener<T> = (data: T) => void;
 
@@ -13,7 +13,7 @@ type UseWebSocketClientOptions<T> = {
   protocols?: string | string[];
   reconnectAttempts?: number;
   reconnectInterval?: number;
-  dependencies?: any[]; // New: dependencies to trigger reconnection
+  dependencies?: ReadonlyArray<unknown>; // New: dependencies to trigger reconnection
 };
 
 export function useWebSocketClient<T = unknown>({
@@ -30,6 +30,7 @@ export function useWebSocketClient<T = unknown>({
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectCountRef = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   
   // Store callbacks in refs to avoid dependency issues
   const onMessageRef = useRef(onMessage);
@@ -57,8 +58,10 @@ export function useWebSocketClient<T = unknown>({
   const sendMessage = useCallback((msg: unknown) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(msg));
+      return true;
     } else {
       console.warn('[WS] Cannot send message — socket not open:', msg);
+      return false;
     }
   }, []);
 
@@ -75,6 +78,7 @@ export function useWebSocketClient<T = unknown>({
     ws.addEventListener('open', () => {
       console.log('[WS] Connected:', url);
       reconnectCountRef.current = 0; // Reset reconnect counter on successful connection
+      setIsOpen(true);
       onOpenRef.current?.();
     });
 
@@ -89,6 +93,7 @@ export function useWebSocketClient<T = unknown>({
 
     ws.addEventListener('close', (event) => {
       console.warn('[WS] Connection closed. Code:', event.code, 'Reason:', event.reason);
+      setIsOpen(false);
       onCloseRef.current?.();
 
       // Only attempt reconnection if it wasn't a manual close (code 1000)
@@ -104,6 +109,7 @@ export function useWebSocketClient<T = unknown>({
 
     ws.addEventListener('error', (err) => {
       console.error('[WS] Error:', err);
+      setIsOpen(false);
       onErrorRef.current?.(err);
     });
   }, [url, protocols, reconnectAttempts, reconnectInterval]);
@@ -127,5 +133,5 @@ export function useWebSocketClient<T = unknown>({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connect, ...dependencies]);
 
-  return { sendMessage, connect };
+  return { sendMessage, connect, isOpen };
 }

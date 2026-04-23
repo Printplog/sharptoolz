@@ -22,6 +22,7 @@ import { useAuthStore } from "@/store/authStore";
 import { User, Mail, Lock } from "lucide-react";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { sourceTracker } from "@/lib/utils/sourceTracker";
+import { trackSignUp } from "@/lib/utils/googleAnalytics";
 
 const registerSchema = z
   .object({
@@ -98,6 +99,7 @@ export default function Register({ dialog = false }: Props) {
   const { mutate, isPending } = useMutation({
     mutationFn: (data: RegisterPayload) => register(data),
     onSuccess: () => {
+      trackSignUp(sourceTracker.getAttribution());
       toast.success("Account created successfully");
       if (dialog) {
         loginMutate({
@@ -114,8 +116,13 @@ export default function Register({ dialog = false }: Props) {
   });
 
   const onSubmit = async (values: RegisterSchema) => {
-    const source = sourceTracker.getSource();
-    mutate({ ...values, source });
+    const attribution = sourceTracker.getAttribution();
+    mutate({
+      ...values,
+      source: attribution?.source,
+      medium: attribution?.medium,
+      campaign: attribution?.campaign || undefined,
+    });
   };
 
   const { data: settings } = useQuery({

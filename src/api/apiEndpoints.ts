@@ -1,4 +1,4 @@
-import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog } from "@/types";
+import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution } from "@/types";
 import { apiClient } from "./apiClient";
 export const getApi = apiClient.get;
 export const postApi = apiClient.post;
@@ -226,8 +226,8 @@ export const getAuditLogs = async (): Promise<AuditLog[]> => {
   return res.data;
 };
 
-export const logVisit = async (path: string, source?: string): Promise<void> => {
-  await apiClient.post('/analytics/log-visit/', { path, source });
+export const logVisit = async (path: string, attribution?: TrafficAttribution, referrer?: string): Promise<void> => {
+  await apiClient.post('/analytics/log-visit/', { path, attribution, referrer });
 };
 
 
@@ -249,7 +249,18 @@ export const getCampaignStats = async (): Promise<CampaignStatsResponse> => {
   return res.data;
 };
 
-export const createCampaign = async (data: { name: string; description?: string; ref_code?: string }): Promise<Campaign> => {
+export const createCampaign = async (data: {
+  name: string;
+  source: string;
+  medium: string;
+  campaign: string;
+  landing_path?: string;
+  description?: string;
+  content?: string;
+  term?: string;
+  source_platform?: string;
+  ref_code?: string;
+}): Promise<Campaign> => {
   const res = await apiClient.post('/analytics/campaigns/', data);
   return res.data;
 };

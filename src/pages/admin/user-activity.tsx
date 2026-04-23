@@ -137,9 +137,9 @@ export default function UserActivity() {
       iconColor: "text-indigo-400",
     },
     {
-      title: "Success Rate",
-      value: `${Math.round((displayLogs.filter(l => !l.status_code || l.status_code < 400).length / (displayLogs.length || 1)) * 100)}%`,
-      label: "Interaction health",
+      title: "Attributed",
+      value: `${Math.round((displayLogs.filter(l => !!l.source && !!l.medium).length / (displayLogs.length || 1)) * 100)}%`,
+      label: "Visits with source and medium",
       icon: CheckCircle2,
       gradient: "from-emerald-500/10 to-emerald-600/5",
       borderColor: "border-emerald-500/10",
@@ -298,6 +298,7 @@ export default function UserActivity() {
 
 function UserActivityCard({ session, isOnline }: { session: ActivityLog; isOnline: boolean }) {
     const isError = session.status_code && session.status_code >= 400;
+    const sourceLabel = session.source_label || [session.source, session.medium].filter(Boolean).join(' / ') || 'direct / (none)';
 
     return (
         <div className={cn(
@@ -377,7 +378,7 @@ function UserActivityCard({ session, isOnline }: { session: ActivityLog; isOnlin
                     <div className="flex-1 min-w-0">
                         <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Discovery Source</p>
                         <p className="text-[10px] font-mono truncate italic text-primary/60">
-                            {session.source || 'Direct/Organic'}
+                            {sourceLabel}
                         </p>
                     </div>
                 </div>

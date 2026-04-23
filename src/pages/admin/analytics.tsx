@@ -45,14 +45,20 @@ interface AnalyticsResponse {
     total_revenue: number;
   }>;
   recent_visitors: Array<{
+    id: number;
     ip_address: string | null;
     visitor_id: string | null;
+    session_key: string | null;
     path: string;
     timestamp: string;
     user__username: string | null;
     method: string;
     visit_count: number;
     source: string | null;
+    medium: string | null;
+    campaign: string | null;
+    channel_group: string | null;
+    source_label: string;
   }>;
   device_stats: Array<{ device: string; count: number }>;
   top_pages: Array<{ path: string; visits: number }>;
@@ -70,6 +76,18 @@ interface AnalyticsResponse {
   range_days: number;
   range_label: string;
 }
+
+type ActivitySocketPayload =
+  | {
+      type: "new_visit";
+      visitor: AnalyticsResponse["recent_visitors"][number];
+    }
+  | {
+      type: "new_sale";
+    }
+  | {
+      status: "online" | "offline";
+    };
 
 export default function Analytics() {
   const [days, setDays] = useState<number | null>(1);
@@ -100,15 +118,16 @@ export default function Analytics() {
         socketRef.current = socket;
 
         socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+            const data = JSON.parse(event.data) as ActivitySocketPayload;
             
-            if (data.type === "new_visit") {
-                queryClient.setQueryData(["admin_analytics", date, days], (old: any) => {
+            if ("type" in data && data.type === "new_visit") {
+                queryClient.setQueryData<AnalyticsResponse | undefined>(["admin_analytics", date, days], (old) => {
                     if (!old) return old;
                     
                     const visitors = [...(old.recent_visitors || [])];
                     const visitorId = data.visitor.visitor_id;
                     const username = data.visitor.user__username;
+                    const sourceLabel = data.visitor.source_label || `${data.visitor.source || 'direct'} / ${data.visitor.medium || '(none)'}`;
 
                     // Group by exact user match (Username or Visitor ID)
                     const existingIdx = visitors.findIndex(v => 
@@ -151,7 +170,7 @@ export default function Analytics() {
                         })(),
                         source_stats: (() => {
                            const sources = [...(old.source_stats || [])];
-                           const sourceName = data.visitor.source || 'Organic';
+                           const sourceName = sourceLabel;
                            const idx = sources.findIndex(s => s.source === sourceName);
                            if (idx > -1) {
                                sources[idx] = { 
@@ -168,8 +187,8 @@ export default function Analytics() {
             }
 
 
-            if (data.type === "new_sale") {
-                queryClient.setQueryData(["admin_analytics", date, days], (old: any) => {
+            if ("type" in data && data.type === "new_sale") {
+                queryClient.setQueryData<AnalyticsResponse | undefined>(["admin_analytics", date, days], (old) => {
                     if (!old) return old;
                     toast.success("New Payment Received", {
                         description: `Revenue stream updated in real-time.`
@@ -185,8 +204,8 @@ export default function Analytics() {
                 queryClient.invalidateQueries({ queryKey: ["admin_analytics", date, days] });
             }
 
-            if (data.status === "online" || data.status === "offline") {
-                queryClient.setQueryData(["admin_analytics", date, days], (old: any) => {
+            if ("status" in data && (data.status === "online" || data.status === "offline")) {
+                queryClient.setQueryData<AnalyticsResponse | undefined>(["admin_analytics", date, days], (old) => {
                     if (!old) return old;
                     return {
                         ...old,
@@ -285,7 +304,12 @@ export default function Analytics() {
                 <Calendar 
                   mode="single" 
                   selected={date ? new Date(date) : undefined} 
-                  onSelect={(d) => { d && setDate(format(d, "yyyy-MM-dd")); setDays(null); }} 
+                  onSelect={(d) => {
+                    if (d) {
+                      setDate(format(d, "yyyy-MM-dd"));
+                    }
+                    setDays(null);
+                  }} 
                   disabled={(date) => date > new Date()}
                   initialFocus 
                   className="bg-zinc-950 text-white" 

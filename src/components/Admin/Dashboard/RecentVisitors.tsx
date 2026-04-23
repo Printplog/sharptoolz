@@ -6,14 +6,20 @@ import { formatAdminDateTime } from "@/lib/utils/adminDate";
 import { cn } from "@/lib/utils";
 
 interface Visitor {
+  id: number;
   ip_address: string | null;
   visitor_id: string | null;
+  session_key: string | null;
   path: string;
   timestamp: string;
   user__username: string | null;
   method: string;
   visit_count: number;
   source: string | null;
+  medium: string | null;
+  campaign: string | null;
+  channel_group: string | null;
+  source_label: string;
 }
 
 interface RecentVisitorsProps {
@@ -135,7 +141,7 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
                     
                     {visitor.source && (
                       <span className="text-amber-500/80 font-black px-1 border border-amber-500/20 rounded">
-                         via {visitor.source}
+                         via {visitor.source_label}
                       </span>
                     )}
 
