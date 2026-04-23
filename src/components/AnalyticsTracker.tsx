@@ -1,42 +1,100 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { logVisit } from '@/api/apiEndpoints';
 import { sourceTracker } from '@/lib/utils/sourceTracker';
+import { trackPageView } from '@/lib/utils/googleAnalytics';
+import { useWebSocketClient } from '@/hooks/useWebSocketClient';
+
+type PendingAnalyticsEvent = {
+  key: string;
+  payload: {
+    type: 'page_view';
+    path: string;
+    attribution?: ReturnType<typeof sourceTracker.getAttribution>;
+    referrer?: string;
+  };
+};
 
 export function AnalyticsTracker() {
   const location = useLocation();
+  const pendingEventRef = useRef<PendingAnalyticsEvent | null>(null);
+  const lastSentKeyRef = useRef<string | null>(null);
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const baseWsUrl = import.meta.env.VITE_WS_URL;
+  const wsUrl = `${protocol}://${baseWsUrl}/ws/visitor-analytics/`;
 
-  useEffect(() => {
-    // Check cookie first
-    let source = sourceTracker.getSource();
-    
-    // If no URL source, try to detect from Referrer (The Universal Standard)
-    if (!source && document.referrer) {
-      try {
-        const referrerUrl = new URL(document.referrer);
-        const host = referrerUrl.hostname.toLowerCase();
-        
-        // Skip if from our own domain
-        if (!host.includes(window.location.hostname)) {
-          if (host.includes('google')) source = 'Search (Google)';
-          else if (host.includes('facebook') || host.includes('fb.')) source = 'Social (Facebook)';
-          else if (host.includes('twitter') || host.includes('t.co')) source = 'Social (Twitter/X)';
-          else if (host.includes('linkedin')) source = 'Social (LinkedIn)';
-          else if (host.includes('instagram')) source = 'Social (Instagram)';
-          else if (host.includes('duckduckgo')) source = 'Search (DuckDuckGo)';
-          else if (host.includes('bing')) source = 'Search (Bing)';
-          else source = `Referral (${host})`;
-        }
-      } catch (e) {
-        // Invalid URL in referrer, ignore
-      }
+  const { sendMessage, isOpen } = useWebSocketClient({
+    url: wsUrl,
+    reconnectAttempts: 10,
+    reconnectInterval: 3000,
+  });
+
+  const flushPendingEvent = useCallback(() => {
+    if (!pendingEventRef.current) return;
+    if (lastSentKeyRef.current === pendingEventRef.current.key) {
+      pendingEventRef.current = null;
+      return;
     }
 
-    logVisit(location.pathname, source);
+    if (sendMessage(pendingEventRef.current.payload)) {
+      lastSentKeyRef.current = pendingEventRef.current.key;
+      pendingEventRef.current = null;
+    }
+  }, [sendMessage]);
 
-  }, [location.pathname]);
+  useEffect(() => {
+    const attribution = sourceTracker.getAttribution();
+    const path = `${location.pathname}${location.search}`;
+    const key = `${path}|${attribution?.source || 'direct'}|${attribution?.medium || '(none)'}|${attribution?.campaign || ''}`;
 
+    trackPageView(path, attribution);
+
+    const payload: PendingAnalyticsEvent = {
+      key,
+      payload: {
+        type: 'page_view',
+        path,
+        attribution,
+        referrer: document.referrer || undefined,
+      },
+    };
+
+    pendingEventRef.current = payload;
+
+    if (isOpen && sendMessage(payload.payload)) {
+      lastSentKeyRef.current = key;
+      pendingEventRef.current = null;
+      return;
+    }
+
+    const fallbackTimer = window.setTimeout(() => {
+      if (lastSentKeyRef.current === key) return;
+      void logVisit(path, attribution, document.referrer || undefined);
+      lastSentKeyRef.current = key;
+      pendingEventRef.current = null;
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+    };
+  }, [isOpen, location.pathname, location.search, sendMessage]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    flushPendingEvent();
+  }, [flushPendingEvent, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const heartbeatTimer = window.setInterval(() => {
+      sendMessage({ type: 'heartbeat' });
+    }, 25000);
+
+    return () => {
+      window.clearInterval(heartbeatTimer);
+    };
+  }, [isOpen, sendMessage]);
 
   return null;
 }
-

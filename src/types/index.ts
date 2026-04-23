@@ -7,6 +7,8 @@ export type User = {
   downloads: number;
   wallet_balance: string;
   source?: string;
+  medium?: string;
+  campaign?: string;
   is_active: boolean;
   is_staff: boolean;
   date_joined: string;
@@ -31,6 +33,20 @@ export type RegisterPayload = {
   confirmPassword: string;
   referred_by?: string;
   source?: string;
+  medium?: string;
+  campaign?: string;
+};
+
+export type TrafficAttribution = {
+  source: string;
+  medium: string;
+  campaign?: string | null;
+  term?: string | null;
+  content?: string | null;
+  source_platform?: string | null;
+  initial_referrer?: string | null;
+  channel_group?: string | null;
+  is_custom_source?: boolean;
 };
 
 export interface AuthDialogProps {
@@ -173,11 +189,17 @@ export interface ActivityLog {
   username: string | null;
   ip_address: string | null;
   session_key: string | null;
+  visitor_id?: string | null;
   path: string;
   method: string;
   user_agent: string;
-  referrer: string;
-  source?: string;
+  referrer: string | null;
+  source?: string | null;
+  medium?: string | null;
+  campaign?: string | null;
+  channel_group?: string | null;
+  source_label?: string | null;
+  status_code?: number | null;
   timestamp: string;
 }
 
@@ -424,6 +446,13 @@ export interface Campaign {
   id: number;
   name: string;
   description: string | null;
+  source: string | null;
+  medium: string | null;
+  campaign: string | null;
+  content: string | null;
+  term: string | null;
+  source_platform: string | null;
+  landing_path: string;
   ref_code: string | null;
   created_at: string;
   last_visit_at: string | null;

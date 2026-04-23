@@ -5,12 +5,14 @@ import { useAuthStore } from '@/store/authStore'
 import { isAdmin } from '@/lib/constants/roles'
 import { usePresence } from '@/hooks/usePresence'
 import { sourceTracker } from '@/lib/utils/sourceTracker'
+import { initGoogleAnalytics } from '@/lib/utils/googleAnalytics'
 
 export default function App() {
   usePresence()
 
   useEffect(() => {
     sourceTracker.captureSource()
+    initGoogleAnalytics()
   }, [])
 
   const user = useAuthStore((state) => state.user)
