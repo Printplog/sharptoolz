@@ -46,6 +46,7 @@ export function AnalyticsTracker() {
   }, [sendMessage]);
 
   useEffect(() => {
+    sourceTracker.captureSource();
     const attribution = sourceTracker.getAttribution();
     const path = `${location.pathname}${location.search}`;
     const key = `${path}|${attribution?.source || 'direct'}|${attribution?.medium || '(none)'}|${attribution?.campaign || ''}`;
