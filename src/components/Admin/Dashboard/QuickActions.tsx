@@ -54,10 +54,11 @@ export default function QuickActions() {
             iconColor: "text-rose-400",
         },
         {
-            title: "Analytics",
-            description: "Platform performance",
+            title: "Traffic Sources",
+            description: "Live traffic telemetry",
             icon: LineChart,
-            href: "/admin/analytics",
+            href: "/admin/traffic-sources",
+
             gradient: "from-cyan-500/20 to-cyan-600/5",
             borderColor: "border-cyan-500/20",
             iconColor: "text-cyan-400",

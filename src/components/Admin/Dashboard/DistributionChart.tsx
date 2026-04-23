@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -48,13 +47,12 @@ export default function DistributionChart({ data, isLoading }: DistributionChart
   const chartData = React.useMemo(() => {
     if (!data) return []
 
-    // Aggregate data
     const totalPaid = data.reduce((acc, item) => acc + item.paid, 0)
     const totalTest = data.reduce((acc, item) => acc + item.test, 0)
 
     return [
-      { type: "paid", count: totalPaid, fill: "var(--color-paid)" },
-      { type: "test", count: totalTest, fill: "var(--color-test)" },
+      { type: "paid", count: totalPaid, fill: "#10b981" },
+      { type: "test", count: totalTest, fill: "#f59e0b" },
     ]
   }, [data])
 
@@ -64,41 +62,36 @@ export default function DistributionChart({ data, isLoading }: DistributionChart
 
   if (isLoading) {
     return (
-      <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
+      <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-xl animate-pulse h-full">
         <CardHeader className="items-center pb-0">
-          <Skeleton className="h-6 w-32 bg-white/10 mb-2" />
-          <Skeleton className="h-4 w-48 bg-white/10" />
+          <Skeleton className="h-6 w-32 bg-white/10 rounded-full" />
         </CardHeader>
-        <CardContent className="flex-1 pb-0 flex items-center justify-center">
-          <div className="relative h-[200px] w-[200px]">
-            <Skeleton className="absolute inset-0 rounded-full border-[20px] border-white/5 bg-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-              <Skeleton className="h-8 w-16 bg-white/10" />
-              <Skeleton className="h-3 w-12 bg-white/5" />
-            </div>
-          </div>
+        <CardContent className="flex-1 pb-0 flex items-center justify-center h-[300px]">
+           <Skeleton className="h-40 w-40 rounded-full border-[10px] border-white/5" />
         </CardContent>
-        <CardFooter className="flex justify-center pb-6">
-          <Skeleton className="h-4 w-48 bg-white/5" />
-        </CardFooter>
       </Card>
     )
   }
 
-  if (!data || data.length === 0) {
-    return null
-  }
+  if (!data || data.length === 0) return null
 
   return (
-    <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-sm">
-      <CardHeader className="items-center pb-0">
-        <CardTitle className="text-white">Document Types</CardTitle>
-        <CardDescription className="text-white/60">Distribution of Paid vs Test Documents</CardDescription>
+    <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/[0.07] transition-all duration-300 shadow-2xl h-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-white/5">
+        <div className="space-y-1">
+          <CardTitle className="text-lg font-black italic uppercase tracking-tighter text-emerald-400">Document <span className="text-white">Types</span></CardTitle>
+          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+            Distribution of Paid vs Test Documents
+          </CardDescription>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+           <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]" />
+        </div>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 pb-0 pt-6">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
+          className="mx-auto aspect-square max-h-[280px]"
         >
           <PieChart>
             <ChartTooltip
@@ -106,7 +99,7 @@ export default function DistributionChart({ data, isLoading }: DistributionChart
               content={
                 <ChartTooltipContent
                   hideLabel
-                  className="bg-zinc-950 border border-zinc-800 text-white shadow-xl"
+                  className="bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl"
                 />
               }
             />
@@ -114,8 +107,10 @@ export default function DistributionChart({ data, isLoading }: DistributionChart
               data={chartData}
               dataKey="count"
               nameKey="type"
-              innerRadius={60}
-              strokeWidth={5}
+              innerRadius={70}
+              outerRadius={90}
+              strokeWidth={8}
+              stroke="rgba(0,0,0,0.2)"
             >
               <Label
                 content={({ viewBox }) => {
@@ -127,20 +122,20 @@ export default function DistributionChart({ data, isLoading }: DistributionChart
                         textAnchor="middle"
                         dominantBaseline="middle"
                       >
-                        <tspan
+                        <text
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-white text-3xl font-bold"
+                          className="fill-white text-4xl font-black italic tracking-tighter"
                         >
                           {totalDocuments.toLocaleString()}
-                        </tspan>
-                        <tspan
+                        </text>
+                        <text
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
-                          className="fill-white/60 text-xs"
+                          className="fill-zinc-400 text-[10px] uppercase font-bold tracking-widest"
                         >
-                          Documents
-                        </tspan>
+                          Docs Total
+                        </text>
                       </text>
                     )
                   }
@@ -150,11 +145,6 @@ export default function DistributionChart({ data, isLoading }: DistributionChart
           </PieChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm text-white/50">
-        <div className="flex items-center gap-2 font-medium leading-none text-white/80">
-          Showing total distribution <span className="text-emerald-400">Paid</span> vs <span className="text-amber-400">Test</span>
-        </div>
-      </CardFooter>
     </Card>
   )
 }

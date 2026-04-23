@@ -15,20 +15,23 @@ export default function AnalyticsSkeleton() {
       {/* Stats Cards Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-32 bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
+          <div key={i} className="h-32 bg-white/5 border border-white/10 rounded-3xl p-6 space-y-3">
             <div className="flex justify-between items-start">
               <Skeleton className="h-4 w-24 bg-white/10" />
-              <Skeleton className="h-10 w-10 bg-white/10 rounded-xl" />
+              <Skeleton className="h-10 w-10 bg-white/10 rounded-2xl" />
             </div>
             <Skeleton className="h-8 w-20 bg-white/10" />
           </div>
         ))}
       </div>
 
+
       {/* Charts Grid Skeleton */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[400px] bg-white/5 border border-white/10 rounded-3xl p-6 space-y-4">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <div key={i} className="h-[480px] bg-white/5 border border-white/10 rounded-3xl p-6 space-y-4">
+
+
             <div className="flex justify-between">
               <Skeleton className="h-6 w-32 bg-white/10" />
               <Skeleton className="h-6 w-6 rounded-full bg-white/10" />
@@ -51,9 +54,10 @@ export default function AnalyticsSkeleton() {
         <Skeleton className="h-6 w-48 bg-white/10" />
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full bg-white/5 rounded-2xl" />
+            <Skeleton key={i} className="h-14 w-full bg-white/10 rounded-2xl" />
           ))}
         </div>
+
       </div>
     </div>
   );

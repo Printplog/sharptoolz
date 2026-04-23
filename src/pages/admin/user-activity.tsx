@@ -23,6 +23,14 @@ import { cn } from "@/lib/utils";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 import UserActivitySkeleton from "@/components/Admin/Layouts/UserActivitySkeleton";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
 
 export default function UserActivity() {
   const [date, setDate] = useState<string>("");
@@ -226,18 +234,33 @@ export default function UserActivity() {
             />
           </div>
 
-          <div className="relative group">
-            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 group-focus-within:text-primary transition-colors" />
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => {
-                setDate(e.target.value);
-                if (e.target.value) setIsLive(false);
-              }}
-              className="pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest text-white focus:outline-none focus:border-primary/50 cursor-pointer transition-all"
-            />
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-zinc-500 uppercase tracking-widest hidden sm:inline">Activity Date:</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"outline"} className="w-[180px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
+                  <CalendarIcon className="mr-2 h-4 w-4 opacity-50 text-primary" />
+                  {date ? format(new Date(date), "PPP") : <span>Select Date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-zinc-950 border-white/10 z-[500]" align="end">
+                <Calendar 
+                    mode="single" 
+                    selected={date ? new Date(date) : undefined} 
+                    onSelect={(d) => { 
+                        if (d) {
+                            setDate(format(d, "yyyy-MM-dd")); 
+                            setIsLive(false);
+                        }
+                    }} 
+                    disabled={(date) => date > new Date()}
+                    initialFocus 
+                    className="bg-zinc-950 text-white" 
+                />
+              </PopoverContent>
+            </Popover>
           </div>
+
         </div>
       </div>
 

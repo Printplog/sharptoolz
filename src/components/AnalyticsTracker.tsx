@@ -10,18 +10,30 @@ export function AnalyticsTracker() {
     // Check cookie first
     let source = sourceTracker.getSource();
     
-    // If no cookie, try to get from URL directly (handles initial hit race condition)
-    if (!source) {
-      const params = new URLSearchParams(window.location.search);
-      source = params.get('source') || params.get('utm_source') || undefined;
-      
-      // If still no source but there's a ref, count as referral
-      if (!source && params.get('ref')) {
-        source = 'referral';
+    // If no URL source, try to detect from Referrer (The Universal Standard)
+    if (!source && document.referrer) {
+      try {
+        const referrerUrl = new URL(document.referrer);
+        const host = referrerUrl.hostname.toLowerCase();
+        
+        // Skip if from our own domain
+        if (!host.includes(window.location.hostname)) {
+          if (host.includes('google')) source = 'Search (Google)';
+          else if (host.includes('facebook') || host.includes('fb.')) source = 'Social (Facebook)';
+          else if (host.includes('twitter') || host.includes('t.co')) source = 'Social (Twitter/X)';
+          else if (host.includes('linkedin')) source = 'Social (LinkedIn)';
+          else if (host.includes('instagram')) source = 'Social (Instagram)';
+          else if (host.includes('duckduckgo')) source = 'Search (DuckDuckGo)';
+          else if (host.includes('bing')) source = 'Search (Bing)';
+          else source = `Referral (${host})`;
+        }
+      } catch (e) {
+        // Invalid URL in referrer, ignore
       }
     }
 
     logVisit(location.pathname, source);
+
   }, [location.pathname]);
 
 

@@ -1,0 +1,10 @@
+
+> docsmaker@0.0.0 build /home/urkelcodes/Desktop/MyProjects/Clients/sharptoolz/frontend
+> tsc -b && vite build
+
+src/components/Admin/Dashboard/SourceStatsChart.tsx(87,89): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: Props): YAxis', gave the following error.
+    Object literal may only specify known properties, and 'textTransform' does not exist in type 'SVGProps<SVGTextElement> | ReactElement<SVGElement, string | JSXElementConstructor<any>> | ((props: any) => ReactElement<...>)'.
+  Overload 2 of 2, '(props: Props, context: any): YAxis', gave the following error.
+    Object literal may only specify known properties, and 'textTransform' does not exist in type 'SVGProps<SVGTextElement> | ReactElement<SVGElement, string | JSXElementConstructor<any>> | ((props: any) => ReactElement<...>)'.
+ ELIFECYCLE  Command failed with exit code 2.

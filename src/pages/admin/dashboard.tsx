@@ -59,10 +59,11 @@ export default function Dashboard() {
                 I will show this button ONLY for Admin for now to be safe, as the main Analytics page likely has more sensitive data.
              */}
             {isAdmin && (
-              <Link to="/admin/analytics">
+              <Link to="/admin/traffic-sources">
                 <Button variant="outline" className="text-white border-white/20 hover:bg-white/10">
-                  View All Analytics
+                  View Traffic Sources
                 </Button>
+
               </Link>
             )}
           </div>

@@ -170,6 +170,8 @@ html.lenis, html.lenis body {
 }
 
 
+
+
 .input {
   @apply border-white/10 focus-visible:border-white/10
 }

@@ -56,8 +56,13 @@ export default function Sidebar() {
         queryClient.prefetchQuery({ queryKey: ["adminOverview", defaultDays], queryFn: () => adminOverview(defaultDays) });
         break;
       case "/admin/analytics":
-        queryClient.prefetchQuery({ queryKey: ["adminAnalytics", defaultDays], queryFn: () => getAdminAnalytics(defaultDays) });
+        queryClient.prefetchQuery({ queryKey: ["admin_analytics", "", defaultDays], queryFn: () => getAdminAnalytics(defaultDays) });
         break;
+      case "/admin/traffic-sources":
+        // This was link generator, maybe we don't prefetch this one or it has its own
+        break;
+
+
       case "/admin/users":
         queryClient.prefetchQuery({
           queryKey: ["adminUsers", { page: 1, page_size: 10, search: "" }],
@@ -80,8 +85,8 @@ export default function Sidebar() {
     },
     {
       icon: <LinkIcon className="h-4 w-4" />,
-      label: "Link Generator",
-      to: "/admin/link-generator",
+      label: "Traffic Sources",
+      to: "/admin/traffic-sources",
     },
     {
       icon: <Users className="h-4 w-4" />,
@@ -190,7 +195,9 @@ export default function Sidebar() {
           }
           if (isAdmin) return true;
 
-          const restrictedForUser = ["Users", "Analytics", "Settings", "Tools", "Templates", "Fonts", "Logs"];
+          const restrictedForUser = ["Users", "Analytics", "Traffic Sources", "Settings", "Tools", "Templates", "Fonts", "Logs"];
+
+
           return !restrictedForUser.includes(item.label);
 
         }).map((item) => {

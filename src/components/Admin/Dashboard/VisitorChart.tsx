@@ -43,30 +43,15 @@ interface VisitorChartProps {
 export default function VisitorChart({ data, isLoading, rangeLabel }: VisitorChartProps) {
   if (isLoading) {
     return (
-      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-        <CardHeader>
-          <Skeleton className="h-6 w-38 bg-white/10 mb-2" />
-          <Skeleton className="h-4 w-56 bg-white/10" />
+      <Card className="bg-white/5 border-white/10 backdrop-blur-xl animate-pulse">
+        <CardHeader className="gap-2">
+          <Skeleton className="h-6 w-32 bg-white/10 rounded-full" />
+          <Skeleton className="h-4 w-52 bg-white/5 rounded-full" />
         </CardHeader>
-        <CardContent>
-          <div className="h-[200px] w-full flex items-end gap-1 pt-4">
-            {Array.from({ length: 24 }).map((_, i) => (
-              <Skeleton
-                key={i}
-                className="flex-1 bg-white/5 rounded-t-sm"
-                style={{
-                  height: `${Math.random() * 70 + 10}%`,
-                  opacity: i % 2 === 0 ? 0.3 : 0.1,
-                  animationDelay: `${i * 0.03}s`
-                }}
-              />
-            ))}
-          </div>
-          <div className="flex justify-between mt-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-3 w-8 bg-white/10" />
-            ))}
-          </div>
+        <CardContent className="h-[300px] w-full flex items-end gap-2 px-10 pb-10">
+           {Array.from({ length: 20 }).map((_, i) => (
+             <Skeleton key={i} className="flex-1 bg-white/5 rounded-t-lg" style={{ height: `${Math.random() * 80 + 10}%` }} />
+           ))}
         </CardContent>
       </Card>
     )
@@ -74,89 +59,77 @@ export default function VisitorChart({ data, isLoading, rangeLabel }: VisitorCha
 
   if (!data || data.length === 0) return null
 
-  // Format data
   const chartData = data.map((item) => ({
-    date: formatAdminDate(item.date, {
-      month: "short",
-      day: "numeric",
-    }),
+    date: formatAdminDate(item.date, { month: "short", day: "numeric" }),
     visits: item.total_visits,
     unique: item.unique_visitors,
   }))
 
   return (
-    <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="text-white">Visitor Traffic</CardTitle>
-        <CardDescription className="text-white/60">
-          Page views and unique visitors for {rangeLabel?.toLowerCase() || "the selected range"}
-        </CardDescription>
+    <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/[0.07] transition-all duration-300 shadow-2xl">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-white/5">
+        <div className="space-y-1">
+          <CardTitle className="text-lg font-black italic uppercase tracking-tighter text-cyan-400">Visitor <span className="text-white">Traffic</span></CardTitle>
+          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+            Telemetry for {rangeLabel?.toLowerCase() || "the selected range"}
+          </CardDescription>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20">
+           <div className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
+        </div>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig}>
-          <AreaChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-            }}
-          >
+      <CardContent className="pt-6">
+        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+          <AreaChart data={chartData} margin={{ left: 0, right: 0, top: 10, bottom: 0 }}>
             <defs>
               <linearGradient id="fillVisits" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-visits)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-visits)" stopOpacity={0.1} />
+                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="fillUnique" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-unique)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-unique)" stopOpacity={0.1} />
+                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.1)" />
+            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 6)}
-              stroke="rgba(255,255,255,0.5)"
+              tickMargin={12}
+              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 'bold' }}
             />
             <ChartTooltip
-              cursor={{ fill: 'rgba(255,255,255,0.05)' }}
               content={
                 <ChartTooltipContent
-                  indicator="dot"
-                  className="bg-zinc-950 border border-zinc-800 text-white shadow-xl"
+                  indicator="line"
+                  className="bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl"
                 />
               }
             />
+
             <Area
               dataKey="visits"
-              type="monotone"
+              type="natural"
               fill="url(#fillVisits)"
-              fillOpacity={0.4}
-              stroke="var(--color-visits)"
-              stackId="a"
+              stroke="#06b6d4"
+              strokeWidth={3}
+              dot={false}
+              activeDot={{ r: 4, fill: "#06b6d4", strokeWidth: 2, stroke: "#000" }}
             />
             <Area
               dataKey="unique"
-              type="monotone"
+              type="natural"
               fill="url(#fillUnique)"
-              fillOpacity={0.4}
-              stroke="var(--color-unique)"
-              stackId="b"
+              stroke="#8b5cf6"
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4, fill: "#8b5cf6", strokeWidth: 2, stroke: "#000" }}
             />
-            {/* Note: stackId 'b' so it doesn't stack on top of 'a', but overlays or separate. 
-                If we want them not stacked, remove stackId or use different ones. 
-                Total Visits >= Unique. Area chart might hide unique if it's behind.
-                Usually better to not stack if comparing sizes directly, or put Unique on top (render second).
-                Render order is defined by component order. Unique is second here.
-                If visits > unique, visits will cover unique if not transparent.
-                But fillOpacity 0.4 handles it.
-            */}
           </AreaChart>
         </ChartContainer>
       </CardContent>
     </Card>
   )
 }
+

@@ -38,106 +38,61 @@ interface UserGrowthChartProps {
 export default function UserGrowthChart({ data, isLoading, rangeLabel }: UserGrowthChartProps) {
   if (isLoading) {
     return (
-      <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
-        <CardHeader>
-          <Skeleton className="h-6 w-32 bg-white/10 mb-2" />
-          <Skeleton className="h-4 w-48 bg-white/10" />
+      <Card className="bg-white/5 border-white/10 backdrop-blur-xl animate-pulse h-full">
+        <CardHeader className="gap-2">
+          <Skeleton className="h-6 w-32 bg-white/10 rounded-full" />
         </CardHeader>
-        <CardContent>
-          <div className="h-[250px] w-full flex items-end gap-1 pt-4">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <Skeleton
-                key={i}
-                className="flex-1 bg-white/5 rounded-t-sm"
-                style={{
-                  height: `${20 + (i * 3.5)}%`,
-                  opacity: 0.1 + (i * 0.02)
-                }}
-              />
-            ))}
-          </div>
-          <div className="flex justify-between mt-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-3 w-12 bg-white/10" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-  if (!data || data.length === 0) {
-    return (
-      <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
-        <CardHeader>
-          <CardTitle className="text-white">User Growth</CardTitle>
-          <CardDescription className="text-white/60">Total Registered Users</CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center h-[300px] text-white/40">
-          No data available
+        <CardContent className="h-[300px] w-full flex items-end gap-2 px-10 pb-10">
+           {Array.from({ length: 15 }).map((_, i) => (
+             <Skeleton key={i} className="flex-1 bg-white/5 rounded-t-lg" style={{ height: `${Math.random() * 80 + 10}%` }} />
+           ))}
         </CardContent>
       </Card>
     )
   }
 
-  // Format data
+  if (!data || data.length === 0) return null
+
   const chartData = data.map((item) => ({
-    date: formatAdminDate(item.date, {
-      month: "short",
-      day: "numeric",
-    }),
+    date: formatAdminDate(item.date, { month: "short", day: "numeric" }),
     users: item.users,
   }))
 
   return (
-    <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
-      <CardHeader>
-        <CardTitle className="text-white">User Growth</CardTitle>
-        <CardDescription className="text-white/60">
-          Registration growth across {rangeLabel?.toLowerCase() || "the selected range"}
-        </CardDescription>
+    <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/[0.07] transition-all duration-300 shadow-2xl h-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-white/5">
+        <div className="space-y-1">
+          <CardTitle className="text-lg font-black italic uppercase tracking-tighter text-violet-400">User <span className="text-white">Growth</span></CardTitle>
+          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+            Registration velocity for {rangeLabel?.toLowerCase() || "the selected range"}
+          </CardDescription>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20">
+           <div className="h-2 w-2 rounded-full bg-violet-400 animate-pulse shadow-[0_0_8px_#a855f7]" />
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <ChartContainer config={chartConfig} className="h-[310px] w-full">
-          <AreaChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 0,
-              right: 0,
-              top: 10,
-              bottom: 0,
-            }}
-          >
+          <AreaChart data={chartData} margin={{ left: 0, right: 0, top: 10, bottom: 0 }}>
             <defs>
               <linearGradient id="fillUsers" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-users)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-users)"
-                  stopOpacity={0.1}
-                />
+                <stop offset="5%" stopColor="#a855f7" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.05)" />
+            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => value}
-              stroke="rgba(255,255,255,0.4)"
+              tickMargin={12}
+              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 'bold' }}
             />
             <ChartTooltip
-              cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
               content={
                 <ChartTooltipContent
-                  indicator="dot"
-                  className="bg-zinc-950 border border-zinc-800 text-white shadow-xl"
+                  indicator="line"
+                  className="bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl"
                 />
               }
             />
@@ -145,9 +100,10 @@ export default function UserGrowthChart({ data, isLoading, rangeLabel }: UserGro
               dataKey="users"
               type="natural"
               fill="url(#fillUsers)"
-              fillOpacity={0.4}
-              stroke="var(--color-users)"
-              strokeWidth={2}
+              stroke="#a855f7"
+              strokeWidth={3}
+              dot={false}
+              activeDot={{ r: 4, fill: "#a855f7", strokeWidth: 2, stroke: "#000" }}
             />
           </AreaChart>
         </ChartContainer>

@@ -1,7 +1,21 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { DollarSign, Eye, HandCoins, Users, Calendar as CalendarIcon } from "lucide-react";
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import { getAdminAnalytics, adminOverview } from "@/api/apiEndpoints";
+import { format } from "date-fns";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { DollarSign, Eye, HandCoins, Users, Calendar as CalendarIcon } from "lucide-react";
+
+
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
 import WalletFlowChart from "@/components/Admin/Dashboard/WalletFlowChart";
 import VisitorChart from "@/components/Admin/Dashboard/VisitorChart";
 import RecentVisitors from "@/components/Admin/Dashboard/RecentVisitors";
@@ -32,6 +46,7 @@ interface AnalyticsResponse {
   }>;
   recent_visitors: Array<{
     ip_address: string | null;
+    visitor_id: string | null;
     path: string;
     timestamp: string;
     user__username: string | null;
@@ -39,20 +54,9 @@ interface AnalyticsResponse {
     visit_count: number;
     source: string | null;
   }>;
-
-  device_stats: Array<{
-    device: string;
-    count: number;
-  }>;
-  top_pages: Array<{
-    path: string;
-    visits: number;
-  }>;
-  source_stats: Array<{
-    source: string;
-    visits: number;
-    unique_visitors: number;
-  }>;
+  device_stats: Array<{ device: string; count: number }>;
+  top_pages: Array<{ path: string; visits: number }>;
+  source_stats: Array<{ source: string; visits: number; unique_visitors: number }>;
   summary: {
     online_now: number;
     total_visits: number;
@@ -70,11 +74,13 @@ interface AnalyticsResponse {
 export default function Analytics() {
   const [days, setDays] = useState<number | null>(1);
   const [date, setDate] = useState<string>("");
+  const queryClient = useQueryClient();
+  const socketRef = useRef<WebSocket | null>(null);
 
   const { data: analyticsData, isLoading: isAnalyticsLoading } = useQuery<AnalyticsResponse>({
     queryFn: () => getAdminAnalytics(days || 1, date),
-    queryKey: ["adminAnalytics", days, date],
-    refetchInterval: 30000, // Refetch every 30s for "Live" feel
+    queryKey: ["admin_analytics", date, days],
+    refetchInterval: 60000, // Background poll every minute as fallback
   });
 
   const { data: overviewData, isLoading: isOverviewLoading } = useQuery<AdminOverview>({
@@ -82,17 +88,118 @@ export default function Analytics() {
     queryKey: ["adminOverview", days],
   });
 
-  const chartData = analyticsData?.chart_data;
-  const visitorLog = analyticsData?.recent_visitors;
-  const deviceStats = analyticsData?.device_stats;
-  const rangeLabel = analyticsData?.range_label || "Today";
+  // Advanced Realtime: WebSocket Connection
+  useEffect(() => {
+    const wsUrl = import.meta.env.VITE_WS_URL || window.location.host;
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const socketUrl = `${protocol}//${wsUrl}/ws/activity/`;
+
+    
+    const connect = () => {
+        const socket = new WebSocket(socketUrl);
+        socketRef.current = socket;
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === "new_visit") {
+                queryClient.setQueryData(["admin_analytics", date, days], (old: any) => {
+                    if (!old) return old;
+                    
+                    const isDuplicate = old.recent_visitors.some((v: any) => 
+                        v.visitor_id === data.visitor.visitor_id && 
+                        v.path === data.visitor.path &&
+                        Math.abs(new Date(v.timestamp).getTime() - new Date(data.visitor.timestamp).getTime()) < 2000
+                    );
+
+                    if (isDuplicate) return old;
+
+                    return {
+                        ...old,
+                        recent_visitors: [data.visitor, ...old.recent_visitors.slice(0, 23)],
+                        summary: {
+                            ...old.summary,
+                            total_visits: (old.summary.total_visits || 0) + 1
+                        },
+                        // LIVE CHART UPDATES
+                        top_pages: (() => {
+                           const pages = [...old.top_pages];
+                           const idx = pages.findIndex(p => p.path === data.visitor.path);
+                           if (idx > -1) {
+                               pages[idx] = { ...pages[idx], visits: pages[idx].visits + 1 };
+                               return pages.sort((a, b) => b.visits - a.visits);
+                           }
+                           return [...pages, { path: data.visitor.path, visits: 1 }].sort((a, b) => b.visits - a.visits).slice(0, 6);
+                        })(),
+                        source_stats: (() => {
+                           const sources = [...old.source_stats];
+                           const sourceName = data.visitor.source || 'Organic';
+                           const idx = sources.findIndex(s => s.source === sourceName);
+                           if (idx > -1) {
+                               sources[idx] = { 
+                                   ...sources[idx], 
+                                   visits: sources[idx].visits + 1,
+                                   unique_visitors: sources[idx].unique_visitors + (isDuplicate ? 0 : 1)
+                               };
+                               return sources.sort((a, b) => b.visits - a.visits);
+                           }
+                           return [...sources, { source: sourceName, visits: 1, unique_visitors: 1 }].sort((a, b) => b.visits - a.visits).slice(0, 10);
+                        })()
+                    };
+
+                });
+            }
+
+            if (data.type === "new_sale") {
+                queryClient.setQueryData(["admin_analytics", date, days], (old: any) => {
+                    if (!old) return old;
+                    toast.success("New Payment Received", {
+                        description: `Revenue stream updated in real-time.`
+                    });
+                    return {
+                        ...old,
+                        summary: {
+                            ...old.summary,
+                            total_sales: (old.summary.total_sales || 0) + 1,
+                        }
+                    };
+                });
+                queryClient.invalidateQueries({ queryKey: ["admin_analytics", date, days] });
+            }
+
+            if (data.status === "online" || data.status === "offline") {
+                queryClient.setQueryData(["admin_analytics", date, days], (old: any) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        summary: {
+                            ...old.summary,
+                            online_now: data.status === "online" 
+                                ? (old.summary.online_now || 0) + 1 
+                                : Math.max(0, (old.summary.online_now || 0) - 1)
+                        }
+                    };
+                });
+            }
+        };
+
+        socket.onclose = () => {
+            setTimeout(connect, 3000);
+        };
+    };
+
+    connect();
+    return () => socketRef.current?.close();
+  }, [queryClient, date, days]);
+
   const summary = analyticsData?.summary;
+  const rangeLabel = analyticsData?.range_label || "the selected range";
 
   const summaryCards: StatData[] = [
     {
       title: "Total Visits",
       value: summary?.total_visits ?? 0,
-      label: `${rangeLabel} traffic`,
+      label: `${rangeLabel} traffic logs`,
       icon: Eye,
       gradient: "from-cyan-500/20 to-cyan-600/5",
       borderColor: "border-cyan-500/20",
@@ -102,7 +209,7 @@ export default function Analytics() {
     {
       title: "Unique Visitors",
       value: summary?.unique_visitors ?? 0,
-      label: `${summary?.authenticated_visits ?? 0} signed-in visits`,
+      label: `${summary?.authenticated_visits ?? 0} signed-in sessions`,
       icon: Users,
       gradient: "from-violet-500/20 to-violet-600/5",
       borderColor: "border-violet-500/20",
@@ -112,7 +219,7 @@ export default function Analytics() {
     {
       title: "Orders",
       value: summary?.total_sales ?? 0,
-      label: `${summary?.conversion_rate ?? 0}% visitor-to-sale`,
+      label: `${summary?.conversion_rate ?? 0}% conversion efficiency`,
       icon: HandCoins,
       gradient: "from-emerald-500/20 to-emerald-600/5",
       borderColor: "border-emerald-500/20",
@@ -122,7 +229,7 @@ export default function Analytics() {
     {
       title: "Revenue",
       value: `$${(summary?.total_revenue ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-      label: `${summary?.guest_visits ?? 0} guest visits`,
+      label: `Verified financial inflow`,
       icon: DollarSign,
       gradient: "from-rose-500/20 to-rose-600/5",
       borderColor: "border-rose-500/20",
@@ -134,58 +241,45 @@ export default function Analytics() {
   if (isAnalyticsLoading || isOverviewLoading) return <AnalyticsSkeleton />;
 
   return (
-    <div className="dashboard-content space-y-6 text-white">
+    <div className="dashboard-content space-y-8 text-white">
+
       <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-        <div className="space-y-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
-              Platform <span className="text-primary">Analytics</span>
-            </h1>
-            <p className="mt-1 text-sm font-medium text-white/40 italic">
-              Focused performance signals for {rangeLabel.toLowerCase()}
-            </p>
-          </div>
-          
-          {/* Live Badge - Now under title */}
-          <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full animate-pulse whitespace-nowrap w-fit">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)] shrink-0" />
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest leading-none">
-              {summary?.online_now ?? 0} Live
-            </span>
-          </div>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+            Platform <span className="text-primary">Analytics</span>
+          </h1>
+          <p className="text-sm font-medium text-white/40 italic">
+            Focused performance signals for {rangeLabel.toLowerCase()}
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          {/* Date Picker */}
-          <div className="relative group">
-            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => {
-                setDate(e.target.value);
-                setDays(null);
-              }}
-              className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-full text-xs font-bold uppercase tracking-wider text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer"
-            />
+        <div className="flex flex-wrap items-center justify-end gap-3 font-bold uppercase tracking-tight">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-zinc-500 uppercase tracking-widest hidden sm:inline">Select Day:</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"outline"} className="w-[200px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
+                  <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                  {date ? format(new Date(date), "PPP") : <span>Filter by Date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-zinc-950 border-white/10 z-[500]" align="end">
+                <Calendar 
+                  mode="single" 
+                  selected={date ? new Date(date) : undefined} 
+                  onSelect={(d) => { d && setDate(format(d, "yyyy-MM-dd")); setDays(null); }} 
+                  disabled={(date) => date > new Date()}
+                  initialFocus 
+                  className="bg-zinc-950 text-white" 
+                />
+
+              </PopoverContent>
+            </Popover>
           </div>
 
-          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 overflow-x-auto custom-scrollbar no-scrollbar">
+          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 overflow-x-auto no-scrollbar">
             {RANGES.map((r) => (
-              <button
-                key={r.days}
-                onClick={() => {
-                  setDays(r.days);
-                  setDate("");
-                }}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${
-                  days === r.days
-                    ? "bg-primary text-black shadow"
-                    : "text-white/50 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {r.label}
-              </button>
+              <button key={r.days} onClick={() => { setDays(r.days); setDate(""); }} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${days === r.days ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}>{r.label}</button>
             ))}
           </div>
         </div>
@@ -193,38 +287,19 @@ export default function Analytics() {
 
       <StatsCards stats={summaryCards} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="h-[400px]">
-          <VisitorChart data={chartData} isLoading={isAnalyticsLoading} rangeLabel={rangeLabel} />
-        </div>
-
-        <div className="h-[400px]">
-          <WalletFlowChart data={chartData} isLoading={isAnalyticsLoading} rangeLabel={rangeLabel} />
-        </div>
-
-        <div className="h-[400px]">
-          <DeviceStatsChart data={deviceStats} isLoading={isAnalyticsLoading} rangeLabel={rangeLabel} />
-        </div>
-
-        <div className="h-[400px]">
-          <UserGrowthChart data={overviewData?.revenue_chart} isLoading={isOverviewLoading} rangeLabel={rangeLabel} />
-        </div>
-
-        <div className="h-[400px]">
-          <TopPagesChart data={analyticsData?.top_pages} rangeLabel={rangeLabel} />
-        </div>
-
-        <div className="h-[400px]">
-          <SourceStatsChart data={analyticsData?.source_stats} rangeLabel={rangeLabel} />
-        </div>
-
-        <div className="h-[400px]">
-          <DistributionChart data={overviewData?.documents_chart} isLoading={isOverviewLoading} />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <SourceStatsChart data={analyticsData?.source_stats} rangeLabel={rangeLabel} />
+        <TopPagesChart data={analyticsData?.top_pages} rangeLabel={rangeLabel} />
+        <VisitorChart data={analyticsData?.chart_data} isLoading={isAnalyticsLoading} rangeLabel={rangeLabel} />
+        <WalletFlowChart data={analyticsData?.chart_data} isLoading={isAnalyticsLoading} rangeLabel={rangeLabel} />
+        <DeviceStatsChart data={analyticsData?.device_stats} isLoading={isAnalyticsLoading} rangeLabel={rangeLabel} />
+        <UserGrowthChart data={overviewData?.revenue_chart} isLoading={isOverviewLoading} rangeLabel={rangeLabel} />
+        <DistributionChart data={overviewData?.documents_chart} isLoading={isOverviewLoading} />
       </div>
 
+
       <div className="mt-8">
-        <RecentVisitors data={visitorLog} isLoading={isAnalyticsLoading} rangeLabel={rangeLabel} />
+        <RecentVisitors data={analyticsData?.recent_visitors} isLoading={isAnalyticsLoading} rangeLabel={rangeLabel} />
       </div>
     </div>
   );

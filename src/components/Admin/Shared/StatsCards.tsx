@@ -97,15 +97,16 @@ export function StatsCards({ stats, isLoading, className }: StatsCardsProps) {
     return (
       <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8", className)}>
         {stats.map((_, i) => (
-          <div key={i} className="h-40 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div key={i} className="h-40 bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
             <div className="flex justify-between items-start mb-4">
               <Skeleton className="h-4 w-24 bg-white/10 rounded-full" />
-              <Skeleton className="h-10 w-10 rounded-xl bg-white/10" />
+              <Skeleton className="h-10 w-10 rounded-2xl bg-white/10" />
             </div>
             <Skeleton className="h-10 w-20 bg-white/10 rounded-lg mb-2" />
             <Skeleton className="h-4 w-32 bg-white/5 rounded-full" />
           </div>
         ))}
+
       </div>
     );
   }
@@ -117,11 +118,12 @@ export function StatsCards({ stats, isLoading, className }: StatsCardsProps) {
           <div
             key={stat.title}
             className={cn(
-              "relative group overflow-hidden bg-gradient-to-br border rounded-2xl p-6 backdrop-blur-md transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-white/5",
+              "relative group overflow-hidden bg-gradient-to-br border rounded-3xl p-6 backdrop-blur-md transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-white/5",
               stat.gradient,
               stat.borderColor
             )}
           >
+
             <div className="absolute -right-6 -bottom-6 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none">
               <stat.icon size={120} />
             </div>
@@ -129,9 +131,10 @@ export function StatsCards({ stats, isLoading, className }: StatsCardsProps) {
             <div className="flex flex-col h-full justify-between relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <p className="text-white/50 text-[10px] font-bold uppercase tracking-wider">
+                  <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
                     {stat.title}
                   </p>
+
                   {stat.isComingSoon && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -168,9 +171,10 @@ export function StatsCards({ stats, isLoading, className }: StatsCardsProps) {
                         <HoverScrollableValue value={stat.value} isComingSoon={stat.isComingSoon} />
                      </div>
                   )}
-                  <p className="text-white/40 text-[10px] mt-1 font-medium uppercase tracking-tight">
+                   <p className="text-zinc-300 text-[10px] mt-1 font-medium uppercase tracking-tight">
                     {stat.label}
                   </p>
+
                 </div>
 
                 {!stat.isComingSoon && stat.action && (

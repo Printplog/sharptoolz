@@ -53,19 +53,12 @@ export default function DeviceStatsChart({ data, isLoading, rangeLabel }: Device
 
   if (isLoading) {
     return (
-      <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
+      <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-xl animate-pulse h-full">
         <CardHeader className="items-center pb-0">
-          <Skeleton className="h-6 w-32 bg-white/10 mb-2" />
-          <Skeleton className="h-4 w-48 bg-white/10" />
+          <Skeleton className="h-6 w-32 bg-white/10 rounded-full" />
         </CardHeader>
-        <CardContent className="flex-1 pb-0 flex items-center justify-center">
-          <div className="relative h-[200px] w-[200px]">
-            <Skeleton className="absolute inset-0 rounded-full border-[15px] border-white/5 bg-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-              <Skeleton className="h-8 w-16 bg-white/10" />
-              <Skeleton className="h-3 w-12 bg-white/5" />
-            </div>
-          </div>
+        <CardContent className="flex-1 pb-0 flex items-center justify-center h-[300px]">
+           <Skeleton className="h-40 w-40 rounded-full border-[10px] border-white/5" />
         </CardContent>
       </Card>
     )
@@ -81,28 +74,30 @@ export default function DeviceStatsChart({ data, isLoading, rangeLabel }: Device
 
   if (!data || data.length === 0 || totalVisitors === 0) {
     return (
-      <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
-        <CardHeader className="items-center pb-0">
-          <CardTitle className="text-white">Traffic Sources</CardTitle>
-          <CardDescription className="text-white/60">Device mix for {rangeLabel?.toLowerCase() || "the selected range"}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex-1 flex items-center justify-center pb-0 text-white/40">
-          No data available
-        </CardContent>
+      <Card className="bg-white/5 border-white/10 backdrop-blur-xl h-full min-h-[300px] flex flex-col items-center justify-center">
+         <p className="text-white/20 uppercase tracking-[0.2em] text-[10px] font-black">No Signal Detected</p>
       </Card>
     )
   }
 
   return (
-    <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-sm h-full max-h-[400px]">
-      <CardHeader className="items-center pb-0">
-        <CardTitle className="text-white">Traffic Sources</CardTitle>
-        <CardDescription className="text-white/60">Device mix for {rangeLabel?.toLowerCase() || "the selected range"}</CardDescription>
+    <Card className="flex flex-col bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/[0.07] transition-all duration-300 shadow-2xl h-full">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-white/5">
+        <div className="space-y-1 text-left">
+          <CardTitle className="text-lg font-black italic uppercase tracking-tighter text-violet-400">Traffic <span className="text-white">Sources</span></CardTitle>
+          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+            Device Distribution for {rangeLabel?.toLowerCase() || "the selected range"}
+          </CardDescription>
+
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20">
+           <div className="h-2 w-2 rounded-full bg-violet-400 animate-pulse shadow-[0_0_8px_#8b5cf6]" />
+        </div>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 pb-0 pt-6">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
+          className="mx-auto aspect-square max-h-[280px]"
         >
           <PieChart>
             <ChartTooltip
@@ -110,7 +105,7 @@ export default function DeviceStatsChart({ data, isLoading, rangeLabel }: Device
               content={
                 <ChartTooltipContent
                   hideLabel
-                  className="bg-zinc-950 border border-zinc-800 text-white shadow-xl"
+                  className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl"
                 />
               }
             />
@@ -118,8 +113,10 @@ export default function DeviceStatsChart({ data, isLoading, rangeLabel }: Device
               data={chartData}
               dataKey="count"
               nameKey="device"
-              innerRadius={60}
-              strokeWidth={5}
+              innerRadius={70}
+              outerRadius={90}
+              strokeWidth={8}
+              stroke="rgba(0,0,0,0.2)"
             >
               <Label
                 content={({ viewBox }) => {
@@ -134,17 +131,18 @@ export default function DeviceStatsChart({ data, isLoading, rangeLabel }: Device
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-white text-3xl font-bold"
+                          className="fill-white text-4xl font-black italic tracking-tighter"
                         >
                           {totalVisitors.toLocaleString()}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
-                          className="fill-white/60"
+                          className="fill-zinc-400 text-[10px] uppercase font-bold tracking-widest"
                         >
-                          Visitors
+                          Total Visits
                         </tspan>
+
                       </text>
                     )
                   }
@@ -157,3 +155,4 @@ export default function DeviceStatsChart({ data, isLoading, rangeLabel }: Device
     </Card>
   )
 }
+

@@ -13,13 +13,13 @@ export type Path =
   | `/admin/documents`
   | `/admin/fonts`
   | `/admin/fonts/FontUploadDialog`
-  | `/admin/link-generator`
   | `/admin/settings`
   | `/admin/svg-test-render`
   | `/admin/templates`
   | `/admin/templates/:id`
   | `/admin/tools`
   | `/admin/tools/:id/templates`
+  | `/admin/traffic-sources`
   | `/admin/transactions`
   | `/admin/user-activity`
   | `/admin/users`
