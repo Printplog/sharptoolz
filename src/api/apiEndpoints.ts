@@ -226,8 +226,8 @@ export const getAuditLogs = async (): Promise<AuditLog[]> => {
   return res.data;
 };
 
-export const logVisit = async (path: string, attribution?: TrafficAttribution, referrer?: string): Promise<void> => {
-  await apiClient.post('/analytics/log-visit/', { path, attribution, referrer });
+export const logVisit = async (path: string, attribution?: TrafficAttribution, referrer?: string, visitorId?: string): Promise<void> => {
+  await apiClient.post('/analytics/log-visit/', { path, attribution, referrer, visitor_id: visitorId });
 };
 
 

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Mail, Shield, Wallet, Activity, Calendar, Fingerprint } from "lucide-react";
+import { User, Mail, Shield, Wallet, Activity, Calendar, Fingerprint, Megaphone, Radio, Tag, Binary } from "lucide-react";
 import type { AdminUserDetails } from "@/types";
 import { cn } from "@/lib/utils";
 import { formatAdminDate } from "@/lib/utils/adminDate";
@@ -71,6 +71,14 @@ export default function ProfileCard({ user }: ProfileCardProps) {
         { label: "User ID", value: `#${user.pk}`, icon: Fingerprint, color: "slate" },
     ];
 
+    const acquisitionItems: InfoTileProps[] = [
+        { label: "Source", value: user.source || "direct", icon: Megaphone, color: "purple" },
+        { label: "Medium", value: user.medium || "(none)", icon: Radio, color: "indigo" },
+        { label: "Campaign", value: user.campaign || "No campaign", icon: Tag, color: "amber" },
+        { label: "Google Click ID", value: user.gclid || "Not captured", icon: Binary, color: "green" },
+        { label: "Facebook Click ID", value: user.fbclid || "Not captured", icon: Binary, color: "blue" },
+    ];
+
     return (
         <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full rounded-3xl overflow-hidden">
             <CardHeader className="pb-2">
@@ -80,10 +88,24 @@ export default function ProfileCard({ user }: ProfileCardProps) {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {infoItems.map((item, idx) => (
-                        <InfoTile key={idx} {...item} />
-                    ))}
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {infoItems.map((item, idx) => (
+                            <InfoTile key={idx} {...item} />
+                        ))}
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-white/40 text-[10px] font-black uppercase tracking-widest">
+                            <Megaphone className="h-3.5 w-3.5" />
+                            Acquisition Data
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {acquisitionItems.map((item, idx) => (
+                                <InfoTile key={`acq-${idx}`} {...item} />
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </CardContent>
         </Card>
