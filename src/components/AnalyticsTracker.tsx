@@ -73,7 +73,7 @@ export function AnalyticsTracker() {
 
     const fallbackTimer = window.setTimeout(() => {
       if (lastSentKeyRef.current === key) return;
-      void logVisit(path, attribution, document.referrer || undefined);
+      void logVisit(path, attribution, document.referrer || undefined, visitorId);
       lastSentKeyRef.current = key;
       pendingEventRef.current = null;
     }, 1200);
@@ -81,7 +81,8 @@ export function AnalyticsTracker() {
     return () => {
       window.clearTimeout(fallbackTimer);
     };
-  }, [isOpen, location.pathname, location.search, sendMessage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     if (!isOpen) return;

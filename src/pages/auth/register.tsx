@@ -122,6 +122,11 @@ export default function Register({ dialog = false }: Props) {
       source: attribution?.source,
       medium: attribution?.medium,
       campaign: attribution?.campaign || undefined,
+      term: attribution?.term || undefined,
+      content: attribution?.content || undefined,
+      source_platform: attribution?.source_platform || undefined,
+      gclid: attribution?.gclid || undefined,
+      fbclid: attribution?.fbclid || undefined,
     });
   };
 
