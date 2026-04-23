@@ -372,6 +372,19 @@ function UserActivityCard({ session, isOnline }: { session: ActivityLog; isOnlin
 
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-white/5 text-white/40">
+                        <Globe className="w-3 h-3" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Discovery Source</p>
+                        <p className="text-[10px] font-mono truncate italic text-primary/60">
+                            {session.source || 'Direct/Organic'}
+                        </p>
+                    </div>
+                </div>
+
+
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-white/5 text-white/40">
                         <Clock className="w-3 h-3" />
                     </div>
                     <div className="flex-1">
