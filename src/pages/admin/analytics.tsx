@@ -106,24 +106,42 @@ export default function Analytics() {
                 queryClient.setQueryData(["admin_analytics", date, days], (old: any) => {
                     if (!old) return old;
                     
-                    const isDuplicate = old.recent_visitors.some((v: any) => 
-                        v.visitor_id === data.visitor.visitor_id && 
-                        v.path === data.visitor.path &&
-                        Math.abs(new Date(v.timestamp).getTime() - new Date(data.visitor.timestamp).getTime()) < 2000
+                    const visitors = [...(old.recent_visitors || [])];
+                    const visitorId = data.visitor.visitor_id;
+                    const username = data.visitor.user__username;
+
+                    // Group by exact user match (Username or Visitor ID)
+                    const existingIdx = visitors.findIndex(v => 
+                        (username && v.user__username === username) || 
+                        (visitorId && v.visitor_id === visitorId)
                     );
 
-                    if (isDuplicate) return old;
+                    let updatedVisitors;
+                    if (existingIdx > -1) {
+                        // Update existing person in the list
+                        const existing = visitors[existingIdx];
+                        visitors[existingIdx] = {
+                            ...data.visitor,
+                            visit_count: (existing.visit_count || 0) + 1
+                        };
+                        // Move to top of the list
+                        const [moved] = visitors.splice(existingIdx, 1);
+                        updatedVisitors = [moved, ...visitors];
+                    } else {
+                        // Brand new person
+                        updatedVisitors = [data.visitor, ...visitors.slice(0, 23)];
+                    }
 
                     return {
                         ...old,
-                        recent_visitors: [data.visitor, ...old.recent_visitors.slice(0, 23)],
+                        recent_visitors: updatedVisitors,
                         summary: {
                             ...old.summary,
                             total_visits: (old.summary.total_visits || 0) + 1
                         },
                         // LIVE CHART UPDATES
                         top_pages: (() => {
-                           const pages = [...old.top_pages];
+                           const pages = [...(old.top_pages || [])];
                            const idx = pages.findIndex(p => p.path === data.visitor.path);
                            if (idx > -1) {
                                pages[idx] = { ...pages[idx], visits: pages[idx].visits + 1 };
@@ -132,23 +150,23 @@ export default function Analytics() {
                            return [...pages, { path: data.visitor.path, visits: 1 }].sort((a, b) => b.visits - a.visits).slice(0, 6);
                         })(),
                         source_stats: (() => {
-                           const sources = [...old.source_stats];
+                           const sources = [...(old.source_stats || [])];
                            const sourceName = data.visitor.source || 'Organic';
                            const idx = sources.findIndex(s => s.source === sourceName);
                            if (idx > -1) {
                                sources[idx] = { 
                                    ...sources[idx], 
                                    visits: sources[idx].visits + 1,
-                                   unique_visitors: sources[idx].unique_visitors + (isDuplicate ? 0 : 1)
+                                   unique_visitors: sources[idx].unique_visitors + (existingIdx > -1 ? 0 : 1)
                                };
                                return sources.sort((a, b) => b.visits - a.visits);
                            }
                            return [...sources, { source: sourceName, visits: 1, unique_visitors: 1 }].sort((a, b) => b.visits - a.visits).slice(0, 10);
                         })()
                     };
-
                 });
             }
+
 
             if (data.type === "new_sale") {
                 queryClient.setQueryData(["admin_analytics", date, days], (old: any) => {

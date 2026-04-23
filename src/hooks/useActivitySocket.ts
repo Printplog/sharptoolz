@@ -14,8 +14,10 @@ export type ActivityLog = {
   user_agent: string;
   referrer: string;
   status_code: number | null;
+  source: string | null;
   timestamp: string;
 };
+
 
 export type PresenceUpdate = {
   type: "presence_update";
