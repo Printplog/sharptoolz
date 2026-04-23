@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 import UserActivitySkeleton from "@/components/Admin/Layouts/UserActivitySkeleton";
+import { getPresenceKey } from "@/lib/utils/presence";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -48,9 +49,7 @@ export default function UserActivity() {
 
   // INITIAL SYNC: When the backend sends the full list of online users
   useEffect(() => {
-    if (initialOnlineList && initialOnlineList.length > 0) {
-        setOnlineSessions(new Set(initialOnlineList));
-    }
+    setOnlineSessions(new Set(initialOnlineList));
   }, [initialOnlineList]);
 
   // INCREMENTAL SYNC: Update presence based on individual socket events
@@ -59,9 +58,9 @@ export default function UserActivity() {
         setOnlineSessions(prev => {
             const next = new Set(prev);
             if (presenceUpdate.status === "online") {
-                next.add(presenceUpdate.session_key);
+                next.add(presenceUpdate.presence_key);
             } else {
-                next.delete(presenceUpdate.session_key);
+                next.delete(presenceUpdate.presence_key);
             }
             return next;
         });
@@ -97,29 +96,76 @@ export default function UserActivity() {
     });
   }, [liveLogs, historicalData, isLive, date, search, showAnonymous, showErrors]);
 
-  // Active Sessions calculation using TRUE Real-time presence
-  // FILTERED TO SHOW ONLY ONLINE PEOPLE (as requested)
-  const activeSessions = useMemo(() => {
-      // Map logs to unique sessions (by key or IP)
-      const sessionMap = new Map<string, ActivityLog>();
-      
-      displayLogs.forEach(log => {
-          const key = log.session_key || log.ip_address || `unknown-${log.timestamp}`;
-          if (!sessionMap.has(key)) {
-              sessionMap.set(key, log);
-          }
-      });
+  const latestSessionMap = useMemo(() => {
+    const sessionMap = new Map<string, ActivityLog>();
 
-      return Array.from(sessionMap.values())
-        .filter(session => onlineSessions.has(session.session_key || "")) // RESTORED STRICT ONLINE FILTER
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [displayLogs, onlineSessions]);
+    displayLogs.forEach((log) => {
+      const key = getPresenceKey(log) || `unknown-${log.timestamp}`;
+      const existing = sessionMap.get(key);
+
+      if (!existing) {
+        sessionMap.set(key, log);
+        return;
+      }
+
+      const existingTime = new Date(existing.timestamp).getTime();
+      const nextTime = new Date(log.timestamp).getTime();
+
+      if (nextTime > existingTime) {
+        sessionMap.set(key, log);
+      }
+    });
+
+    return sessionMap;
+  }, [displayLogs]);
+
+  const sessionResults = useMemo(
+    () =>
+      Array.from(latestSessionMap.values()).sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      ),
+    [latestSessionMap]
+  );
+
+  const activeSessions = useMemo(() => {
+    return Array.from(onlineSessions)
+      .map((sessionKey) => {
+        const existing = latestSessionMap.get(sessionKey);
+        if (existing) {
+          return existing;
+        }
+
+        return {
+          id: 0,
+          user: null,
+          username: null,
+          ip_address: null,
+          session_key: null,
+          visitor_id: sessionKey,
+          path: "Live connection established",
+          method: "WS",
+          user_agent: "",
+          referrer: null,
+          source: null,
+          medium: null,
+          campaign: null,
+          channel_group: null,
+          source_label: null,
+          status_code: 200,
+          timestamp: new Date().toISOString(),
+        } satisfies ActivityLog;
+      })
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [latestSessionMap, onlineSessions]);
+
+  const showingLiveSessions = isLive && !date && !search;
+  const visibleSessions = showingLiveSessions ? activeSessions : sessionResults;
 
   const stats: StatData[] = [
     {
       title: "Online",
-      value: onlineSessions.size.toString(),
-      label: "Live visitors",
+      value: activeSessions.length.toString(),
+      label: showingLiveSessions ? "Live visitors listed below" : "Live visitors online now",
       icon: Wifi,
       gradient: "from-emerald-500/20 to-emerald-600/5",
       borderColor: "border-emerald-500/20",
@@ -128,8 +174,8 @@ export default function UserActivity() {
     },
     {
       title: "Authenticated",
-      value: activeSessions.filter(s => !!s.username).length.toString(),
-      label: "Logged in verified users",
+      value: visibleSessions.filter(s => !!s.username).length.toString(),
+      label: showingLiveSessions ? "Logged in verified users" : "Matching logged in users",
       icon: UserIcon,
       gradient: "from-indigo-500/20 to-indigo-600/5",
       borderColor: "border-indigo-500/20",
@@ -270,23 +316,29 @@ export default function UserActivity() {
         <div className="flex items-center justify-between px-2">
             <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/40 italic flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                Live Visitors
+                {showingLiveSessions ? "Live Visitors" : "Session Results"}
             </h3>
-            <span className="text-[10px] font-mono text-white/20 uppercase">Displaying {activeSessions.length} currently online sessions</span>
+            <span className="text-[10px] font-mono text-white/20 uppercase">
+              {showingLiveSessions
+                ? `Displaying ${visibleSessions.length} currently online sessions`
+                : `Displaying ${visibleSessions.length} sessions matching current filters`}
+            </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
-            {activeSessions.length === 0 ? (
+            {visibleSessions.length === 0 ? (
                 <div className="col-span-full py-20 bg-white/5 border border-dashed border-white/10 rounded-3xl flex flex-col items-center justify-center opacity-30 italic space-y-2">
                     <Activity className="w-12 h-12" />
-                    <p className="text-sm font-bold uppercase tracking-widest">No visitors currently online</p>
+                    <p className="text-sm font-bold uppercase tracking-widest">
+                      {showingLiveSessions ? "No visitors currently online" : "No sessions found for these filters"}
+                    </p>
                 </div>
             ) : (
-                activeSessions.map((session) => (
+                visibleSessions.map((session, index) => (
                     <UserActivityCard 
-                        key={session.id || session.session_key || session.timestamp} 
+                        key={`${session.id || "session"}-${session.session_key || session.timestamp}-${index}`}
                         session={session} 
-                        isOnline={onlineSessions.has(session.session_key || "")}
+                        isOnline={onlineSessions.has(getPresenceKey(session) || "")}
                     />
                 ))
             )}
@@ -391,14 +443,14 @@ function UserActivityCard({ session, isOnline }: { session: ActivityLog; isOnlin
                     <div className="flex-1">
                         <div className="flex items-center justify-between">
                             <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
-                                Online Session
+                                Last Activity
                             </p>
                             <p className="text-[9px] font-medium text-white/40 italic">
                                 {format(new Date(session.timestamp), "HH:mm:ss")}
                             </p>
                         </div>
                         <p className="text-[11px] font-medium text-white/60 italic leading-none">
-                            Active {formatDistanceToNow(new Date(session.timestamp), { addSuffix: true })}
+                            Seen {formatDistanceToNow(new Date(session.timestamp), { addSuffix: true })}
                         </p>
                     </div>
                 </div>

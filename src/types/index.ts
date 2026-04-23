@@ -9,6 +9,11 @@ export type User = {
   source?: string;
   medium?: string;
   campaign?: string;
+  term?: string;
+  content?: string;
+  source_platform?: string;
+  gclid?: string;
+  fbclid?: string;
   is_active: boolean;
   is_staff: boolean;
   date_joined: string;
@@ -35,6 +40,11 @@ export type RegisterPayload = {
   source?: string;
   medium?: string;
   campaign?: string;
+  term?: string;
+  content?: string;
+  source_platform?: string;
+  gclid?: string;
+  fbclid?: string;
 };
 
 export type TrafficAttribution = {
@@ -44,6 +54,8 @@ export type TrafficAttribution = {
   term?: string | null;
   content?: string | null;
   source_platform?: string | null;
+  gclid?: string | null;
+  fbclid?: string | null;
   initial_referrer?: string | null;
   channel_group?: string | null;
   is_custom_source?: boolean;
@@ -197,6 +209,11 @@ export interface ActivityLog {
   source?: string | null;
   medium?: string | null;
   campaign?: string | null;
+  term?: string | null;
+  content?: string | null;
+  source_platform?: string | null;
+  gclid?: string | null;
+  fbclid?: string | null;
   channel_group?: string | null;
   source_label?: string | null;
   status_code?: number | null;
@@ -452,6 +469,8 @@ export interface Campaign {
   content: string | null;
   term: string | null;
   source_platform: string | null;
+  gclid: string | null;
+  fbclid: string | null;
   landing_path: string;
   ref_code: string | null;
   created_at: string;

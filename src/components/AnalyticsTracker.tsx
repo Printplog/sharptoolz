@@ -4,6 +4,7 @@ import { logVisit } from '@/api/apiEndpoints';
 import { sourceTracker } from '@/lib/utils/sourceTracker';
 import { trackPageView } from '@/lib/utils/googleAnalytics';
 import { useWebSocketClient } from '@/hooks/useWebSocketClient';
+import { ensureVisitorId } from '@/lib/utils/visitorIdentity';
 
 type PendingAnalyticsEvent = {
   key: string;
@@ -21,12 +22,14 @@ export function AnalyticsTracker() {
   const lastSentKeyRef = useRef<string | null>(null);
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   const baseWsUrl = import.meta.env.VITE_WS_URL;
-  const wsUrl = `${protocol}://${baseWsUrl}/ws/visitor-analytics/`;
+  const visitorId = ensureVisitorId();
+  const wsUrl = `${protocol}://${baseWsUrl}/ws/visitor-analytics/?vux_id=${encodeURIComponent(visitorId)}`;
 
   const { sendMessage, isOpen } = useWebSocketClient({
     url: wsUrl,
     reconnectAttempts: 10,
     reconnectInterval: 3000,
+    dependencies: [visitorId],
   });
 
   const flushPendingEvent = useCallback(() => {
