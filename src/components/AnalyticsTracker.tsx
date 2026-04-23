@@ -32,7 +32,13 @@ export function AnalyticsTracker() {
       }
     }
 
+    // Skip tracking for API calls and technical paths
+    if (location.pathname.startsWith('/api/') || location.pathname.includes('.')) {
+      return;
+    }
+
     logVisit(location.pathname, source);
+
 
   }, [location.pathname]);
 
