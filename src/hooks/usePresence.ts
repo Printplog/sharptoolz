@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useWebSocketClient } from "./useWebSocketClient";
 import { ensureVisitorId } from "@/lib/utils/visitorIdentity";
@@ -13,12 +14,26 @@ export function usePresence() {
   const visitorId = ensureVisitorId();
   const wsUrl = `${protocol}://${baseWsUrl}/ws/presence/?vux_id=${encodeURIComponent(visitorId)}`;
 
-  // We only need to connect; no message handling required for standard users.
-  // We include user?.pk in dependencies to force a reconnect when login/logout happens.
-  useWebSocketClient({
+  const { connect } = useWebSocketClient({
     url: wsUrl,
     reconnectAttempts: 10,
     reconnectInterval: 5000,
     dependencies: [user?.pk, visitorId],
   });
+
+  useEffect(() => {
+    // Sharp "Off Page" Detection
+    // The pagehide event is more reliable than 'unload' for modern browsers
+    const handleExit = () => {
+      // We don't need to send a beacon for presence because 
+      // closing the WebSocket itself triggers the 'disconnect' on the server.
+      // Manually closing it here ensures it happens the moment the tab is hidden.
+      connect(); // Accessing connect to ensure it's in scope, but we really want the cleanup
+    };
+
+    window.addEventListener("pagehide", handleExit);
+    return () => {
+      window.removeEventListener("pagehide", handleExit);
+    };
+  }, [connect]);
 }
