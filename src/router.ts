@@ -29,6 +29,7 @@ export type Path =
   | `/all-tools`
   | `/all-tools/:id`
   | `/auth/forgot-password`
+  | `/auth/google-callback`
   | `/auth/login`
   | `/auth/register`
   | `/auth/reset-password`

@@ -52,6 +52,11 @@ export const refreshToken = async (): Promise<User> => {
   return res.data;
 };
 
+export const loginWithGoogle = async (access_token: string): Promise<User> => {
+  const res = await apiClient.post('/accounts/google/', { access_token });
+  return res.data;
+};
+
 export const addTemplate = async (data: FormData): Promise<unknown> => {
   const res = await apiClient.post('/templates/', data, {
     headers: {
