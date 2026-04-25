@@ -6,12 +6,11 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/sonner";
 import App from "./App";
 import ErrorBoundary from "@/components/ErrorBoundary";
-
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <App />
-      <Toaster 
+      <Toaster
         position="top-right"
         richColors
       />
