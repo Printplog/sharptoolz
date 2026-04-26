@@ -44,21 +44,25 @@ export default function UserActivity() {
   // Hook for real-time updates
   const { logs: liveLogs, presenceUpdate, initialOnlineList } = useActivitySocket();
 
-  // Local state to track real-time presence
-  const [onlineSessions, setOnlineSessions] = useState<Set<string>>(new Set());
+  // Local state to track real-time presence and usernames
+  const [presenceMap, setPresenceMap] = useState<Map<string, string | null>>(new Map());
 
-  // INITIAL SYNC: When the backend sends the full list of online users
+  // INITIAL SYNC: When the backend sends the full list of online users with names
   useEffect(() => {
-    setOnlineSessions(new Set(initialOnlineList));
+    const next = new Map<string, string | null>();
+    initialOnlineList.forEach(item => {
+        next.set(item.presence_key, item.username);
+    });
+    setPresenceMap(next);
   }, [initialOnlineList]);
 
   // INCREMENTAL SYNC: Update presence based on individual socket events
   useEffect(() => {
     if (presenceUpdate) {
-        setOnlineSessions(prev => {
-            const next = new Set(prev);
+        setPresenceMap(prev => {
+            const next = new Map(prev);
             if (presenceUpdate.status === "online") {
-                next.add(presenceUpdate.presence_key);
+                next.set(presenceUpdate.presence_key, presenceUpdate.username);
             } else {
                 next.delete(presenceUpdate.presence_key);
             }
@@ -128,20 +132,23 @@ export default function UserActivity() {
   );
 
   const activeSessions = useMemo(() => {
-    return Array.from(onlineSessions)
-      .map((sessionKey) => {
-        const existing = latestSessionMap.get(sessionKey);
+    return Array.from(presenceMap.entries())
+      .map(([presenceKey, username]) => {
+        const existing = latestSessionMap.get(presenceKey);
         if (existing) {
-          return existing;
+          return {
+            ...existing,
+            username: username || existing.username // Prefer live username
+          };
         }
 
         return {
           id: 0,
           user: null,
-          username: null,
+          username: username,
           ip_address: null,
           session_key: null,
-          visitor_id: sessionKey,
+          visitor_id: presenceKey,
           path: "Live connection established",
           method: "WS",
           user_agent: "",
@@ -156,7 +163,7 @@ export default function UserActivity() {
         } satisfies ActivityLog;
       })
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [latestSessionMap, onlineSessions]);
+  }, [latestSessionMap, presenceMap]);
 
   const showingLiveSessions = isLive && !date && !search;
   const visibleSessions = showingLiveSessions ? activeSessions : sessionResults;
@@ -336,9 +343,9 @@ export default function UserActivity() {
             ) : (
                 visibleSessions.map((session, index) => (
                     <UserActivityCard 
-                        key={`${session.id || "session"}-${session.session_key || session.timestamp}-${index}`}
+                        key={`${session.id || "session"}-${session.visitor_id || session.timestamp}-${index}`}
                         session={session} 
-                        isOnline={onlineSessions.has(getPresenceKey(session) || "")}
+                        isOnline={presenceMap.has(getPresenceKey(session) || "")}
                     />
                 ))
             )}

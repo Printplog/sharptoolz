@@ -59,14 +59,14 @@ export type PresenceUpdate = {
 
 export type OnlineListUpdate = {
     type: "online_list";
-    sessions: string[];
+    sessions: { presence_key: string; username: string | null }[];
 }
 
 export function useActivitySocket() {
   const { user } = useAuthStore();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [presenceUpdate, setPresenceUpdate] = useState<PresenceUpdate | null>(null);
-  const [initialOnlineList, setInitialOnlineList] = useState<string[]>([]);
+  const [initialOnlineList, setInitialOnlineList] = useState<OnlineListUpdate["sessions"]>([]);
 
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const baseWsUrl = import.meta.env.VITE_WS_URL;
