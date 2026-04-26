@@ -5,6 +5,7 @@ import { sourceTracker } from '@/lib/utils/sourceTracker';
 import { trackPageView } from '@/lib/utils/googleAnalytics';
 import { useWebSocketClient } from '@/hooks/useWebSocketClient';
 import { ensureVisitorId } from '@/lib/utils/visitorIdentity';
+import { useAuthStore } from '@/store/authStore';
 
 type PendingAnalyticsEvent = {
   key: string;
@@ -21,6 +22,7 @@ type PendingAnalyticsEvent = {
  * and API fallback (reliability).
  */
 export function AnalyticsTracker() {
+  const { user } = useAuthStore();
   const location = useLocation();
   const pendingEventRef = useRef<PendingAnalyticsEvent | null>(null);
   const lastSentKeyRef = useRef<string | null>(null);
@@ -33,7 +35,7 @@ export function AnalyticsTracker() {
     url: wsUrl,
     reconnectAttempts: 10,
     reconnectInterval: 3000,
-    dependencies: [visitorId],
+    dependencies: [visitorId, user?.pk], // Force reconnect on auth change
   });
 
   const flushViaApi = useCallback((path: string, attribution: any, referrer: string) => {
