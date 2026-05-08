@@ -232,7 +232,8 @@ export const getAuditLogs = async (): Promise<AuditLog[]> => {
 };
 
 export const logVisit = async (path: string, attribution?: TrafficAttribution, referrer?: string, visitorId?: string): Promise<void> => {
-  await apiClient.post('/analytics/log-visit/', { path, attribution, referrer, visitor_id: visitorId });
+  // Innocuous URL — ad blockers strip URLs containing "analytics" or "log".
+  await apiClient.post('/u/p/', { path, attribution, referrer, visitor_id: visitorId });
 };
 
 

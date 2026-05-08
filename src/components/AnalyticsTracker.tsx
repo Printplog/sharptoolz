@@ -29,7 +29,10 @@ export function AnalyticsTracker() {
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   const baseWsUrl = import.meta.env.VITE_WS_URL;
   const visitorId = ensureVisitorId();
-  const wsUrl = `${protocol}://${baseWsUrl}/ws/visitor-analytics/?vux_id=${encodeURIComponent(visitorId)}`;
+  // Innocuous URL — ad blockers (uBO, Brave, AdBlock Plus) silently kill
+  // anything containing "analytics", "tracking", "visitor". This route is an
+  // alias of /ws/visitor-analytics/ but evades the default filter lists.
+  const wsUrl = `${protocol}://${baseWsUrl}/ws/u/p/?vux_id=${encodeURIComponent(visitorId)}`;
 
   const { sendMessage, isOpen } = useWebSocketClient({
     url: wsUrl,
@@ -39,7 +42,8 @@ export function AnalyticsTracker() {
   });
 
   const flushViaApi = useCallback((path: string, attribution: any, referrer: string) => {
-    const endpoint = `${import.meta.env.VITE_PUBLIC_API_URL}/analytics/log-visit/`;
+    // Innocuous URL — bypasses ad-blocker filter lists matching "analytics" / "log-visit".
+    const endpoint = `${import.meta.env.VITE_PUBLIC_API_URL}/u/p/`;
     const payload = {
       path,
       attribution,
