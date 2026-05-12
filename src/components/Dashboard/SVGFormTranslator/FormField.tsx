@@ -748,9 +748,12 @@ const FormFieldComponent: React.FC<{
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => qrRef.current?.addRow()}
+                  onClick={() => {
+                    console.log('[QR-DEBUG] Add Field button clicked');
+                    qrRef.current?.addRow();
+                  }}
                   className="bg-white/5 border border-dashed border-white/20 text-white/60 hover:bg-white/10 hover:text-white rounded-full h-8 px-3"
-                  disabled={isFieldDisabled || hasGenerationRule}
+                  disabled={isFieldDisabled}
                   title="Add new field to QR code"
                 >
                   <Plus className="w-3 h-3 mr-2" />

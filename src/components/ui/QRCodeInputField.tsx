@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Input } from './input';
 import { Button } from './button';
@@ -26,20 +26,46 @@ const QRCodeInputField = forwardRef<QRCodeInputFieldRef, QRCodeInputFieldProps>(
   disabled = false,
 }, ref) => {
   const [rows, setRows] = useState<QRCodeRow[]>([]);
+  const lastSyncedValue = useRef<string>(value);
+
+  const updateParent = useCallback((currentRows: QRCodeRow[]) => {
+    const serialized = currentRows
+      .map((r) => {
+        if (r.label && r.value) return `${r.label}: ${r.value}`;
+        return r.value || r.label;
+      })
+      .filter(Boolean)
+      .join('\n');
+    
+    lastSyncedValue.current = serialized;
+    onChange(serialized);
+  }, [onChange]);
+
+  const handleAddRow = useCallback(() => {
+    console.log('[QR-DEBUG] handleAddRow called in child component');
+    const newId = Math.random().toString(36).substr(2, 9);
+    setRows(prev => {
+        const newRows = [...prev, { id: newId, label: '', value: '' }];
+        // We don't call updateParent here because an empty row doesn't change the encoded string
+        return newRows;
+    });
+  }, []);
 
   // Expose addRow to parent
   useImperativeHandle(ref, () => ({
     addRow: handleAddRow
-  }));
+  }), [handleAddRow]);
 
-  // Parse initial value
+  // Sync rows when value changes externally (e.g. via Regenerate button)
   useEffect(() => {
+    if (value === lastSyncedValue.current && rows.length > 0) return;
+    
     if (!value) {
       setRows([{ id: Math.random().toString(36).substr(2, 9), label: '', value: '' }]);
+      lastSyncedValue.current = '';
       return;
     }
 
-    // Try to parse rows. If it doesn't look like "Label: Value", treat it as one row with empty label.
     const lines = value.split('\n');
     const parsedRows = lines.map((line) => {
       const colonIndex = line.indexOf(': ');
@@ -62,23 +88,8 @@ const QRCodeInputField = forwardRef<QRCodeInputFieldRef, QRCodeInputFieldProps>(
     } else {
       setRows(parsedRows);
     }
-  }, [value === '']); // Only reset if value becomes empty externally
-
-  const updateParent = useCallback((currentRows: QRCodeRow[]) => {
-    const serialized = currentRows
-      .map((r) => {
-        if (r.label && r.value) return `${r.label}: ${r.value}`;
-        return r.value || r.label;
-      })
-      .filter(Boolean)
-      .join('\n');
-    onChange(serialized);
-  }, [onChange]);
-
-  const handleAddRow = () => {
-    const newRows = [...rows, { id: Math.random().toString(36).substr(2, 9), label: '', value: '' }];
-    setRows(newRows);
-  };
+    lastSyncedValue.current = value;
+  }, [value, rows.length]);
 
   const handleRemoveRow = (id: string) => {
     const newRows = rows.filter((r) => r.id !== id);
