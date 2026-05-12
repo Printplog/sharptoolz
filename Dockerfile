@@ -13,6 +13,9 @@ WORKDIR /app
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
+# Configure pnpm to ignore build scripts to prevent ERR_PNPM_IGNORED_BUILDS in CI
+RUN pnpm config set ignore-scripts true
+
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
