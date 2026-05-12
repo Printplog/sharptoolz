@@ -152,8 +152,6 @@ const FormPanel = React.memo(function FormPanel({
           // and should not appear in the form. Non-AUTO gen fields show with a Regenerate button.
           !field.generationRule?.startsWith("AUTO:") &&
           field.generationMode !== "auto" &&
-          // Explicitly hide QR codes with rules as they are usually derived from other fields
-          !(field.type === "qrcode" && field.generationRule) &&
           // Hide fields that have dependsOn - they are auto-populated from other fields
           !field.dependsOn
       ) ?? [],
