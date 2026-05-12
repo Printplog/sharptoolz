@@ -8,6 +8,7 @@ import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
+import QRCodeBuilder from "./IdEditor/QRCodeBuilder";
 import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
 import { validateSvgId } from "@/lib/utils/svgIdValidator";
 
@@ -284,8 +285,8 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     };
 
     const baseId = localElement.id?.split(".")[0]?.replace(/_/g, " ") || `${localElement.tag} ${index + 1}`;
-    const isGenField = localElement.id?.includes(".gen");
-    const genRuleMatch = localElement.id?.match(/gen_(.+?)(?:\.|$)/);
+    const isGenField = localElement.id?.includes(".gen") || localElement.id?.includes(".qrcode");
+    const genRuleMatch = localElement.id?.match(/(?:gen_|qrcode_)(.+?)(?:\.|$)/);
     const currentGenRule = genRuleMatch ? genRuleMatch[1] : "";
     const previewGenRule = currentGenRule.length > 40 ? `${currentGenRule.slice(0, 40)}...` : currentGenRule;
     const maxLengthMatch = localElement.id?.match(/max_(\d+)/);
@@ -295,12 +296,16 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const handleGenRuleChange = (newRule: string) => {
       const parts = localElement.id?.split(".") || [];
+      const isQr = localElement.id?.includes(".qrcode") || localElement.tag === "image";
       
       // We want to keep track_/hide_ at the end correctly if they exist.
-      // So let's strip out 'gen' and 'gen_...' first.
-      const cleanParts = parts.filter((p: string) => p !== "gen" && !p.startsWith("gen_"));
+      // So let's strip out 'gen', 'gen_...', 'qrcode' and 'qrcode_...' first.
+      const cleanParts = parts.filter((p: string) => 
+        p !== "gen" && !p.startsWith("gen_") && 
+        p !== "qrcode" && !p.startsWith("qrcode_")
+      );
       
-      // Determine where to insert the new gen_ rule
+      // Determine where to insert the new gen_ / qrcode_ rule
       // It should ideally go before any tracking_id, track_, link_, grayscale_ or mode modifiers 
       // to maintain DSL valid grammar.
       let insertIndex = cleanParts.length;
@@ -314,7 +319,8 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       }
       
       // Insert the new rule at the correct grammatical index
-      cleanParts.splice(insertIndex, 0, `gen_${newRule}`);
+      const rulePrefix = isQr ? "qrcode_" : "gen_";
+      cleanParts.splice(insertIndex, 0, `${rulePrefix}${newRule}`);
       
       handleLocalUpdate({ id: cleanParts.join(".") });
     };
@@ -442,25 +448,46 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
         {isGenField && (
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Generation Rule</Label>
+            <Label className="text-sm font-medium">
+              {localElement.id?.includes(".qrcode") ? "QR Content Rule" : "Generation Rule"}
+            </Label>
             <div className="flex gap-2">
               <Input value={previewGenRule} readOnly className="bg-white/5 text-white/60 font-mono text-xs border-white/20 focus-visible:ring-0" />
-              <GenRuleBuilder
-                value={currentGenRule}
-                onChange={handleGenRuleChange}
-                allElements={allElements}
-                maxLength={maxLength}
-                open={showGenBuilder}
-                onOpenChange={setShowGenBuilder}
-                currentFieldValues={currentFieldValues}
-                defaultTextContent={localElement.innerText || ""}
-                trigger={
-                  <Button variant="outline" className="shrink-0 bg-white/5 border-white/20 hover:bg-white/10 gap-2 rounded-full">
-                    <Wand2 className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="text-xs">Builder</span>
-                  </Button>
-                }
-              />
+              {localElement.id?.includes(".qrcode") ? (
+                <QRCodeBuilder
+                  value={currentGenRule}
+                  onChange={handleGenRuleChange}
+                  allElements={allElements}
+                  maxLength={maxLength}
+                  open={showGenBuilder}
+                  onOpenChange={setShowGenBuilder}
+                  currentFieldValues={currentFieldValues}
+                  trigger={
+                    <Button variant="outline" className="shrink-0 bg-white/5 border-white/20 hover:bg-white/10 gap-2 rounded-full">
+                      <Wand2 className="w-3.5 h-3.5 text-purple-400" />
+                      <span className="text-xs">QR Builder</span>
+                    </Button>
+                  }
+                />
+              ) : (
+                <GenRuleBuilder
+                  value={currentGenRule}
+                  onChange={handleGenRuleChange}
+                  allElements={allElements}
+                  maxLength={maxLength}
+                  open={showGenBuilder}
+                  onOpenChange={setShowGenBuilder}
+                  currentFieldValues={currentFieldValues}
+                  defaultTextContent={localElement.innerText || ""}
+                  isQr={false}
+                  trigger={
+                    <Button variant="outline" className="shrink-0 bg-white/5 border-white/20 hover:bg-white/10 gap-2 rounded-full">
+                      <Wand2 className="w-3.5 h-3.5 text-purple-400" />
+                      <span className="text-xs">Builder</span>
+                    </Button>
+                  }
+                />
+              )}
             </div>
           </div>
         )}

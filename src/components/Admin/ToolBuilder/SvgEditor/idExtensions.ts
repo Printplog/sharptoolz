@@ -112,6 +112,13 @@ export const FIELD_TYPES: ExtensionDefinition[] = [
     label: "Hide (Hidden Default)",
     helper: "Creates a checkbox to toggle visibility (hidden by default)",
   },
+  {
+    key: "qrcode",
+    label: "QR Code",
+    helper: "Creates a QR code field with structured data support (e.g., .qrcode_Label:Value). Use underscores for spaces.",
+    requiresValue: true,
+    valuePlaceholder: "Enter QR rule",
+  },
 ].map(ft => ({ ...ft, isFieldType: true }));
 
 // Extensions that can come after field types
@@ -235,7 +242,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "Custom generation rule with static text, dependencies (dep_FieldName), random parts (rn[12], rc[6]), repeats (<[5]), and fill (<[fill]). Use the interactive builder for best experience.",
     requiresValue: true,
     valuePlaceholder: "Click 'Build Rule' button to use interactive builder",
-    allowedAfter: ["gen"],
+    allowedAfter: ["gen", "qrcode"],
   },
   {
     key: "mode",
@@ -243,7 +250,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     helper: "Set generation mode: mode[auto] for auto-generation on load and when dependencies change, or omit for manual generation only.",
     requiresValue: true,
     valuePlaceholder: "auto",
-    allowedAfter: ["gen"],
+    allowedAfter: ["gen", "qrcode"],
   },
   {
     key: "grayscale",
@@ -425,3 +432,5 @@ export function getSuggestions(id: string): ExtensionDefinition[] {
 
   return allowed;
 }
+
+

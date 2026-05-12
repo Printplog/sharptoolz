@@ -25,6 +25,7 @@ interface GenRuleBuilderProps {
   trigger: React.ReactNode;
   currentFieldValues?: Record<string, string>; // Current field values from the page
   defaultTextContent?: string; // Default text content of the element
+  isQr?: boolean; // If true, shows a QR code preview
 }
 
 type RandomType = 'number' | 'letter' | 'both';
@@ -39,6 +40,8 @@ type PatternPart =
   | { type: 'date'; format: string }
   | { type: 'env'; varName: string };
 
+import { QRCodeSVG } from 'qrcode.react';
+
 export default function GenRuleBuilder({
   value,
   onChange,
@@ -49,6 +52,7 @@ export default function GenRuleBuilder({
   trigger,
   currentFieldValues = {},
   defaultTextContent,
+  isQr = false,
 }: GenRuleBuilderProps) {
   const [isAuto, setIsAuto] = useState<boolean>(() => value?.startsWith("AUTO:") || false);
   // Strip AUTO: prefix before parsing to avoid showing it as a rule
@@ -544,9 +548,14 @@ export default function GenRuleBuilder({
                 <div className="flex flex-col gap-1">
                   <div className="text-white/40 text-[10px] uppercase tracking-widest font-black">Output</div>
                   <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg shadow-inner">
-                    <div className="font-mono text-emerald-400 text-sm break-all leading-tight">
+                    <div className="font-mono text-emerald-400 text-sm break-all leading-tight mb-2">
                       {preview}
                     </div>
+                    {isQr && preview && (
+                      <div className="bg-white p-1 rounded-md mb-1 w-fit mx-auto border border-white/10 shadow-lg animate-in zoom-in-50 duration-300">
+                        <QRCodeSVG value={preview} size={80} level="M" />
+                      </div>
+                    )}
                     {maxLength !== undefined && (
                       <div className="mt-1 flex items-center justify-between">
                         <span className="text-[9px] text-white/30 uppercase tracking-tighter">Length</span>

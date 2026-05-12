@@ -1,5 +1,6 @@
 import { extractFromDependency } from "./fieldExtractor";
 import { applyWrappedText, getSvgElementStyle } from "./textWrapping";
+import { generateQrDataUrlSync } from "./qrGenerator";
 import type { FormField } from "@/types";
 
 export default function updateSvgFromFormData(svgSource: string, fields: FormField[]): string;
@@ -254,12 +255,22 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
         const tagName = el.tagName.toLowerCase();
         const fieldType = (field.type || "text").toLowerCase();
         const isImageTag = tagName === 'image' || tagName === 'use';
-        const isImageField = fieldType === "upload" || fieldType === "file" || fieldType === "sign";
+        const isImageField = fieldType === "upload" || fieldType === "file" || fieldType === "sign" || fieldType === "qrcode";
         // Support .depends both as a type and as an extension in the ID for backward compatibility
         const isDependsField = fieldType === "depends" || field.id.includes('.depends');
         
         // Final sanity check: if the value is definitely an image data URL, we should allow updating image tags
         const isImageValue = typeof value === 'string' && (value.startsWith('data:image/') || value.startsWith('blob:') || value.includes('base64'));
+
+        // Special case: Generate QR code if field type is qrcode and value is not already an image
+        if (fieldType === "qrcode" && !isImageValue) {
+          console.log(`[updateSvg] Generating QR for field ${field.id}, content length: ${String(value).length}`);
+          const qrData = generateQrDataUrlSync(String(value));
+          if (!qrData) {
+            console.error(`[updateSvg] QR Generation failed for field ${field.id}`);
+          }
+          value = qrData;
+        }
 
         // For select fields, use the label/displayText if targeting a text element,
         // or the raw value if targeting an image element.

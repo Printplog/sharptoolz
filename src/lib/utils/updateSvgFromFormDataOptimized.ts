@@ -1,5 +1,6 @@
 import type { FormField } from "@/types";
 import { extractFromDependency } from "./fieldExtractor";
+import { generateQrDataUrlSync } from "./qrGenerator";
 
 /**
  * Optimized version that only updates specific fields instead of processing all fields
@@ -104,19 +105,18 @@ export default function updateSvgFromFormDataOptimized(
 
       switch (field.type) {
         case "upload":
-        case "file": {
+        case "file":
+        case "sign":
+        case "qrcode": {
           const hrefNS = "http://www.w3.org/1999/xlink";
           // Only update href if there's a value, otherwise preserve original
           if (value && value.trim() !== "") {
-            el.setAttributeNS(hrefNS, "href", value);
-          }
-          break;
-        }
-        case "sign": {
-          const hrefNS = "http://www.w3.org/1999/xlink";
-          // Only update href if there's a value, otherwise preserve original
-          if (value && value.trim() !== "") {
-            el.setAttributeNS(hrefNS, "href", value);
+            let finalValue = value;
+            if (field.type === "qrcode" && !value.startsWith("data:")) {
+              finalValue = generateQrDataUrlSync(value);
+            }
+            el.setAttributeNS(hrefNS, "href", finalValue);
+            el.setAttribute("href", finalValue);
           }
           break;
         }

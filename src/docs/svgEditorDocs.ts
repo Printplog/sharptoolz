@@ -203,6 +203,28 @@ export const svgEditorDocs: DocSection[] = [
     ]
   },
   {
+    id: "qrcode-fields",
+    title: "QR Code Extensions",
+    content: "Generate scannable QR codes from SVG image elements. Use .qrcode for standard text input, or .qrcode_RULE for dynamic generation based on other field values.",
+    codeExamples: [
+      {
+        title: "Static QR Code",
+        code: "Verify_Link.qrcode",
+        description: "Creates a standard QR code field where you can type any text or URL."
+      },
+      {
+        title: "Dynamic QR Code Rule",
+        code: "Itinerary_QR.qrcode_Name:_(dep_Passenger_Name)",
+        description: "Automatically generates a QR code containing 'Name: ' followed by the value of the Passenger Name field. Use underscores (_) for spaces."
+      },
+      {
+        title: "Complex Rule",
+        code: "Order_QR.qrcode_ID:_(dep_Order_ID)_Amt:_(dep_Total)",
+        description: "QR code with multiple field dependencies and static labels."
+      }
+    ]
+  },
+  {
     id: "status-fields",
     title: ".status Extension",
     content: "Creates a status input field from an SVG element.",

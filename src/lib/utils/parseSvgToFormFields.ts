@@ -16,9 +16,10 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
     const parts = id.split(".");
     const baseId = parts[0];
     const name = baseId.replace(/_/g, " ");
-    let type = id.split(".")[0];
+    let type = "text";
     let max: number | undefined;
     let dateFormat: string | undefined;
+    let generationRule: string | undefined;
     const svgElementId = id;
 
     // If it's a select option
@@ -58,24 +59,31 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
       if (part.startsWith("max_")) {
         max = parseInt(part.replace("max_", ""));
       } else if (part.startsWith("format_")) {
-        // Extract format and replace underscores with spaces (common convention for IDs)
-        // e.g. format_YYYY-MM-DD_HH:mm -> YYYY-MM-DD HH:mm
+        // Extract format and replace underscores with spaces
         const rawFormat = part.replace("format_", "");
-        // If the format contains typical time separators like colon, it might be preserved
-        // But if it uses underscores for spaces, we convert them
-        if (rawFormat.includes("_")) {
-           dateFormat = rawFormat.replace(/_/g, " ");
-        } else {
-           dateFormat = rawFormat;
-        }
+        dateFormat = rawFormat.replace(/_/g, " ");
+      } else if (part.startsWith("gen_")) {
+        type = "gen";
+        generationRule = part.replace("gen_", "");
+      } else if (part.startsWith("qrcode_")) {
+        type = "qrcode";
+        generationRule = part.replace("qrcode_", "");
       } else if (
         [
           "text", "textarea", "checkbox", "date", "upload", "number",
-          "email", "tel", "gen", "password", "range", "color", "file"
+          "email", "tel", "gen", "password", "range", "color", "file", "qrcode"
         ].includes(part)
       ) {
-        type = part;
+        // Only update type if it's currently the default 'text' or we're explicitly setting it to a specialized type.
+        // We don't want a trailing '.text' or '.textarea' to overwrite '.qrcode_...' or '.gen_...'
+        if (type === "text" || (part !== "text" && part !== "textarea")) {
+          type = part;
+        }
       }
+    }
+
+    if (type === "qrcode") {
+      console.log(`[Parser] Found QR field: ${baseId}, rule: ${generationRule}`);
     }
 
     fieldsMap[baseId] = {
@@ -86,7 +94,8 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
       defaultValue: type === "checkbox" ? false : textContent,
       currentValue: type === "checkbox" ? false : textContent,
       ...(max ? { max } : {}),
-      ...(dateFormat ? { dateFormat } : {})
+      ...(dateFormat ? { dateFormat } : {}),
+      ...(generationRule ? { generationRule } : {})
     };
   }
 

@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import ImageCropUpload from "@/components/ui/ImageCropUpload.tsx";
 import SignatureField from "@/components/ui/SignatureField";
 import CustomDateTimePicker from "@/components/ui/CustomDateTimePicker";
+import QRCodeInputField from "@/components/ui/QRCodeInputField";
 import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
 import { extractFromDependency } from "@/lib/utils/fieldExtractor";
 
@@ -72,15 +73,24 @@ const FormFieldComponent: React.FC<{
     const generateFieldValue = useCallback(() => {
       const fieldMap: Record<string, string | number | boolean> = {};
       allFields.forEach((f) => {
-        fieldMap[f.id] = f.currentValue || "";
+        // Use display text for selects if available, consistent with generateAutoFields
+        if (f.type === "select" && f.options && f.options.length > 0) {
+          const selected = f.options.find(
+            (opt) => String(opt.value) === String(f.currentValue)
+          );
+          fieldMap[f.id] = selected?.displayText ?? selected?.label ?? (f.currentValue || "");
+        } else {
+          fieldMap[f.id] = f.currentValue || "";
+        }
       });
 
       if (field.generationRule) {
         const maxLength = field.max || undefined;
-        let generated = generateValue(field.generationRule, fieldMap, maxLength);
+        console.log(`[FormField] Generating value for ${field.id} with rule: ${field.generationRule}`);
+        const generated = generateValue(field.generationRule, fieldMap, maxLength);
 
         if (field.maxGeneration) {
-          generated = applyMaxGeneration(generated, field.maxGeneration);
+          return applyMaxGeneration(generated, field.maxGeneration);
         }
 
         return generated;
@@ -297,7 +307,7 @@ const FormFieldComponent: React.FC<{
     // Render based on field type
     // If field has generationRule, treat it as gen field (even if type is "text")
     const hasGenerationRule = !!field.generationRule;
-    const effectiveType = hasGenerationRule ? "gen" : field.type;
+    const effectiveType = (hasGenerationRule && field.type !== "qrcode") ? "gen" : field.type;
 
     switch (effectiveType) {
       case "text":
@@ -714,6 +724,42 @@ const FormFieldComponent: React.FC<{
               value={value as string}
               onChange={(e) => handleChange(e.target.value)}
               className="bg-white/10 border-white/20 h-10 w-full"
+              disabled={isFieldDisabled}
+            />
+          </div>
+        );
+
+      case "qrcode":
+        return (
+          <div className="space-y-3 w-full">
+            <div className="flex justify-between items-center">
+              <label htmlFor={field.id} className="text-sm font-medium text-white">
+                {field.name}
+                {field.helperText && (
+                  <FieldHelper
+                    fieldName={field.name}
+                    helperText={field.helperText}
+                    tutorialUrl={tutorial?.url}
+                  />
+                )}
+              </label>
+              {hasGenerationRule && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => handleChange(generateFieldValue())}
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full h-8 px-3"
+                  disabled={isFieldDisabled}
+                  title="Regenerate QR content"
+                >
+                  <RotateCcw className="w-3 h-3 mr-2" />
+                  Regenerate
+                </Button>
+              )}
+            </div>
+            <QRCodeInputField
+              value={value as string}
+              onChange={handleChange}
               disabled={isFieldDisabled}
             />
           </div>
