@@ -13,7 +13,8 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
     const id = el.getAttribute("id") || "";
     const textContent = el.textContent?.trim() || "";
 
-    const parts = id.split(".");
+    // Split on dots that are NOT inside parentheses
+    const parts = id.split(/\.(?![^(]*\))/g);
     const baseId = parts[0];
     const name = baseId.replace(/_/g, " ");
     let type = "text";
