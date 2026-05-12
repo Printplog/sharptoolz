@@ -760,7 +760,7 @@ const FormFieldComponent: React.FC<{
             <QRCodeInputField
               value={value as string}
               onChange={handleChange}
-              disabled={isFieldDisabled || hasGenerationRule}
+              disabled={isFieldDisabled}
             />
           </div>
         );
