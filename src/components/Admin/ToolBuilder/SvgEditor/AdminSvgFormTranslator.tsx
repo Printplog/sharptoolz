@@ -8,6 +8,7 @@ import type { FormField } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Download, Upload } from "lucide-react";
 import { DownloadDocDialog } from "@/components/Dashboard/Documents/DownloadDoc/index";
+import { generateAutoFields } from "@/lib/utils/fieldGenerator";
 import { toast } from "sonner";
 
 interface AdminSvgFormTranslatorProps {
@@ -21,8 +22,6 @@ export default function AdminSvgFormTranslator({
   formFields,
   templateName
 }: AdminSvgFormTranslatorProps) {
-  const [svgText, setSvgText] = useState<string>("");
-  const [livePreview, setLivePreview] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("editor");
 
   const {
@@ -32,6 +31,8 @@ export default function AdminSvgFormTranslator({
     fields,
     svgRaw,
     name,
+    setSvgPreview,
+    svgPreview,
   } = useToolStore();
 
   // Initialize with provided data instead of making API calls
@@ -44,16 +45,17 @@ export default function AdminSvgFormTranslator({
       currentValue: field.defaultValue ?? "",
     }));
 
-    // Process SVG with initialized fields
-    const newSvgText = updateSvgFromFormData(svgContent, initializedFields);
+    // Process SVG with initialized fields and auto-generation
+    const fieldsWithAuto = generateAutoFields(initializedFields, false);
+    const newSvgText = updateSvgFromFormData(svgContent, fieldsWithAuto);
 
     // Update all state
-    setSvgText(newSvgText);
+    setSvgPreview(newSvgText);
     setSvgRaw(newSvgText);
     setName(templateName);
     setFields(formFields, false);
 
-  }, [svgContent, formFields, templateName, setSvgRaw, setName, setFields]);
+  }, [svgContent, formFields, templateName, setSvgRaw, setName, setFields, setSvgPreview]);
 
   // Update live preview when fields change with debouncing
   useEffect(() => {
@@ -61,8 +63,9 @@ export default function AdminSvgFormTranslator({
 
     // Use a short delay for debouncing to prevent UI lag during typing
     const timer = setTimeout(() => {
-      const updatedSvg = updateSvgFromFormData(svgRaw, fields);
-      setLivePreview(updatedSvg);
+      const fieldsWithAuto = generateAutoFields(fields, false);
+      const updatedSvg = updateSvgFromFormData(svgRaw, fieldsWithAuto);
+      setSvgPreview(updatedSvg);
     }, 150); // 150ms is a sweet spot for "perceived instant" vs "main thread freedom"
 
     return () => clearTimeout(timer);
@@ -99,7 +102,7 @@ export default function AdminSvgFormTranslator({
         </>
       </Button>
       <DownloadDocDialog
-        svg={livePreview || svgRaw || svgText}
+        svg={svgPreview || svgRaw}
         templateName={name || templateName}
       />
     </div>
@@ -125,7 +128,10 @@ export default function AdminSvgFormTranslator({
 
   return (
     <div className="w-full">
-      <Tabs defaultValue="editor" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="editor" className="w-full" value={activeTab} onValueChange={(v) => {
+        if (v === "preview") console.log("[ADMIN-PREVIEW-DEBUG] 👁️ Switching to Preview Tab");
+        setActiveTab(v);
+      }}>
         <TabsList className="bg-white/10 w-full">
           <TabsTrigger value="editor">Editor</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -149,7 +155,7 @@ export default function AdminSvgFormTranslator({
               <div
                 data-svg-preview
                 className="[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full"
-                dangerouslySetInnerHTML={{ __html: livePreview || svgText }}
+                dangerouslySetInnerHTML={{ __html: svgPreview || svgRaw }}
               />
             </div>
           </div>

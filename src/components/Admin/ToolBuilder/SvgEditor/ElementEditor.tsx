@@ -167,7 +167,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         Object.keys(imageMap.current).forEach((blobUrl) => {
           try {
             URL.revokeObjectURL(blobUrl);
-          } catch (e) {
+          } catch {
             console.warn('Failed to revoke Blob URL:', blobUrl);
           }
         });
@@ -284,45 +284,56 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       toast.info("Changes discarded");
     };
 
-    const baseId = localElement.id?.split(".")[0]?.replace(/_/g, " ") || `${localElement.tag} ${index + 1}`;
-    const isGenField = localElement.id?.includes(".gen") || localElement.id?.includes(".qrcode");
-    const genRuleMatch = localElement.id?.match(/(?:gen_|qrcode_)(.+?)(?:\.|$)/);
+    const currentId = localElement.id || "";
+    const baseId = currentId.split(".")[0]?.replace(/_/g, " ") || `${localElement.tag} ${index + 1}`;
+    const isGenField = currentId.includes(".gen") || currentId.includes(".qrcode");
+    
+    // Match the generation rule. It starts with gen_ or qrcode_ and goes until a late modifier or the end of the string.
+    const genRuleMatch = currentId.match(/(?:gen_|qrcode_)(.*?)(?=\.track_|\.tracking_id|\.link_|\.grayscale|\.hide_|\.mode|$)/);
     const currentGenRule = genRuleMatch ? genRuleMatch[1] : "";
     const previewGenRule = currentGenRule.length > 40 ? `${currentGenRule.slice(0, 40)}...` : currentGenRule;
-    const maxLengthMatch = localElement.id?.match(/max_(\d+)/);
+    const maxLengthMatch = currentId.match(/max_(\d+)/);
     const maxLength = maxLengthMatch ? parseInt(maxLengthMatch[1]) : undefined;
-    const isUploadField = localElement.id?.includes(".upload");
+    const isUploadField = currentId.includes(".upload");
     const currentImageUrl = localElement.attributes.href || localElement.attributes['xlink:href'] || "";
 
     const handleGenRuleChange = (newRule: string) => {
-      const parts = localElement.id?.split(".") || [];
-      const isQr = localElement.id?.includes(".qrcode") || localElement.tag === "image";
-      
-      // We want to keep track_/hide_ at the end correctly if they exist.
-      // So let's strip out 'gen', 'gen_...', 'qrcode' and 'qrcode_...' first.
-      const cleanParts = parts.filter((p: string) => 
-        p !== "gen" && !p.startsWith("gen_") && 
-        p !== "qrcode" && !p.startsWith("qrcode_")
-      );
-      
-      // Determine where to insert the new gen_ / qrcode_ rule
-      // It should ideally go before any tracking_id, track_, link_, grayscale_ or mode modifiers 
-      // to maintain DSL valid grammar.
-      let insertIndex = cleanParts.length;
-      const lateModifiers = ["tracking_id", "track_", "link_", "grayscale", "hide_", "mode"];
-      
-      for (let i = 0; i < cleanParts.length; i++) {
-        if (lateModifiers.some(mod => cleanParts[i].startsWith(mod))) {
-          insertIndex = i;
-          break;
+      const currentId = localElement.id || "";
+      const isQr = currentId.includes(".qrcode") || localElement.tag === "image";
+      const rulePrefix = isQr ? "qrcode_" : "gen_";
+      const basePrefix = isQr ? "qrcode" : "gen";
+
+      let prefixPart = currentId;
+      let suffixPart = "";
+
+      // Find where the late modifiers start
+      const lateModifiers = [".track_", ".tracking_id", ".link_", ".grayscale", ".hide_", ".mode"];
+      let lateModIndex = -1;
+      for (const mod of lateModifiers) {
+        const idx = currentId.indexOf(mod);
+        if (idx !== -1 && (lateModIndex === -1 || idx < lateModIndex)) {
+          lateModIndex = idx;
         }
       }
+
+      if (lateModIndex !== -1) {
+        prefixPart = currentId.substring(0, lateModIndex);
+        suffixPart = currentId.substring(lateModIndex);
+      }
+
+      // Now prefixPart contains the base ID and all early modifiers (and the existing qrcode/gen rule)
+      // The rule is at the end of prefixPart (because it's the last early modifier)
+      // Let's find .qrcode or .gen in prefixPart
+      const typeIndex = prefixPart.indexOf(`.${basePrefix}`);
+      if (typeIndex !== -1) {
+        // Strip everything from .qrcode onwards in the prefixPart
+        prefixPart = prefixPart.substring(0, typeIndex);
+      }
+
+      // Reassemble: base parts + .qrcode_NewRule + .late_modifiers
+      const newId = `${prefixPart}.${rulePrefix}${newRule}${suffixPart}`;
       
-      // Insert the new rule at the correct grammatical index
-      const rulePrefix = isQr ? "qrcode_" : "gen_";
-      cleanParts.splice(insertIndex, 0, `${rulePrefix}${newRule}`);
-      
-      handleLocalUpdate({ id: cleanParts.join(".") });
+      handleLocalUpdate({ id: newId });
     };
 
     const currentFieldValues = useMemo(() => {

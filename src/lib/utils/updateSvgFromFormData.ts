@@ -50,11 +50,17 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
     if (byId) results.push(byId);
 
     // 2. Check various selectors for multiple matches
+    const escape = (s: string) => {
+        if (typeof CSS !== 'undefined' && CSS.escape) return CSS.escape(s);
+        // Simple fallback for environments where CSS.escape is missing
+        return s.replace(/([!"#$%&'()*+,.\/:;<=>?@\[\\\]^`{|}~])/g, "\\$1");
+    };
+
     const selectors = [
-      `[data-internal-id="${CSS.escape(id)}"]`,
-      `[name="${CSS.escape(id)}"]`,
-      `[data-name="${CSS.escape(id)}"]`,
-      `[id="${CSS.escape(id)}"]` // Case where id might not be unique but querySelectorAll can find others
+      `[data-internal-id="${escape(id)}"]`,
+      `[name="${escape(id)}"]`,
+      `[data-name="${escape(id)}"]`,
+      `[id="${escape(id)}"]` // Case where id might not be unique but querySelectorAll can find others
     ];
 
     selectors.forEach(selector => {
@@ -68,7 +74,7 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
     // We match [id^="baseId."] to find elements with extensions (e.g. Field.text.track_123)
     // but we EXCLUDE helper elements like .error or .helper to prevent accidental transforms.
     if (results.length === 0) {
-      const prefixSelector = `[id^="${CSS.escape(id)}."]`;
+      const prefixSelector = `[id^="${escape(id)}."]`;
       try {
         const items = Array.from(doc.querySelectorAll(prefixSelector)).filter(el => {
           const elId = el.getAttribute("id") || "";
@@ -87,7 +93,13 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
   /*
    * Helper to consolidate transforms from both 'style' and 'transform' attribute.
    */
-  const getElementCenter = (el: SVGElement) => {
+  const getElementCenter = (el: Element) => {
+    const tagName = el.tagName.toLowerCase();
+    
+    // Safety check: only elements with style should be processed for complex transforms
+    const style = (el as any).style;
+    if (!style) return null;
+
     // 1. Try to extract existing pivot from the transform attribute as ground truth
     const transform = el.getAttribute("transform") || "";
     // Matches rotate(angle) or rotate(angle, cx, cy) or rotate(angle cx cy) with optional commas
@@ -100,7 +112,6 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
     }
 
     // 2. Element Specific Coordinates
-    const tagName = el.tagName.toLowerCase();
     
     // Circle/Ellipse use cx/cy directly
     if (tagName === 'circle' || tagName === 'ellipse') {
@@ -117,11 +128,11 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
 
     // If attributes are missing or zero, try reading from style
     if (!wAttr || parseFloat(wAttr) <= 0) {
-      const styleW = el.style.width || (el.getAttribute("style") || "").match(/width:\s*([\d.]+)px/)?.[1];
+      const styleW = style.width || (el.getAttribute("style") || "").match(/width:\s*([\d.]+)px/)?.[1];
       if (styleW) wAttr = styleW;
     }
     if (!hAttr || parseFloat(hAttr) <= 0) {
-      const styleH = el.style.height || (el.getAttribute("style") || "").match(/height:\s*([\d.]+)px/)?.[1];
+      const styleH = style.height || (el.getAttribute("style") || "").match(/height:\s*([\d.]+)px/)?.[1];
       if (styleH) hAttr = styleH;
     }
 
@@ -158,7 +169,9 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
 
     if (!styleTransform) return;
 
-    const { cx, cy } = getElementCenter(el);
+    const center = getElementCenter(el);
+    if (!center) return;
+    const { cx, cy } = center;
     const canComputeCenter = cx !== 0 || cy !== 0;
 
     // Only proceed with normalization if we have a solid center or it's a simple translate
@@ -190,9 +203,12 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
     // CLEAR styles only if we successfully normalized with a pivot
     // If cx/cy are 0, we leave the styles so the browser can handle it with transform-origin: center
     if (canComputeCenter || !styleTransform.includes("rotate")) {
-        el.style.transform = "";
-        el.style.transformOrigin = "";
-        el.style.transformBox = "";
+        const anyEl = el as any;
+        if (anyEl.style) {
+          anyEl.style.transform = "";
+          anyEl.style.transformOrigin = "";
+          anyEl.style.transformBox = "";
+        }
     }
   };
 
@@ -205,12 +221,18 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
       return;
     }
 
-    // Support dependency values with extraction
+    // 1. Resolve base value (from direct input, auto-generation, or dependency)
     let value: string = "";
+    const hasAutoRule = field.generationRule?.startsWith("AUTO:") || (field.type === "qrcode" && field.generationRule);
 
-    if ("dependsOn" in field && field.dependsOn) {
+    if (hasAutoRule && field.currentValue) {
+      // Prioritize auto-generated values already present in the field object
+      value = String(field.currentValue);
+    } else if ("dependsOn" in field && field.dependsOn) {
+      // Fallback to simple dependency extraction
       value = extractFromDependency(field.dependsOn, allFieldValues);
     } else {
+      // Use direct current value or default
       value = String(field.currentValue ?? "");
     }
 
@@ -256,20 +278,36 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
         const fieldType = (field.type || "text").toLowerCase();
         const isImageTag = tagName === 'image' || tagName === 'use';
         const isImageField = fieldType === "upload" || fieldType === "file" || fieldType === "sign" || fieldType === "qrcode";
+        const elId = el.getAttribute("id") || "";
+        
+        // Support both .qrcode and .qrcode_ prefixes
+        const isQrElement = fieldType === "qrcode" || 
+                           elId.toLowerCase().includes(".qrcode.") || 
+                           elId.toLowerCase().includes(".qrcode_") ||
+                           elId.toLowerCase().endsWith(".qrcode");
+
         // Support .depends both as a type and as an extension in the ID for backward compatibility
         const isDependsField = fieldType === "depends" || field.id.includes('.depends');
         
+        if (isQrElement) {
+          console.log(`[QR-DEBUG] ℹ️ Element: ${elId}, Tag: <${tagName}>, isImageTag: ${isImageTag}, fieldType: ${fieldType}`);
+        }
+        
         // Final sanity check: if the value is definitely an image data URL, we should allow updating image tags
-        const isImageValue = typeof value === 'string' && (value.startsWith('data:image/') || value.startsWith('blob:') || value.includes('base64'));
+        let isImageValue = typeof value === 'string' && (value.startsWith('data:image/') || value.startsWith('blob:') || value.includes('base64'));
 
         // Special case: Generate QR code if field type is qrcode and value is not already an image
-        if (fieldType === "qrcode" && !isImageValue) {
-          console.log(`[updateSvg] Generating QR for field ${field.id}, content length: ${String(value).length}`);
+        if (isQrElement && !isImageValue) {
+          console.log(`[QR-DEBUG] 🔥 Triggering QR Generation for: ${field.id}`);
+          console.log(`[QR-DEBUG] Content: "${String(value).slice(0, 50)}${String(value).length > 50 ? '...' : ''}"`);
           const qrData = generateQrDataUrlSync(String(value));
           if (!qrData) {
-            console.error(`[updateSvg] QR Generation failed for field ${field.id}`);
+            console.error(`[QR-DEBUG] ❌ QR Generation FAILED for: ${field.id}`);
+          } else {
+            console.log(`[QR-DEBUG] ✅ QR Generated Successfully (${qrData.length} bytes)`);
           }
           value = qrData;
+          isImageValue = true; // Update so image logic allows injection
         }
 
         // For select fields, use the label/displayText if targeting a text element,
@@ -316,8 +354,11 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
           const hrefNS = "http://www.w3.org/1999/xlink";
           
           if (finalValue && finalValue.trim() !== "") {
+            console.log(`[QR-DEBUG] 📝 Applying href to <${tagName}> element ${el.getAttribute('id')}`);
+            console.log(`[QR-DEBUG] Data URL prefix: ${finalValue.slice(0, 50)}...`);
             el.setAttribute("href", finalValue);
             el.setAttributeNS(hrefNS, "href", finalValue);
+            console.log(`[QR-DEBUG] ✨ Successfully set href on element ${el.getAttribute('id')} (${finalValue.length} bytes)`);
             el.setAttribute("preserveAspectRatio", "none");
 
             (el as SVGElement).style.transformBox = "fill-box";
@@ -347,8 +388,10 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
         }
         // 3. TEXT-LIKE TAGS: <text>, <tspan>, etc.
         else {
-          // If the field is an image field but the tag is NOT an image, skip to avoid corruption
-          if (isImageField) return;
+          if (isImageField) {
+            console.warn(`[QR-DEBUG] ⚠️ Element ${el.getAttribute('id')} is type <${tagName}>, which doesn't support image injection. Expected <image> or <use>.`);
+            return;
+          }
 
           const stringValue = value === null || value === undefined ? "" : String(value);
           const shouldSkipUpdate = !field.touched && stringValue === "";
@@ -362,13 +405,17 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
             let finalLines: string[] = [];
 
             const getWidth = (str: string) => {
-              if (typeof document !== 'undefined') {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                  ctx.font = `${fontSize}px ${fontFamily}`;
-                  return ctx.measureText(str).width;
+              try {
+                if (typeof document !== 'undefined') {
+                  const canvas = document.createElement('canvas');
+                  const ctx = canvas.getContext('2d');
+                  if (ctx) {
+                    ctx.font = `${fontSize}px ${fontFamily}`;
+                    return ctx.measureText(str).width;
+                  }
                 }
+              } catch (err) {
+                console.error("Error calculating text width", err);
               }
               return str.length * fontSize * 0.6;
             };
@@ -415,7 +462,9 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
             el.setAttribute("data-base-transform", el.getAttribute("transform") || "");
           }
           const baseTransform = el.getAttribute("data-base-transform") || "";
-          const { cx, cy } = getElementCenter(el);
+          const center = getElementCenter(el);
+          if (!center) return;
+          const { cx, cy } = center;
           const baseWithoutRotation = baseTransform.replace(/rotate\s*\([^)]*\)/g, '').trim();
           const newRotation = `rotate(${rotation}, ${cx}, ${cy})`;
           const updatedTransform = baseWithoutRotation ? `${baseWithoutRotation} ${newRotation}` : newRotation;

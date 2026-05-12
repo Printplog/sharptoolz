@@ -8,8 +8,8 @@ import qrcode from 'qrcode-generator';
 export function generateQrDataUrlSync(data: string): string {
   if (!data) return '';
   try {
-    const typeNumber: TypeNumber = 0; // Auto-detect
-    const errorCorrectionLevel: ErrorCorrectionLevel = 'L';
+    const typeNumber = 0; // Auto-detect
+    const errorCorrectionLevel = 'L';
     const qr = qrcode(typeNumber, errorCorrectionLevel);
     qr.addData(data);
     qr.make();
