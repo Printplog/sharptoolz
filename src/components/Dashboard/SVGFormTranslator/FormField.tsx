@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Calendar } from "lucide-react";
+import { RotateCcw, Calendar, Plus } from "lucide-react";
 import useToolStore from "@/store/formStore";
 import type { FormField, Tutorial } from "@/types";
 import FieldHelper from "./FieldHelper";
@@ -27,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import ImageCropUpload from "@/components/ui/ImageCropUpload.tsx";
 import SignatureField from "@/components/ui/SignatureField";
 import CustomDateTimePicker from "@/components/ui/CustomDateTimePicker";
-import QRCodeInputField from "@/components/ui/QRCodeInputField";
+import QRCodeInputField, { type QRCodeInputFieldRef } from "@/components/ui/QRCodeInputField";
 import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
 import { extractFromDependency } from "@/lib/utils/fieldExtractor";
 
@@ -50,6 +50,7 @@ const FormFieldComponent: React.FC<{
     // Use storeFields if available, otherwise fall back to allFields prop
     const fieldsForDependencies = storeFields.length > 0 ? storeFields : allFields;
     const dateInputRef = useRef<HTMLInputElement>(null);
+    const qrRef = useRef<QRCodeInputFieldRef>(null);
 
     // Track raw date value for date inputs (YYYY-MM-DD format)
     const [rawDateValue, setRawDateValue] = useState<string>(() => {
@@ -743,21 +744,35 @@ const FormFieldComponent: React.FC<{
                   />
                 )}
               </label>
-              {hasGenerationRule && (
+              <div className="flex gap-2">
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => handleChange(generateFieldValue())}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full h-8 px-3"
-                  disabled={isFieldDisabled}
-                  title="Regenerate QR content"
+                  onClick={() => qrRef.current?.addRow()}
+                  className="bg-white/5 border border-dashed border-white/20 text-white/60 hover:bg-white/10 hover:text-white rounded-full h-8 px-3"
+                  disabled={isFieldDisabled || hasGenerationRule}
+                  title="Add new field to QR code"
                 >
-                  <RotateCcw className="w-3 h-3 mr-2" />
-                  Regenerate
+                  <Plus className="w-3 h-3 mr-2" />
+                  Add Field
                 </Button>
-              )}
+                {hasGenerationRule && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => handleChange(generateFieldValue())}
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full h-8 px-3"
+                    disabled={isFieldDisabled}
+                    title="Regenerate QR content"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-2" />
+                    Regenerate
+                  </Button>
+                )}
+              </div>
             </div>
             <QRCodeInputField
+              ref={qrRef}
               value={value as string}
               onChange={handleChange}
               disabled={isFieldDisabled}

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Input } from './input';
 import { Button } from './button';
-import { Plus, Trash2, QrCode } from 'lucide-react';
+import { Trash2, QrCode } from 'lucide-react';
 
 interface QRCodeRow {
   id: string;
@@ -16,12 +16,21 @@ interface QRCodeInputFieldProps {
   disabled?: boolean;
 }
 
-const QRCodeInputField: React.FC<QRCodeInputFieldProps> = ({
+export interface QRCodeInputFieldRef {
+  addRow: () => void;
+}
+
+const QRCodeInputField = forwardRef<QRCodeInputFieldRef, QRCodeInputFieldProps>(({
   value,
   onChange,
   disabled = false,
-}) => {
+}, ref) => {
   const [rows, setRows] = useState<QRCodeRow[]>([]);
+
+  // Expose addRow to parent
+  useImperativeHandle(ref, () => ({
+    addRow: handleAddRow
+  }));
 
   // Parse initial value
   useEffect(() => {
@@ -139,18 +148,6 @@ const QRCodeInputField: React.FC<QRCodeInputFieldProps> = ({
               </Button>
             </div>
           ))}
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddRow}
-            disabled={disabled}
-            className="w-full mt-2 bg-white/5 border-dashed border-white/20 text-white/60 hover:bg-white/10 hover:text-white"
-          >
-            <Plus className="w-3 h-3 mr-2" />
-            Add Field
-          </Button>
         </div>
       </div>
       
@@ -164,6 +161,8 @@ const QRCodeInputField: React.FC<QRCodeInputFieldProps> = ({
       )}
     </div>
   );
-};
+});
+
+QRCodeInputField.displayName = "QRCodeInputField";
 
 export default QRCodeInputField;
