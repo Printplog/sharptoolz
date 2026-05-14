@@ -286,7 +286,8 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const currentId = localElement.id || "";
     const baseId = currentId.split(".")[0]?.replace(/_/g, " ") || `${localElement.tag} ${index + 1}`;
-    const isGenField = currentId.includes(".gen") || currentId.includes(".qrcode");
+    const isQrField = currentId.includes(".qrcode");
+    const isGenField = currentId.includes(".gen") || isQrField;
     
     // Match the generation rule. It starts with gen_ or qrcode_ and goes until a late modifier or the end of the string.
     const genRuleMatch = currentId.match(/(?:gen_|qrcode_)(.*?)(?=\.track_|\.tracking_id|\.link_|\.grayscale|\.hide_|\.mode|$)/);
@@ -598,7 +599,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           </div>
         )}
 
-        {!isGenField && (
+        {(!isGenField || isQrField) && (
           <CollapsiblePanel id={`transform-${index}`} title="Transformations" defaultOpen={false}>
             <div className="space-y-6 bg-white/3 p-4 rounded-xl border border-white/5">
               {[

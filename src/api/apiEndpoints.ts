@@ -276,13 +276,15 @@ export const deleteCampaign = async (id: number): Promise<unknown> => {
   return res.data;
 };
 
-export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string; role?: string; source?: string }) => {
+export const adminUsers = async (params?: { page?: number; page_size?: number; search?: string; role?: string; source?: string; days?: number; date?: string }) => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
   if (params?.search) searchParams.append('search', params.search);
   if (params?.role && params.role !== 'all') searchParams.append('role', params.role);
   if (params?.source) searchParams.append('source', params.source);
+  if (params?.days) searchParams.append('days', params.days.toString());
+  if (params?.date) searchParams.append('date', params.date);
 
   const res = await apiClient.get(`/admin/users/?${searchParams.toString()}`);
   return res.data;
@@ -298,12 +300,14 @@ export const updateAdminUser = async (userId: string, data: { role?: string; is_
   return res.data;
 };
 
-export const adminDocuments = async (params?: { page?: number; page_size?: number; search?: string; type?: string }) => {
+export const adminDocuments = async (params?: { page?: number; page_size?: number; search?: string; type?: string; days?: number; date?: string }) => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
   if (params?.search) searchParams.append('search', params.search);
   if (params?.type && params.type !== 'all') searchParams.append('type', params.type);
+  if (params?.days) searchParams.append('days', params.days.toString());
+  if (params?.date) searchParams.append('date', params.date);
   const res = await apiClient.get(`/admin/documents/?${searchParams.toString()}`);
   return res.data;
 };

@@ -1,6 +1,8 @@
 import { ArrowLeftRight, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { StatsCards, type StatData } from '@/components/Admin/Shared/StatsCards';
 
+import type { LucideIcon } from 'lucide-react';
+
 interface WalletStatsProps {
   totalBalance: number;
   totalInflow: number;
@@ -15,7 +17,7 @@ interface Stat {
   title: string;
   value: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   bgColor: string;
   gradient: string;
@@ -51,7 +53,7 @@ export default function WalletStats({
       iconColor: 'text-blue-400',
     },
     {
-      title: 'Money In',
+      title: 'Total Deposits',
       value: formatCurrency(totalInflow),
       label: `${rangeLabel} • ${fundedWallets} wallets funded`,
       icon: TrendingUp,
@@ -62,7 +64,7 @@ export default function WalletStats({
       iconColor: 'text-green-400',
     },
     {
-      title: 'Money Out',
+      title: 'User Spending',
       value: formatCurrency(totalOutflow),
       label: `${rangeLabel} • ${transactionCount} completed transactions`,
       icon: TrendingDown,
@@ -73,9 +75,9 @@ export default function WalletStats({
       iconColor: 'text-red-400',
     },
     {
-      title: 'Net Flow',
+      title: 'Net Inflow',
       value: `${netPositive ? '+' : '-'}${formatCurrency(netFlow)}`,
-      label: `${rangeLabel} cash movement`,
+      label: `${rangeLabel} recognized platform revenue`,
       icon: ArrowLeftRight,
       color: netPositive ? 'text-emerald-400' : 'text-amber-300',
       bgColor: netPositive ? 'bg-emerald-500/10' : 'bg-amber-500/10',

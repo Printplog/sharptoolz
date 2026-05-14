@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Download, ArrowUpRight, ArrowDownRight, Activity, Calendar, Clock, DollarSign } from 'lucide-react';
+import { Download, ArrowUpRight, ArrowDownRight, Activity, Calendar as CalendarIcon, Clock, DollarSign } from 'lucide-react';
+import { format } from "date-fns";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -12,6 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { getApi } from '@/api/walletApi';
 import { StatsCards, type StatData } from '@/components/Admin/Shared/StatsCards';
@@ -59,12 +66,22 @@ export default function TransactionsPage() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'credit' | 'debit'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending' | 'failed'>('all');
   const [page, setPage] = useState(1);
+  const [days, setDays] = useState<number | null>(null);
+  const [date, setDate] = useState<string>("");
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const PAGE_SIZE = 20;
 
+  const RANGES = [
+    { label: "1D", days: 1 },
+    { label: "7D", days: 7 },
+    { label: "30D", days: 30 },
+    { label: "6M", days: 180 },
+    { label: "1Y", days: 365 },
+  ] as const;
+
   const { data, isLoading } = useQuery<TransactionsResponse>({
-    queryKey: ['admin-wallet-transactions', { page, search, typeFilter, statusFilter }],
+    queryKey: ['admin-wallet-transactions', { page, search, typeFilter, statusFilter, days, date }],
     queryFn: () => {
       const params = new URLSearchParams();
       params.set('page', String(page));
@@ -72,6 +89,8 @@ export default function TransactionsPage() {
       if (search) params.set('search', search);
       if (typeFilter !== 'all') params.set('type', typeFilter);
       if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (days) params.set('days', String(days));
+      if (date) params.set('date', date);
       return getApi(`/admin/wallet/transactions/?${params.toString()}`);
     },
   });
@@ -103,10 +122,10 @@ export default function TransactionsPage() {
       iconColor: 'text-green-400',
     },
     {
-      title: 'This Month',
+      title: 'This Period',
       value: stats?.month_count.toLocaleString() ?? '0',
-      label: 'Recent activity',
-      icon: Calendar,
+      label: 'Activity in range',
+      icon: CalendarIcon,
       gradient: 'from-orange-500/20 to-orange-600/5',
       borderColor: 'border-orange-500/20',
       iconBg: 'bg-orange-500/10',
@@ -245,12 +264,54 @@ export default function TransactionsPage() {
           </h1>
           <p className="text-white/40 text-sm mt-1 font-medium italic">Manage all financial activity logs</p>
         </div>
-        <PremiumButton
-          onClick={handleExport}
-          text="EXPORT LEDGER"
-          icon={Download}
-          className="mt-4"
-        />
+        <div className="flex flex-wrap items-center justify-end gap-3 font-bold uppercase tracking-tight">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-zinc-500 uppercase tracking-widest hidden sm:inline">Select Day:</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"outline"} className="w-[200px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
+                  <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                  {date ? format(new Date(date), "PPP") : <span>Filter by Date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-zinc-950 border-white/10 z-[500]" align="end">
+                <Calendar 
+                  mode="single" 
+                  selected={date ? new Date(date) : undefined} 
+                  onSelect={(d) => {
+                    if (d) {
+                      setDate(format(d, "yyyy-MM-dd"));
+                    }
+                    setDays(null);
+                    setPage(1);
+                  }} 
+                  disabled={(date) => date > new Date()}
+                  initialFocus 
+                  className="bg-zinc-950 text-white" 
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 overflow-x-auto no-scrollbar">
+            {RANGES.map((r) => (
+              <button 
+                key={r.days} 
+                onClick={() => { setDays(r.days); setDate(""); setPage(1); }} 
+                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${days === r.days ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+          
+          <PremiumButton
+            onClick={handleExport}
+            text="EXPORT LEDGER"
+            icon={Download}
+            className="hidden md:flex"
+          />
+        </div>
       </div>
 
       {/* Stats Cards */}

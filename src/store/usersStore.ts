@@ -17,6 +17,8 @@ interface UsersState {
   searchInput: string;
   roleFilter: 'all' | 'admin' | 'staff' | 'user';
   sourceFilter: string;
+  days: number | null;
+  date: string;
   
   // Actions
   setCurrentPage: (page: number) => void;
@@ -25,6 +27,8 @@ interface UsersState {
   setSearchInput: (input: string) => void;
   setRoleFilter: (role: 'all' | 'admin' | 'staff' | 'user') => void;
   setSourceFilter: (source: string) => void;
+  setDays: (days: number | null) => void;
+  setDate: (date: string) => void;
   fetchUsers: () => Promise<void>;
   handleSearch: () => void;
   resetSearch: () => void;
@@ -42,6 +46,8 @@ export const useUsersStore = create<UsersState>((set, get) => ({
   searchInput: '',
   roleFilter: 'all',
   sourceFilter: '',
+  days: null,
+  date: '',
 
   // Actions
   setCurrentPage: (page: number) => {
@@ -73,8 +79,18 @@ export const useUsersStore = create<UsersState>((set, get) => ({
     get().fetchUsers();
   },
 
+  setDays: (days: number | null) => {
+    set({ days, date: '', currentPage: 1 });
+    get().fetchUsers();
+  },
+
+  setDate: (date: string) => {
+    set({ date, days: null, currentPage: 1 });
+    get().fetchUsers();
+  },
+
   fetchUsers: async () => {
-    const { currentPage, pageSize, searchQuery, roleFilter, sourceFilter } = get();
+    const { currentPage, pageSize, searchQuery, roleFilter, sourceFilter, days, date } = get();
     
     set({ isLoading: true, error: null });
     
@@ -85,6 +101,8 @@ export const useUsersStore = create<UsersState>((set, get) => ({
         search: searchQuery,
         role: roleFilter,
         source: sourceFilter,
+        days: days || undefined,
+        date: date || undefined,
       });
       set({ data, isLoading: false });
     } catch (error) {
