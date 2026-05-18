@@ -14,6 +14,7 @@ import {
   FileText,
   Wallet,
   ArrowLeftRight,
+  HandCoins,
   ChevronDown,
   BookOpen,
   ChevronLeft,
@@ -139,6 +140,11 @@ export default function Sidebar() {
       to: "/admin/transactions",
     },
     {
+      icon: <HandCoins className="h-4 w-4" />,
+      label: "Payout Requests",
+      to: "/admin/payouts",
+    },
+    {
       icon: <Settings className="h-4 w-4" />,
       label: "Settings",
       to: "/admin/settings",
@@ -195,7 +201,7 @@ export default function Sidebar() {
           }
           if (isAdmin) return true;
 
-          const restrictedForUser = ["Users", "Analytics", "Traffic Sources", "Settings", "Tools", "Templates", "Fonts", "Logs"];
+          const restrictedForUser = ["Users", "Analytics", "Traffic Sources", "Settings", "Tools", "Templates", "Fonts", "Logs", "Payout Requests"];
 
 
           return !restrictedForUser.includes(item.label);
