@@ -339,16 +339,14 @@ export type AdminUsers = {
   staff_users: number;
   new_users: {
     today: number;
-    past_7_days: number;
-    past_14_days: number;
-    past_30_days: number;
+    period: number;
   };
   total_purchases_users: {
     today: number;
-    past_7_days: number;
-    past_14_days: number;
-    past_30_days: number;
+    period: number;
   };
+  range_label: string;
+  range_days: number;
   users: {
     results: User[]; // Replace 'any' with a User type/interface if available
     count: number;

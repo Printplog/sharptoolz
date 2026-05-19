@@ -14,9 +14,10 @@ interface UsersOverviewProps {
 }
 
 export default function UsersOverview({ data, isLoading }: UsersOverviewProps) {
-  const [newUsersRange, setNewUsersRange] = useState("today");
-  const [purchasesRange, setPurchasesRange] = useState("today");
   const [accountType, setAccountType] = useState<AccountType>("real");
+
+  const rangeLabel = data?.range_label ?? "Selected period";
+  const isToday = (data?.range_days ?? 1) === 1;
 
   if (isLoading) {
     return (
@@ -35,27 +36,13 @@ export default function UsersOverview({ data, isLoading }: UsersOverviewProps) {
     );
   }
 
-  const getNewUsersCount = () => {
-    if (!data?.new_users) return 0;
-    switch (newUsersRange) {
-      case "today": return data.new_users.today;
-      case "7d": return data.new_users.past_7_days;
-      case "14d": return data.new_users.past_14_days;
-      case "30d": return data.new_users.past_30_days;
-      default: return data.new_users.today;
-    }
-  };
+  const newUsersCount = isToday
+    ? (data?.new_users?.today ?? 0)
+    : (data?.new_users?.period ?? 0);
 
-  const getPurchasesCount = () => {
-    if (!data?.total_purchases_users) return 0;
-    switch (purchasesRange) {
-      case "today": return data.total_purchases_users.today;
-      case "7d": return data.total_purchases_users.past_7_days;
-      case "14d": return data.total_purchases_users.past_14_days;
-      case "30d": return data.total_purchases_users.past_30_days;
-      default: return data.total_purchases_users.today;
-    }
-  };
+  const purchasesCount = isToday
+    ? (data?.total_purchases_users?.today ?? 0)
+    : (data?.total_purchases_users?.period ?? 0);
 
   const isReal = accountType === "real";
   const breakdownCount = isReal ? (data?.regular_users ?? 0) : (data?.staff_users ?? 0);
@@ -72,31 +59,24 @@ export default function UsersOverview({ data, isLoading }: UsersOverviewProps) {
       borderColor: "border-blue-500/20",
       iconColor: "text-blue-400",
       trend: "+5%",
-      showRange: false,
     },
     {
       title: "New Members",
-      value: `+${getNewUsersCount()}`,
-      label: newUsersRange === "today" ? "Today" : "Selected Period",
+      value: `+${newUsersCount}`,
+      label: rangeLabel,
       icon: UserPlus,
       gradient: "from-purple-500/20 to-purple-600/5",
       borderColor: "border-purple-500/20",
       iconColor: "text-purple-400",
-      range: newUsersRange,
-      setRange: setNewUsersRange,
-      showRange: true,
     },
     {
       title: "Active Buyers",
-      value: getPurchasesCount(),
-      label: "Completed orders",
+      value: purchasesCount,
+      label: `Completed orders · ${rangeLabel}`,
       icon: DollarSign,
       gradient: "from-emerald-500/20 to-emerald-600/5",
       borderColor: "border-emerald-500/20",
       iconColor: "text-emerald-400",
-      range: purchasesRange,
-      setRange: setPurchasesRange,
-      showRange: true,
     },
   ];
 
@@ -124,19 +104,6 @@ export default function UsersOverview({ data, isLoading }: UsersOverviewProps) {
                 <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">
                   {stat.title}
                 </p>
-                {stat.showRange && (
-                  <Select value={stat.range} onValueChange={stat.setRange}>
-                    <SelectTrigger className="h-7 w-fit bg-white/10 border-white/10 text-[10px] text-white/70 rounded-full px-3 py-0 focus:ring-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#0a0a0a] border-white/10 text-white min-w-[120px]">
-                      <SelectItem value="today" className="text-xs">Today</SelectItem>
-                      <SelectItem value="7d" className="text-xs">Past 7 days</SelectItem>
-                      <SelectItem value="14d" className="text-xs">Past 14 days</SelectItem>
-                      <SelectItem value="30d" className="text-xs">Past 30 days</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
               </div>
               <div className={cn("p-2.5 rounded-xl bg-white/10 border border-white/10 shadow-inner", stat.iconColor)}>
                 <stat.icon className="h-5 w-5" />

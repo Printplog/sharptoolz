@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -208,49 +208,64 @@ export default function WalletManagementPage() {
           <p className="text-white/40 text-sm mt-1 font-medium italic">Manage user wallets, balances, and funding requests</p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3 font-bold uppercase tracking-tight">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-widest hidden sm:inline">Select Day:</span>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"outline"} className="w-[180px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
-                  <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
-                  {date ? format(new Date(date), "PPP") : <span>Filter by Date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-zinc-950 border-white/10 z-[500]" align="end">
-                <Calendar 
-                  mode="single" 
-                  selected={date ? new Date(date) : undefined} 
-                  onSelect={(d) => {
-                    if (d) {
+        <div className="flex flex-col items-end gap-2 font-bold uppercase tracking-tight">
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-zinc-500 uppercase tracking-widest hidden sm:inline">Select Day:</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className="w-[180px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
+                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                    {date ? format(new Date(date), "PPP") : <span>Filter by Date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-zinc-950 border-white/10 z-[500]" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={date ? new Date(date) : undefined}
+                    onSelect={(d) => {
+                      if (!d) return;
                       setDate(format(d, "yyyy-MM-dd"));
-                    }
-                    setDays(null);
-                  }} 
-                  disabled={(date) => date > new Date()}
-                  initialFocus 
-                  className="bg-zinc-950 text-white" 
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+                      setDays(null);
+                    }}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                    className="bg-zinc-950 text-white"
+                  />
+                </PopoverContent>
+              </Popover>
+              {date && (
+                <button
+                  type="button"
+                  onClick={() => { setDate(""); setDays(1); }}
+                  aria-label="Clear date filter"
+                  title="Clear date filter"
+                  className="h-8 w-8 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
 
-          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
-            {RANGE_OPTIONS.map((option) => (
-              <button
-                key={option.days}
-                onClick={() => { setDays(option.days); setDate(""); }}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
-                  days === option.days
-                    ? 'bg-primary text-black shadow'
-                    : 'text-white/50 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
+              {RANGE_OPTIONS.map((option) => (
+                <button
+                  key={option.days}
+                  onClick={() => { setDays(option.days); setDate(""); }}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                    days === option.days
+                      ? 'bg-primary text-black shadow'
+                      : 'text-white/50 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
+          <p className="text-[10px] text-white/30 italic normal-case tracking-normal font-medium">
+            Date range affects stats only · use the filters in the table below to narrow wallets.
+          </p>
         </div>
       </div>
 
