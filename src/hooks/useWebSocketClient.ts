@@ -98,12 +98,24 @@ export function useWebSocketClient<T = unknown>({
 
       // Only attempt reconnection if it wasn't a manual close (code 1000)
       if (event.code !== 1000 && reconnectCountRef.current < reconnectAttempts) {
+        // Don't reconnect while the tab is hidden — the browser may freeze
+        // the timer anyway, and reconnect storms from background tabs are a
+        // primary source of server-side DB connection pressure.
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+          return;
+        }
+
         reconnectCountRef.current++;
-        console.log(`[WS] Attempting reconnection ${reconnectCountRef.current}/${reconnectAttempts} in ${reconnectInterval}ms`);
-        
+        // True exponential backoff capped at 60s, with ½–1× jitter so a
+        // server hiccup doesn't synchronize every client into a thundering herd.
+        const MAX = 60_000;
+        const base = Math.min(MAX, reconnectInterval * Math.pow(2, reconnectCountRef.current - 1));
+        const delay = Math.floor(base * (0.5 + Math.random() * 0.5));
+        console.log(`[WS] Attempting reconnection ${reconnectCountRef.current}/${reconnectAttempts} in ${delay}ms`);
+
         reconnectTimeoutRef.current = setTimeout(() => {
           connect();
-        }, reconnectInterval * reconnectCountRef.current); // Exponential backoff
+        }, delay);
       }
     });
 

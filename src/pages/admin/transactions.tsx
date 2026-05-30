@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Download, ArrowUpRight, ArrowDownRight, Activity, Calendar as CalendarIcon, Clock, DollarSign } from 'lucide-react';
+import { Download, ArrowUpRight, ArrowDownRight, Activity, Calendar as CalendarIcon, Clock, DollarSign, X } from 'lucide-react';
 import { format } from "date-fns";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +68,7 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(1);
   const [days, setDays] = useState<number | null>(null);
   const [date, setDate] = useState<string>("");
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const PAGE_SIZE = 20;
@@ -267,37 +268,58 @@ export default function TransactionsPage() {
         <div className="flex flex-wrap items-center justify-end gap-3 font-bold uppercase tracking-tight">
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-zinc-500 uppercase tracking-widest hidden sm:inline">Select Day:</span>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"outline"} className="w-[200px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
-                  <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
-                  {date ? format(new Date(date), "PPP") : <span>Filter by Date</span>}
+            <div className="flex items-center gap-1">
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className={cn("w-[200px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all", date && "border-primary/40 bg-primary/5 text-primary")}>
+                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                    {date ? format(new Date(date + 'T00:00:00'), "PPP") : <span>Filter by Date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-zinc-950 border-white/10 z-[500]" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={date ? new Date(date + 'T00:00:00') : undefined}
+                    onSelect={(d) => {
+                      if (d) {
+                        const formatted = format(d, "yyyy-MM-dd");
+                        setDate(prev => prev === formatted ? "" : formatted);
+                      } else {
+                        setDate("");
+                      }
+                      setDays(null);
+                      setPage(1);
+                      setCalendarOpen(false);
+                    }}
+                    disabled={(d) => d > new Date()}
+                    className="bg-zinc-950 text-white"
+                  />
+                </PopoverContent>
+              </Popover>
+              {date && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-white/40 hover:text-white hover:bg-white/10"
+                  onClick={() => { setDate(""); setPage(1); }}
+                >
+                  <X className="h-3.5 w-3.5" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-zinc-950 border-white/10 z-[500]" align="end">
-                <Calendar 
-                  mode="single" 
-                  selected={date ? new Date(date) : undefined} 
-                  onSelect={(d) => {
-                    if (d) {
-                      setDate(format(d, "yyyy-MM-dd"));
-                    }
-                    setDays(null);
-                    setPage(1);
-                  }} 
-                  disabled={(date) => date > new Date()}
-                  initialFocus 
-                  className="bg-zinc-950 text-white" 
-                />
-              </PopoverContent>
-            </Popover>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => { setDays(null); setDate(""); setPage(1); }}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${!days && !date ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}
+            >
+              All
+            </button>
             {RANGES.map((r) => (
-              <button 
-                key={r.days} 
-                onClick={() => { setDays(r.days); setDate(""); setPage(1); }} 
+              <button
+                key={r.days}
+                onClick={() => { setDays(r.days); setDate(""); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${days === r.days ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}
               >
                 {r.label}
