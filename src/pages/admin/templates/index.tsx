@@ -3,7 +3,7 @@ import ToolCard from "@/components/Admin/Tools/ToolCard";
 import ToolGridSkeleton from "@/components/ToolGridSkeleton";
 
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Layout, CheckCircle, XCircle, Flame, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Layout, CheckCircle, XCircle, Flame, Search } from "lucide-react";
 
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -14,23 +14,28 @@ import { cn } from "@/lib/utils";
 
 export default function Templates() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
 
   const { data: templatesData, isLoading } = useQuery({
-    queryFn: () => getTemplatesForAdmin({ page_size: 100 }),
-    queryKey: ["templates"]
+    queryFn: () => getTemplatesForAdmin({
+      page,
+      page_size: PAGE_SIZE,
+      search: searchQuery.trim() || undefined,
+    }),
+    queryKey: ["templates", { page, search: searchQuery }],
+    placeholderData: (previousData) => previousData,
   })
 
   const data = templatesData?.results || [];
-
-  const filteredData = data.filter(t =>
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const total = data.length;
-  const active = data.filter(t => t.is_active).length;
-  const inactive = data.filter(t => !t.is_active).length;
-  const hotCount = data.filter(t => t.hot).length;
+  const total = templatesData?.stats?.total ?? templatesData?.count ?? data.length;
+  const active = templatesData?.stats?.active ?? data.filter(t => t.is_active).length;
+  const inactive = templatesData?.stats?.inactive ?? data.filter(t => !t.is_active).length;
+  const hotCount = templatesData?.stats?.hot ?? data.filter(t => t.hot).length;
+  const totalPages = templatesData?.total_pages ?? Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentPage = templatesData?.current_page ?? page;
+  const showingFrom = total === 0 ? 0 : ((currentPage - 1) * PAGE_SIZE) + 1;
+  const showingTo = total === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, total);
 
   const stats = [
     {
@@ -92,7 +97,10 @@ export default function Templates() {
               placeholder="Search templates..."
               className="pl-10 h-12 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-primary/20"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
           <PremiumButton
@@ -155,7 +163,7 @@ export default function Templates() {
         <div className="flex items-center gap-4">
           <div className="h-8 w-1 bg-primary rounded-full" />
           <h2 className="text-xl font-bold text-white">
-            {searchQuery ? `Search Results (${filteredData?.length || 0})` : 'All Templates'}
+            {searchQuery ? `Search Results (${total})` : `All Templates (${total})`}
           </h2>
         </div>
 
@@ -163,7 +171,7 @@ export default function Templates() {
           <ToolGridSkeleton />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredData?.map((template, index) => (
+            {data.map((template, index) => (
               <motion.div
                 key={template.id}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -176,11 +184,45 @@ export default function Templates() {
           </div>
         )}
 
-        {!isLoading && filteredData?.length === 0 && (
+        {!isLoading && data.length === 0 && (
           <div className="text-center py-20 border border-dashed border-white/10 rounded-2xl bg-white/2 backdrop-blur-sm">
             <p className="text-white/40 italic text-lg font-medium">
               {searchQuery ? `No templates match "${searchQuery}"` : "No templates found. Start by creating your first one!"}
             </p>
+          </div>
+        )}
+
+        {!isLoading && total > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
+            <p className="text-sm text-white/50">
+              Showing <span className="font-semibold text-white">{showingFrom}</span>-
+              <span className="font-semibold text-white">{showingTo}</span> of{" "}
+              <span className="font-semibold text-white">{total}</span>
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((value) => Math.max(value - 1, 1))}
+                disabled={currentPage <= 1}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-white/10 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </button>
+              <span className="px-3 text-sm font-semibold text-white/70">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((value) => Math.min(value + 1, totalPages))}
+                disabled={currentPage >= totalPages}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-white/10 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

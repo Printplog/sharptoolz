@@ -111,6 +111,14 @@ export const getTemplatesForAdmin = async (params?: { page?: number; search?: st
   count: number;
   next: string | null;
   previous: string | null;
+  current_page?: number;
+  total_pages?: number;
+  stats?: {
+    total: number;
+    active: number;
+    inactive: number;
+    hot: number;
+  };
 }> => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());
