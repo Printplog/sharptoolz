@@ -11,6 +11,15 @@ import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 import QRCodeBuilder from "./IdEditor/QRCodeBuilder";
 import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
 import { validateSvgId } from "@/lib/utils/svgIdValidator";
+import { SYMBOLOGIES, SYMBOLOGY_CATEGORIES, DEFAULT_SYMBOLOGY, getSymbology } from "@/lib/utils/barcodeSymbologies";
+import { readBarcodeFromId, writeBarcodeToId } from "@/lib/utils/barcodeId";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -287,7 +296,14 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     const currentId = localElement.id || "";
     const baseId = currentId.split(".")[0]?.replace(/_/g, " ") || `${localElement.tag} ${index + 1}`;
     const isQrField = currentId.includes(".qrcode");
-    const isGenField = currentId.includes(".gen") || isQrField;
+    const isBarcodeField = currentId.includes(".barcode");
+    const isGenField = (currentId.includes(".gen") || isQrField) && !isBarcodeField;
+    // Single-carrier barcode: barcode_(symbology)(content rule). The ID is the source of truth.
+    const barcodeCarrier = isBarcodeField ? readBarcodeFromId(currentId) : null;
+    const currentSymbology = barcodeCarrier?.symbology || DEFAULT_SYMBOLOGY;
+    const currentBarcodeRule = barcodeCarrier ? (barcodeCarrier.isAuto ? "AUTO:" : "") + barcodeCarrier.rule : "";
+    const previewBarcodeRule = currentBarcodeRule.length > 40 ? `${currentBarcodeRule.slice(0, 40)}...` : currentBarcodeRule;
+    const currentSymbologyCategory = getSymbology(currentSymbology)?.category ?? "Linear";
     
     // Match the generation rule. It starts with gen_ or qrcode_ and goes until a late modifier or the end of the string.
     const genRuleMatch = currentId.match(/(?:gen_|qrcode_)(.*?)(?=\.track_|\.tracking_id|\.link_|\.grayscale|\.hide_|\.mode|$)/);
@@ -300,7 +316,10 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const handleGenRuleChange = (newRule: string) => {
       const currentId = localElement.id || "";
-      const isQr = currentId.includes(".qrcode") || localElement.tag === "image";
+      // Barcode content uses a .gen_ rule. Barcode targets <image>, so the
+      // "image ⇒ qrcode" shortcut must NOT apply to barcode fields.
+      const isBarcode = currentId.includes(".barcode");
+      const isQr = !isBarcode && (currentId.includes(".qrcode") || localElement.tag === "image");
       const rulePrefix = isQr ? "qrcode_" : "gen_";
       const basePrefix = isQr ? "qrcode" : "gen";
 
@@ -333,8 +352,32 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
       // Reassemble: base parts + .qrcode_NewRule + .late_modifiers
       const newId = `${prefixPart}.${rulePrefix}${newRule}${suffixPart}`;
-      
+
       handleLocalUpdate({ id: newId });
+    };
+
+    // Pick a category (main type) → jump to the first symbology in it. The
+    // symbology dropdown then lets you refine to the exact sub-type.
+    const handleBarcodeCategoryChange = (cat: string) => {
+      const first = SYMBOLOGIES.find((s) => s.category === cat);
+      if (first && first.bcid !== currentSymbology) handleSymbologyChange(first.bcid);
+    };
+
+    // Rewrite just the symbology inside the barcode carrier, keeping the content rule.
+    const handleSymbologyChange = (newSym: string) => {
+      handleLocalUpdate({ id: writeBarcodeToId(localElement.id || "", { symbology: newSym }) });
+    };
+
+    // Rewrite just the content rule inside the barcode carrier, keeping the symbology.
+    // The builder hands us the rule (optionally AUTO:-prefixed for auto-generate).
+    const handleBarcodeContentRuleChange = (newRule: string) => {
+      let isAuto = false;
+      let rule = newRule;
+      if (rule.startsWith("AUTO:")) {
+        isAuto = true;
+        rule = rule.slice(5);
+      }
+      handleLocalUpdate({ id: writeBarcodeToId(localElement.id || "", { rule, isAuto }) });
     };
 
     const currentFieldValues = useMemo(() => {
@@ -501,6 +544,68 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                 />
               )}
             </div>
+          </div>
+        )}
+
+        {isBarcodeField && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Barcode Symbology</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {/* Main type (category) — choose this first */}
+              <Select value={currentSymbologyCategory} onValueChange={handleBarcodeCategoryChange}>
+                <SelectTrigger className="w-full bg-white/10 border-white/20 text-white text-sm h-9">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/95 border-white/20 text-white z-[120]">
+                  {SYMBOLOGY_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat} className="text-sm">{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Sub-type (specific symbology) within the chosen category */}
+              <Select value={currentSymbology} onValueChange={handleSymbologyChange}>
+                <SelectTrigger className="w-full bg-white/10 border-white/20 text-white text-sm h-9">
+                  <SelectValue placeholder="Symbology" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/95 border-white/20 text-white z-[120] max-h-64">
+                  {SYMBOLOGIES.filter((s) => s.category === currentSymbologyCategory).map((s) => (
+                    <SelectItem key={s.bcid} value={s.bcid} className="text-sm">{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-[11px] text-white/40">
+              Stored as <span className="font-mono text-white/60">.barcode_({currentSymbology})</span>. Content comes from the element text, the user, or the rule below.
+            </p>
+          </div>
+        )}
+
+        {isBarcodeField && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Barcode Content (optional)</Label>
+            <div className="flex gap-2">
+              <Input value={previewBarcodeRule} readOnly placeholder="Static text, or build rows…" className="bg-white/5 text-white/60 font-mono text-xs border-white/20 focus-visible:ring-0" />
+              <QRCodeBuilder
+                value={currentBarcodeRule}
+                onChange={handleBarcodeContentRuleChange}
+                allElements={allElements}
+                maxLength={maxLength}
+                open={showGenBuilder}
+                onOpenChange={setShowGenBuilder}
+                currentFieldValues={currentFieldValues}
+                defaultTextContent={localElement.innerText || ""}
+                barcodeSymbology={currentSymbology}
+                trigger={
+                  <Button variant="outline" className="shrink-0 bg-white/5 border-white/20 hover:bg-white/10 gap-2 rounded-full">
+                    <Wand2 className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="text-xs">Builder</span>
+                  </Button>
+                }
+              />
+            </div>
+            <p className="text-[11px] text-white/40">
+              Add rows — each becomes a new line in the barcode (great for 2D codes like PDF417 / Data Matrix). Leave empty to use the element's text or let the user type it.
+            </p>
           </div>
         )}
 

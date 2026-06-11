@@ -26,6 +26,7 @@ interface GenRuleBuilderProps {
   currentFieldValues?: Record<string, string>; // Current field values from the page
   defaultTextContent?: string; // Default text content of the element
   isQr?: boolean; // If true, shows a QR code preview
+  barcodeSymbology?: string; // If set, shows a live barcode preview for this bwip-js bcid
 }
 
 type RandomType = 'number' | 'letter' | 'both';
@@ -41,6 +42,7 @@ type PatternPart =
   | { type: 'env'; varName: string };
 
 import { QRCodeSVG } from 'qrcode.react';
+import BarcodePreview from '@/components/ui/BarcodePreview';
 
 export default function GenRuleBuilder({
   value,
@@ -53,6 +55,7 @@ export default function GenRuleBuilder({
   currentFieldValues = {},
   defaultTextContent,
   isQr = false,
+  barcodeSymbology,
 }: GenRuleBuilderProps) {
   const [isAuto, setIsAuto] = useState<boolean>(() => value?.startsWith("AUTO:") || false);
   // Strip AUTO: prefix before parsing to avoid showing it as a rule
@@ -554,6 +557,11 @@ export default function GenRuleBuilder({
                     {isQr && preview && (
                       <div className="bg-white p-1 rounded-md mb-1 w-fit mx-auto border border-white/10 shadow-lg animate-in zoom-in-50 duration-300">
                         <QRCodeSVG value={preview} size={80} level="M" />
+                      </div>
+                    )}
+                    {barcodeSymbology && preview && (
+                      <div className="bg-white p-1.5 rounded-md mb-1 w-fit mx-auto border border-white/10 shadow-lg animate-in zoom-in-50 duration-300">
+                        <BarcodePreview value={preview} symbology={barcodeSymbology} maxHeight={70} maxWidth={150} />
                       </div>
                     )}
                     {maxLength !== undefined && (

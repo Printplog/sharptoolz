@@ -109,6 +109,8 @@ export interface FormField {
   trackingRole?: string; // Role in tracking display (e.g., "name", "email", "weight")
   dateFormat?: string; // Date format string (e.g., "MM/DD/YYYY", "MMM DD", "MMMM D, YYYY")
   generationRule?: string; // Generation rule (e.g., "(rn[12])", "FL(rn[6])(rc[6])")
+  symbology?: string; // Barcode symbology / bwip-js bcid (e.g., "code128", "ean13", "datamatrix")
+  barcodeImage?: string; // Baked barcode PNG data URL (derived from currentValue + symbology, single-source)
   maxGeneration?: string; // Max padding generation (e.g., "(A[10])")
   generationMode?: string; // Generation mode: "auto" for auto-generation, undefined for manual
   helperText?: string; // Contextual help text for the field (from data-helper attribute)
@@ -132,6 +134,7 @@ export interface FormField {
 export type FieldUpdate = {
   id: string;
   value?: string | number | boolean | null | Record<string, unknown>;
+  barcodeImage?: string; // baked barcode PNG (single-source) — persisted for server-side render
 };
 
 export type Tool = {

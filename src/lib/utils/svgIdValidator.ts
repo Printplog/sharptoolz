@@ -60,7 +60,9 @@ export function validateSvgId(id: string): ValidationResult {
     };
   }
 
-  const parts = cleanId.split(".");
+  // Split on dots that are NOT inside parentheses — generator-rule tokens
+  // (e.g. (dep_Order.Subtotal)) may contain dots and must stay one part.
+  const parts = cleanId.split(/\.(?![^(]*\))/g);
   const baseId = parts[0];
 
   // 2. Validate Base ID
@@ -106,6 +108,20 @@ export function validateSvgId(id: string): ValidationResult {
         }
       }
       lastPartBase = "showIf";
+      continue;
+    }
+
+    // ── PRIMARY CARRIERS (gen_, qrcode_, barcode_) ─────────────────────
+    // These prefixes are the field-type carrier ONLY at position 1. When they
+    // follow an existing field type (e.g. .barcode_ean13.gen_(rn[8])) they are a
+    // generation/content rule, not a second field type. Mirrors the backend,
+    // where gen_/qrcode_/barcode_ are modifier prefixes rather than VALID_TYPES.
+    const carrierBase = part.includes("_") ? part.split("_")[0] : "";
+    if (i > 1 && (carrierBase === "gen" || carrierBase === "qrcode" || carrierBase === "barcode")) {
+      if (part.endsWith("_")) {
+        return { valid: false, error: `✍️ Add a value after '${part.slice(0, -1)}' (e.g., .${part}rule).`, parts, baseId };
+      }
+      lastPartBase = carrierBase;
       continue;
     }
 
