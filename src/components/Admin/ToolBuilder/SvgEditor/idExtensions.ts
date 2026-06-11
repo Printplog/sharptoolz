@@ -119,6 +119,13 @@ export const FIELD_TYPES: ExtensionDefinition[] = [
     requiresValue: true,
     valuePlaceholder: "Enter QR rule",
   },
+  {
+    key: "barcode",
+    label: "Barcode",
+    helper: "Creates a barcode field. Single carrier like QR: .barcode_(symbology)(content rule). Pick the symbology from the dropdown (defaults to Code 128), e.g. .barcode_(ean13) or .barcode_(code128)(dep_OrderId). Content can also come from the element text or the user.",
+    requiresValue: false, // symbology is optional in the ID — chosen via the dropdown, defaults to code128
+    valuePlaceholder: "(symbology), e.g. (code128), (ean13), (datamatrix)",
+  },
 ].map(ft => ({ ...ft, isFieldType: true }));
 
 // Extensions that can come after field types
@@ -169,6 +176,8 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "status",
       "sign",
       "select",
+      "qrcode",
+      "barcode",
       "hide",
       "hide_checked",
       "hide_unchecked",
@@ -242,7 +251,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "Custom generation rule with static text, dependencies (dep_FieldName), random parts (rn[12], rc[6]), repeats (<[5]), and fill (<[fill]). Use the interactive builder for best experience.",
     requiresValue: true,
     valuePlaceholder: "Click 'Build Rule' button to use interactive builder",
-    allowedAfter: ["gen", "qrcode"],
+    allowedAfter: ["gen", "qrcode", "barcode"],
   },
   {
     key: "mode",
@@ -250,7 +259,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     helper: "Set generation mode: mode[auto] for auto-generation on load and when dependencies change, or omit for manual generation only.",
     requiresValue: true,
     valuePlaceholder: "auto",
-    allowedAfter: ["gen", "qrcode"],
+    allowedAfter: ["gen", "qrcode", "barcode"],
   },
   {
     key: "grayscale",
@@ -268,7 +277,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     valuePlaceholder: "FieldId[Value] (e.g., Status[Error])",
     allowedAfter: [
       "text", "textarea", "gen", "email", "number", "date", "checkbox",
-      "upload", "tel", "password", "range", "color", "file", "status", "sign",
+      "upload", "tel", "password", "range", "color", "file", "status", "sign", "qrcode", "barcode",
       "hide", "hide_checked", "hide_unchecked",
       "editable", "max", "min", "tracking_id", "date_format", "gen_rule", "select",
     ],

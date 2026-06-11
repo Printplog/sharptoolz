@@ -28,6 +28,7 @@ import ImageCropUpload from "@/components/ui/ImageCropUpload.tsx";
 import SignatureField from "@/components/ui/SignatureField";
 import CustomDateTimePicker from "@/components/ui/CustomDateTimePicker";
 import QRCodeInputField, { type QRCodeInputFieldRef } from "@/components/ui/QRCodeInputField";
+import BarcodeInputField, { type BarcodeInputFieldRef } from "@/components/ui/BarcodeInputField";
 import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
 import { extractFromDependency } from "@/lib/utils/fieldExtractor";
 
@@ -51,6 +52,7 @@ const FormFieldComponent: React.FC<{
     const fieldsForDependencies = storeFields.length > 0 ? storeFields : allFields;
     const dateInputRef = useRef<HTMLInputElement>(null);
     const qrRef = useRef<QRCodeInputFieldRef>(null);
+    const barcodeRef = useRef<BarcodeInputFieldRef>(null);
 
     // Track raw date value for date inputs (YYYY-MM-DD format)
     const [rawDateValue, setRawDateValue] = useState<string>(() => {
@@ -308,7 +310,7 @@ const FormFieldComponent: React.FC<{
     // Render based on field type
     // If field has generationRule, treat it as gen field (even if type is "text")
     const hasGenerationRule = !!field.generationRule;
-    const effectiveType = (hasGenerationRule && field.type !== "qrcode") ? "gen" : field.type;
+    const effectiveType = (hasGenerationRule && field.type !== "qrcode" && field.type !== "barcode") ? "gen" : field.type;
 
     switch (effectiveType) {
       case "text":
@@ -779,6 +781,59 @@ const FormFieldComponent: React.FC<{
               value={value as string}
               onChange={handleChange}
               disabled={isFieldDisabled}
+            />
+          </div>
+        );
+
+      case "barcode":
+        return (
+          <div className="space-y-3 w-full">
+            <div className="flex justify-between items-center">
+              <label htmlFor={field.id} className="text-sm font-medium text-white">
+                {field.name}
+                {field.helperText && (
+                  <FieldHelper
+                    fieldName={field.name}
+                    helperText={field.helperText}
+                    tutorialUrl={tutorial?.url}
+                  />
+                )}
+              </label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => barcodeRef.current?.addRow()}
+                  className="bg-white/5 border border-dashed border-white/20 text-white/60 hover:bg-white/10 hover:text-white rounded-full h-8 px-3"
+                  disabled={isFieldDisabled}
+                  title="Add a new line to the barcode"
+                >
+                  <Plus className="w-3 h-3 mr-2" />
+                  Add Line
+                </Button>
+                {hasGenerationRule && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => handleChange(generateFieldValue())}
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full h-8 px-3"
+                    disabled={isFieldDisabled}
+                    title="Regenerate barcode content"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-2" />
+                    Regenerate
+                  </Button>
+                )}
+              </div>
+            </div>
+            <BarcodeInputField
+              ref={barcodeRef}
+              value={typeof value === "string" ? value : String(value ?? "")}
+              symbology={field.symbology}
+              disabled={isFieldDisabled}
+              onCommit={(text, dataUrl) =>
+                updateField(field.id, text, { barcodeImage: dataUrl })
+              }
             />
           </div>
         );

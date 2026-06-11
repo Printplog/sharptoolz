@@ -1,5 +1,6 @@
 // utils/parseSvgToFormFields.ts
 import type { FormField, SelectOption } from "@/types";
+import { parseBarcodeCarrier } from "./barcodeId";
 
 const parseSvgToFormFields = (svgText: string): FormField[] => {
   const parser = new DOMParser();
@@ -21,6 +22,8 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
     let max: number | undefined;
     let dateFormat: string | undefined;
     let generationRule: string | undefined;
+    let symbology: string | undefined;
+    let generationMode: string | undefined;
     const svgElementId = id;
 
     // If it's a select option
@@ -69,10 +72,21 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
       } else if (part.startsWith("qrcode_")) {
         type = "qrcode";
         generationRule = part.replace("qrcode_", "");
+      } else if (part.startsWith("barcode_")) {
+        type = "barcode";
+        // Single-carrier format: barcode_(symbology)(content rule), optional AUTO:
+        const carrier = parseBarcodeCarrier(part.slice("barcode_".length));
+        symbology = carrier.symbology || undefined;
+        if (carrier.rule) {
+          generationRule = (carrier.isAuto ? "AUTO:" : "") + carrier.rule;
+        } else if (carrier.isAuto) {
+          generationRule = "AUTO:";
+        }
+        if (carrier.isAuto) generationMode = "auto";
       } else if (
         [
           "text", "textarea", "checkbox", "date", "upload", "number",
-          "email", "tel", "gen", "password", "range", "color", "file", "qrcode"
+          "email", "tel", "gen", "password", "range", "color", "file", "qrcode", "barcode"
         ].includes(part)
       ) {
         // Only update type if it's currently the default 'text' or we're explicitly setting it to a specialized type.
@@ -96,7 +110,9 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
       currentValue: type === "checkbox" ? false : textContent,
       ...(max ? { max } : {}),
       ...(dateFormat ? { dateFormat } : {}),
-      ...(generationRule ? { generationRule } : {})
+      ...(generationRule ? { generationRule } : {}),
+      ...(generationMode ? { generationMode } : {}),
+      ...(symbology ? { symbology } : {})
     };
   }
 

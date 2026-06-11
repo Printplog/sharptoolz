@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from 'qrcode.react';
+import BarcodePreview from "@/components/ui/BarcodePreview";
 import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 
 interface QRCodeBuilderProps {
@@ -28,6 +29,7 @@ interface QRCodeBuilderProps {
   trigger: React.ReactNode;
   currentFieldValues?: Record<string, string>;
   defaultTextContent?: string;
+  barcodeSymbology?: string; // If set, render a barcode preview (this bcid) instead of a QR preview
 }
 
 type RandomType = 'number' | 'letter' | 'both';
@@ -56,6 +58,7 @@ export default function QRCodeBuilder({
   onOpenChange,
   trigger,
   currentFieldValues = {},
+  barcodeSymbology,
 }: QRCodeBuilderProps) {
   const [isAuto, setIsAuto] = useState<boolean>(() => value?.startsWith("AUTO:") || false);
   const patternWithoutAuto = value?.startsWith("AUTO:") ? value.substring(5) : value;
@@ -184,7 +187,7 @@ export default function QRCodeBuilder({
         <div className="mb-0 flex flex-col gap-1 shrink-0 pb-2 border-b border-white/10">
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold text-white">
-              QR Code Builder
+              {barcodeSymbology ? "Barcode Builder" : "QR Code Builder"}
             </div>
             <button
               type="button"
@@ -201,7 +204,9 @@ export default function QRCodeBuilder({
             </button>
           </div>
           <div className="text-[10px] text-white/40">
-            Add labeled rows for structured QR content.
+            {barcodeSymbology
+              ? "Add rows — each becomes a new line in the barcode."
+              : "Add labeled rows for structured QR content."}
           </div>
         </div>
 
@@ -349,13 +354,19 @@ export default function QRCodeBuilder({
             <div className="flex-1 flex flex-col gap-3 min-h-0">
               <div className="flex-1 bg-white/5 border border-white/10 rounded-lg p-3 flex flex-col items-center justify-center gap-3 overflow-hidden">
                 <div className="shrink-0 p-1">
-                  <QRCodeSVG
-                    value={preview || " "}
-                    size={100}
-                    level="M"
-                    bgColor="transparent"
-                    fgColor="white"
-                  />
+                  {barcodeSymbology ? (
+                    <div className="bg-white p-1.5 rounded-md">
+                      <BarcodePreview value={preview} symbology={barcodeSymbology} maxHeight={80} maxWidth={180} />
+                    </div>
+                  ) : (
+                    <QRCodeSVG
+                      value={preview || " "}
+                      size={100}
+                      level="M"
+                      bgColor="transparent"
+                      fgColor="white"
+                    />
+                  )}
                 </div>
                 <div className="w-full min-h-0 flex flex-col gap-1">
                   <div className="text-[9px] uppercase font-black text-white/20">Data</div>

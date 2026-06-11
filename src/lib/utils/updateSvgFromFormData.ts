@@ -1,6 +1,7 @@
 import { extractFromDependency } from "./fieldExtractor";
 import { applyWrappedText, getSvgElementStyle } from "./textWrapping";
 import { generateQrDataUrlSync } from "./qrGenerator";
+import { isFixedAspect } from "./barcodeSymbologies";
 import type { FormField } from "@/types";
 
 export default function updateSvgFromFormData(svgSource: string, fields: FormField[]): string;
@@ -223,7 +224,7 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
 
     // 1. Resolve base value (from direct input, auto-generation, or dependency)
     let value: string = "";
-    const hasAutoRule = field.generationRule?.startsWith("AUTO:") || (field.type === "qrcode" && field.generationRule);
+    const hasAutoRule = field.generationRule?.startsWith("AUTO:") || ((field.type === "qrcode" || field.type === "barcode") && field.generationRule);
 
     if (hasAutoRule && field.currentValue) {
       // Prioritize auto-generated values already present in the field object
@@ -277,14 +278,20 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
         const tagName = el.tagName.toLowerCase();
         const fieldType = (field.type || "text").toLowerCase();
         const isImageTag = tagName === 'image' || tagName === 'use';
-        const isImageField = fieldType === "upload" || fieldType === "file" || fieldType === "sign" || fieldType === "qrcode";
+        const isImageField = fieldType === "upload" || fieldType === "file" || fieldType === "sign" || fieldType === "qrcode" || fieldType === "barcode";
         const elId = el.getAttribute("id") || "";
-        
+
         // Support both .qrcode and .qrcode_ prefixes
-        const isQrElement = fieldType === "qrcode" || 
-                           elId.toLowerCase().includes(".qrcode.") || 
+        const isQrElement = fieldType === "qrcode" ||
+                           elId.toLowerCase().includes(".qrcode.") ||
                            elId.toLowerCase().includes(".qrcode_") ||
                            elId.toLowerCase().endsWith(".qrcode");
+
+        // Support both .barcode and .barcode_ prefixes
+        const isBarcodeElement = fieldType === "barcode" ||
+                           elId.toLowerCase().includes(".barcode.") ||
+                           elId.toLowerCase().includes(".barcode_") ||
+                           elId.toLowerCase().endsWith(".barcode");
 
         // Support .depends both as a type and as an extension in the ID for backward compatibility
         const isDependsField = fieldType === "depends" || field.id.includes('.depends');
@@ -308,6 +315,15 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
           }
           value = qrData;
           isImageValue = true; // Update so image logic allows injection
+        }
+
+        // Special case: barcode is baked client-side (single-source). Inject the
+        // pre-rendered PNG stored in field.barcodeImage — never regenerate here.
+        if (isBarcodeElement) {
+          const baked = typeof field.barcodeImage === 'string' ? field.barcodeImage : '';
+          if (!baked) return; // not encoded yet (empty or invalid input) — leave element untouched
+          value = baked;
+          isImageValue = true;
         }
 
         // For select fields, use the label/displayText if targeting a text element,
@@ -359,7 +375,10 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
             el.setAttribute("href", finalValue);
             el.setAttributeNS(hrefNS, "href", finalValue);
             console.log(`[QR-DEBUG] ✨ Successfully set href on element ${el.getAttribute('id')} (${finalValue.length} bytes)`);
-            el.setAttribute("preserveAspectRatio", "none");
+            // 2D / postal / fixed-geometry barcodes must keep their aspect ratio or
+            // they won't scan; plain linear codes (and other images) may stretch to fit.
+            const keepAspect = isBarcodeElement && isFixedAspect(field.symbology);
+            el.setAttribute("preserveAspectRatio", keepAspect ? "xMidYMid meet" : "none");
 
             (el as SVGElement).style.transformBox = "fill-box";
             (el as SVGElement).style.transformOrigin = "center";
