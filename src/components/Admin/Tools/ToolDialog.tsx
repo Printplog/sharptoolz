@@ -13,14 +13,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Save } from "lucide-react";
+import { Play, Plus, Save } from "lucide-react";
 import type { Tool } from "@/types";
 
 interface ToolDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tool?: Tool | null; // null for add, Category for edit
-  onSave: (data: { name: string; description?: string; price: number }) => void;
+  onSave: (data: {
+    name: string;
+    description?: string;
+    price: number;
+    tutorial_url: string;
+    tutorial_title: string;
+  }) => void;
   isLoading?: boolean;
 }
 
@@ -34,6 +40,8 @@ export default function ToolDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<string>("5");
+  const [tutorialUrl, setTutorialUrl] = useState("");
+  const [tutorialTitle, setTutorialTitle] = useState("");
 
   const isEditing = !!tool;
 
@@ -43,12 +51,27 @@ export default function ToolDialog({
       setName(tool?.name || "");
       setDescription(tool?.description || "");
       setPrice(tool?.price?.toString() || "5");
+      setTutorialUrl(tool?.tutorial?.url || "");
+      setTutorialTitle(tool?.tutorial?.title || "");
     } else {
       setName("");
       setDescription("");
       setPrice("5");
+      setTutorialUrl("");
+      setTutorialTitle("");
     }
   }, [open, tool]);
+
+  const handleNameChange = (value: string) => {
+    // Auto-generate the tutorial title while it's still untouched
+    if (
+      value.trim() &&
+      (!tutorialTitle || tutorialTitle === `How to use the ${name} tool`)
+    ) {
+      setTutorialTitle(`How to use the ${value} tool`);
+    }
+    setName(value);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +82,9 @@ export default function ToolDialog({
       name: name.trim(),
       description: description.trim() || undefined,
       price: parseFloat(price) || 0,
+      // Empty string clears the tool's tutorial on the backend
+      tutorial_url: tutorialUrl.trim(),
+      tutorial_title: tutorialTitle.trim(),
     });
   };
 
@@ -98,7 +124,7 @@ export default function ToolDialog({
               id="tool-name"
               placeholder="e.g., Shipping Labels, Business Cards, Invoices"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => handleNameChange(e.target.value)}
               className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
               maxLength={100}
               required
@@ -143,6 +169,33 @@ export default function ToolDialog({
             />
             <div className="text-xs text-white/60">
               The amount users will be charged to remove the watermark from templates in this tool.
+            </div>
+          </div>
+
+          {/* Tool Tutorial */}
+          <div className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center gap-2">
+              <Play className="w-4 h-4 text-primary" />
+              <Label className="text-sm font-medium">
+                Tutorial <span className="text-white/60">(optional)</span>
+              </Label>
+            </div>
+            <div className="space-y-2">
+              <Input
+                placeholder="https://youtube.com/watch?v=..."
+                value={tutorialUrl}
+                onChange={(e) => setTutorialUrl(e.target.value)}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
+              />
+              <Input
+                placeholder="Tutorial title"
+                value={tutorialTitle}
+                onChange={(e) => setTutorialTitle(e.target.value)}
+                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
+              />
+            </div>
+            <div className="text-xs text-white/60">
+              Shown on templates of this tool that don't have their own tutorial. Clear the URL to remove it.
             </div>
           </div>
 

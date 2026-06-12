@@ -12,6 +12,7 @@ import {
   createTool,
   updateTool,
   deleteTool,
+  type ToolPayload,
 } from "@/api/apiEndpoints";
 import type { Tool } from "@/types";
 import { toast } from "sonner";
@@ -40,6 +41,8 @@ export default function AdminTools() {
       // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["tutorials"] });
+      queryClient.invalidateQueries({ queryKey: ["adminTutorials"] });
       setDialogOpen(false);
     },
     onError: () => {
@@ -49,13 +52,15 @@ export default function AdminTools() {
 
   // Update tool mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Tool> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<ToolPayload> }) =>
       updateTool(id, data),
     onSuccess: () => {
       toast.success("Tool updated successfully!");
       // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["tutorials"] });
+      queryClient.invalidateQueries({ queryKey: ["adminTutorials"] });
       setDialogOpen(false);
       setEditingTool(null);
     },
@@ -88,7 +93,13 @@ export default function AdminTools() {
     setDialogOpen(true);
   };
 
-  const handleSaveTool = (data: { name: string; description?: string; price: number }) => {
+  const handleSaveTool = (data: {
+    name: string;
+    description?: string;
+    price: number;
+    tutorial_url: string;
+    tutorial_title: string;
+  }) => {
     if (editingTool) {
       updateMutation.mutate({ id: editingTool.id, data });
     } else {

@@ -142,17 +142,21 @@ export type Tool = {
   name: string;
   description?: string;
   price: number;
+  tutorial?: Pick<Tutorial, "id" | "url" | "title" | "is_featured"> | null;
   created_at: string;
 };
 
 export type Tutorial = {
   id: string;
-  template: string;
+  template: string | null;
   template_name?: string;
   template_tool?: string;
   template_tool_name?: string;
+  tool: string | null;
+  tool_name?: string;
   url: string;
   title?: string;
+  is_featured: boolean;
   created_at: string;
   updated_at: string;
 };

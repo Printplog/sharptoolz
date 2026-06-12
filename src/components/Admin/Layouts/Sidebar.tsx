@@ -17,6 +17,7 @@ import {
   HandCoins,
   ChevronDown,
   BookOpen,
+  Video,
   ChevronLeft,
   ChevronRight,
   X,
@@ -120,6 +121,11 @@ export default function Sidebar() {
       to: "/admin/fonts",
     },
     {
+      icon: <Video className="h-4 w-4" />,
+      label: "Tutorials",
+      to: "/admin/tutorials",
+    },
+    {
       icon: <BookOpen className="h-4 w-4" />,
       label: "Docs",
       to: "/admin/docs",
@@ -196,12 +202,12 @@ export default function Sidebar() {
           const isAdmin = role === ROLES.ADMIN;
 
           if (isStaff) {
-            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Purchased Templates", "Switch to User", "Docs"];
+            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Tutorials", "Purchased Templates", "Switch to User", "Docs"];
             return allowedForStaff.includes(item.label);
           }
           if (isAdmin) return true;
 
-          const restrictedForUser = ["Users", "Analytics", "Traffic Sources", "Settings", "Tools", "Templates", "Fonts", "Logs", "Payout Requests"];
+          const restrictedForUser = ["Users", "Analytics", "Traffic Sources", "Settings", "Tools", "Templates", "Fonts", "Tutorials", "Logs", "Payout Requests"];
 
 
           return !restrictedForUser.includes(item.label);
