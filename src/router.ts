@@ -22,6 +22,7 @@ export type Path =
   | `/admin/tools/:id/templates`
   | `/admin/traffic-sources`
   | `/admin/transactions`
+  | `/admin/tutorials`
   | `/admin/user-activity`
   | `/admin/users`
   | `/admin/users/:id`

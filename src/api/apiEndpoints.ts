@@ -331,12 +331,20 @@ export const getTool = async (id: string): Promise<Tool> => {
   return res.data;
 };
 
-export const createTool = async (data: { name: string; description?: string; price: number }): Promise<Tool> => {
+export type ToolPayload = {
+  name: string;
+  description?: string;
+  price: number;
+  tutorial_url?: string;
+  tutorial_title?: string;
+};
+
+export const createTool = async (data: ToolPayload): Promise<Tool> => {
   const res = await apiClient.post('/tools/', data);
   return res.data;
 };
 
-export const updateTool = async (id: string, data: Partial<Tool>): Promise<Tool> => {
+export const updateTool = async (id: string, data: Partial<ToolPayload>): Promise<Tool> => {
   const res = await apiClient.put(`/tools/${id}/`, data);
   return res.data;
 };
@@ -382,12 +390,28 @@ export const deleteFont = async (id: string): Promise<unknown> => {
 };
 
 // Tutorials API
-export const getTutorials = async (toolId?: string): Promise<Tutorial[]> => {
+export const getTutorials = async (toolId?: string, search?: string): Promise<Tutorial[]> => {
   const params = new URLSearchParams();
   if (toolId) params.append('tool', toolId);
+  if (search) params.append('search', search);
 
   const queryString = params.toString();
   const res = await apiClient.get(`/tutorials/${queryString ? `?${queryString}` : ''}`);
+  return res.data;
+};
+
+export const createTutorial = async (data: Partial<Tutorial>): Promise<Tutorial> => {
+  const res = await apiClient.post('/tutorials/', data);
+  return res.data;
+};
+
+export const updateTutorial = async (id: string, data: Partial<Tutorial>): Promise<Tutorial> => {
+  const res = await apiClient.patch(`/tutorials/${id}/`, data);
+  return res.data;
+};
+
+export const deleteTutorial = async (id: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/tutorials/${id}/`);
   return res.data;
 };
 
