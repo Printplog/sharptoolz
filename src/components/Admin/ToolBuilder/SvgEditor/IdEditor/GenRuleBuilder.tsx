@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Copy, Trash2 } from "lucide-react";
 
 interface GenRuleBuilderProps {
   value: string;
@@ -40,6 +41,8 @@ type PatternPart =
   | { type: 'fill'; char: string }
   | { type: 'date'; format: string }
   | { type: 'env'; varName: string };
+
+const clonePatternPart = (part: PatternPart): PatternPart => ({ ...part } as PatternPart);
 
 import { QRCodeSVG } from 'qrcode.react';
 import BarcodePreview from '@/components/ui/BarcodePreview';
@@ -114,7 +117,7 @@ export default function GenRuleBuilder({
     } catch (error) {
       return `Error: ${error instanceof Error ? error.message : 'Invalid pattern'}`;
     }
-  }, [parts, availableFields, maxLength, currentFieldValues, isAuto]);
+  }, [parts, availableFields, maxLength, currentFieldValues, isAuto, sampleInputs]);
 
   const handleAddPart = useCallback((type: PatternPart['type']) => {
     const newPart: PatternPart =
@@ -158,6 +161,20 @@ export default function GenRuleBuilder({
     }
   }, [parts, editingIndex]);
 
+  const handleDuplicatePart = useCallback((index: number) => {
+    const part = parts[index];
+    if (!part) return;
+
+    const newParts = [
+      ...parts.slice(0, index + 1),
+      clonePatternPart(part),
+      ...parts.slice(index + 1),
+    ];
+    setParts(newParts);
+    setEditingIndex(index + 1);
+    setCountInputs({});
+  }, [parts]);
+
   const handleApply = useCallback(() => {
     const basePattern = buildPattern(parts);
     const finalPattern = isAuto ? `AUTO:${basePattern}` : basePattern;
@@ -173,7 +190,7 @@ export default function GenRuleBuilder({
   }, [value, onOpenChange]);
 
   return (
-    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu modal={false} open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
         {trigger}
       </DropdownMenuTrigger>
@@ -473,13 +490,24 @@ export default function GenRuleBuilder({
                       )}
                     </div>
 
-                    <button
-                      onClick={() => handleRemovePart(index)}
-                      className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/50 rounded-full transition-colors text-sm font-semibold shrink-0 flex items-center justify-center min-w-[32px]"
-                      title="Remove this part"
-                    >
-                      ×
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleDuplicatePart(index)}
+                        className="w-8 h-8 bg-white/5 hover:bg-white/10 text-white/50 hover:text-primary border border-white/10 hover:border-primary/30 rounded-full transition-colors flex items-center justify-center"
+                        title="Duplicate this part"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePart(index)}
+                        className="w-8 h-8 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/50 rounded-full transition-colors flex items-center justify-center"
+                        title="Remove this part"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from 'qrcode.react';
 import BarcodePreview from "@/components/ui/BarcodePreview";
-import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown, Copy } from "lucide-react";
 
 interface QRCodeBuilderProps {
   value: string;
@@ -49,6 +49,53 @@ interface QRCodeRow {
   label: string;
   parts: PatternPart[];
 }
+
+const createRowId = () => Math.random().toString(36).slice(2, 11);
+
+const createPatternPart = (type: PatternPart['type']): PatternPart =>
+  type === 'static' ? { type: 'static', value: '' }
+    : type === 'dep' ? { type: 'dep', fieldName: '' }
+      : type === 'random' ? { type: 'random', randomType: 'number', count: 1 }
+        : type === 'repeat' ? { type: 'repeat', char: '', count: 1 }
+          : type === 'fill' ? { type: 'fill', char: '' }
+            : type === 'date' ? { type: 'date', format: 'YYYY-MM-DD' }
+              : { type: 'env', varName: 'YEAR' };
+
+const clonePatternPart = (part: PatternPart): PatternPart => ({ ...part } as PatternPart);
+
+const coerceCount = (value: string) => {
+  const count = parseInt(value, 10);
+  return Number.isNaN(count) || count < 1 ? 1 : count;
+};
+
+const formatPartLabel = (part: PatternPart) => {
+  switch (part.type) {
+    case 'static':
+      return part.value || '""';
+    case 'dep': {
+      const extraction = part.extraction ? `[${part.extraction}]` : '';
+      return `dep_${part.fieldName}${extraction}`;
+    }
+    case 'random': {
+      const kind = part.randomType === 'number'
+        ? 'rn'
+        : part.case === 'uppercase'
+          ? 'ru'
+          : part.case === 'lowercase'
+            ? 'rl'
+            : 'rc';
+      return `${kind}[${part.count}]`;
+    }
+    case 'repeat':
+      return `${part.char || '" "'}[${part.count}]`;
+    case 'fill':
+      return `${part.char || '" "'}[fill]`;
+    case 'date':
+      return `date[${part.format}]`;
+    case 'env':
+      return `env_${part.varName}`;
+  }
+};
 
 export default function QRCodeBuilder({
   value,
@@ -113,11 +160,38 @@ export default function QRCodeBuilder({
   }, [rows, availableFields, currentFieldValues, sampleInputs]);
 
   const handleAddRow = () => {
-    setRows([...rows, { id: Math.random().toString(36).substr(2, 9), label: "", parts: [] }]);
+    setRows([...rows, { id: createRowId(), label: "", parts: [] }]);
+    setEditingRowIndex(rows.length);
+    setEditingPartIndex(null);
   };
 
   const handleRemoveRow = (index: number) => {
     setRows(rows.filter((_, i) => i !== index));
+    if (editingRowIndex === index) {
+      setEditingRowIndex(null);
+      setEditingPartIndex(null);
+    } else if (editingRowIndex !== null && editingRowIndex > index) {
+      setEditingRowIndex(editingRowIndex - 1);
+    }
+  };
+
+  const handleDuplicateRow = (index: number) => {
+    const row = rows[index];
+    if (!row) return;
+
+    const duplicatedRow: QRCodeRow = {
+      ...row,
+      id: createRowId(),
+      parts: row.parts.map(clonePatternPart),
+    };
+
+    setRows([
+      ...rows.slice(0, index + 1),
+      duplicatedRow,
+      ...rows.slice(index + 1),
+    ]);
+    setEditingRowIndex(index + 1);
+    setEditingPartIndex(null);
   };
 
   const handleMoveRow = (index: number, direction: 'up' | 'down') => {
@@ -126,6 +200,11 @@ export default function QRCodeBuilder({
     if (targetIndex >= 0 && targetIndex < newRows.length) {
       [newRows[index], newRows[targetIndex]] = [newRows[targetIndex], newRows[index]];
       setRows(newRows);
+      if (editingRowIndex === index) {
+        setEditingRowIndex(targetIndex);
+      } else if (editingRowIndex === targetIndex) {
+        setEditingRowIndex(index);
+      }
     }
   };
 
@@ -134,16 +213,11 @@ export default function QRCodeBuilder({
   };
 
   const handleAddPartToRow = (rowIndex: number, type: PatternPart['type']) => {
-    const newPart: PatternPart =
-      type === 'static' ? { type: 'static', value: '' }
-        : type === 'dep' ? { type: 'dep', fieldName: '' }
-          : type === 'random' ? { type: 'random', randomType: 'number', count: 1 }
-            : type === 'repeat' ? { type: 'repeat', char: '', count: 1 }
-              : type === 'fill' ? { type: 'fill', char: '' }
-                : type === 'date' ? { type: 'date', format: 'YYYY-MM-DD' }
-                  : { type: 'env', varName: 'YEAR' };
-
+    const partIndex = rows[rowIndex]?.parts.length ?? 0;
+    const newPart = createPatternPart(type);
     setRows(rows.map((r, i) => i === rowIndex ? { ...r, parts: [...r.parts, newPart] } : r));
+    setEditingRowIndex(rowIndex);
+    setEditingPartIndex(partIndex);
   };
 
   const handleUpdatePartInRow = (rowIndex: number, partIndex: number, updates: Partial<PatternPart>) => {
@@ -151,6 +225,37 @@ export default function QRCodeBuilder({
       ...r,
       parts: r.parts.map((p, j) => j === partIndex ? { ...p, ...updates } as PatternPart : p)
     } : r));
+  };
+
+  const handleDuplicatePartInRow = (rowIndex: number, partIndex: number) => {
+    const part = rows[rowIndex]?.parts[partIndex];
+    if (!part) return;
+
+    setRows(rows.map((r, i) => i === rowIndex ? {
+      ...r,
+      parts: [
+        ...r.parts.slice(0, partIndex + 1),
+        clonePatternPart(part),
+        ...r.parts.slice(partIndex + 1),
+      ],
+    } : r));
+    setEditingRowIndex(rowIndex);
+    setEditingPartIndex(partIndex + 1);
+  };
+
+  const handleRemovePartFromRow = (rowIndex: number, partIndex: number) => {
+    setRows(rows.map((r, i) => i === rowIndex ? {
+      ...r,
+      parts: r.parts.filter((_, j) => j !== partIndex),
+    } : r));
+
+    if (editingRowIndex === rowIndex) {
+      setEditingPartIndex((current) => {
+        if (current === null) return null;
+        if (current === partIndex) return null;
+        return current > partIndex ? current - 1 : current;
+      });
+    }
   };
 
 
@@ -169,7 +274,7 @@ export default function QRCodeBuilder({
   };
 
   return (
-    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu modal={false} open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
         {trigger}
       </DropdownMenuTrigger>
@@ -217,6 +322,7 @@ export default function QRCodeBuilder({
             <div className="flex items-center justify-between mb-2 shrink-0">
               <div className="text-[10px] font-black uppercase tracking-widest text-white/40">Data Rows</div>
               <button
+                type="button"
                 onClick={handleAddRow}
                 className="text-[10px] text-primary hover:text-primary/80 font-bold uppercase tracking-tighter"
               >
@@ -233,7 +339,7 @@ export default function QRCodeBuilder({
                   <div
                     key={row.id}
                     className={cn(
-                      "flex flex-col gap-2 p-2 rounded-md border transition-colors",
+                      "group flex flex-col gap-2 p-2 rounded-md border transition-colors",
                       editingRowIndex === rowIndex ? "bg-white/10 border-primary/40" : "bg-white/5 border-white/10"
                     )}
                     onClick={() => setEditingRowIndex(rowIndex)}
@@ -266,15 +372,17 @@ export default function QRCodeBuilder({
                               part.type === 'env' && "bg-pink-500/20"
                             )}
                           >
-                            {part.type === 'static' ? part.value || '""' :
-                             part.type === 'dep' ? `dep_${part.fieldName}` :
-                             part.type === 'random' ? `rn[${part.count}]` :
-                             part.type === 'date' ? 'date' : 'env'}
+                            {formatPartLabel(part)}
                           </span>
                         ))}
-                        <DropdownMenu>
+                        <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
-                            <button className="w-5 h-5 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/40">
+                            <button
+                              type="button"
+                              onClick={(event) => event.stopPropagation()}
+                              className="w-5 h-5 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/40"
+                              title="Add param"
+                            >
                               <Plus className="w-3 h-3" />
                             </button>
                           </DropdownMenuTrigger>
@@ -282,17 +390,26 @@ export default function QRCodeBuilder({
                             <DropdownMenuItem onClick={() => handleAddPartToRow(rowIndex, 'static')}>+ Static</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleAddPartToRow(rowIndex, 'dep')}>+ Dep</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleAddPartToRow(rowIndex, 'random')}>+ Random</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAddPartToRow(rowIndex, 'repeat')}>+ Repeat</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAddPartToRow(rowIndex, 'fill')}>+ Fill</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleAddPartToRow(rowIndex, 'date')}>+ Date</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAddPartToRow(rowIndex, 'env')}>+ Env</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={(e) => { e.stopPropagation(); handleMoveRow(rowIndex, 'up'); }} className="text-white/20 hover:text-white"><ArrowUp className="w-3 h-3" /></button>
-                        <button onClick={(e) => { e.stopPropagation(); handleMoveRow(rowIndex, 'down'); }} className="text-white/20 hover:text-white"><ArrowDown className="w-3 h-3" /></button>
+                      <div className={cn(
+                        "flex gap-1 transition-opacity",
+                        editingRowIndex === rowIndex ? "opacity-100" : "opacity-40 group-hover:opacity-100"
+                      )}>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); handleMoveRow(rowIndex, 'up'); }} className="text-white/30 hover:text-white" title="Move row up"><ArrowUp className="w-3 h-3" /></button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); handleMoveRow(rowIndex, 'down'); }} className="text-white/30 hover:text-white" title="Move row down"><ArrowDown className="w-3 h-3" /></button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); handleDuplicateRow(rowIndex); }} className="text-white/30 hover:text-primary" title="Duplicate row"><Copy className="w-3 h-3" /></button>
                       </div>
                       <button
+                        type="button"
                         onClick={(e) => { e.stopPropagation(); handleRemoveRow(rowIndex); }}
                         className="w-5 h-5 flex items-center justify-center rounded-full text-white/20 hover:text-red-400 hover:bg-red-400/10"
+                        title="Remove row"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -300,47 +417,16 @@ export default function QRCodeBuilder({
 
                     {/* Part Editor Inline */}
                     {editingRowIndex === rowIndex && editingPartIndex !== null && row.parts[editingPartIndex] && (
-                      <div className="mt-1 pt-2 border-t border-white/5 flex gap-2 items-center">
-                        <span className="text-[9px] uppercase font-black text-primary/60 shrink-0">Edit {row.parts[editingPartIndex].type}:</span>
-                        {row.parts[editingPartIndex].type === 'static' && (
-                          <input
-                            autoFocus
-                            type="text"
-                            value={(row.parts[editingPartIndex] as any).value}
-                            onChange={(e) => handleUpdatePartInRow(rowIndex, editingPartIndex, { value: e.target.value })}
-                            className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-0.5 text-xs outline-none focus:border-primary/40"
-                          />
-                        )}
-                        {row.parts[editingPartIndex].type === 'dep' && (
-                          <div className="flex-1 flex gap-1">
-                            <Select
-                              value={(row.parts[editingPartIndex] as any).fieldName}
-                              onValueChange={(val) => handleUpdatePartInRow(rowIndex, editingPartIndex, { fieldName: val })}
-                            >
-                              <SelectTrigger className="flex-1 h-7 text-[10px] bg-white/5 border-white/10">
-                                <SelectValue placeholder="Field" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-black/95 border-white/20 text-white z-[120]">
-                                {availableFields.map(f => <SelectItem key={f} value={f} className="text-xs">{f}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                        {row.parts[editingPartIndex].type === 'random' && (
-                          <input
-                            type="number"
-                            value={(row.parts[editingPartIndex] as any).count}
-                            onChange={(e) => handleUpdatePartInRow(rowIndex, editingPartIndex, { count: parseInt(e.target.value) || 1 })}
-                            className="w-16 bg-white/5 border border-white/10 rounded px-2 py-0.5 text-xs outline-none"
-                          />
-                        )}
-                        <button
-                          onClick={() => { setEditingPartIndex(null); }}
-                          className="text-[10px] text-white/40 hover:text-white"
-                        >
-                          Done
-                        </button>
-                      </div>
+                      <PatternPartEditor
+                        part={row.parts[editingPartIndex]}
+                        rowIndex={rowIndex}
+                        partIndex={editingPartIndex}
+                        availableFields={availableFields}
+                        onUpdate={handleUpdatePartInRow}
+                        onDuplicate={handleDuplicatePartInRow}
+                        onRemove={handleRemovePartFromRow}
+                        onDone={() => setEditingPartIndex(null)}
+                      />
                     )}
                   </div>
                 ))
@@ -400,6 +486,215 @@ export default function QRCodeBuilder({
   );
 }
 
+interface PatternPartEditorProps {
+  part: PatternPart;
+  rowIndex: number;
+  partIndex: number;
+  availableFields: string[];
+  onUpdate: (rowIndex: number, partIndex: number, updates: Partial<PatternPart>) => void;
+  onDuplicate: (rowIndex: number, partIndex: number) => void;
+  onRemove: (rowIndex: number, partIndex: number) => void;
+  onDone: () => void;
+}
+
+function PatternPartEditor({
+  part,
+  rowIndex,
+  partIndex,
+  availableFields,
+  onUpdate,
+  onDuplicate,
+  onRemove,
+  onDone,
+}: PatternPartEditorProps) {
+  return (
+    <div
+      className="mt-1 pt-2 border-t border-white/5 flex flex-col gap-2"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-[9px] uppercase font-black text-primary/60 shrink-0">
+          Edit {part.type}:
+        </span>
+
+        <div className="flex-1 min-w-0">
+          {part.type === 'static' && (
+            <input
+              autoFocus
+              type="text"
+              value={part.value}
+              onChange={(event) => onUpdate(rowIndex, partIndex, { value: event.target.value })}
+              placeholder="Static text"
+              className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary/40"
+            />
+          )}
+
+          {part.type === 'dep' && (
+            <div className="flex flex-wrap gap-1 min-w-0">
+              <Select
+                value={part.fieldName}
+                onValueChange={(value) => onUpdate(rowIndex, partIndex, { fieldName: value })}
+              >
+                <SelectTrigger className="flex-1 min-w-[130px] h-7 text-[10px] bg-white/5 border-white/10">
+                  <SelectValue placeholder="Field" />
+                </SelectTrigger>
+                <SelectContent className="bg-black/95 border-white/20 text-white z-[120]">
+                  {availableFields.map((field) => (
+                    <SelectItem key={field} value={field} className="text-xs">
+                      {field}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input
+                type="text"
+                value={part.extraction || ''}
+                onChange={(event) => onUpdate(rowIndex, partIndex, { extraction: event.target.value })}
+                placeholder="w1, ch1-4"
+                className="w-28 shrink-0 bg-white/5 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary/40"
+              />
+            </div>
+          )}
+
+          {part.type === 'random' && (
+            <div className="grid grid-cols-[minmax(0,1fr)_96px_64px] gap-1">
+              <Select
+                value={part.randomType}
+                onValueChange={(value) => {
+                  const randomType = value as RandomType;
+                  const updates: Partial<PatternPart> = { randomType };
+                  if (randomType === 'number') {
+                    updates.case = undefined;
+                  } else if (!part.case) {
+                    updates.case = 'mixed';
+                  }
+                  onUpdate(rowIndex, partIndex, updates);
+                }}
+              >
+                <SelectTrigger className="h-7 text-[10px] bg-white/5 border-white/10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-black/95 border-white/20 text-white z-[120]">
+                  <SelectItem value="number" className="text-xs">Number</SelectItem>
+                  <SelectItem value="letter" className="text-xs">Letter</SelectItem>
+                  <SelectItem value="both" className="text-xs">Both</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {(part.randomType === 'letter' || part.randomType === 'both') ? (
+                <Select
+                  value={part.case || 'mixed'}
+                  onValueChange={(value) => onUpdate(rowIndex, partIndex, { case: value as RandomCase })}
+                >
+                  <SelectTrigger className="h-7 text-[10px] bg-white/5 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/95 border-white/20 text-white z-[120]">
+                    <SelectItem value="uppercase" className="text-xs">Upper</SelectItem>
+                    <SelectItem value="lowercase" className="text-xs">Lower</SelectItem>
+                    <SelectItem value="mixed" className="text-xs">Mixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div />
+              )}
+
+              <input
+                type="number"
+                min={1}
+                value={part.count}
+                onChange={(event) => onUpdate(rowIndex, partIndex, { count: coerceCount(event.target.value) })}
+                className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary/40"
+              />
+            </div>
+          )}
+
+          {part.type === 'repeat' && (
+            <div className="flex gap-1 min-w-0">
+              <input
+                type="text"
+                value={part.char}
+                onChange={(event) => onUpdate(rowIndex, partIndex, { char: event.target.value })}
+                placeholder="Text"
+                className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary/40"
+              />
+              <input
+                type="number"
+                min={1}
+                value={part.count}
+                onChange={(event) => onUpdate(rowIndex, partIndex, { count: coerceCount(event.target.value) })}
+                className="w-16 bg-white/5 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary/40"
+              />
+            </div>
+          )}
+
+          {part.type === 'fill' && (
+            <input
+              type="text"
+              value={part.char}
+              onChange={(event) => onUpdate(rowIndex, partIndex, { char: event.target.value })}
+              placeholder="Fill character"
+              className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary/40"
+            />
+          )}
+
+          {part.type === 'date' && (
+            <input
+              type="text"
+              value={part.format}
+              onChange={(event) => onUpdate(rowIndex, partIndex, { format: event.target.value })}
+              placeholder="YYYY-MM-DD"
+              className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary/40"
+            />
+          )}
+
+          {part.type === 'env' && (
+            <Select
+              value={part.varName}
+              onValueChange={(value) => onUpdate(rowIndex, partIndex, { varName: value })}
+            >
+              <SelectTrigger className="w-full h-7 text-[10px] bg-white/5 border-white/10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-black/95 border-white/20 text-white z-[120]">
+                <SelectItem value="PLATFORM" className="text-xs">Platform Name</SelectItem>
+                <SelectItem value="YEAR" className="text-xs">Current Year</SelectItem>
+                <SelectItem value="USER_ID" className="text-xs">User ID</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-end gap-1">
+        <button
+          type="button"
+          onClick={() => onDuplicate(rowIndex, partIndex)}
+          className="w-6 h-6 flex items-center justify-center rounded-full text-white/40 hover:text-primary hover:bg-white/10"
+          title="Duplicate param"
+        >
+          <Copy className="w-3 h-3" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onRemove(rowIndex, partIndex)}
+          className="w-6 h-6 flex items-center justify-center rounded-full text-white/40 hover:text-red-400 hover:bg-red-400/10"
+          title="Remove param"
+        >
+          <Trash2 className="w-3 h-3" />
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="px-2 py-1 rounded-full bg-white/5 text-[10px] text-white/50 hover:text-white hover:bg-white/10"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Reuse buildPattern from GenRuleBuilder
 function buildPattern(parts: PatternPart[]): string {
   return parts.map(part => {
@@ -411,6 +706,12 @@ function buildPattern(parts: PatternPart[]): string {
       }
       case 'random': {
         if (part.randomType === 'number') return `(rn[${part.count}])`;
+        if (part.randomType === 'both') {
+          const numCount = Math.ceil(part.count / 2);
+          const letterCount = part.count - numCount;
+          const letterKind = part.case === 'uppercase' ? 'ru' : part.case === 'lowercase' ? 'rl' : 'rc';
+          return `(rn[${numCount}])(${letterKind}[${letterCount}])`;
+        }
         const kind = part.case === 'uppercase' ? 'ru' : part.case === 'lowercase' ? 'rl' : 'rc';
         return `(${kind}[${part.count}])`;
       }
@@ -448,7 +749,7 @@ function parseQRCodePattern(pattern: string): QRCodeRow[] {
     }
 
     return {
-      id: Math.random().toString(36).substr(2, 9),
+      id: createRowId(),
       label,
       parts: parseParts(ruleContent)
     };
@@ -464,7 +765,11 @@ function parseParts(pattern: string): PatternPart[] {
   for (const match of matches) {
     if (match.startsWith('(') && match.endsWith(')')) {
       const content = match.slice(1, -1);
-      if (content.match(/^dep_(.+?)(\[(.+)\])?$/)) {
+
+      const fillMatch = content.match(/^(.+)\[fill\]$/);
+      if (fillMatch) {
+        parts.push({ type: 'fill', char: fillMatch[1] });
+      } else if (content.match(/^dep_(.+?)(\[(.+)\])?$/)) {
         const depMatch = content.match(/^dep_(.+?)(\[(.+)\])?$/)!;
         parts.push({ type: 'dep', fieldName: depMatch[1], extraction: depMatch[3] });
       } else if (content.match(/^rn\[(\d+)\]$/)) {
@@ -474,6 +779,9 @@ function parseParts(pattern: string): PatternPart[] {
         parts.push({ type: 'random', randomType: 'letter', case: m[1] === 'u' ? 'uppercase' : m[1] === 'l' ? 'lowercase' : 'mixed', count: parseInt(m[2]) });
       } else if (content.match(/^date\[(.+)\]$/)) {
         parts.push({ type: 'date', format: content.match(/^date\[(.+)\]$/)![1] });
+      } else if (content.match(/^(.+)\[(\d+)\]$/)) {
+        const repeatMatch = content.match(/^(.+)\[(\d+)\]$/)!;
+        parts.push({ type: 'repeat', char: repeatMatch[1], count: parseInt(repeatMatch[2]) });
       } else if (content.startsWith('env_')) {
         parts.push({ type: 'env', varName: content.replace('env_', '') });
       } else {
