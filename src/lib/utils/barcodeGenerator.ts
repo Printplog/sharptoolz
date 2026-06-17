@@ -1,25 +1,12 @@
-// Barcode generation via bwip-js (BWIPP). bwip-js is ~400KB, so it is loaded
-// lazily on first use — only when a barcode field is actually rendered.
+// Barcode generation via bwip-js (BWIPP).
 //
 // We "bake" upstream: the input component encodes text -> PNG data URL and
 // persists that as the field value. Both the client-side SVG render and the
 // server-side PDF/PNG render then just inject the finished image. This is the
 // single-source design — nothing regenerates the barcode downstream.
 
+import bwipjs from "bwip-js/browser";
 import { getSymbology, showsHumanText, DEFAULT_SYMBOLOGY } from "./barcodeSymbologies";
-
-// bwip-js default export, resolved once and cached.
-let bwipPromise: Promise<any> | null = null;
-
-function loadBwip(): Promise<any> {
-  if (!bwipPromise) {
-    // Import the explicit /browser entry: it exposes types directly (the root "."
-    // export gates them behind a "browser" condition that bundler resolution skips)
-    // and guarantees the canvas-based build that backs toCanvas().
-    bwipPromise = import("bwip-js/browser").then((m: any) => m.default ?? m);
-  }
-  return bwipPromise;
-}
 
 export interface BarcodeOptions {
   scale?: number; // pixel scaling factor (default 3)
@@ -30,6 +17,43 @@ export interface BarcodeOptions {
 export interface BarcodeResult {
   dataUrl: string; // PNG data URL, or "" on failure
   error?: string; // bwip-js error message when encoding failed (e.g. bad input)
+}
+
+/**
+ * Generate a barcode synchronously and return a PNG data URL.
+ * Returns empty string on failure.
+ */
+export function generateBarcodeDataUrlSync(
+  text: string,
+  bcid: string = DEFAULT_SYMBOLOGY,
+  opts: BarcodeOptions = {}
+): string {
+  if (!text) return "";
+
+  const def = getSymbology(bcid);
+  const is2D = def?.category === "2D";
+  const isPostal = def?.category === "Postal";
+  const showText = opts.includetext ?? showsHumanText(bcid);
+
+  const canvas = document.createElement("canvas");
+  try {
+    bwipjs.toCanvas(canvas, {
+      bcid: bcid || DEFAULT_SYMBOLOGY,
+      text,
+      scale: opts.scale ?? 3,
+      // Height only applies to linear/height-modulated codes; matrix codes size by scale.
+      ...(is2D ? {} : { height: opts.height ?? (isPostal ? undefined : 10) }),
+      includetext: showText,
+      textxalign: "center",
+      backgroundcolor: "ffffff", // light quiet zone — required for reliable scanning
+      paddingwidth: 2,
+      paddingheight: 2,
+    });
+    return canvas.toDataURL("image/png");
+  } catch (e) {
+    console.error("Barcode Generation Error (Sync):", e);
+    return "";
+  }
 }
 
 /**
@@ -48,14 +72,6 @@ export async function generateBarcodeDataUrl(
   const is2D = def?.category === "2D";
   const isPostal = def?.category === "Postal";
   const showText = opts.includetext ?? showsHumanText(bcid);
-
-  let bwipjs: any;
-  try {
-    bwipjs = await loadBwip();
-  } catch (e) {
-    console.error("Failed to load bwip-js:", e);
-    return { dataUrl: "", error: "Barcode engine failed to load" };
-  }
 
   const canvas = document.createElement("canvas");
   try {
@@ -78,3 +94,4 @@ export async function generateBarcodeDataUrl(
     return { dataUrl: "", error: message };
   }
 }
+

@@ -3,24 +3,16 @@ import { forwardRef, useEffect, useState, useMemo, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Save, Bookmark, Trash2, Loader2, Wand2, Upload, X, ImageIcon } from "lucide-react";
+import { Wand2 } from "lucide-react";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 import { toast } from "sonner";
 import IdEditor from "./IdEditor/index";
 import GenRuleBuilder from "./IdEditor/GenRuleBuilder";
 import QRCodeBuilder from "./IdEditor/QRCodeBuilder";
-import { DebouncedInput, DebouncedTextarea } from "@/components/ui/debounced-inputs";
+import { DebouncedTextarea } from "@/components/ui/debounced-inputs";
 import { validateSvgId } from "@/lib/utils/svgIdValidator";
-import { SYMBOLOGIES, SYMBOLOGY_CATEGORIES, DEFAULT_SYMBOLOGY, getSymbology } from "@/lib/utils/barcodeSymbologies";
+import { DEFAULT_SYMBOLOGY, getSymbology, SYMBOLOGIES } from "@/lib/utils/barcodeSymbologies";
 import { readBarcodeFromId, writeBarcodeToId } from "@/lib/utils/barcodeId";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -28,121 +20,14 @@ import {
   createTransformVariable,
   deleteTransformVariable
 } from "@/api/apiEndpoints";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel
-} from "@/components/ui/dropdown-menu";
 import type { TransformVariable, SvgPatch } from "@/types";
-import { CollapsiblePanel } from "./components/CollapsiblePanel";
 
-interface VariableDropdownProps {
-  category: TransformVariable['category'];
-  currentValue: number;
-  onApply: (val: number) => void;
-  variables: TransformVariable[];
-  saveMutation: { mutate: (data: Partial<TransformVariable>) => void; isPending: boolean };
-  deleteMutation: { mutate: (id: number) => void; isPending: boolean };
-}
-
-const VariableDropdown = ({
-  category,
-  currentValue,
-  onApply,
-  variables,
-  saveMutation,
-  deleteMutation
-}: VariableDropdownProps) => {
-  const [variableName, setVariableName] = useState("");
-  const filteredVars = variables.filter(v => v.category === category);
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="glass"
-          size="icon"
-          className="h-8 w-8 text-white/40 hover:text-white transition-all duration-300 rounded-full"
-          title={`Save or apply ${category} variable`}
-        >
-          <Bookmark className="w-3.5 h-3.5 group-hover:text-primary transition-colors" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-[#0f0f12]/95 border-white/10 text-white w-64 shadow-2xl backdrop-blur-xl">
-        <DropdownMenuLabel className="text-[11px] uppercase tracking-widest text-white/40 font-bold px-3 py-2">
-          {category.replace('translate', 'Position ')} Variables
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-white/5 mx-1" />
-
-        <div className="max-h-[200px] overflow-y-auto">
-          {filteredVars.length > 0 ? (
-            filteredVars.map((v) => (
-              <div key={v.id} className="flex items-center px-1 group/item">
-                <DropdownMenuItem
-                  className="flex-1 text-xs hover:bg-white/5 cursor-pointer rounded-md"
-                  onClick={() => {
-                    onApply(v.value);
-                    toast.success(`Applied ${v.name}: ${v.value}`);
-                  }}
-                >
-                  <span className="truncate flex-1 font-medium">{v.name}</span>
-                  <span className="text-[10px] text-white/30 ml-2 font-mono">
-                    {v.value}{category === 'rotate' ? '°' : category === 'scale' ? 'x' : 'px'}
-                  </span>
-                </DropdownMenuItem>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-white/10 hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-all rounded-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteMutation.mutate(v.id);
-                  }}
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
-            ))
-          ) : (
-            <div className="px-2 py-6 text-[10px] text-white/30 text-center italic">No {category} variables yet</div>
-          )}
-        </div>
-
-        <DropdownMenuSeparator className="bg-white/5 mx-1" />
-        <div className="p-3 space-y-3 bg-white/2">
-          <Label className="text-[10px] text-white/50 block">Save current: <span className="text-white font-mono">{currentValue}</span></Label>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Name..."
-              className="h-8 text-[11px] bg-white/5 border-white/10 focus-visible:ring-0 focus-visible:border-white/30"
-              value={variableName}
-              onChange={(e) => setVariableName(e.target.value)}
-            />
-            <Button
-              size="icon"
-              variant="vibrant"
-              className="h-8 w-8 shrink-0 rounded-full"
-              disabled={!variableName || saveMutation.isPending}
-              onClick={() => {
-                saveMutation.mutate({
-                  name: variableName,
-                  category: category,
-                  value: currentValue
-                });
-                setVariableName("");
-              }}
-            >
-              {saveMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-            </Button>
-          </div>
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
+// Import modular sub-components and hooks with exact-UI preservation
+import { BarcodeSettings } from "./ElementEditor/BarcodeSettings";
+import { TextSettings } from "./ElementEditor/TextSettings";
+import { ImageUploadSettings } from "./ElementEditor/ImageUploadSettings";
+import { TransformSettings } from "./ElementEditor/TransformSettings";
+import { useElementTransform } from "./ElementEditor/useElementTransform";
 
 interface ElementEditorProps {
   element: SvgElement;
@@ -194,41 +79,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         onDirtyChange?.(false);
         prevId.current = element.internalId || null;
       }
-    }, [element.internalId]);
-
-    // Robust Transformation Parser
-    const getTransform = () => {
-      const style = localElement.attributes.style || "";
-      const transformAttr = localElement.attributes.transform || "";
-      const combined = `${style} ${transformAttr}`.replace(/,/g, ' '); // Replace commas with spaces for easier parsing
-
-      const getVal = (regex: RegExp) => {
-        const match = combined.match(regex);
-        return match ? parseFloat(match[1]) : null;
-      };
-
-      const rotate = getVal(/rotate\s*\(\s*(-?\d+\.?\d*)/);
-      const scale = getVal(/scale\s*\(\s*(-?\d+\.?\d*)/);
-
-      // Improved translate parsing
-      const transMatch = combined.match(/translate\s*\(\s*(-?\d+\.?\d*)\s*(-?\d+\.?\d*|)/);
-      let translateX = 0;
-      let translateY = 0;
-      if (transMatch) {
-        translateX = parseFloat(transMatch[1]);
-        translateY = transMatch[2] ? parseFloat(transMatch[2]) : 0;
-      }
-
-      return {
-        rotate: rotate ?? 0,
-        scale: scale ?? 1,
-        translateX: translateX,
-        translateY: translateY,
-      };
-    };
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const currentTransform = useMemo(() => getTransform(), [localElement.attributes.style, localElement.attributes.transform]);
+    }, [element.internalId, onDirtyChange]);
 
     const handleLocalUpdate = (updates: Partial<SvgElement>) => {
       const updated = {
@@ -242,6 +93,9 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         onDirtyChange?.(true);
       }
     };
+
+    // Use Custom Hook for Coordinates parsing and updating
+    const { currentTransform, updateTransform } = useElementTransform(localElement, handleLocalUpdate, allElements);
 
     const handleApply = () => {
       console.log('[ElementEditor] Apply button clicked - finalizing state');
@@ -298,14 +152,12 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     const isQrField = currentId.includes(".qrcode");
     const isBarcodeField = currentId.includes(".barcode");
     const isGenField = (currentId.includes(".gen") || isQrField) && !isBarcodeField;
-    // Single-carrier barcode: barcode_(symbology)(content rule). The ID is the source of truth.
     const barcodeCarrier = isBarcodeField ? readBarcodeFromId(currentId) : null;
     const currentSymbology = barcodeCarrier?.symbology || DEFAULT_SYMBOLOGY;
     const currentBarcodeRule = barcodeCarrier ? (barcodeCarrier.isAuto ? "AUTO:" : "") + barcodeCarrier.rule : "";
     const previewBarcodeRule = currentBarcodeRule.length > 40 ? `${currentBarcodeRule.slice(0, 40)}...` : currentBarcodeRule;
     const currentSymbologyCategory = getSymbology(currentSymbology)?.category ?? "Linear";
     
-    // Match the generation rule. It starts with gen_ or qrcode_ and goes until a late modifier or the end of the string.
     const genRuleMatch = currentId.match(/(?:gen_|qrcode_)(.*?)(?=\.track_|\.tracking_id|\.link_|\.grayscale|\.hide_|\.mode|$)/);
     const currentGenRule = genRuleMatch ? genRuleMatch[1] : "";
     const previewGenRule = currentGenRule.length > 40 ? `${currentGenRule.slice(0, 40)}...` : currentGenRule;
@@ -316,8 +168,6 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const handleGenRuleChange = (newRule: string) => {
       const currentId = localElement.id || "";
-      // Barcode content uses a .gen_ rule. Barcode targets <image>, so the
-      // "image ⇒ qrcode" shortcut must NOT apply to barcode fields.
       const isBarcode = currentId.includes(".barcode");
       const isQr = !isBarcode && (currentId.includes(".qrcode") || localElement.tag === "image");
       const rulePrefix = isQr ? "qrcode_" : "gen_";
@@ -326,7 +176,6 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       let prefixPart = currentId;
       let suffixPart = "";
 
-      // Find where the late modifiers start
       const lateModifiers = [".track_", ".tracking_id", ".link_", ".grayscale", ".hide_", ".mode"];
       let lateModIndex = -1;
       for (const mod of lateModifiers) {
@@ -341,35 +190,26 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         suffixPart = currentId.substring(lateModIndex);
       }
 
-      // Now prefixPart contains the base ID and all early modifiers (and the existing qrcode/gen rule)
-      // The rule is at the end of prefixPart (because it's the last early modifier)
-      // Let's find .qrcode or .gen in prefixPart
       const typeIndex = prefixPart.indexOf(`.${basePrefix}`);
       if (typeIndex !== -1) {
-        // Strip everything from .qrcode onwards in the prefixPart
         prefixPart = prefixPart.substring(0, typeIndex);
       }
 
-      // Reassemble: base parts + .qrcode_NewRule + .late_modifiers
       const newId = `${prefixPart}.${rulePrefix}${newRule}${suffixPart}`;
-
       handleLocalUpdate({ id: newId });
     };
 
-    // Pick a category (main type) → jump to the first symbology in it. The
-    // symbology dropdown then lets you refine to the exact sub-type.
     const handleBarcodeCategoryChange = (cat: string) => {
       const first = SYMBOLOGIES.find((s) => s.category === cat);
-      if (first && first.bcid !== currentSymbology) handleSymbologyChange(first.bcid);
+      if (first && first.bcid !== currentSymbology) {
+        handleLocalUpdate({ id: writeBarcodeToId(localElement.id || "", { symbology: first.bcid }) });
+      }
     };
 
-    // Rewrite just the symbology inside the barcode carrier, keeping the content rule.
     const handleSymbologyChange = (newSym: string) => {
       handleLocalUpdate({ id: writeBarcodeToId(localElement.id || "", { symbology: newSym }) });
     };
 
-    // Rewrite just the content rule inside the barcode carrier, keeping the symbology.
-    // The builder hands us the rule (optionally AUTO:-prefixed for auto-generate).
     const handleBarcodeContentRuleChange = (newRule: string) => {
       let isAuto = false;
       let rule = newRule;
@@ -425,46 +265,6 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         toast.success("Variable deleted");
       }
     });
-
-    const updateTransform = (key: 'rotate' | 'scale' | 'translateX' | 'translateY', value: number) => {
-      const newTransform = { ...currentTransform, [key]: value };
-
-      // Generate Normalized SVG Transform components (NO 'deg', NO 'px')
-      const components: string[] = [];
-
-      if (newTransform.translateX !== 0 || newTransform.translateY !== 0) {
-        components.push(`translate(${newTransform.translateX} ${newTransform.translateY})`);
-      }
-
-      if (newTransform.rotate !== 0) {
-        // We use a simple rotate(angle) here because we complement it with
-        // transform-origin: center in the CSS style. This provides the best
-        // "rotate itself" (spin-in-place) behavior for interactive editing.
-        components.push(`rotate(${newTransform.rotate})`);
-      }
-
-      if (newTransform.scale !== 1) {
-        components.push(`scale(${newTransform.scale})`);
-      }
-
-      const tStr = components.join(' ');
-
-      // Keep CSS for things like transform-origin for preview, but MOVE actual transform to attribute
-      let newStyle = localElement.attributes.style || "";
-      if (!newStyle.includes("transform-box")) newStyle = `transform-box: fill-box; ${newStyle}`;
-      if (!newStyle.includes("transform-origin")) newStyle = `transform-origin: center; ${newStyle}`;
-
-      // Strip transform from style to avoid double-application if browser supports both
-      newStyle = newStyle.replace(/transform:[^;]+;?/g, '').trim();
-
-      handleLocalUpdate({
-        attributes: {
-          ...localElement.attributes,
-          style: newStyle.replace(/;;/g, ";"),
-          transform: tStr
-        }
-      });
-    };
 
     return (
       <div ref={ref} className="space-y-4">
@@ -548,65 +348,21 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
         )}
 
         {isBarcodeField && (
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Barcode Symbology</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {/* Main type (category) — choose this first */}
-              <Select value={currentSymbologyCategory} onValueChange={handleBarcodeCategoryChange}>
-                <SelectTrigger className="w-full bg-white/10 border-white/20 text-white text-sm h-9">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent className="bg-black/95 border-white/20 text-white z-[120]">
-                  {SYMBOLOGY_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat} className="text-sm">{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {/* Sub-type (specific symbology) within the chosen category */}
-              <Select value={currentSymbology} onValueChange={handleSymbologyChange}>
-                <SelectTrigger className="w-full bg-white/10 border-white/20 text-white text-sm h-9">
-                  <SelectValue placeholder="Symbology" />
-                </SelectTrigger>
-                <SelectContent className="bg-black/95 border-white/20 text-white z-[120] max-h-64">
-                  {SYMBOLOGIES.filter((s) => s.category === currentSymbologyCategory).map((s) => (
-                    <SelectItem key={s.bcid} value={s.bcid} className="text-sm">{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <p className="text-[11px] text-white/40">
-              Stored as <span className="font-mono text-white/60">.barcode_({currentSymbology})</span>. Content comes from the element text, the user, or the rule below.
-            </p>
-          </div>
-        )}
-
-        {isBarcodeField && (
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Barcode Content (optional)</Label>
-            <div className="flex gap-2">
-              <Input value={previewBarcodeRule} readOnly placeholder="Static text, or build rows…" className="bg-white/5 text-white/60 font-mono text-xs border-white/20 focus-visible:ring-0" />
-              <QRCodeBuilder
-                value={currentBarcodeRule}
-                onChange={handleBarcodeContentRuleChange}
-                allElements={allElements}
-                maxLength={maxLength}
-                open={showGenBuilder}
-                onOpenChange={setShowGenBuilder}
-                currentFieldValues={currentFieldValues}
-                defaultTextContent={localElement.innerText || ""}
-                barcodeSymbology={currentSymbology}
-                trigger={
-                  <Button variant="outline" className="shrink-0 bg-white/5 border-white/20 hover:bg-white/10 gap-2 rounded-full">
-                    <Wand2 className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="text-xs">Builder</span>
-                  </Button>
-                }
-              />
-            </div>
-            <p className="text-[11px] text-white/40">
-              Add rows — each becomes a new line in the barcode (great for 2D codes like PDF417 / Data Matrix). Leave empty to use the element's text or let the user type it.
-            </p>
-          </div>
+          <BarcodeSettings
+            currentSymbologyCategory={currentSymbologyCategory}
+            handleBarcodeCategoryChange={handleBarcodeCategoryChange}
+            currentSymbology={currentSymbology}
+            handleSymbologyChange={handleSymbologyChange}
+            previewBarcodeRule={previewBarcodeRule}
+            currentBarcodeRule={currentBarcodeRule}
+            handleBarcodeContentRuleChange={handleBarcodeContentRuleChange}
+            allElements={allElements}
+            maxLength={maxLength}
+            showGenBuilder={showGenBuilder}
+            setShowGenBuilder={setShowGenBuilder}
+            currentFieldValues={currentFieldValues}
+            localElement={localElement}
+          />
         )}
 
         <div className="space-y-2">
@@ -619,131 +375,31 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           />
         </div>
 
-        {isTextElement(localElement) && (
-          <div className="space-y-4 border-t border-white/5 pt-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Text Content</Label>
-              <DebouncedTextarea
-                value={localElement.innerText || ""}
-                onChange={(val) => handleLocalUpdate({ innerText: String(val) })}
-                rows={6}
-                className="bg-white/10 text-sm font-mono border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs uppercase font-bold text-white/60">Auto-Wrap Width</Label>
-              <DebouncedInput
-                type="number"
-                value={localElement.attributes['data-max-width'] || ""}
-                onChange={(val) => handleLocalUpdate({ attributes: { ...localElement.attributes, 'data-max-width': String(val) } })}
-                className="bg-white/10 h-8 border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
-              />
-            </div>
-          </div>
-        )}
+        <TextSettings
+          localElement={localElement}
+          handleLocalUpdate={handleLocalUpdate}
+          isTextElement={isTextElement}
+        />
 
-        {(isImageElement(localElement) || isUploadField) && (
-          <div className="space-y-3 border-t border-white/5 pt-4">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <Upload className="w-3.5 h-3.5 text-primary" />
-              Upload Image
-            </Label>
-            
-            <div className="group relative">
-              {currentImageUrl ? (
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/10 transition-all group-hover:border-white/20">
-                  <img 
-                    src={currentImageUrl} 
-                    alt="Preview" 
-                    className="w-full h-full object-contain"
-                  />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button 
-                      variant="glass" 
-                      size="sm" 
-                      onClick={() => document.getElementById(`image-upload-${index}`)?.click()}
-                      className="h-8 text-[10px] font-bold rounded-full"
-                    >
-                      <ImageIcon className="w-3 h-3 mr-2" />
-                      Replace
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleLocalUpdate({ attributes: { ...localElement.attributes, href: "", 'xlink:href': "" } })}
-                      className="h-8 w-8 text-white/50 hover:text-red-400 hover:bg-red-400/10 rounded-full"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => document.getElementById(`image-upload-${index}`)?.click()}
-                  className="w-full aspect-video rounded-xl border-2 border-dashed border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all flex flex-col items-center justify-center gap-2 group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Upload className="w-5 h-5 text-white/40" />
-                  </div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Click to upload</div>
-                </button>
-              )}
-              
-              <input 
-                id={`image-upload-${index}`}
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-                className="hidden" 
-              />
-            </div>
-            
-            <p className="text-[10px] text-white/20 italic">
-              Supports JPG, PNG, SGV. Max 5MB recommended.
-            </p>
-          </div>
-        )}
+        <ImageUploadSettings
+          localElement={localElement}
+          isUploadField={isUploadField}
+          currentImageUrl={currentImageUrl}
+          index={index}
+          handleImageUpload={handleImageUpload}
+          handleLocalUpdate={handleLocalUpdate}
+          isImageElement={isImageElement}
+        />
 
         {(!isGenField || isQrField) && (
-          <CollapsiblePanel id={`transform-${index}`} title="Transformations" defaultOpen={false}>
-            <div className="space-y-6 bg-white/3 p-4 rounded-xl border border-white/5">
-              {[
-                { key: 'rotate', label: 'Rotate' },
-                { key: 'translateX', label: 'Pos X' },
-                { key: 'translateY', label: 'Pos Y' },
-                { key: 'scale', label: 'Scale', step: 0.1 }
-              ].map((t) => (
-                <div key={t.key} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-[10px] uppercase font-bold text-white/40">{t.label}</Label>
-                    <VariableDropdown
-                      category={t.key as TransformVariable['category']}
-                      currentValue={(currentTransform as Record<string, number>)[t.key]}
-                      onApply={(val) => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', val)}
-                      variables={variables}
-                      saveMutation={saveVariableMutation}
-                      deleteMutation={deleteVariableMutation}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="glass" size="icon" className="h-8 w-8 rounded-full" onClick={() => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', (currentTransform as Record<string, number>)[t.key] - (t.step || 1))}>
-                      <Minus className="w-3 h-3" />
-                    </Button>
-                    <DebouncedInput
-                      type="number"
-                      value={(currentTransform as Record<string, number>)[t.key]}
-                      step={t.step || 1}
-                      onChange={(val) => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', parseFloat(String(val)) || 0)}
-                      className="h-8 bg-white/5 text-xs text-center border-white/20 focus-visible:ring-0 focus-visible:border-white/40"
-                    />
-                    <Button variant="glass" size="icon" className="h-8 w-8 rounded-full" onClick={() => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', (currentTransform as Record<string, number>)[t.key] + (t.step || 1))}>
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CollapsiblePanel>
+          <TransformSettings
+            index={index}
+            currentTransform={currentTransform}
+            updateTransform={updateTransform}
+            variables={variables}
+            saveVariableMutation={saveVariableMutation}
+            deleteVariableMutation={deleteVariableMutation}
+          />
         )}
       </div>
     );

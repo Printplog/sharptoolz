@@ -1,6 +1,7 @@
 import { extractFromDependency } from "./fieldExtractor";
 import { applyWrappedText, getSvgElementStyle } from "./textWrapping";
 import { generateQrDataUrlSync } from "./qrGenerator";
+import { generateBarcodeDataUrlSync } from "./barcodeGenerator";
 import { isFixedAspect } from "./barcodeSymbologies";
 import type { FormField } from "@/types";
 
@@ -126,6 +127,20 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
     const yAttr = el.getAttribute("y") || el.getAttribute("cy") || "0";
     let wAttr = el.getAttribute("width") || "";
     let hAttr = el.getAttribute("height") || "";
+
+    // If it is a <use> element, and width/height are not set, inherit them from the referenced element
+    if (tagName === "use" && (!wAttr || !hAttr)) {
+      const hrefNS = "http://www.w3.org/1999/xlink";
+      const hrefAttr = el.getAttribute("href") || el.getAttributeNS(hrefNS, "href") || "";
+      if (hrefAttr.startsWith("#")) {
+        const referencedId = hrefAttr.substring(1);
+        const referencedEl = el.ownerDocument?.getElementById(referencedId);
+        if (referencedEl) {
+          if (!wAttr) wAttr = referencedEl.getAttribute("width") || "";
+          if (!hAttr) hAttr = referencedEl.getAttribute("height") || "";
+        }
+      }
+    }
 
     // If attributes are missing or zero, try reading from style
     if (!wAttr || parseFloat(wAttr) <= 0) {
@@ -317,13 +332,25 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
           isImageValue = true; // Update so image logic allows injection
         }
 
-        // Special case: barcode is baked client-side (single-source). Inject the
-        // pre-rendered PNG stored in field.barcodeImage — never regenerate here.
+        // Special case: barcode is baked client-side (single-source) OR generated dynamically on-the-fly.
+        // We prioritize the pre-rendered/baked barcode image if present.
         if (isBarcodeElement) {
-          const baked = typeof field.barcodeImage === 'string' ? field.barcodeImage : '';
-          if (!baked) return; // not encoded yet (empty or invalid input) — leave element untouched
-          value = baked;
-          isImageValue = true;
+          const baked = typeof field.barcodeImage === "string" ? field.barcodeImage : "";
+          const bakedIsImage = baked && (baked.startsWith("data:image/") || baked.startsWith("blob:") || baked.includes("base64"));
+          const valueIsImage = typeof value === "string" && (value.startsWith("data:image/") || value.startsWith("blob:") || value.includes("base64"));
+
+          if (bakedIsImage) {
+            value = baked;
+            isImageValue = true;
+          } else if (valueIsImage) {
+            isImageValue = true;
+          } else if (value && value.trim() !== "") {
+            const barcodeData = generateBarcodeDataUrlSync(String(value), field.symbology);
+            if (barcodeData) {
+              value = barcodeData;
+              isImageValue = true;
+            }
+          }
         }
 
         // For select fields, use the label/displayText if targeting a text element,
@@ -370,18 +397,26 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
           const hrefNS = "http://www.w3.org/1999/xlink";
           
           if (finalValue && finalValue.trim() !== "") {
-            console.log(`[QR-DEBUG] 📝 Applying href to <${tagName}> element ${el.getAttribute('id')}`);
+            let targetEl: Element = el;
+            if (tagName === "use") {
+              const hrefAttr = el.getAttribute("href") || el.getAttributeNS(hrefNS, "href") || "";
+              if (hrefAttr.startsWith("#")) {
+                const referencedId = hrefAttr.substring(1);
+                const referencedEl = doc.getElementById(referencedId);
+                if (referencedEl) {
+                  targetEl = referencedEl as Element;
+                }
+              }
+            }
+            console.log(`[QR-DEBUG] 📝 Applying href to <${targetEl.tagName.toLowerCase()}> element ${targetEl.getAttribute("id")} (via <use> ${el.getAttribute("id")})`);
             console.log(`[QR-DEBUG] Data URL prefix: ${finalValue.slice(0, 50)}...`);
-            el.setAttribute("href", finalValue);
-            el.setAttributeNS(hrefNS, "href", finalValue);
-            console.log(`[QR-DEBUG] ✨ Successfully set href on element ${el.getAttribute('id')} (${finalValue.length} bytes)`);
+            targetEl.setAttribute("href", finalValue);
+            targetEl.setAttributeNS(hrefNS, "href", finalValue);
+            console.log(`[QR-DEBUG] ✨ Successfully set href on element ${targetEl.getAttribute("id")} (${finalValue.length} bytes)`);
             // 2D / postal / fixed-geometry barcodes must keep their aspect ratio or
             // they won't scan; plain linear codes (and other images) may stretch to fit.
             const keepAspect = isBarcodeElement && isFixedAspect(field.symbology);
             el.setAttribute("preserveAspectRatio", keepAspect ? "xMidYMid meet" : "none");
-
-            (el as SVGElement).style.transformBox = "fill-box";
-            (el as SVGElement).style.transformOrigin = "center";
 
             // Apply grayscale SVG filter when this depends field explicitly has .grayscale
             if (field.dependsOn && field.requiresGrayscale) {

@@ -1,6 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import updateSvgFromFormData from '@/lib/utils/updateSvgFromFormData';
 import type { FormField } from '@/types';
+
+vi.mock('@/lib/utils/barcodeGenerator', () => ({
+  generateBarcodeDataUrlSync: (text: string) => `data:image/png;base64,mock_${text}`,
+}));
 
 const baseSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
   <image id="Photo_Copy" width="100" height="100" />
@@ -68,3 +72,40 @@ describe('updateSvgFromFormData — grayscale on depends fields', () => {
     expect(result).not.toContain('filter=');
   });
 });
+
+const barcodeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <image id="barcode_test" width="100" height="100" />
+</svg>`;
+
+describe('updateSvgFromFormData — barcode fields', () => {
+  it('generates barcode on-the-fly when currentValue is text', () => {
+    const field: FormField = {
+      id: 'barcode_test',
+      name: 'Barcode Test',
+      type: 'barcode',
+      symbology: 'code128',
+      currentValue: '12345678',
+      touched: true,
+    };
+
+    const result = updateSvgFromFormData(barcodeSvg, [field]);
+    expect(result).toContain('data:image/png;base64');
+    expect(result).toContain('preserveAspectRatio="none"');
+  });
+
+  it('keeps fixed aspect ratio for pdf417', () => {
+    const field: FormField = {
+      id: 'barcode_test',
+      name: 'Barcode Test',
+      type: 'barcode',
+      symbology: 'pdf417',
+      currentValue: '12345678',
+      touched: true,
+    };
+
+    const result = updateSvgFromFormData(barcodeSvg, [field]);
+    expect(result).toContain('data:image/png;base64');
+    expect(result).toContain('preserveAspectRatio="xMidYMid meet"');
+  });
+});
+

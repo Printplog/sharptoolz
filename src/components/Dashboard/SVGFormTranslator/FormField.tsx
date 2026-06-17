@@ -340,16 +340,17 @@ const FormFieldComponent: React.FC<{
                   readOnly
                   className="bg-white/5 border-white/20 text-gray-400 cursor-not-allowed"
                   disabled={isFieldDisabled}
-                  placeholder="Click regenerate to generate value"
+                  placeholder="Click regenerate to regenerate value"
                 />
                 <Button
                   type="button"
                   onClick={() => handleChange(generateFieldValue())}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full px-4"
                   disabled={isFieldDisabled}
                   title="Regenerate value"
                 >
-                  <RotateCcw className="w-4 h-4" />
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Regenerate
                 </Button>
               </div>
             </div>
@@ -693,16 +694,17 @@ const FormFieldComponent: React.FC<{
                 readOnly
                 className="bg-white/5 border-white/20 text-gray-400 cursor-not-allowed"
                 disabled={isFieldDisabled}
-                placeholder="Click regenerate to generate value"
+                placeholder="Click regenerate to regenerate value"
               />
               <Button
                 type="button"
                 onClick={() => handleChange(generateFieldValue())}
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full px-4"
                 disabled={isFieldDisabled}
                 title="Regenerate value"
               >
-                <RotateCcw className="w-4 h-4" />
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Regenerate
               </Button>
             </div>
           </div>

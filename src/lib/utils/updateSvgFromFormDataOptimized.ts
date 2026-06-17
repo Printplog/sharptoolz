@@ -1,6 +1,8 @@
 import type { FormField } from "@/types";
 import { extractFromDependency } from "./fieldExtractor";
 import { generateQrDataUrlSync } from "./qrGenerator";
+import { generateBarcodeDataUrlSync } from "./barcodeGenerator";
+import { isFixedAspect } from "./barcodeSymbologies";
 
 /**
  * Optimized version that only updates specific fields instead of processing all fields
@@ -107,16 +109,57 @@ export default function updateSvgFromFormDataOptimized(
         case "upload":
         case "file":
         case "sign":
-        case "qrcode": {
+        case "qrcode":
+        case "barcode": {
           const hrefNS = "http://www.w3.org/1999/xlink";
-          // Only update href if there's a value, otherwise preserve original
-          if (value && value.trim() !== "") {
-            let finalValue = value;
-            if (field.type === "qrcode" && !value.startsWith("data:")) {
-              finalValue = generateQrDataUrlSync(value);
+          let isImageValue = typeof value === 'string' && (value.startsWith('data:image/') || value.startsWith('blob:') || value.includes('base64'));
+
+          if (field.type === "qrcode" && !isImageValue) {
+            if (value && value.trim() !== "") {
+              value = generateQrDataUrlSync(value);
+              isImageValue = true;
             }
-            el.setAttributeNS(hrefNS, "href", finalValue);
-            el.setAttribute("href", finalValue);
+          }
+
+          if (field.type === "barcode") {
+            const baked = typeof field.barcodeImage === "string" ? field.barcodeImage : "";
+            const bakedIsImage = baked && (baked.startsWith("data:image/") || baked.startsWith("blob:") || baked.includes("base64"));
+            const valueIsImage = typeof value === "string" && (value.startsWith("data:image/") || value.startsWith("blob:") || value.includes("base64"));
+
+            if (bakedIsImage) {
+              value = baked;
+              isImageValue = true;
+            } else if (valueIsImage) {
+              isImageValue = true;
+            } else if (value && value.trim() !== "") {
+              const barcodeData = generateBarcodeDataUrlSync(String(value), field.symbology);
+              if (barcodeData) {
+                value = barcodeData;
+                isImageValue = true;
+              }
+            }
+          }
+
+          // Only update href if it is an image value
+          if (isImageValue && value && value.trim() !== "") {
+            let targetEl: Element = el;
+            const tagName = el.tagName.toLowerCase();
+            if (tagName === "use") {
+              const hrefAttr = el.getAttribute("href") || el.getAttributeNS(hrefNS, "href") || "";
+              if (hrefAttr.startsWith("#")) {
+                const referencedId = hrefAttr.substring(1);
+                const referencedEl = doc.getElementById(referencedId);
+                if (referencedEl) {
+                  targetEl = referencedEl as Element;
+                }
+              }
+            }
+            targetEl.setAttributeNS(hrefNS, "href", value);
+            targetEl.setAttribute("href", value);
+            if (field.type === "barcode") {
+              const keepAspect = isFixedAspect(field.symbology);
+              el.setAttribute("preserveAspectRatio", keepAspect ? "xMidYMid meet" : "none");
+            }
           }
           break;
         }
