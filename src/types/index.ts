@@ -164,6 +164,9 @@ export type Tutorial = {
 export type Font = {
   id: string;
   name: string;
+  family?: string;
+  weight?: string;
+  style?: string;
   font_file?: string;
   font_url?: string;
   created_at: string;

@@ -24,6 +24,8 @@ export function useFontPreviewStyles(fonts: Font[]) {
         @font-face {
           font-family: "FontPreview-${font.id}";
           src: url("${font.font_url}") format("${getFontFormat(font.font_url)}");
+          font-weight: ${font.weight || "normal"};
+          font-style: ${font.style || "normal"};
           font-display: swap;
         }
       `

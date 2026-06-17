@@ -69,6 +69,13 @@ export default function AdminFontsPage() {
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="font-medium">{row.original.name}</span>
+            <span className="text-xs text-white/50">
+              {row.original.family || row.original.name}
+              {" · "}
+              {row.original.weight || "normal"}
+              {" · "}
+              {row.original.style || "normal"}
+            </span>
             <span className="text-xs text-white/60">{row.original.id}</span>
           </div>
         ),
@@ -82,6 +89,8 @@ export default function AdminFontsPage() {
               className="text-base"
               style={{
                 fontFamily: `"FontPreview-${row.original.id}", sans-serif`,
+                fontWeight: row.original.weight || "normal",
+                fontStyle: row.original.style || "normal",
               }}
             >
               Grumpy wizards make toxic brew.

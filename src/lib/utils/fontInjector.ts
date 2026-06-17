@@ -3,14 +3,20 @@
  */
 import type { Font } from "@/types";
 
-type FontFaceTuple = { family: string; css: string };
+type FontFaceTuple = { family: string; weight: string; style: string; css: string };
 
-const buildFontFace = (family: string, url: string, format: string) => {
+const buildFontFace = (
+  family: string,
+  url: string,
+  format: string,
+  weight: string = "normal",
+  style: string = "normal"
+) => {
   return `@font-face {
   font-family: "${family}";
   src: url("${url}") format("${format}");
-  font-weight: normal;
-  font-style: normal;
+  font-weight: ${weight};
+  font-style: ${style};
 }`;
 };
 
@@ -19,7 +25,15 @@ const buildFontFace = (family: string, url: string, format: string) => {
 const normalizeFontKey = (name?: string | null) =>
   (name || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
 
+const normalizeVariantKey = (family?: string | null, weight: string = "normal", style: string = "normal") =>
+  `${normalizeFontKey(family)}_${weight}_${style}`;
+
 const stripQuotes = (value: string) => value.replace(/^['"]|['"]$/g, "");
+
+const extractDeclaration = (css: string, property: string) => {
+  const match = css.match(new RegExp(`${property}\\s*:\\s*([^;}]+)`, "i"));
+  return match?.[1]?.trim().replace(/^['"]|['"]$/g, "");
+};
 
 const collectFontFamilyAliases = (doc: Document) => {
   const aliasMap = new Map<string, string>();
@@ -138,27 +152,34 @@ export async function injectFontsIntoSVG(
       }
     }
 
-    const candidates = [
-      font.name,
-      getFileNameStem(font.font_file || font.font_url),
-    ].filter(Boolean) as string[];
-
-    let cssFamily = font.name;
-    for (const candidate of candidates) {
-      const key = normalizeFontKey(candidate);
-      if (key && aliasMap.has(key)) {
-        cssFamily = aliasMap.get(key)!;
-        break;
-      }
-    }
+    const weight = font.weight || "normal";
+    const style = font.style || "normal";
+    let cssFamily = font.family || "";
 
     if (!cssFamily) {
-      cssFamily = font.name || candidates[0] || "CustomFont";
+      const candidates = [
+        font.name,
+        getFileNameStem(font.font_file || font.font_url),
+      ].filter(Boolean) as string[];
+
+      for (const candidate of candidates) {
+        const key = normalizeFontKey(candidate);
+        if (key && aliasMap.has(key)) {
+          cssFamily = aliasMap.get(key)!;
+          break;
+        }
+      }
+
+      if (!cssFamily) {
+        cssFamily = font.name || candidates[0] || "CustomFont";
+      }
     }
 
     fontFaces.push({
       family: cssFamily,
-      css: buildFontFace(cssFamily, fontUrl, fontFormat),
+      weight,
+      style,
+      css: buildFontFace(cssFamily, fontUrl, fontFormat, weight, style),
     });
   }
 
@@ -185,19 +206,20 @@ export async function injectFontsIntoSVG(
   if (embedBase64) {
     styleEl.textContent = fontFaces.map(({ css }) => css).join("\n");
   } else {
-    const existingFamilies = new Set<string>();
+    const existingVariants = new Set<string>();
     if (styleEl.textContent) {
-      const matches = styleEl.textContent.match(/font-family:\s*"([^"]+)"/g) || [];
-      matches.forEach((match) => {
-        const familyMatch = match.match(/font-family:\s*"([^"]+)"/);
-        if (familyMatch?.[1]) {
-          existingFamilies.add(familyMatch[1]);
-        }
+      const fontFaceBlocks = styleEl.textContent.match(/@font-face\s*\{[^}]*\}/gi) || [];
+      fontFaceBlocks.forEach((block) => {
+        const family = extractDeclaration(block, "font-family");
+        if (!family) return;
+        const weight = extractDeclaration(block, "font-weight") || "normal";
+        const style = extractDeclaration(block, "font-style") || "normal";
+        existingVariants.add(normalizeVariantKey(family, weight, style));
       });
     }
 
     const cssToInject = fontFaces
-      .filter(({ family }) => !existingFamilies.has(family))
+      .filter(({ family, weight, style }) => !existingVariants.has(normalizeVariantKey(family, weight, style)))
       .map(({ css }) => css);
 
     if (cssToInject.length > 0) {
@@ -210,5 +232,4 @@ export async function injectFontsIntoSVG(
 
   return new XMLSerializer().serializeToString(doc);
 }
-
 

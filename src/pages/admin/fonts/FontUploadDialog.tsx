@@ -27,10 +27,16 @@ export default function FontUploadDialog({
     uploadMutation,
 }: FontUploadDialogProps) {
     const [fontName, setFontName] = useState("");
+    const [fontFamily, setFontFamily] = useState("");
+    const [fontWeight, setFontWeight] = useState("normal");
+    const [fontStyle, setFontStyle] = useState("normal");
     const [fontFile, setFontFile] = useState<File | null>(null);
 
     const resetForm = () => {
         setFontName("");
+        setFontFamily("");
+        setFontWeight("normal");
+        setFontStyle("normal");
         setFontFile(null);
         setDialogOpen(false);
     };
@@ -48,6 +54,11 @@ export default function FontUploadDialog({
 
         const formData = new FormData();
         formData.append("name", fontName.trim());
+        if (fontFamily.trim()) {
+            formData.append("family", fontFamily.trim());
+        }
+        formData.append("weight", fontWeight.trim() || "normal");
+        formData.append("style", fontStyle.trim() || "normal");
         formData.append("font_file", fontFile);
 
         uploadMutation.mutate(formData, {
@@ -81,6 +92,41 @@ export default function FontUploadDialog({
                             className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
                             disabled={uploadMutation.isPending}
                         />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="space-y-2 sm:col-span-1">
+                            <Label htmlFor="font-family">Family</Label>
+                            <Input
+                                id="font-family"
+                                placeholder="Inter"
+                                value={fontFamily}
+                                onChange={(event) => setFontFamily(event.target.value)}
+                                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
+                                disabled={uploadMutation.isPending}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="font-weight">Weight</Label>
+                            <Input
+                                id="font-weight"
+                                placeholder="700"
+                                value={fontWeight}
+                                onChange={(event) => setFontWeight(event.target.value)}
+                                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
+                                disabled={uploadMutation.isPending}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="font-style">Style</Label>
+                            <Input
+                                id="font-style"
+                                placeholder="normal"
+                                value={fontStyle}
+                                onChange={(event) => setFontStyle(event.target.value)}
+                                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
+                                disabled={uploadMutation.isPending}
+                            />
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="font-file">Font file</Label>
