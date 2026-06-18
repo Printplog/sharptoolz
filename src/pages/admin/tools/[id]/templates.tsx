@@ -1,21 +1,17 @@
-import { getTemplatesForAdmin, getTool } from "@/api/apiEndpoints";
+import { getAllTemplatesForAdmin, getTool } from "@/api/apiEndpoints";
 import ToolCard from "@/components/Admin/Tools/ToolCard";
 import ToolGridSkeleton from "@/components/ToolGridSkeleton";
 import type { Tool } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Search } from "lucide-react";
-import { useState, useMemo } from "react";
-import { useDebouncedCallback } from "@/hooks/useDebounce";
+import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function ToolTemplates() {
   const { id } = useParams<{ id: string }>();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Debounced search handler (300ms delay)
-  const handleSearchChange = useDebouncedCallback((value: string) => {
-    setSearchQuery(value);
-  }, 300);
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearchQuery = useDebounce(searchInput, 300);
 
   // Fetch tool data
   const { data: tool, isLoading: toolLoading } = useQuery<Tool>({
@@ -27,26 +23,19 @@ export default function ToolTemplates() {
   // Fetch templates for this tool
   const { data: templatesData, isLoading: templatesLoading } = useQuery(
     {
-      queryKey: ["templates", "tool", id],
-      queryFn: () => getTemplatesForAdmin({ tool: id as string, page_size: 100 }),
+      queryKey: ["templates", "tool", id, { search: debouncedSearchQuery }],
+      queryFn: () => getAllTemplatesForAdmin({
+        tool: id as string,
+        search: debouncedSearchQuery.trim() || undefined,
+      }),
       enabled: !!id,
+      placeholderData: (previousData) => previousData,
     }
   );
 
-  const templates = templatesData?.results || [];
+  const templates = templatesData || [];
 
   const isLoading = toolLoading || templatesLoading;
-
-  // Filter templates based on search query
-  const filteredTemplates = useMemo(() => {
-    if (!templates) return [];
-    if (!searchQuery.trim()) return templates;
-
-    const query = searchQuery.toLowerCase();
-    return templates.filter((template) =>
-      template.name.toLowerCase().includes(query)
-    );
-  }, [templates, searchQuery]);
 
   if (isLoading) {
     return <ToolGridSkeleton />;
@@ -92,22 +81,19 @@ export default function ToolTemplates() {
       </div>
 
       {/* Search Bar */}
-      {templates && templates.length > 0 && (
+      {(templates.length > 0 || searchInput) && (
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
           <input
             type="text"
             placeholder="Search templates..."
-            defaultValue={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-full pl-10 pr-4 py-2.5 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
           />
-          {searchQuery && (
+          {searchInput && (
             <button
-              onClick={() => {
-                setSearchQuery("");
-                handleSearchChange("");
-              }}
+              onClick={() => setSearchInput("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
             >
               ✕
@@ -117,16 +103,16 @@ export default function ToolTemplates() {
       )}
 
       {/* Templates Grid */}
-      {filteredTemplates.length > 0 ? (
+      {templates.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTemplates.map((template) => (
+          {templates.map((template) => (
             <ToolCard key={template.id} tool={template} />
           ))}
         </div>
-      ) : searchQuery ? (
+      ) : searchInput ? (
         <div className="text-center py-12">
           <p className="text-white/60">
-            No templates found matching "{searchQuery}"
+            No templates found matching "{searchInput}"
           </p>
         </div>
       ) : (

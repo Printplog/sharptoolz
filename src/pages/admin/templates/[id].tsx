@@ -1,4 +1,4 @@
-import { getTemplateForAdmin, updateTemplateForAdmin, getTemplateSvgForAdmin, getTemplatesForAdmin } from '@/api/apiEndpoints';
+import { getTemplateForAdmin, updateTemplateForAdmin, getTemplateSvgForAdmin, getAllTemplatesForAdmin } from '@/api/apiEndpoints';
 import SvgEditor, { type SvgEditorRef } from '@/components/Admin/ToolBuilder/SvgEditor';
 import errorMessage from '@/lib/utils/errorMessage';
 import type { Template, TemplateUpdatePayload, SvgPatch } from '@/types';
@@ -84,12 +84,12 @@ export default function SvgTemplateEditor() {
   // Fetch all templates for the switcher
 
   const { data: siblingsData } = useQuery({
-    queryKey: ["templates-for-admin-all"],
-    queryFn: () => getTemplatesForAdmin({ page_size: 100 }),
+    queryKey: ["templates", "admin", "all"],
+    queryFn: () => getAllTemplatesForAdmin(),
     enabled: true,
   });
 
-  const siblings = siblingsData?.results || [];
+  const siblings = siblingsData || [];
 
 
   const { prevTemplate, nextTemplate } = useMemo(() => {

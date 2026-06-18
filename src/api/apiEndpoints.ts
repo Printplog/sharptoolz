@@ -89,12 +89,35 @@ export const deleteTemplate = async (id: string): Promise<unknown> => {
   return res.data;
 }
 
-export const getTemplates = async (params?: { page?: number; search?: string; tool?: string; hot?: boolean; page_size?: number }): Promise<{
+type TemplateListParams = {
+  page?: number;
+  search?: string;
+  tool?: string;
+  hot?: boolean;
+  page_size?: number;
+};
+
+type TemplateListResponse = {
   results: Template[];
   count: number;
   next: string | null;
   previous: string | null;
-}> => {
+};
+
+type AdminTemplateListResponse = TemplateListResponse & {
+  current_page?: number;
+  total_pages?: number;
+  stats?: {
+    total: number;
+    active: number;
+    inactive: number;
+    hot: number;
+  };
+};
+
+const ADMIN_TEMPLATE_PAGE_SIZE = 50;
+
+export const getTemplates = async (params?: TemplateListParams): Promise<TemplateListResponse> => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.search) searchParams.append('search', params.search);
@@ -106,20 +129,7 @@ export const getTemplates = async (params?: { page?: number; search?: string; to
   const res = await apiClient.get(`/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
 }
-export const getTemplatesForAdmin = async (params?: { page?: number; search?: string; tool?: string; hot?: boolean; page_size?: number }): Promise<{
-  results: Template[];
-  count: number;
-  next: string | null;
-  previous: string | null;
-  current_page?: number;
-  total_pages?: number;
-  stats?: {
-    total: number;
-    active: number;
-    inactive: number;
-    hot: number;
-  };
-}> => {
+export const getTemplatesForAdmin = async (params?: TemplateListParams): Promise<AdminTemplateListResponse> => {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.search) searchParams.append('search', params.search);
@@ -130,6 +140,32 @@ export const getTemplatesForAdmin = async (params?: { page?: number; search?: st
   const queryString = searchParams.toString();
   const res = await apiClient.get(`/admin/templates/${queryString ? `?${queryString}` : ''}`);
   return res.data;
+}
+
+export const getAllTemplatesForAdmin = async (
+  params?: Omit<TemplateListParams, 'page'>
+): Promise<Template[]> => {
+  const pageSize = params?.page_size ?? ADMIN_TEMPLATE_PAGE_SIZE;
+  const templates: Template[] = [];
+  let page = 1;
+
+  while (true) {
+    const response = await getTemplatesForAdmin({
+      ...params,
+      page,
+      page_size: pageSize,
+    });
+
+    templates.push(...response.results);
+
+    if (!response.next || (response.total_pages && page >= response.total_pages)) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return templates;
 }
 
 
