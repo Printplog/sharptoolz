@@ -307,6 +307,8 @@ export type WalletData = {
   id: string;
   balance: number;
   transactions: Transaction[];
+  bonus_balance?: number | string; // Decimal field usually strings over JSON
+  bonus_expires_at?: string | null;
 };
 
 export type DownloadData = {

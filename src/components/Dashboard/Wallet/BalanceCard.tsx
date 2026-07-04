@@ -4,9 +4,11 @@ import { Wallet, ArrowUpRight } from 'lucide-react';
 interface BalanceCardProps {
   balance: number;
   onTopUp: () => void;
+  bonusBalance?: number | string;
+  bonusExpiresAt?: string | null;
 }
 
-const BalanceCard: React.FC<BalanceCardProps> = ({ balance, onTopUp }) => {
+const BalanceCard: React.FC<BalanceCardProps> = ({ balance, onTopUp, bonusBalance, bonusExpiresAt }) => {
   return (
     <div className="relative group overflow-hidden rounded-[2rem] border border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent backdrop-blur-3xl p-8 md:p-10 transition-all duration-500 hover:border-green-500/40">
       {/* Decorative Background Elements */}
@@ -29,6 +31,12 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, onTopUp }) => {
                 {balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
+            {Number(bonusBalance) > 0 && (
+              <div className="text-xs text-emerald-500 font-semibold">
+                +${Number(bonusBalance).toFixed(2)} bonus
+                {bonusExpiresAt ? ` · expires ${new Date(bonusExpiresAt).toLocaleDateString()}` : ""}
+              </div>
+            )}
           </div>
         </div>
 

@@ -53,6 +53,8 @@ const WalletPage: React.FC = () => {
           <BalanceCard
             balance={Number(wallet?.balance)}
             onTopUp={handleOpenAddFunds}
+            bonusBalance={wallet?.bonus_balance}
+            bonusExpiresAt={wallet?.bonus_expires_at}
           />
 
           {wallet?.transactions?.[0]?.status === "pending" && (
