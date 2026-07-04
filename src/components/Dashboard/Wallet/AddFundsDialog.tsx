@@ -52,6 +52,7 @@ export default function AddFundsDialog({
   const depositUsdValue = (parseFloat(amountUsd) || 0) / depositRate;
   const promoBonus = calcBonus(depositUsdValue, promoCfg);
   const promoGap = amountToUnlock(depositUsdValue, promoCfg);
+  const ngnMin = Number(promoCfg.deposit_promo_min_amount) * depositRate;
 
   // Fetch live exchange rate when naira mode is selected
   const loadRate = useCallback(async () => {
@@ -279,11 +280,9 @@ export default function AddFundsDialog({
                     <button
                       type="button"
                       className="underline text-primary font-black"
-                      onClick={() =>
-                        setAmountUsd((Number(promoCfg.deposit_promo_min_amount) * depositRate).toFixed(2))
-                      }
+                      onClick={() => setAmountUsd(String(Math.round(ngnMin)))}
                     >
-                      Set to ${Number(promoCfg.deposit_promo_min_amount)}
+                      Set to ₦{ngnMin.toLocaleString('en-NG', { maximumFractionDigits: 0 })}
                     </button>
                   </p>
                 ) : null
