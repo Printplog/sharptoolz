@@ -121,6 +121,23 @@ export default function AddFundsDialog({
           <p className="text-white/40 text-xs font-black uppercase tracking-[0.2em]">Select your payment method</p>
         </DialogHeader>
 
+        {/* Deposit bonus promo banner — visible in every mode when the promo is on */}
+        {promoCfg.enable_deposit_promo && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+            <span className="text-lg leading-none">🎁</span>
+            <p className="text-xs font-bold leading-relaxed text-emerald-300">
+              Deposit ${Number(promoCfg.deposit_promo_min_amount).toFixed(0)}+ and get{' '}
+              {Number(promoCfg.deposit_promo_percentage)}% bonus
+              {Number(promoCfg.deposit_promo_max_bonus)
+                ? ` (up to $${Number(promoCfg.deposit_promo_max_bonus).toFixed(0)})`
+                : ''}
+              {Number(promoCfg.deposit_promo_expiry_days)
+                ? `. Bonus expires ${Number(promoCfg.deposit_promo_expiry_days)} days after credit.`
+                : '.'}
+            </p>
+          </div>
+        )}
+
         {/* Step 1: Choose method */}
         {!mode && (
           <div className="grid grid-cols-1 gap-4">

@@ -3,6 +3,7 @@ import { Plus, Receipt, History } from "lucide-react";
 import AddFundsDialog from "@/components/Dashboard/Wallet/AddFundsDialog";
 import TransactionHistory from "@/components/Dashboard/Wallet/TransactionHistory";
 import BalanceCard from "@/components/Dashboard/Wallet/BalanceCard";
+import DepositPromoPopup from "@/components/Site/Promo/DepositPromoPopup";
 import { useWalletStore } from "@/store/walletStore";
 import { useWalletSocket } from "@/hooks/useWalletSocket";
 import PendingFundingNotice from "@/components/Dashboard/Wallet/PendingFundingNotice";
@@ -95,6 +96,9 @@ const WalletPage: React.FC = () => {
       />
 
       <SuccessPaymentDialog />
+
+      {/* Deposit promo popup — wallet page only; "Deposit now" opens the Add Funds dialog */}
+      <DepositPromoPopup onDeposit={handleOpenAddFunds} />
     </div>
   );
 };

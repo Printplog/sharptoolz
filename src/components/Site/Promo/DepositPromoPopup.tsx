@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Gift, X } from "lucide-react";
@@ -9,8 +9,7 @@ import { calcBonus, type DepositPromoConfig } from "@/lib/promo/depositPromo";
 
 const DISMISS_KEY = "deposit_promo_dismissed";
 
-export default function DepositPromoPopup() {
-  const location = useLocation();
+export default function DepositPromoPopup({ onDeposit }: { onDeposit?: () => void }) {
   const navigate = useNavigate();
   // Lazy-init from localStorage so a previously-dismissed popup never flashes on mount.
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(DISMISS_KEY) === "1");
@@ -30,8 +29,7 @@ export default function DepositPromoPopup() {
     deposit_promo_message: settings?.deposit_promo_message ?? "",
   };
 
-  const onWalletPage = location.pathname.includes("/wallet");
-  const visible = !!promoCfg.enable_deposit_promo && !onWalletPage && !dismissed;
+  const visible = !!promoCfg.enable_deposit_promo && !dismissed;
 
   const minAmount = Number(promoCfg.deposit_promo_min_amount) || 0;
   const percentage = Number(promoCfg.deposit_promo_percentage) || 0;
@@ -51,7 +49,8 @@ export default function DepositPromoPopup() {
 
   const handleDeposit = () => {
     dismiss();
-    navigate("/wallet");
+    if (onDeposit) onDeposit();
+    else navigate("/wallet");
   };
 
   return (

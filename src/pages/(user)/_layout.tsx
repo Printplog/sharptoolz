@@ -2,7 +2,6 @@ import BottomBar from "@/components/Dashboard/Layouts/BottomBar";
 import Navbar from "@/components/Dashboard/Layouts/Navbar";
 import Sidebar from "@/components/Dashboard/Layouts/Sidebar";
 import GlobalAnnouncement from "@/components/Dashboard/Layouts/GlobalAnnouncement";
-import DepositPromoPopup from "@/components/Site/Promo/DepositPromoPopup";
 import Disclaimer from "@/components/Disclaimer";
 import ProtectedLayout from "@/layouts/ProtectedLayout";
 import { useDialogStore } from "@/store/dialogStore";
@@ -31,7 +30,6 @@ export default function DashboardLayout() {
           </div>
         </main>
         <BottomBar />
-        <DepositPromoPopup />
       </div>
     </ProtectedLayout>
   );
