@@ -64,7 +64,7 @@ export default function DepositPromoPopup() {
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="fixed bottom-24 left-4 z-40 w-[calc(100%-2rem)] max-w-sm lg:bottom-6 lg:left-6"
         >
-          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-[#0a0a0a]/90 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-black p-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             <div className="absolute -top-10 -left-10 h-32 w-32 rounded-full bg-primary/10 blur-[60px]" />
 
             <div className="relative z-10 flex items-start gap-3">
@@ -89,13 +89,13 @@ export default function DepositPromoPopup() {
             <div className="relative z-10 mt-4 flex items-center gap-2">
               <button
                 onClick={handleDeposit}
-                className="flex-1 rounded-xl bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-black transition-all hover:scale-[1.02] active:scale-95"
+                className="flex-1 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black transition-all hover:scale-[1.02] active:scale-95"
               >
                 Deposit now (+${sampleBonus.toFixed(2)})
               </button>
               <button
                 onClick={dismiss}
-                className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-white/40 transition-colors hover:text-white"
+                className="px-3 py-2.5 text-sm font-medium text-white/40 transition-colors hover:text-white"
               >
                 Maybe later
               </button>
