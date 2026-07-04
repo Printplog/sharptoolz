@@ -13,6 +13,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import type { CryptoPaymentData, SiteSettings } from '@/types';
 import errorMessage from '@/lib/utils/errorMessage';
+import { calcBonus, qualifies, amountToUnlock, type DepositPromoConfig } from '@/lib/promo/depositPromo';
 
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -36,6 +37,21 @@ export default function AddFundsDialog({
 
   const adminFallbackRate = Number(siteSettings?.exchange_rate_override) || 1650;
   const minTopup = Number(siteSettings?.min_topup_amount) || 5;
+
+  // Deposit bonus promo config (falls back to disabled while settings are loading/absent)
+  const promoCfg: DepositPromoConfig = {
+    enable_deposit_promo: siteSettings?.enable_deposit_promo ?? false,
+    deposit_promo_min_amount: siteSettings?.deposit_promo_min_amount ?? 0,
+    deposit_promo_percentage: siteSettings?.deposit_promo_percentage ?? 0,
+    deposit_promo_max_bonus: siteSettings?.deposit_promo_max_bonus ?? 0,
+    deposit_promo_expiry_days: siteSettings?.deposit_promo_expiry_days ?? 0,
+    deposit_promo_message: siteSettings?.deposit_promo_message ?? '',
+  };
+  // Amount field holds Naira; convert to the USD-equivalent the promo config is expressed in
+  const depositRate = usdToNgn ?? adminFallbackRate;
+  const depositUsdValue = (parseFloat(amountUsd) || 0) / depositRate;
+  const promoBonus = calcBonus(depositUsdValue, promoCfg);
+  const promoGap = amountToUnlock(depositUsdValue, promoCfg);
 
   // Fetch live exchange rate when naira mode is selected
   const loadRate = useCallback(async () => {
@@ -246,6 +262,32 @@ export default function AddFundsDialog({
                   className="h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-green-500/50 focus:border-green-500/50 text-lg font-bold pl-10"
                 />
               </div>
+
+              {/* Deposit Bonus Nudge */}
+              {promoCfg.enable_deposit_promo && (
+                qualifies(depositUsdValue, promoCfg) ? (
+                  <p className="text-xs font-bold text-emerald-400 ml-1">
+                    🎉 You'll get +${promoBonus.toFixed(2)} bonus
+                    {Number(promoCfg.deposit_promo_expiry_days) ? ` (expires in ${promoCfg.deposit_promo_expiry_days} days)` : ''}!
+                  </p>
+                ) : promoGap > 0 ? (
+                  <p className="text-xs text-amber-400 font-bold ml-1 flex items-center gap-2 flex-wrap">
+                    <span>
+                      Add ${promoGap.toFixed(2)} more to unlock a $
+                      {calcBonus(Number(promoCfg.deposit_promo_min_amount), promoCfg).toFixed(2)} bonus.
+                    </span>
+                    <button
+                      type="button"
+                      className="underline text-primary font-black"
+                      onClick={() =>
+                        setAmountUsd((Number(promoCfg.deposit_promo_min_amount) * depositRate).toFixed(2))
+                      }
+                    >
+                      Set to ${Number(promoCfg.deposit_promo_min_amount)}
+                    </button>
+                  </p>
+                ) : null
+              )}
 
               {/* Conversion Preview */}
               {amountUsd && usdToNgn && (
