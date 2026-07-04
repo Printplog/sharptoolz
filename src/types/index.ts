@@ -459,6 +459,14 @@ export type SiteSettings = {
   referral_percentage: string;
   min_withdrawal_threshold: string;
 
+  // 6. Deposit Promo Configs
+  enable_deposit_promo?: boolean;
+  deposit_promo_min_amount?: number;
+  deposit_promo_percentage?: number;
+  deposit_promo_max_bonus?: number;
+  deposit_promo_expiry_days?: number;
+  deposit_promo_message?: string;
+
   enable_ai_features: boolean;
   manual_purchase_text: string;
   dev_name_obfuscated: string;
