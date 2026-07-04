@@ -461,10 +461,10 @@ export type SiteSettings = {
 
   // 6. Deposit Promo Configs
   enable_deposit_promo?: boolean;
-  deposit_promo_min_amount?: number;
-  deposit_promo_percentage?: number;
-  deposit_promo_max_bonus?: number;
-  deposit_promo_expiry_days?: number;
+  deposit_promo_min_amount?: string | number; // Decimal field usually strings over JSON
+  deposit_promo_percentage?: string | number; // Decimal field usually strings over JSON
+  deposit_promo_max_bonus?: string | number; // Decimal field usually strings over JSON
+  deposit_promo_expiry_days?: string | number; // Integer field, form state keeps it as a string
   deposit_promo_message?: string;
 
   enable_ai_features: boolean;

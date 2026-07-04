@@ -72,6 +72,12 @@ export default function AdminSettings() {
     referral_percentage: "",
     min_referral_deposit: "",
     min_withdrawal_threshold: "",
+    enable_deposit_promo: false,
+    deposit_promo_min_amount: "",
+    deposit_promo_percentage: "",
+    deposit_promo_max_bonus: "",
+    deposit_promo_expiry_days: "",
+    deposit_promo_message: "",
   });
 
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
@@ -115,6 +121,12 @@ export default function AdminSettings() {
         referral_percentage: settings.referral_percentage || "",
         min_referral_deposit: settings.min_referral_deposit || "",
         min_withdrawal_threshold: settings.min_withdrawal_threshold || "",
+        enable_deposit_promo: settings.enable_deposit_promo ?? false,
+        deposit_promo_min_amount: settings.deposit_promo_min_amount ?? "",
+        deposit_promo_percentage: settings.deposit_promo_percentage ?? "",
+        deposit_promo_max_bonus: settings.deposit_promo_max_bonus ?? "",
+        deposit_promo_expiry_days: settings.deposit_promo_expiry_days ?? "",
+        deposit_promo_message: settings.deposit_promo_message ?? "",
       });
     }
   }, [settings]);
@@ -652,6 +664,120 @@ export default function AdminSettings() {
                   />
                   <p className="text-[11px] text-white/40 italic">Minimum referral balance required to request a withdrawal.</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Deposit Promo */}
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
+            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
+              <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-2xl">
+                  <Wallet className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold italic uppercase">Deposit Promo</CardTitle>
+                  <CardDescription className="text-white/50">Reward qualifying deposits with a one-time bonus credit.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 p-8">
+              <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-bold text-white">Enable Deposit Promo</Label>
+                  <p className="text-sm text-white/50">Global toggle for the deposit bonus promotion.</p>
+                </div>
+                <Switch
+                  checked={formData.enable_deposit_promo}
+                  onCheckedChange={(checked: boolean) => setFormData({ ...formData, enable_deposit_promo: checked })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="deposit_promo_min_amount" className="text-white/70 text-xs font-black uppercase tracking-widest">Min Deposit ($)</Label>
+                  </div>
+                  <Input
+                    id="deposit_promo_min_amount"
+                    type="number"
+                    value={formData.deposit_promo_min_amount}
+                    onChange={(e) => setFormData({ ...formData, deposit_promo_min_amount: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono"
+                    placeholder="30.00"
+                    disabled={!formData.enable_deposit_promo}
+                  />
+                  <p className="text-[11px] text-white/40 italic">Minimum deposit amount required to qualify for the bonus.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="deposit_promo_percentage" className="text-white/70 text-xs font-black uppercase tracking-widest">Bonus (%)</Label>
+                  </div>
+                  <Input
+                    id="deposit_promo_percentage"
+                    type="number"
+                    value={formData.deposit_promo_percentage}
+                    onChange={(e) => setFormData({ ...formData, deposit_promo_percentage: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono"
+                    placeholder="100.00"
+                    disabled={!formData.enable_deposit_promo}
+                  />
+                  <p className="text-[11px] text-white/40 italic">Percentage of the qualifying deposit given as bonus credit.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="deposit_promo_max_bonus" className="text-white/70 text-xs font-black uppercase tracking-widest">Max Bonus ($)</Label>
+                  </div>
+                  <Input
+                    id="deposit_promo_max_bonus"
+                    type="number"
+                    value={formData.deposit_promo_max_bonus}
+                    onChange={(e) => setFormData({ ...formData, deposit_promo_max_bonus: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono"
+                    placeholder="50.00"
+                    disabled={!formData.enable_deposit_promo}
+                  />
+                  <p className="text-[11px] text-white/40 italic">Hard cap on the bonus credited per deposit, regardless of percentage.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    <Label htmlFor="deposit_promo_expiry_days" className="text-white/70 text-xs font-black uppercase tracking-widest">Expiry (Days, 0 = Never)</Label>
+                  </div>
+                  <Input
+                    id="deposit_promo_expiry_days"
+                    type="number"
+                    value={formData.deposit_promo_expiry_days}
+                    onChange={(e) => setFormData({ ...formData, deposit_promo_expiry_days: e.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono"
+                    placeholder="7"
+                    disabled={!formData.enable_deposit_promo}
+                  />
+                  <p className="text-[11px] text-white/40 italic">Days before the bonus credit expires. Use 0 for no expiry.</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                  <Label htmlFor="deposit_promo_message" className="text-white/70 text-xs font-black uppercase tracking-widest">Popup Message (Optional)</Label>
+                </div>
+                <Input
+                  id="deposit_promo_message"
+                  value={formData.deposit_promo_message}
+                  onChange={(e) => setFormData({ ...formData, deposit_promo_message: e.target.value })}
+                  className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
+                  placeholder="e.g. Deposit $30+ today and get a 100% bonus!"
+                  disabled={!formData.enable_deposit_promo}
+                />
+                <p className="text-[11px] text-white/40 italic">Shown in the deposit promo popup shown to users. Leave blank to use the default message.</p>
               </div>
             </CardContent>
           </Card>
