@@ -1,9 +1,9 @@
 export interface DepositPromoConfig {
   enable_deposit_promo: boolean;
-  deposit_promo_min_amount: number;
-  deposit_promo_percentage: number;
-  deposit_promo_max_bonus: number;
-  deposit_promo_expiry_days: number;
+  deposit_promo_min_amount: string | number;
+  deposit_promo_percentage: string | number;
+  deposit_promo_max_bonus: string | number;
+  deposit_promo_expiry_days: string | number;
   deposit_promo_message: string;
 }
 
