@@ -48,7 +48,8 @@ export default function DepositPromoPopup({ onDeposit }: { onDeposit?: () => voi
   };
 
   const handleDeposit = () => {
-    dismiss();
+    // Open the Add Funds dialog; don't permanently dismiss (so if it's blocked
+    // e.g. by a pending transaction, the popup stays and the user can retry).
     if (onDeposit) onDeposit();
     else navigate("/wallet");
   };
