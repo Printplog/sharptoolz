@@ -8,20 +8,24 @@ import { sourceTracker } from '@/lib/utils/sourceTracker'
 import { initGoogleAnalytics } from '@/lib/utils/googleAnalytics'
 
 export default function App() {
-  const isHostedEmbed = window.location.pathname === "/embed"
-  usePresence(!isHostedEmbed)
+  const pathname = window.location.pathname
+  const isHostedEmbed = pathname === "/embed"
+  const isDeveloperPortal = pathname === "/api-docs"
+    || window.location.hostname.toLowerCase() === "developer.sharptoolz.com"
+  const isStandaloneSurface = isHostedEmbed || isDeveloperPortal
+  usePresence(!isStandaloneSurface)
 
   useEffect(() => {
-    if (isHostedEmbed) return
+    if (isStandaloneSurface) return
     sourceTracker.captureSource()
     initGoogleAnalytics()
-  }, [isHostedEmbed])
+  }, [isStandaloneSurface])
 
   const user = useAuthStore((state) => state.user)
   const isAdminOnlyUser = isAdmin(user?.role)
 
   useEffect(() => {
-    if (isAdminOnlyUser || isHostedEmbed) {
+    if (isAdminOnlyUser || isStandaloneSurface) {
       return
     }
 
@@ -39,7 +43,7 @@ export default function App() {
       disablePrintScreen: true,
       aggressiveDetection: true
     })
-  }, [isAdminOnlyUser, isHostedEmbed])
+  }, [isAdminOnlyUser, isStandaloneSurface])
 
   return (
     <>
