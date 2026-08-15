@@ -956,7 +956,7 @@ export default function ApiDocsPage() {
       </nav>
 
       <div className="mx-auto grid max-w-[1380px] gap-12 px-4 pb-24 pt-10 sm:px-6 lg:grid-cols-[210px_minmax(0,900px)] lg:justify-center lg:gap-16 lg:px-8 lg:pt-14 xl:gap-24">
-        <aside className="hidden self-start lg:sticky lg:top-20 lg:block">
+        <aside className="hidden self-start lg:sticky lg:top-16 lg:block">
           <div>
             <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white/25">SDK reference</p>
             <nav className="space-y-0.5" aria-label="SDK documentation sections">
