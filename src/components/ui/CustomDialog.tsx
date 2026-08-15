@@ -13,7 +13,7 @@ interface CustomDialogProps
 const CustomDialog = React.forwardRef<
   React.ElementRef<typeof ShadcnDialog>,
   CustomDialogProps
->(({ dialogName, children, ...props }) => {
+>(({ dialogName, children, ...props }, _ref) => {
   const { dialogs, closeDialog } = useDialogStore();
   const navigate = useNavigate();
   const location = useLocation();

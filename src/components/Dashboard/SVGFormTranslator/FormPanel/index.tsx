@@ -87,7 +87,8 @@ const FormPanel = React.memo(function FormPanel({
   templateId,
   isPurchased: isPurchasedProp,
   toolPrice,
-  keywords = []
+  keywords = [],
+  hosted,
 }: {
   test: boolean;
   tutorial?: Tutorial;
@@ -95,6 +96,12 @@ const FormPanel = React.memo(function FormPanel({
   isPurchased?: boolean;
   toolPrice?: number;
   keywords?: string[];
+  hosted?: {
+    onSubmit: () => void | Promise<void>;
+    isSubmitting: boolean;
+    error?: string;
+    buttonText?: string;
+  };
 }) {
   // Use selectors to subscribe only to what we need - prevents re-renders when unrelated fields change
   const fields = useToolStore((state) => state.fields);
@@ -126,8 +133,8 @@ const FormPanel = React.memo(function FormPanel({
   );
 
   const hasUnsavedChanges = useMemo(
-    () => isPurchased && touchedFieldsCount > 0,
-    [isPurchased, touchedFieldsCount]
+    () => !hosted && isPurchased && touchedFieldsCount > 0,
+    [hosted, isPurchased, touchedFieldsCount]
   );
 
   const blocker = useNavigationBlocker(hasUnsavedChanges);
@@ -553,9 +560,31 @@ const FormPanel = React.memo(function FormPanel({
           </div>
         )}
 
+        {hosted?.error && (
+          <p
+            role="alert"
+            className="rounded-xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-200"
+          >
+            {hosted.error}
+          </p>
+        )}
+
         {/* Buttons */}
         <div className="pt-4 border-t border-white/20 flex flex-col lg:flex-row justify-end gap-5 items-center">
-          {isPurchased && test && (
+          {hosted ? (
+            <PremiumButton
+              variant="primary"
+              noShadow
+              isLoading={hosted.isSubmitting}
+              disabled={hosted.isSubmitting}
+              onClick={() => void hosted.onSubmit()}
+              text={hosted.isSubmitting
+                ? (isPurchased ? "Updating Document" : "Creating Document")
+                : hosted.buttonText || (isPurchased ? "Update Document" : "Create Document")}
+              icon={Upload}
+              className="stz-hosted-submit w-full lg:w-auto"
+            />
+          ) : isPurchased && test && (
             <PremiumButton
               variant="outline"
               noShadow
@@ -569,7 +598,7 @@ const FormPanel = React.memo(function FormPanel({
             />
           )}
 
-          {!isPurchased ? (
+          {!hosted && (!isPurchased ? (
             <PremiumButton
               variant="outline"
               noShadow
@@ -621,58 +650,66 @@ const FormPanel = React.memo(function FormPanel({
                 className="w-full lg:w-auto"
               />
             </>
-          )}
+          ))}
 
-          <PremiumButton
-            disabled={createPending || updatePending}
-            onClick={handleDownloadClick}
-            variant="primary"
-            noShadow
-            text="Download Document"
-            icon={Download}
-            className="w-full lg:w-auto"
-          />
+          {!hosted && (
+            <PremiumButton
+              disabled={createPending || updatePending}
+              onClick={handleDownloadClick}
+              variant="primary"
+              noShadow
+              text="Download Document"
+              icon={Download}
+              className="w-full lg:w-auto"
+            />
+          )}
         </div>
 
         {/* Dialogs moved outside flex container to avoid event interference */}
-        <DownloadDocDialog
-          svg={svgRaw}
-          fields={fields ?? []}
-          purchasedTemplateId={isPurchased ? id : undefined}
-          templateName={name}
-          keywords={keywords}
-          isTest={test}
-        />
-        <TestDocumentDialog
-          open={showTestDialog}
-          onOpenChange={(open) => {
-            // Only allow closing if not submitting
-            if (!createPending && !updatePending && !isCreatingDocument) {
-              setShowTestDialog(open);
-            }
-          }}
-          onCreateTest={() => {
-            void createDocument(true);
-            // Don't close dialog here - it will close after successful creation
-          }}
-          onCreatePaid={() => {
-            void createDocument(false);
-            // Don't close dialog here - it will close after successful creation
-          }}
-          isSubmitting={createPending || updatePending || isCreatingDocument}
-          price={toolPrice}
-          error={submissionError}
-        />
+        {!hosted && (
+          <>
+            <DownloadDocDialog
+              svg={svgRaw}
+              fields={fields ?? []}
+              purchasedTemplateId={isPurchased ? id : undefined}
+              templateName={name}
+              keywords={keywords}
+              isTest={test}
+            />
+            <TestDocumentDialog
+              open={showTestDialog}
+              onOpenChange={(open) => {
+                // Only allow closing if not submitting
+                if (!createPending && !updatePending && !isCreatingDocument) {
+                  setShowTestDialog(open);
+                }
+              }}
+              onCreateTest={() => {
+                void createDocument(true);
+                // Don't close dialog here - it will close after successful creation
+              }}
+              onCreatePaid={() => {
+                void createDocument(false);
+                // Don't close dialog here - it will close after successful creation
+              }}
+              isSubmitting={createPending || updatePending || isCreatingDocument}
+              price={toolPrice}
+              error={submissionError}
+            />
+          </>
+        )}
       </div>
 
-      <UnsavedChangesDialog
-        open={showUnsavedDialog}
-        onStay={handleStayOnPage}
-        onLeave={handleLeaveWithoutSaving}
-        onSaveAndLeave={handleSaveAndLeave}
-        isSaving={isSavingBeforeLeave}
-        disableActions={createPending || updatePending}
-      />
+      {!hosted && (
+        <UnsavedChangesDialog
+          open={showUnsavedDialog}
+          onStay={handleStayOnPage}
+          onLeave={handleLeaveWithoutSaving}
+          onSaveAndLeave={handleSaveAndLeave}
+          isSaving={isSavingBeforeLeave}
+          disableActions={createPending || updatePending}
+        />
+      )}
     </>
   );
 });

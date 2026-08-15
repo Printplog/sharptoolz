@@ -192,6 +192,7 @@ export type Template = {
   banner: string;
   tool_price?: number;
   version?: number;
+  protected_preview?: ProtectedPreview | null;
 };
 
 export interface AuditLog {
@@ -449,6 +450,12 @@ export type SiteSettings = {
   maintenance_mode: boolean;
   disable_new_signups: boolean;
   disable_deposits: boolean;
+  enable_api_access: boolean;
+  require_api_upgrade: boolean;
+  api_upgrade_price: string;
+  api_tool_discount_percentage: string;
+  api_default_rate_limit: number;
+  api_session_ttl_minutes: number;
 
   // 4. Branding Defaults
   global_announcement_text: string;
@@ -475,6 +482,122 @@ export type SiteSettings = {
   owner_name_obfuscated: string;
   updated_at: string;
   template_cache_version?: number;
+};
+
+export type ApiTheme = {
+  primaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  inputBackground: string;
+  borderColor: string;
+  borderRadius: string;
+  fontFamily: string;
+  buttonText: string;
+  appearance: "dark" | "light";
+  showSharpToolzBranding: boolean;
+};
+
+export type ApiKeyRecord = {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  allowed_origins: string[];
+  active: boolean;
+  last_used_at: string | null;
+  expires_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+  secret?: string;
+  warning?: string;
+};
+
+export type ApiAccessStatus = {
+  enabled: boolean;
+  upgrade_required: boolean;
+  upgrade_price: string;
+  tool_discount_percentage: string;
+  rate_limit_per_minute: number;
+  session_ttl_minutes: number;
+  wallet_balance: string;
+  wallet_spendable_balance: string;
+  entitlement: null | {
+    status: "active" | "suspended" | "revoked";
+    paid_amount: string;
+    activated_at: string;
+    updated_at: string;
+  };
+  configuration: {
+    allowed_origins: string[];
+    theme: Partial<ApiTheme>;
+    created_at: string;
+    updated_at: string;
+  };
+  keys: ApiKeyRecord[];
+};
+
+export type EmbedSessionData = {
+  id: string;
+  status: "pending" | "completed" | "revoked" | "expired";
+  operation: "create" | "edit";
+  mode: "test" | "paid";
+  preview_mode: "standard" | "protected";
+  expires_at: string;
+  theme: ApiTheme;
+  document_id: string | null;
+  document_name: string | null;
+  prefill: Record<string, string | number | boolean>;
+  template: {
+    id: string;
+    name: string;
+    version: number;
+    form_fields: FormField[];
+    svg_url: string | null;
+    svg_patches: SvgPatch[];
+    fonts?: Font[];
+    protected_preview?: ProtectedPreview | null;
+  };
+};
+
+export type ProtectedPreviewMatrix = {
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
+};
+
+export type ProtectedPreviewLayer = {
+  field_id: string;
+  field_type: string;
+  option_value: string | null;
+  inverted: boolean;
+  kind: "text" | "image";
+  order: number;
+  opacity: number;
+  matrix: ProtectedPreviewMatrix;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  asset_id?: string;
+  asset_url?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: string;
+  fontStyle?: string;
+  letterSpacing?: string;
+  fill?: string;
+  textAnchor?: "start" | "middle" | "end" | string;
+};
+
+export type ProtectedPreview = {
+  version: number;
+  width: number;
+  height: number;
+  base_url: string;
+  layers: ProtectedPreviewLayer[];
 };
 
 export interface Campaign {

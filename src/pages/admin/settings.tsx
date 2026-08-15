@@ -34,7 +34,8 @@ import {
   Lock,
   MessageCircle,
   Gift,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Code2
 } from "lucide-react";
 import { toast } from "sonner";
 import type { SiteSettings } from "@/types";
@@ -68,6 +69,12 @@ export default function AdminSettings() {
     show_twitter_on_hover: true,
     show_tiktok_on_hover: true,
     enable_ai_features: true,
+    enable_api_access: false,
+    require_api_upgrade: true,
+    api_upgrade_price: "0.00",
+    api_tool_discount_percentage: "0.00",
+    api_default_rate_limit: 120,
+    api_session_ttl_minutes: 30,
     enable_referrals: true,
     referral_percentage: "",
     min_referral_deposit: "",
@@ -117,6 +124,12 @@ export default function AdminSettings() {
         show_twitter_on_hover: settings.show_twitter_on_hover ?? true,
         show_tiktok_on_hover: settings.show_tiktok_on_hover ?? true,
         enable_ai_features: settings.enable_ai_features ?? true,
+        enable_api_access: settings.enable_api_access ?? false,
+        require_api_upgrade: settings.require_api_upgrade ?? true,
+        api_upgrade_price: settings.api_upgrade_price ?? "0.00",
+        api_tool_discount_percentage: settings.api_tool_discount_percentage ?? "0.00",
+        api_default_rate_limit: settings.api_default_rate_limit ?? 120,
+        api_session_ttl_minutes: settings.api_session_ttl_minutes ?? 30,
         enable_referrals: settings.enable_referrals ?? true,
         referral_percentage: settings.referral_percentage || "",
         min_referral_deposit: settings.min_referral_deposit || "",
@@ -215,6 +228,10 @@ export default function AdminSettings() {
           <TabsTrigger value="referrals" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
             <Gift className="w-4 h-4" />
             Referral Program
+          </TabsTrigger>
+          <TabsTrigger value="api" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
+            <Code2 className="w-4 h-4" />
+            API Platform
           </TabsTrigger>
         </TabsList>
 
@@ -778,6 +795,106 @@ export default function AdminSettings() {
                   disabled={!formData.enable_deposit_promo}
                 />
                 <p className="text-[11px] text-white/40 italic">Shown in the deposit promo popup shown to users. Leave blank to use the default message.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="api" className="space-y-6 focus:outline-none focus-visible:outline-none">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
+            <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-2xl">
+                  <Code2 className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold italic uppercase">API Platform</CardTitle>
+                  <CardDescription className="text-white/50">Control availability, wallet upgrade pricing, tool discounts, rate limits, and hosted-session lifetime.</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-8 p-8">
+              <div className="flex items-center justify-between gap-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+                <div>
+                  <p className="font-bold text-white">Enable API access</p>
+                  <p className="text-xs text-white/40 mt-1">Global kill switch for API keys and hosted embeds.</p>
+                </div>
+                <Switch
+                  checked={formData.enable_api_access}
+                  onCheckedChange={(checked) => setFormData({ ...formData, enable_api_access: checked })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+                <div>
+                  <p className="font-bold text-white">Require wallet upgrade</p>
+                  <p className="text-xs text-white/40 mt-1">When disabled, users activate API access for free and can still be suspended later.</p>
+                </div>
+                <Switch
+                  checked={formData.require_api_upgrade}
+                  disabled={!formData.enable_api_access}
+                  onCheckedChange={(checked) => setFormData({ ...formData, require_api_upgrade: checked })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="api_upgrade_price" className="text-white/70 text-xs font-black uppercase tracking-widest">Upgrade price ($)</Label>
+                  <Input
+                    id="api_upgrade_price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.api_upgrade_price}
+                    disabled={!formData.enable_api_access || !formData.require_api_upgrade}
+                    onChange={(event) => setFormData({ ...formData, api_upgrade_price: event.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl font-mono"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="api_tool_discount_percentage" className="text-white/70 text-xs font-black uppercase tracking-widest">Tool discount (%)</Label>
+                  <Input
+                    id="api_tool_discount_percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={formData.api_tool_discount_percentage}
+                    disabled={!formData.enable_api_access}
+                    onChange={(event) => setFormData({ ...formData, api_tool_discount_percentage: event.target.value })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl font-mono"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="api_rate_limit" className="text-white/70 text-xs font-black uppercase tracking-widest">Requests / minute</Label>
+                  <Input
+                    id="api_rate_limit"
+                    type="number"
+                    min="1"
+                    max="100000"
+                    value={formData.api_default_rate_limit}
+                    disabled={!formData.enable_api_access}
+                    onChange={(event) => setFormData({ ...formData, api_default_rate_limit: Number(event.target.value) })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl font-mono"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="api_session_ttl" className="text-white/70 text-xs font-black uppercase tracking-widest">Session lifetime (minutes)</Label>
+                  <Input
+                    id="api_session_ttl"
+                    type="number"
+                    min="1"
+                    max="1440"
+                    value={formData.api_session_ttl_minutes}
+                    disabled={!formData.enable_api_access}
+                    onChange={(event) => setFormData({ ...formData, api_session_ttl_minutes: Number(event.target.value) })}
+                    className="bg-white/5 border-white/10 h-12 rounded-xl font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5 text-sm text-amber-100/70">
+                Changing the upgrade price affects new activations only. The tool discount applies immediately to future paid API documents, including upgrades from test documents.
               </div>
             </CardContent>
           </Card>

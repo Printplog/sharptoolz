@@ -14,6 +14,7 @@ type UseWebSocketClientOptions<T> = {
   reconnectAttempts?: number;
   reconnectInterval?: number;
   dependencies?: ReadonlyArray<unknown>; // New: dependencies to trigger reconnection
+  enabled?: boolean;
 };
 
 export function useWebSocketClient<T = unknown>({
@@ -26,6 +27,7 @@ export function useWebSocketClient<T = unknown>({
   reconnectAttempts = 3,
   reconnectInterval = 1000,
   dependencies = [], // New
+  enabled = true,
 }: UseWebSocketClientOptions<T>) {
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectCountRef = useRef(0);
@@ -66,6 +68,7 @@ export function useWebSocketClient<T = unknown>({
   }, []);
 
   const connect = useCallback(() => {
+    if (!enabled) return;
     // Clean up existing connection
     if (socketRef.current) {
       socketRef.current.close();
@@ -124,9 +127,13 @@ export function useWebSocketClient<T = unknown>({
       setIsOpen(false);
       onErrorRef.current?.(err);
     });
-  }, [url, protocols, reconnectAttempts, reconnectInterval]);
+  }, [url, protocols, reconnectAttempts, reconnectInterval, enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      if (socketRef.current) socketRef.current.close(1000, 'WebSocket disabled');
+      return;
+    }
     connect();
 
     return () => {
@@ -143,7 +150,7 @@ export function useWebSocketClient<T = unknown>({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connect, ...dependencies]);
+  }, [connect, enabled, ...dependencies]);
 
   return { sendMessage, connect, isOpen };
 }

@@ -1,4 +1,4 @@
-import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution } from "@/types";
+import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme } from "@/types";
 import { apiClient } from "./apiClient";
 export const getApi = apiClient.get;
 export const postApi = apiClient.post;
@@ -464,6 +464,37 @@ export const updateSiteSettings = async (data: Partial<SiteSettings> & { otp: st
 export const requestSettingsVerificationCode = async (): Promise<{ message: string }> => {
   const res = await apiClient.post('/settings/request-code/');
   return res.data;
+};
+
+export const getApiAccessStatus = async (): Promise<ApiAccessStatus> => {
+  const res = await apiClient.get('/api-access/');
+  return res.data;
+};
+
+export const activateApiAccess = async (): Promise<ApiAccessStatus> => {
+  const res = await apiClient.post('/api-access/activate/', {});
+  return res.data;
+};
+
+export const updateApiConfiguration = async (data: {
+  allowed_origins?: string[];
+  theme?: Partial<ApiTheme>;
+}): Promise<ApiAccessStatus['configuration']> => {
+  const res = await apiClient.patch('/api-access/configuration/', data);
+  return res.data;
+};
+
+export const createApiKey = async (data: {
+  name: string;
+  scopes?: string[];
+  allowed_origins?: string[];
+}): Promise<ApiKeyRecord> => {
+  const res = await apiClient.post('/api-access/keys/', data);
+  return res.data;
+};
+
+export const revokeApiKey = async (id: string): Promise<void> => {
+  await apiClient.delete(`/api-access/keys/${id}/`);
 };
 
 import type { TransformVariable } from "@/types";

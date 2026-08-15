@@ -22,13 +22,16 @@ const SEO: React.FC<SEOProps> = ({
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
   const defaultDescription = 'Create realistic sample documents for testing, development, and demonstrations with SharpToolz. The ultimate professional tool for rapid document automation.';
   const siteUrl = 'https://sharptoolz.com';
+  const canonicalUrl = canonical
+    ? canonical.startsWith('http') ? canonical : `${siteUrl}${canonical}`
+    : undefined;
 
   return (
     <Helmet>
       {/* Standard Meta Tags */}
       <title>{fullTitle}</title>
       <meta name="description" content={description || defaultDescription} />
-      {canonical && <link rel="canonical" href={`${siteUrl}${canonical}`} />}
+      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
       {/* Open Graph / Facebook */}
       <meta property="og:site_name" content={siteName} />
@@ -36,7 +39,7 @@ const SEO: React.FC<SEOProps> = ({
       <meta property="og:description" content={description || defaultDescription} />
       <meta property="og:type" content={ogType} />
       <meta property="og:image" content={ogImage} />
-      {canonical && <meta property="og:url" content={`${siteUrl}${canonical}`} />}
+      {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
 
       {/* Twitter */}
       <meta name="twitter:card" content={twitterCard} />

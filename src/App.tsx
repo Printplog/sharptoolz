@@ -8,18 +8,20 @@ import { sourceTracker } from '@/lib/utils/sourceTracker'
 import { initGoogleAnalytics } from '@/lib/utils/googleAnalytics'
 
 export default function App() {
-  usePresence()
+  const isHostedEmbed = window.location.pathname === "/embed"
+  usePresence(!isHostedEmbed)
 
   useEffect(() => {
+    if (isHostedEmbed) return
     sourceTracker.captureSource()
     initGoogleAnalytics()
-  }, [])
+  }, [isHostedEmbed])
 
   const user = useAuthStore((state) => state.user)
   const isAdminOnlyUser = isAdmin(user?.role)
 
   useEffect(() => {
-    if (isAdminOnlyUser) {
+    if (isAdminOnlyUser || isHostedEmbed) {
       return
     }
 
@@ -37,7 +39,7 @@ export default function App() {
       disablePrintScreen: true,
       aggressiveDetection: true
     })
-  }, [isAdminOnlyUser])
+  }, [isAdminOnlyUser, isHostedEmbed])
 
   return (
     <>

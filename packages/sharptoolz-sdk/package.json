@@ -1,0 +1,36 @@
+{
+  "name": "@sharp-toolz/sdk",
+  "version": "0.2.0",
+  "description": "Official JavaScript client and hosted-form loader for the SharpToolz API",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./browser": {
+      "types": "./src/browser.d.ts",
+      "import": "./src/browser.js"
+    }
+  },
+  "bin": {
+    "sharptoolz": "bin/sharptoolz.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "pack:check": "npm pack --dry-run"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}

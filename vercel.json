@@ -1,4 +1,60 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "developer.sharptoolz.com"
+        }
+      ],
+      "destination": "/api-docs",
+      "permanent": false
+    },
+    {
+      "source": "/api-docs",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:(?:www|app)\\.)?sharptoolz\\.com"
+        }
+      ],
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/api-docs",
+      "has": [
+        {
+          "type": "host",
+          "value": ".+\\.vercel\\.app"
+        }
+      ],
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/embed",
+      "headers": [
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://sharptoolz.com https://*.sharptoolz.com data: blob:; connect-src 'self' https://sharptoolz.com https://*.sharptoolz.com http://localhost:8003 http://127.0.0.1:8003; font-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; frame-ancestors https: http://localhost:* http://127.0.0.1:*; upgrade-insecure-requests" },
+        { "key": "Referrer-Policy", "value": "strict-origin" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/embed/v1.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

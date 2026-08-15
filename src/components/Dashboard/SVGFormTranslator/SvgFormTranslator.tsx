@@ -17,13 +17,15 @@ import {
   getTemplate,
   getTemplateSvgForAdmin
 } from "@/api/apiEndpoints";
-import type { FormField, PurchasedTemplate, Template } from "@/types";
+import type { EmbedSessionData, FormField, PurchasedTemplate, Template } from "@/types";
 import SvgFormTranslatorSkeleton from "./SvgFormTranslatorSkeleton";
 import PreviewSkeleton from "./PreviewSkeleton";
 import parseSvgElements from "@/lib/utils/parseSvgElements";
 import { applySvgPatches } from "@/lib/utils/applySvgPatches";
 import { toast } from "sonner";
 import { getAdaptiveDebounce } from "@/lib/utils/deviceDetection";
+import { sanitizeSvgForEmbed } from "@/lib/utils/sanitizeSvgForEmbed";
+import ProtectedCanvasPreview from "./ProtectedCanvasPreview";
 
 // Component to render action buttons by cloning and connecting to FormPanel buttons
 function ActionButtonsRenderer() {
@@ -116,14 +118,37 @@ interface Props {
   isPurchased?: boolean;
   /** Optional explicit template id — use when rendering outside the router (e.g. in a dialog) */
   templateId?: string;
+  /**
+   * A hosted session still uses the real translator workspace. The session
+   * only replaces the normal account-backed data source and purchase action.
+   */
+  hosted?: {
+    session: EmbedSessionData;
+    embedToken: string;
+    parentOrigin: string;
+    onSubmit: () => void | Promise<void>;
+    isSubmitting: boolean;
+    error?: string;
+  };
 }
+
+type DuplicateLocationState = {
+  startValues?: Record<string, string | number | boolean>;
+};
 
 import { FilePen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 
-export default function SvgFormTranslator({ isPurchased, templateId: templateIdProp }: Props) {
+export default function SvgFormTranslator({ isPurchased, templateId: templateIdProp, hosted }: Props) {
   const user = useAuthStore((state) => state.user);
+  const hostedSession = hosted?.session;
+  const isHosted = Boolean(hostedSession);
+  const isEditingDocument = Boolean(isPurchased || hostedSession?.operation === "edit");
+  const protectedPreview = hostedSession?.template.protected_preview;
+  const isProtectedHosted = Boolean(
+    hostedSession?.preview_mode === "protected" && protectedPreview,
+  );
 
   const [svgText, setSvgText] = useState<string>("");
   const [debouncedFields, setDebouncedFields] = useState<FormField[]>([]);
@@ -141,19 +166,46 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
 
   const { id: paramId } = useParams<{ id: string }>();
   const location = useLocation();
-  const id = templateIdProp ?? paramId;
+  const startValues = (location.state as DuplicateLocationState | null)?.startValues;
+  const id = hostedSession?.template.id ?? templateIdProp ?? paramId;
+
+  const hostedTemplate = useMemo<Template | undefined>(() => {
+    if (!hostedSession) return undefined;
+    const { template } = hostedSession;
+    return {
+      id: template.id,
+      name: template.name,
+      version: template.version,
+      form_fields: template.form_fields,
+      svg_url: template.svg_url || undefined,
+      svg_patches: template.svg_patches || [],
+      fonts: template.fonts || [],
+      keywords: [],
+      type: "tool",
+      hot: false,
+      created_at: "",
+      updated_at: "",
+      is_active: true,
+      banner: "",
+      protected_preview: template.protected_preview,
+    };
+  }, [hostedSession]);
 
   // Fetch template data (without SVG for faster loading)
-  const { data, isLoading, error } = useQuery<PurchasedTemplate | Template>({
+  const { data: queriedData, isLoading: isQueryLoading, error: queryError } = useQuery<PurchasedTemplate | Template>({
     queryKey: [isPurchased ? "purchased-template" : "template", id],
     queryFn: () =>
       isPurchased
         ? getPurchasedTemplate(id as string)
         : getTemplate(id as string),
-    enabled: !!id, // Only run query if id exists
+    enabled: !isHosted && !!id, // Hosted sessions are the trusted data source inside the iframe.
     refetchOnWindowFocus: true,
     staleTime: 30 * 1000, // 30s cache
   });
+
+  const data = hostedTemplate ?? queriedData;
+  const isLoading = isHosted ? false : isQueryLoading;
+  const error = isHosted ? null : queryError;
 
 
   // No longer fetching SVG separately - it's included as svg_url in the main data
@@ -166,7 +218,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   const baseSvgText = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!data?.svg_url) return;
+    if (isProtectedHosted || !data?.svg_url) return;
 
     const isNewUrl = data.svg_url !== lastLoadedBaseUrl.current;
     let cancelled = false;
@@ -217,12 +269,14 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         if (text && !cancelled) {
           // Always apply current patches to the base text
           const patchedBase = applySvgPatches(text, data.svg_patches || []);
-          setSvgContent(patchedBase);
+          const safeBase = isHosted ? sanitizeSvgForEmbed(patchedBase) : patchedBase;
+          setSvgContent(safeBase);
         }
       } catch (e) {
         if (cancelled) return;
         console.warn("Failed to load SVG via direct URL, trying backend proxy...", e);
         try {
+          if (isHosted) throw e;
           // Fallback to proxy
           const targetId = isPurchased && data && 'template' in data ? (data as PurchasedTemplate).template : id as string;
           setIsSvgFetching(true);
@@ -251,19 +305,23 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
 
     loadAndApply();
     return () => { cancelled = true; };
-  }, [data?.svg_url, isLoading, data, id, isPurchased]); // Removed svgContent dependency
+  }, [data?.svg_url, isLoading, data, id, isPurchased, isHosted, isProtectedHosted]); // Removed svgContent dependency
 
   // Initialize fields immediately when template data loads (before SVG)
   useEffect(() => {
     if (isLoading || !data) return;
 
     // Check for duplicated values in location state
-    const locationState = location as any;
-    const startValues = locationState.state?.startValues;
+    const hostedPrefill = hostedSession?.prefill;
 
     // Initialize fields - use currentValue if available (for purchased templates), otherwise use defaultValue
     const initializedFields = data.form_fields?.map((field: FormField) => {
-      let currentValue = field.currentValue ?? field.defaultValue ?? "";
+      const hasHostedPrefill = Boolean(
+        hostedPrefill && Object.prototype.hasOwnProperty.call(hostedPrefill, field.id)
+      );
+      let currentValue = hasHostedPrefill
+        ? hostedPrefill?.[field.id] ?? ""
+        : field.currentValue ?? field.defaultValue ?? "";
 
       // SPECIAL CASE: Select fields must have a valid option value
       if (field.options && field.options.length > 0 && !currentValue) {
@@ -283,13 +341,17 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         ...field,
         currentValue,
         // If it came from startValues, mark it as touched so it's treated as "provided" data
-        touched: startValues ? (startValues[field.id] !== undefined) : false
+        touched: hasHostedPrefill || (startValues ? (startValues[field.id] !== undefined) : false)
       };
     }) || [];
 
-    setName(data.name as string);
-    const fieldsWithAuto = generateAutoFields(initializedFields, isPurchased);
-    setFields(fieldsWithAuto, isPurchased);
+    setName(
+      isHosted
+        ? hostedSession?.document_name || `My ${data.name}`
+        : data.name as string,
+    );
+    const fieldsWithAuto = generateAutoFields(initializedFields, isEditingDocument);
+    setFields(fieldsWithAuto, isEditingDocument);
 
     // ADMIN DEBUG: Log form fields for troubleshooting
     if (user?.is_staff || user?.role === 'ZK7T-93XY') {
@@ -322,16 +384,15 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
     // Store fields in ref to apply changes once SVG loads
     pendingFieldsRef.current = initializedFields;
 
-  }, [data, isLoading, setName, setFields, isPurchased, location.state]);
+  }, [data, isLoading, setName, setFields, isPurchased, isEditingDocument, startValues, hostedSession, isHosted, id, user?.is_staff, user?.role]);
 
   const hasSyncedRef = useRef<string | null>(null);
 
   // EFFECT 3: Sync defaults from SVG text (runs once when SVG content is ready)
   useEffect(() => {
+    if (isProtectedHosted) return;
     // skip sync if we have startValues (duplicating a doc) to prevent overwriting
-    const locationState = location as any;
-    const startValues = locationState.state?.startValues;
-    if (isSvgFetching || !svgContent || !data || isPurchased || startValues) return;
+    if (isSvgFetching || !svgContent || !data || isEditingDocument || startValues) return;
 
     // Only run this sync once per SVG URL
     if (hasSyncedRef.current === data.svg_url) return;
@@ -364,10 +425,10 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
 
     if (hasUpdates) {
       setTimeout(() => {
-        useToolStore.getState().setFields(populatedFields, isPurchased);
+        useToolStore.getState().setFields(populatedFields, isEditingDocument);
       }, 0);
     }
-  }, [svgContent, isSvgFetching, data, isPurchased]);
+  }, [svgContent, isSvgFetching, data, isEditingDocument, isProtectedHosted, startValues, fields]);
 
   // DEBOUNCE EFFECT: Updates debouncedFields when users stop typing
   // Adaptive debounce: 250ms on high-end, 500ms on low-end devices
@@ -382,6 +443,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
 
   // EFFECT 4: Live Preview Update - Re-runs whenever debouncedFields or SVG content changes
   useEffect(() => {
+    if (isProtectedHosted) return;
     if (isSvgFetching || !svgContent || !data) return;
 
     const finalizeSvg = async () => {
@@ -405,7 +467,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
       const workDoc = baseDoc.cloneNode(true) as Document;
 
       // 3. Process SVG with current field values (efficiently using DOM)
-      const fieldsWithAutoGenerated = generateAutoFields(debouncedFields, isPurchased);
+      const fieldsWithAutoGenerated = generateAutoFields(debouncedFields, isEditingDocument);
       updateSvgFromFormData(workDoc, fieldsWithAutoGenerated);
 
       // 4. Inject images (including signatures/blobs) - optimized to use cloned DOM
@@ -427,7 +489,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
     };
 
     finalizeSvg();
-  }, [svgContent, isSvgFetching, data, debouncedFields, isPurchased, setSvgRaw]);
+  }, [svgContent, isSvgFetching, data, debouncedFields, isPurchased, isEditingDocument, setSvgRaw, isProtectedHosted]);
 
   const purchasedData = data as PurchasedTemplate;
 
@@ -508,7 +570,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   return (
     <div>
       {/* Admin Edit Link */}
-      {user?.is_staff && (
+      {!isHosted && user?.is_staff && (
         <div className="flex justify-end mb-4">
           <Link
             to={`/admin/templates/${isPurchased && data ? (data as PurchasedTemplate).template : id}`}
@@ -528,11 +590,12 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
           setActiveTab(value);
           // When switching to preview, immediately update with fresh values
           if (value === "preview") {
+            if (isProtectedHosted) return;
             console.log("[PREVIEW-DEBUG] 👁️ Switching to Preview Tab - forcing fresh generation");
             if (baseSvgDocRef.current) {
             const freshFields = useToolStore.getState().fields;
             if (freshFields.length > 0) {
-              const fieldsWithAutoGenerated = generateAutoFields(freshFields, isPurchased);
+              const fieldsWithAutoGenerated = generateAutoFields(freshFields, isEditingDocument);
               // Clone the baseDocRef.current before modifying it
               const workDoc = baseSvgDocRef.current.cloneNode(true) as Document;
               const updatedSvg = updateSvgFromFormData(workDoc, fieldsWithAutoGenerated);
@@ -553,12 +616,20 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
           <TabsContent value="editor" forceMount className="space-y-4">
             <div data-form-panel-user>
               <FormPanel
-                test={purchasedData?.test}
+                test={hostedSession ? hostedSession.mode === "test" : purchasedData?.test}
                 tutorial={data && 'tutorial' in data ? data.tutorial : undefined}
                 templateId={isPurchased ? purchasedData?.template : undefined}
-                isPurchased={Boolean(isPurchased)}
+                isPurchased={isEditingDocument}
                 toolPrice={(data as unknown as Record<string, number>)?.tool_price}
                 keywords={data?.keywords || []}
+                hosted={hosted && hostedSession ? {
+                  onSubmit: hosted.onSubmit,
+                  isSubmitting: hosted.isSubmitting,
+                  error: hosted.error,
+                  buttonText: hostedSession.operation === "edit"
+                    ? "Update document"
+                    : hostedSession.theme.buttonText,
+                } : undefined}
               />
             </div>
             {/* Action Buttons - cloned from FormPanel to show in both tabs */}
@@ -568,7 +639,17 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         <div style={{ display: activeTab === "preview" ? "block" : "none" }}>
           <TabsContent value="preview" forceMount className="space-y-4">
             {/* Only show skeleton if we don't have SVG text or assets are loading */}
-            {(!svgText || isSvgFetching || isAssetsLoading) ? (
+            {isProtectedHosted && protectedPreview && hosted ? (
+              <div className="w-full overflow-auto rounded-xl border border-white/20 bg-white/10 p-2 sm:p-5">
+                <ProtectedCanvasPreview
+                  preview={protectedPreview}
+                  embedToken={hosted.embedToken}
+                  parentOrigin={hosted.parentOrigin}
+                  isTest={hosted.session.mode === "test"}
+                  templateName={hosted.session.template.name}
+                />
+              </div>
+            ) : (!svgText || isSvgFetching || isAssetsLoading) ? (
               <PreviewSkeleton progress={downloadProgress || (isAssetsLoading ? 95 : 0)} />
             ) : (
               <div

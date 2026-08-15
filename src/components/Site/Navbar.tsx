@@ -36,6 +36,7 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/all-tools", label: "All Tools" },
+    { href: "https://developer.sharptoolz.com", label: "API", isExternal: true },
     { href: "/tutorials", label: "Tutorials" },
     {
       href: settings?.whatsapp_community_link || settings?.telegram_link || "#",
@@ -72,11 +73,13 @@ export default function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-8">
-              {navLinks.map((link, index) => (
+              {navLinks.map((link) => (
                 <Link
-                  key={index}
+                  key={link.label}
                   to={link.href}
                   target={link.isExternal ? "_blank" : "_self"}
+                  rel={link.isExternal ? "noopener noreferrer" : undefined}
+                  aria-current={link.href === pathname ? "page" : undefined}
                   className={`transition-colors font-medium text-sm ${
                     link.href === pathname ? "text-primary" : "text-foreground/80 hover:text-primary"
                   }`}
@@ -120,6 +123,10 @@ export default function Navbar() {
             {/* Premium Custom Staggered Menu Toggle */}
             <button
               onClick={() => setIsMenuOpen(true)}
+              type="button"
+              aria-label="Open navigation menu"
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-navigation"
               className="lg:hidden w-12 h-12 flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-white/3 border border-white/5 hover:border-primary/40 transition-all group"
             >
                <div className="w-6 h-[2px] bg-foreground group-hover:bg-primary transition-colors rounded-full" />
@@ -134,6 +141,7 @@ export default function Navbar() {
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
+            id="mobile-navigation"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -149,6 +157,8 @@ export default function Navbar() {
                 <Logo />
                 <button
                   onClick={() => setIsMenuOpen(false)}
+                  type="button"
+                  aria-label="Close navigation menu"
                   className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:border-primary/40 hover:rotate-90 transition-all duration-500"
                 >
                   <X className="w-5 h-5 text-white" />
@@ -167,6 +177,8 @@ export default function Navbar() {
                     <Link
                       to={link.href}
                       target={link.isExternal ? "_blank" : "_self"}
+                      rel={link.isExternal ? "noopener noreferrer" : undefined}
+                      aria-current={link.href === pathname ? "page" : undefined}
                       onClick={() => setIsMenuOpen(false)}
                       className="group flex items-center justify-between py-1.5 border-b border-white/5"
                     >

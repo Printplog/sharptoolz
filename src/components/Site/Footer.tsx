@@ -41,6 +41,14 @@ export default function Footer() {
                 <Link to="/tutorials" className="hover:text-primary transition-all hover:translate-x-1 inline-block">Tutorials</Link>
               </li>
               <li>
+                <a
+                  href="https://developer.sharptoolz.com"
+                  className="hover:text-primary transition-all hover:translate-x-1 inline-block"
+                >
+                  API Docs
+                </a>
+              </li>
+              <li>
                 <Link to="/contact" className="hover:text-primary transition-all hover:translate-x-1 inline-block">Contact Support</Link>
               </li>
               <li>

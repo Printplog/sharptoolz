@@ -30,6 +30,7 @@ export type Path =
   | `/admin/wallet`
   | `/all-tools`
   | `/all-tools/:id`
+  | `/api-docs`
   | `/auth/forgot-password`
   | `/auth/google-callback`
   | `/auth/login`
@@ -40,6 +41,7 @@ export type Path =
   | `/dashboard`
   | `/documents`
   | `/documents/:id`
+  | `/embed`
   | `/privacy`
   | `/referrals`
   | `/settings`

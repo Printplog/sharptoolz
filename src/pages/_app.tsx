@@ -6,11 +6,14 @@ import SEO from '@/components/SEO'
 import ErrorBoundary from '@/components/ErrorBoundary'
 
 export default function App() {
+  const isHostedEmbed = window.location.pathname === '/embed'
+  const isApiDocs = window.location.pathname === '/api-docs'
+
   return (
     <HelmetProvider>
-      <SEO />
-      <ScrollToTop />
-      <WhatsAppButton />
+      {!isHostedEmbed && <SEO />}
+      {!isHostedEmbed && <ScrollToTop />}
+      {!isHostedEmbed && !isApiDocs && <WhatsAppButton />}
       <ErrorBoundary>
         <Outlet />
       </ErrorBoundary>

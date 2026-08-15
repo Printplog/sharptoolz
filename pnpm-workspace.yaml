@@ -1,0 +1,16 @@
+packages:
+  - "packages/*"
+
+# pnpm 11 blocks dependency build scripts by default (see https://pnpm.io/settings).
+# esbuild's postinstall fetches its native binary — without it `vite` cannot start.
+allowBuilds:
+  esbuild: true      # required: fetches the native binary vite runs on
+  msw: true          # writes the service-worker stub used by the vitest suite
+  bufferutil: true   # optional native speedup for ws (channels/websocket dev)
+  core-js: false     # postinstall is only a funding notice
+  protobufjs: false  # not needed for this build
+
+# onnxruntime-web accepts protobufjs ^7.2.4, but an older lock resolution has
+# known code-execution and denial-of-service advisories. Force its patched v7.
+overrides:
+  protobufjs: 7.6.5

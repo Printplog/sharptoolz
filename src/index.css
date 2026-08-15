@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
-
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -253,3 +251,40 @@ html.lenis, html.lenis body {
     opacity: 0;
   }
 }
+
+/* API documentation code editor colours */
+.api-code .token.comment,
+.api-code .token.prolog,
+.api-code .token.doctype,
+.api-code .token.cdata {
+  color: #637777;
+  font-style: italic;
+}
+
+.api-code .token.punctuation { color: #89ddff; }
+.api-code .token.property,
+.api-code .token.tag,
+.api-code .token.constant,
+.api-code .token.symbol,
+.api-code .token.deleted { color: #f07178; }
+.api-code .token.boolean,
+.api-code .token.number { color: #f78c6c; }
+.api-code .token.selector,
+.api-code .token.attr-name,
+.api-code .token.string,
+.api-code .token.char,
+.api-code .token.builtin,
+.api-code .token.inserted { color: #c3e88d; }
+.api-code .token.operator,
+.api-code .token.entity,
+.api-code .token.url,
+.api-code .language-css .token.string,
+.api-code .style .token.string { color: #89ddff; }
+.api-code .token.atrule,
+.api-code .token.attr-value,
+.api-code .token.keyword { color: #c792ea; }
+.api-code .token.function,
+.api-code .token.class-name { color: #82aaff; }
+.api-code .token.regex,
+.api-code .token.important,
+.api-code .token.variable { color: #ffcb6b; }
