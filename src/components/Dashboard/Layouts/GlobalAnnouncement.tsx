@@ -36,7 +36,7 @@ export default function GlobalAnnouncement() {
                     href={settings.global_announcement_link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-all text-xs font-black uppercase tracking-widest"
+                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-all text-xs font-semibold"
                 >
                     Check out <ExternalLink className="w-3 h-3" />
                 </a>

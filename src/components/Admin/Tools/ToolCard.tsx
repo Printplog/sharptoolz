@@ -63,7 +63,7 @@ export default function ToolCard({ tool }: Props) {
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-black/40 backdrop-blur-xl border border-white/10 text-white/60 text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full flex items-center gap-2"
+              className="bg-black/40 backdrop-blur-xl border border-white/10 text-white/60 text-[11px] font-semibold px-3 py-1.5 rounded-full flex items-center gap-2"
             >
               <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse" />
               Draft Mode
@@ -96,7 +96,7 @@ export default function ToolCard({ tool }: Props) {
         {/* Bottom Content Area */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-8 space-y-4">
           <div className="space-y-1.5 transition-transform duration-500">
-            <div className="flex items-center gap-2 text-white/40 text-[9px] uppercase font-black tracking-[0.2em]">
+            <div className="flex items-center gap-2 text-white/40 text-[11px] font-semibold">
               <Calendar className="w-3 h-3" />
               <span>{formattedDate}</span>
             </div>
@@ -110,7 +110,7 @@ export default function ToolCard({ tool }: Props) {
             <div className="flex-1">
               <Button
                 onClick={handleModifyClick}
-                className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-full font-black text-[10px] uppercase tracking-widest transition-all"
+                className="w-full h-11 bg-white text-black hover:bg-white/90 rounded-full font-semibold text-[11px] transition-all"
               >
                 <Pencil className="h-3.5 w-3.5 mr-2" />
                 Modify Template

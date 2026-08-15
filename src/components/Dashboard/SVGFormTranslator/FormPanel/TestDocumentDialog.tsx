@@ -191,7 +191,7 @@ export function TestDocumentDialog({
                    </p>
                    <button 
                      onClick={() => onOpenChange(false)}
-                     className="w-full py-3 rounded-xl border border-white/5 bg-white/2 text-white/40 hover:text-white/80 hover:bg-white/5 font-medium transition-all active:scale-95 text-xs uppercase tracking-widest"
+                     className="w-full py-3 rounded-xl border border-white/5 bg-white/2 text-white/40 hover:text-white/80 hover:bg-white/5 font-medium transition-all active:scale-95 text-xs"
                    >
                      Cancel
                    </button>

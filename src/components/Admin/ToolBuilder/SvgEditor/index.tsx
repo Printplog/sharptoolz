@@ -598,7 +598,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       {/* Top Toolbar */}
       <div className="flex flex-wrap items-center justify-between pb-4 border-b border-white/10 gap-4 shrink-0">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl font-black tracking-tighter uppercase text-white/90">Designer</h2>
+          <h2 className="text-xl font-semibold tracking-tighter text-white/90">Designer</h2>
           <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10">
             <Button
               variant="ghost"
@@ -697,7 +697,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
               <Button
                 onClick={handleSave}
                 disabled={!name.trim() || isLoading}
-                className="h-9 px-6 bg-primary text-black font-black uppercase tracking-widest text-[10px] rounded-full hover:scale-105 transition-all shadow-lg shadow-primary/20"
+                className="h-9 px-6 bg-primary text-black font-semibold text-[11px] rounded-full hover:scale-105 transition-all shadow-lg shadow-primary/20"
               >
                 {isLoading ? "Saving..." : "Save Changes"}
               </Button>
@@ -717,7 +717,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                <p className="text-xs font-black uppercase tracking-widest text-white/40">Initializing Canvas...</p>
+                <p className="text-xs font-semibold text-white/40">Initializing Canvas...</p>
               </div>
             </div>
           ) : null}
@@ -742,13 +742,13 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
           <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
             <div className="px-5 pt-5 pb-0">
               <TabsList className="w-full bg-black/40 border border-white/5 h-11 p-1 rounded-full">
-                <TabsTrigger value="layers" className="flex-1 rounded-full font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                <TabsTrigger value="layers" className="flex-1 rounded-full font-bold text-[11px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
                   Layers
                 </TabsTrigger>
-                <TabsTrigger value="inspector" className="flex-1 rounded-full font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                <TabsTrigger value="inspector" className="flex-1 rounded-full font-bold text-[11px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
                   Inspector
                 </TabsTrigger>
-                <TabsTrigger value="docs" className="flex-1 rounded-full font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                <TabsTrigger value="docs" className="flex-1 rounded-full font-bold text-[11px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
                   Docs
                 </TabsTrigger>
               </TabsList>
@@ -772,7 +772,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
                       </div>
-                      <p className="text-xs font-bold uppercase tracking-widest">No Layers</p>
+                      <p className="text-xs font-bold">No Layers</p>
                       <p className="text-[10px] opacity-60 mt-1">Upload an SVG to start designing</p>
                     </div>
                   )}
@@ -785,7 +785,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
                   <>
                     {/* Prev / Next navigator */}
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                      <span className="text-[11px] font-bold text-white/40">
                         {selectedElementIndex + 1} / {elements.length}
                       </span>
                       <div className="flex items-center gap-1">
@@ -823,7 +823,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                       </svg>
                     </div>
-                    <p className="text-xs font-bold uppercase tracking-widest">Inspector</p>
+                    <p className="text-xs font-bold">Inspector</p>
                     <p className="text-[10px] opacity-60 mt-1">Select an element on the canvas to edit its properties</p>
                   </div>
                 )}

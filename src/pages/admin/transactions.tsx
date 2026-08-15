@@ -94,6 +94,9 @@ export default function TransactionsPage() {
       if (date) params.set('date', date);
       return getApi(`/admin/wallet/transactions/?${params.toString()}`);
     },
+    // Keep the previous page on screen while the next one loads, otherwise
+    // total_pages momentarily collapses to 1 and disables the Next button.
+    placeholderData: (previousData) => previousData,
   });
 
   const transactions = data?.transactions;
@@ -165,7 +168,7 @@ export default function TransactionsPage() {
       cell: ({ row }) => (
         <div className="flex flex-col">
           <span className="text-white/70 font-medium">{new Date(row.original.createdAt).toLocaleDateString()}</span>
-          <span className="text-[10px] text-white/30 uppercase font-bold tracking-tight">{new Date(row.original.createdAt).toLocaleTimeString()}</span>
+          <span className="text-[11px] text-white/30 font-bold tracking-tight">{new Date(row.original.createdAt).toLocaleTimeString()}</span>
         </div>
       ),
     },
@@ -195,7 +198,7 @@ export default function TransactionsPage() {
             )}
           </div>
           <span className={cn(
-            "text-xs font-bold uppercase tracking-widest",
+            "text-xs font-bold",
             row.original.type === 'credit' ? 'text-green-400' : 'text-red-400'
           )}>
             {row.original.type}
@@ -260,18 +263,18 @@ export default function TransactionsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/10 pb-10">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+          <h1 className="text-3xl font-bold text-white tracking-tighter italic">
             Transaction <span className="text-primary">History</span>
           </h1>
           <p className="text-white/40 text-sm mt-1 font-medium italic">Manage all financial activity logs</p>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-3 font-bold uppercase tracking-tight">
+        <div className="flex flex-wrap items-center justify-end gap-3 font-bold tracking-tight">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-widest hidden sm:inline">Select Day:</span>
+            <span className="text-[11px] text-zinc-500 hidden sm:inline">Select Day:</span>
             <div className="flex items-center gap-1">
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={cn("w-[200px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all", date && "border-primary/40 bg-primary/5 text-primary")}>
+                  <Button variant={"outline"} className={cn("w-[200px] justify-start text-left font-semibold text-[11px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all", date && "border-primary/40 bg-primary/5 text-primary")}>
                     <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
                     {date ? format(new Date(date + 'T00:00:00'), "PPP") : <span>Filter by Date</span>}
                   </Button>
@@ -312,7 +315,7 @@ export default function TransactionsPage() {
           <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 overflow-x-auto no-scrollbar">
             <button
               onClick={() => { setDays(null); setDate(""); setPage(1); }}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${!days && !date ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 whitespace-nowrap ${!days && !date ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}
             >
               All
             </button>
@@ -320,7 +323,7 @@ export default function TransactionsPage() {
               <button
                 key={r.days}
                 onClick={() => { setDays(r.days); setDate(""); setPage(1); }}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${days === r.days ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 whitespace-nowrap ${days === r.days ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}
               >
                 {r.label}
               </button>
@@ -402,7 +405,7 @@ export default function TransactionsPage() {
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="max-w-lg p-8 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black text-white italic uppercase tracking-tighter">
+            <DialogTitle className="text-2xl font-semibold text-white italic tracking-tighter">
               Transaction <span className="text-primary ml-1">#Details</span>
             </DialogTitle>
           </DialogHeader>
@@ -412,11 +415,11 @@ export default function TransactionsPage() {
               <div className="bg-white/5 rounded-2xl p-6 border border-white/5">
                 <div className="flex justify-between items-start mb-6">
                   <div>
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">ID Ref</p>
+                    <p className="text-[11px] font-semibold text-white/30 mb-1">ID Ref</p>
                     <p className="font-mono text-primary text-xs font-bold">{selectedTransaction.id}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Status</p>
+                    <p className="text-[11px] font-semibold text-white/30 mb-1">Status</p>
                     {getStatusBadge(selectedTransaction.status)}
                   </div>
                 </div>
@@ -425,7 +428,7 @@ export default function TransactionsPage() {
 
                 <div className="grid grid-cols-2 gap-8">
                   <div>
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Activity</p>
+                    <p className="text-[11px] font-semibold text-white/30 mb-1">Activity</p>
                     <div className="flex items-center gap-2">
                        {selectedTransaction.type === 'credit' ? (
                         <ArrowUpRight className="w-4 h-4 text-green-400" />
@@ -433,7 +436,7 @@ export default function TransactionsPage() {
                         <ArrowDownRight className="w-4 h-4 text-red-400" />
                       )}
                       <p className={cn(
-                        "font-bold uppercase tracking-widest text-sm",
+                        "font-bold text-sm",
                         selectedTransaction.type === 'credit' ? "text-green-400" : "text-red-400"
                       )}>
                         {selectedTransaction.type}
@@ -441,7 +444,7 @@ export default function TransactionsPage() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Net Amount</p>
+                    <p className="text-[11px] font-semibold text-white/30 mb-1">Net Amount</p>
                     <p className={cn(
                       "text-xl font-black italic",
                       selectedTransaction.type === 'credit' ? "text-green-400" : "text-red-400"
@@ -454,14 +457,14 @@ export default function TransactionsPage() {
 
               <div className="space-y-4">
                  <div className="flex items-center justify-between px-4">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Timestamp</p>
+                  <p className="text-[11px] font-semibold text-white/30">Timestamp</p>
                   <p className="text-white font-bold text-sm">
                     {new Date(selectedTransaction.createdAt).toLocaleString()}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between px-4">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Counterparty</p>
+                  <p className="text-[11px] font-semibold text-white/30">Counterparty</p>
                   <div className="text-right">
                     <p className="font-bold text-white text-sm">{selectedTransaction.user.username}</p>
                     <p className="text-[11px] text-white/40 font-mono">{selectedTransaction.user.email}</p>
@@ -469,21 +472,21 @@ export default function TransactionsPage() {
                 </div>
 
                 <div className="flex items-center justify-between bg-white/3 rounded-2xl p-4">
-                   <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Balance Impact</p>
+                   <p className="text-[11px] font-semibold text-white/30">Balance Impact</p>
                    <p className="text-white font-black italic">
                     ${selectedTransaction.balanceAfter.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
 
                 <div className="px-4">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2">Extended Note</p>
+                  <p className="text-[11px] font-semibold text-white/30 mb-2">Extended Note</p>
                   <p className="text-white/60 text-sm italic font-medium">"{selectedTransaction.description}"</p>
                 </div>
               </div>
 
               {selectedTransaction.metadata && (
                 <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10">
-                  <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                  <p className="text-[11px] font-semibold text-primary mb-4 flex items-center gap-2">
                     <Activity className="w-3 h-3" /> System Evidence
                   </p>
                   <div className="space-y-2">

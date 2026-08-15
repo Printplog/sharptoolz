@@ -20,7 +20,7 @@ export default function HotTools() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-white uppercase italic tracking-tighter">
+        <h2 className="text-xl font-bold text-white italic tracking-tighter">
           Hot <span className="text-primary">Tools</span> 🔥
         </h2>
       </div>

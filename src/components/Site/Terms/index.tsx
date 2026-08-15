@@ -26,14 +26,14 @@ export default function TermsOfService() {
 
           <div className="prose prose-invert prose-primary max-w-none space-y-12">
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold text-white uppercase tracking-wider text-sm opacity-50">01. Agreement to Terms</h2>
+              <h2 className="text-2xl font-bold text-white text-sm opacity-50">01. Agreement to Terms</h2>
               <p className="text-white/60 leading-relaxed text-lg">
                 By accessing or using SharpToolz, you agree to be bound by these Terms of Service. If you do not agree to all of these terms, do not use our service. These terms constitute a legally binding agreement between you and SharpToolz.
               </p>
             </section>
 
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold text-white uppercase tracking-wider text-sm opacity-50">02. License & Use</h2>
+              <h2 className="text-2xl font-bold text-white text-sm opacity-50">02. License & Use</h2>
               <p className="text-white/60 leading-relaxed">
                 We grant you a limited, non-exclusive, non-transferable license to access and use SharpToolz for your personal or internal business purposes.
               </p>
@@ -53,7 +53,7 @@ export default function TermsOfService() {
             </section>
 
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold text-white uppercase tracking-wider text-sm opacity-50">03. User Responsibilities</h2>
+              <h2 className="text-2xl font-bold text-white text-sm opacity-50">03. User Responsibilities</h2>
               <p className="text-white/60 leading-relaxed">
                 You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree not to:
               </p>
@@ -66,7 +66,7 @@ export default function TermsOfService() {
             </section>
 
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold text-white uppercase tracking-wider text-sm opacity-50">04. Payments & Subscriptions</h2>
+              <h2 className="text-2xl font-bold text-white text-sm opacity-50">04. Payments & Subscriptions</h2>
               <p className="text-white/60 leading-relaxed">
                 Certain features require a paid subscription. All fees are non-refundable unless required by law. We reserve the right to modify subscription pricing with reasonable notice.
               </p>
@@ -78,7 +78,7 @@ export default function TermsOfService() {
             </section>
 
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold text-white uppercase tracking-wider text-sm opacity-50">05. Limitation of Liability</h2>
+              <h2 className="text-2xl font-bold text-white text-sm opacity-50">05. Limitation of Liability</h2>
               <p className="text-white/60 leading-relaxed">
                 SharpToolz shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the service.
               </p>

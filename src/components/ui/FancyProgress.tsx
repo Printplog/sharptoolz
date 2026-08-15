@@ -38,7 +38,7 @@ export const FancyProgress: React.FC<FancyProgressProps> = ({
                             </p>
                         )}
                         {label && (
-                            <p className="text-[10px] text-white/40 uppercase tracking-wider">
+                            <p className="text-[11px] text-white/40">
                                 {label}
                             </p>
                         )}

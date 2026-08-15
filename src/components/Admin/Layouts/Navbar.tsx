@@ -29,8 +29,8 @@ export default function Navbar() {
         >
           <AlignLeft className="h-5 w-5" />
         </Button>
-        <h2 className="text-lg font-semibold lg:block hidden">Hey {user?.username?.toUpperCase()} 👋</h2>
-        <h2 className="text-sm font-semibold lg:hidden block">Hey {user?.username?.split(' ')[0].toUpperCase()} 👋</h2>
+        <h2 className="text-lg font-semibold lg:block hidden">Hey {user?.username} 👋</h2>
+        <h2 className="text-sm font-semibold lg:hidden block">Hey {user?.username?.split(' ')[0]} 👋</h2>
       </div>
       {/* Right Side - User Menu */}
       <div className="flex items-center gap-4">

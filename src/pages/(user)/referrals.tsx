@@ -75,15 +75,15 @@ function WithdrawalModal({
               <Wallet className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Withdraw Earnings</h3>
-              <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Manual Payout (USDT BEP20)</p>
+              <h3 className="text-xl font-semibold text-white italic tracking-tight">Withdraw Earnings</h3>
+              <p className="text-white/40 text-[11px] font-bold">Manual Payout (USDT BEP20)</p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <div className="flex justify-between items-end mb-1">
-                <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Amount (USD)</label>
+                <label className="text-[11px] font-semibold text-white/40">Amount (USD)</label>
                 <span className="text-[10px] font-bold text-primary italic">Available: ${balance}</span>
               </div>
               <input
@@ -97,7 +97,7 @@ function WithdrawalModal({
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">USDT BEP20 Address</label>
+              <label className="text-[11px] font-semibold text-white/40">USDT BEP20 Address</label>
               <input
                 type="text"
                 value={address}
@@ -110,7 +110,7 @@ function WithdrawalModal({
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="w-full py-4 bg-primary text-background rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] primary-glow hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-primary text-background rounded-2xl text-[11px] font-semibold primary-glow hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Request"}
             </button>
@@ -165,10 +165,10 @@ export default function ReferralsPage() {
             <AlertTriangle className="w-6 h-6 text-red-500" />
           </div>
           <div>
-            <h4 className="text-white font-black uppercase italic tracking-tight text-lg leading-none">
+            <h4 className="text-white font-semibold italic tracking-tight text-lg leading-none">
               Referral Program Currently <span className="text-red-500">Closed</span>
             </h4>
-            <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">
+            <p className="text-white/40 text-[11px] font-bold mt-1">
               The affiliate system is under scheduled maintenance. You can still view your stats and leaderboards.
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function ReferralsPage() {
               <span className="text-[10px] font-black tracking-widest text-primary">Sharp Rewards</span>
             </div>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic text-white leading-[0.9]">
+          <h1 className="text-4xl md:text-6xl font-semibold tracking-tighter italic text-white leading-[0.9]">
             Invite Friends.<br/>
             <span className="text-primary italic">Earn Together.</span>
           </h1>
@@ -199,7 +199,7 @@ export default function ReferralsPage() {
           <div className="flex items-center gap-3 mt-8">
             <button 
               onClick={() => document.getElementById('leaderboard-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-5 py-2.5 bg-primary text-background rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all active:scale-95 flex items-center gap-2 primary-glow group/btn"
+              className="px-5 py-2.5 bg-primary text-background rounded-full text-[11px] font-semibold hover:bg-primary/90 transition-all active:scale-95 flex items-center gap-2 primary-glow group/btn"
             >
               <span>Leaderboard</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
@@ -208,7 +208,7 @@ export default function ReferralsPage() {
             <button 
               onClick={() => setIsWithdrawModalOpen(true)}
               disabled={stats?.enable_referrals === false}
-              className="px-5 py-2.5 bg-white/5 border border-white/10 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95 flex items-center gap-2 backdrop-blur-sm disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 bg-white/5 border border-white/10 text-white rounded-full text-[11px] font-semibold hover:bg-white/10 transition-all active:scale-95 flex items-center gap-2 backdrop-blur-sm disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <Wallet className="w-3.5 h-3.5 text-primary" />
               <span>Withdraw</span>
@@ -260,17 +260,17 @@ export default function ReferralsPage() {
                   <Sparkles className="w-6 h-6 text-amber-400" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-white font-black uppercase italic tracking-tight text-lg leading-none">
+                  <h4 className="text-white font-semibold italic tracking-tight text-lg leading-none">
                     You have <span className="text-amber-400">{stats.pending_referrals} pending</span> {stats.pending_referrals === 1 ? 'referral' : 'referrals'}!
                   </h4>
-                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">
+                  <p className="text-white/40 text-[11px] font-bold mt-1">
                     Remind them to deposit so you both earn a 10% cash bonus.
                   </p>
                 </div>
                 <button 
                   onClick={() => remindMutation.mutate()}
                   disabled={remindMutation.isPending || stats?.enable_referrals === false}
-                  className="px-6 py-2.5 bg-amber-500 text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.3)] disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 bg-amber-500 text-black rounded-full text-[11px] font-semibold hover:bg-amber-400 transition-all active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.3)] disabled:opacity-50 flex items-center gap-2"
                 >
                   {remindMutation.isPending ? (
                     <>

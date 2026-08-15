@@ -59,7 +59,7 @@ export const ManualMismatchDialog: React.FC<ManualMismatchDialogProps> = ({
                     <div className="space-y-6 py-4">
                         {hasNew && (
                             <div className="space-y-3">
-                                <h4 className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                                <h4 className="text-[11px] font-bold text-white/40">
                                     New Elements to Assign ({report.unmatchedNew.length})
                                 </h4>
                                 <div className="space-y-2">
@@ -73,7 +73,7 @@ export const ManualMismatchDialog: React.FC<ManualMismatchDialogProps> = ({
                                                     <Tag className="h-3 w-3 text-white/40" />
                                                     <span className="text-xs font-mono text-white/80 truncate">{item.id}</span>
                                                 </div>
-                                                <div className="text-[10px] text-white/30 uppercase font-bold">{item.tag} element</div>
+                                                <div className="text-[11px] text-white/30 font-bold">{item.tag} element</div>
                                             </div>
                                             <ArrowRight className="h-4 w-4 text-white/20 shrink-0" />
                                             <div className="w-56 shrink-0">
@@ -89,7 +89,7 @@ export const ManualMismatchDialog: React.FC<ManualMismatchDialogProps> = ({
                                                         {report.unmatchedOld.map(old => (
                                                             <SelectItem key={old.id} value={old.id}>
                                                                 <span className="text-xs font-mono">{old.id}</span>
-                                                                <span className="ml-2 text-[10px] text-white/30 uppercase">({old.tag})</span>
+                                                                <span className="ml-2 text-[11px] text-white/30">({old.tag})</span>
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>

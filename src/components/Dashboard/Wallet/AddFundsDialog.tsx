@@ -115,10 +115,10 @@ export default function AddFundsDialog({
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/20 rounded-full blur-[80px] -z-10" />
 
         <DialogHeader className="mb-6">
-          <DialogTitle className="text-2xl font-black text-white tracking-tighter uppercase italic">
+          <DialogTitle className="text-2xl font-semibold text-white tracking-tighter italic">
             Add Funds
           </DialogTitle>
-          <p className="text-white/40 text-xs font-black uppercase tracking-[0.2em]">Select your payment method</p>
+          <p className="text-white/40 text-xs font-semibold">Select your payment method</p>
         </DialogHeader>
 
         {/* Deposit bonus promo banner — visible in every mode when the promo is on */}
@@ -161,7 +161,7 @@ export default function AddFundsDialog({
                 </div>
                 <div className="text-left">
                   <span className="block text-sm font-bold text-white">Direct Crypto</span>
-                  <span className="text-xs text-white/40 uppercase font-black tracking-widest">USDT BEP20</span>
+                  <span className="text-xs text-white/40 font-semibold">USDT BEP20</span>
                 </div>
               </div>
               <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
@@ -179,7 +179,7 @@ export default function AddFundsDialog({
                 </div>
                 <div className="text-left">
                   <span className="block text-sm font-bold text-white">Pay with Naira</span>
-                  <span className="text-xs text-white/40 uppercase font-black tracking-widest">WhatsApp Vendor</span>
+                  <span className="text-xs text-white/40 font-semibold">WhatsApp Vendor</span>
                 </div>
               </div>
               <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-green-500 group-hover:text-white transition-colors">
@@ -203,7 +203,7 @@ export default function AddFundsDialog({
             {isPending ? (
               <div className="flex flex-col items-center justify-center py-10 gap-4">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="text-xs font-black uppercase tracking-widest text-white/40">Generating Address...</span>
+                <span className="text-xs font-semibold text-white/40">Generating Address...</span>
               </div>
             ) : data?.payment_address ? (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -220,7 +220,7 @@ export default function AddFundsDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-widest text-white/40 ml-1">USDT BEP20 Address</label>
+                  <label className="text-xs font-semibold text-white/40 ml-1">USDT BEP20 Address</label>
                   <div className="group relative bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:border-primary/30 transition-colors">
                     <span className="text-sm font-mono break-all text-white/80 pr-4">{data.payment_address}</span>
                     <button
@@ -236,14 +236,14 @@ export default function AddFundsDialog({
                   </div>
                 </div>
 
-                <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 text-xs uppercase font-bold tracking-tight p-4 rounded-xl flex gap-3 italic">
+                <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 text-xs font-bold tracking-tight p-4 rounded-xl flex gap-3 italic">
                   <span className="text-lg">⚠️</span>
                   <span>Only send USDT via BEP20 network to avoid permanent loss of funds.</span>
                 </div>
 
                 <button
                   onClick={() => onOpenChange(false)}
-                  className="w-full bg-white text-black py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-white/5"
+                  className="w-full bg-white text-black py-4 rounded-full font-semibold text-xs transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-white/5"
                 >
                   Close & Proceed
                 </button>
@@ -263,13 +263,13 @@ export default function AddFundsDialog({
                   {rateLoading ? 'Fetching live rate...' : `Live Rate: $1 = ₦${usdToNgn?.toLocaleString('en-NG') ?? '...'}`}
                 </span>
               </div>
-              <span className="text-[10px] text-white/20 uppercase tracking-widest font-black">
+              <span className="text-[11px] text-white/20 font-semibold">
                 Min: ${minTopup}
               </span>
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs font-black uppercase tracking-widest text-white/40 ml-1">Amount in Naira (₦)</label>
+              <label className="text-xs font-semibold text-white/40 ml-1">Amount in Naira (₦)</label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-white/40">₦</div>
                 <Input
@@ -308,7 +308,7 @@ export default function AddFundsDialog({
               {/* Conversion Preview */}
               {amountUsd && usdToNgn && (
                 <div className="flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-2xl animate-in fade-in duration-300">
-                  <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Equivalent in USD</span>
+                  <span className="text-xs font-bold text-white/40">Equivalent in USD</span>
                   <span className="text-lg font-black text-primary">${(parseFloat(amountUsd) / usdToNgn).toFixed(2)}</span>
                 </div>
               )}
@@ -325,13 +325,13 @@ export default function AddFundsDialog({
             {isPending ? (
               <div className="flex flex-col items-center justify-center py-6 gap-4">
                 <Loader2 className="w-8 h-8 animate-spin text-green-500" />
-                <span className="text-xs font-black uppercase tracking-widest text-white/40">Preparing Payment...</span>
+                <span className="text-xs font-semibold text-white/40">Preparing Payment...</span>
               </div>
             ) : (
               data?.payment_address && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-white/40 ml-1">Assigned BSC Address</label>
+                    <label className="text-xs font-semibold text-white/40 ml-1">Assigned BSC Address</label>
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
                       <div className="text-sm font-mono break-all text-white/60">{data.payment_address}</div>
                     </div>
@@ -349,7 +349,7 @@ export default function AddFundsDialog({
                       onOpenChange(false);
                     }}
                     disabled={!amountUsd || (amountUsd && usdToNgn && (parseFloat(amountUsd) / usdToNgn) < minTopup) || rateLoading}
-                    className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                    className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-full font-semibold text-xs transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
                   >
                     <MessageSquare className="w-4 h-4" />
                     Chat with Vendor on WhatsApp

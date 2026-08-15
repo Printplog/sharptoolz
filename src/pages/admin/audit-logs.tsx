@@ -95,7 +95,7 @@ export default function AuditLogsPage() {
         <div className="dashboard-content space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+                    <h1 className="text-3xl font-bold text-white tracking-tighter italic">
                         Platform <span className="text-primary">Logs</span>
                     </h1>
                     <p className="text-white/60 mt-1">

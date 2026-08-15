@@ -1,4 +1,4 @@
-import { FileText, Wallet, Users, Download } from "lucide-react";
+import { FileText, Wallet, Users, Download, Globe } from "lucide-react";
 import type { AdminOverview } from "@/types";
 import { useAuthStore } from "@/store/authStore";
 import { isAdmin as checkAdmin, isAdminOrStaff } from "@/lib/constants/roles";
@@ -45,6 +45,19 @@ export default function Overview({ data, isLoading }: OverviewProps) {
             borderColor: "border-orange-500/20",
             iconBg: "bg-orange-500/10",
             iconColor: "text-orange-400",
+          },
+          {
+            title: "External Users",
+            value: data?.external_users ?? 0,
+            label:
+              data?.active_external_users !== undefined
+                ? `${data.active_external_users.toLocaleString()} active in range`
+                : "End users via the API",
+            icon: Globe,
+            gradient: "from-violet-500/20 to-violet-600/5",
+            borderColor: "border-violet-500/20",
+            iconBg: "bg-violet-500/10",
+            iconColor: "text-violet-400",
           },
         ]
       : []),

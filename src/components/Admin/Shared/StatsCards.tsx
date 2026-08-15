@@ -82,7 +82,7 @@ function HoverScrollableValue({ value, isComingSoon }: { value: string | number,
         style={scrollStyle}
           className={cn(
           "font-black text-white tracking-tighter whitespace-nowrap pr-6 transition-transform ease-linear",
-          isComingSoon ? "text-[10px] text-white/20 uppercase italic" : "text-4xl",
+          isComingSoon ? "text-[11px] text-white/20 italic" : "text-4xl",
           overflowDistance > 0 && "group-hover:translate-x-[calc(var(--stat-scroll-distance)*-1)]"
         )}
       >
@@ -131,7 +131,7 @@ export function StatsCards({ stats, isLoading, className }: StatsCardsProps) {
             <div className="flex flex-col h-full justify-between relative z-10">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
+                  <p className="text-zinc-400 text-[11px] font-bold">
                     {stat.title}
                   </p>
 
@@ -140,7 +140,7 @@ export function StatsCards({ stats, isLoading, className }: StatsCardsProps) {
                       <TooltipTrigger asChild>
                         <Info className="h-3 w-3 text-white/20 hover:text-primary transition-colors cursor-help" />
                       </TooltipTrigger>
-                      <TooltipContent className="bg-zinc-900 border-white/10 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-2 rounded-lg shadow-2xl">
+                      <TooltipContent className="bg-zinc-900 border-white/10 text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-2xl">
                         Coming Soon to SharpToolz
                       </TooltipContent>
                     </Tooltip>
@@ -162,7 +162,7 @@ export function StatsCards({ stats, isLoading, className }: StatsCardsProps) {
                             variant="outline" 
                             size="sm" 
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); stat.action?.onClick?.(); }}
-                            className="h-8 w-fit px-6 rounded-full bg-white/5 border-white/10 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 hover:border-white/20 transition-all group/btn shadow-xl"
+                            className="h-8 w-fit px-6 rounded-full bg-white/5 border-white/10 backdrop-blur-md text-white text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all group/btn shadow-xl"
                           >
                             <stat.action.icon className="h-3 w-3 mr-2 group/btn-hover:scale-110 transition-transform" />
                             {stat.action.label}
@@ -171,7 +171,7 @@ export function StatsCards({ stats, isLoading, className }: StatsCardsProps) {
                         <HoverScrollableValue value={stat.value} isComingSoon={stat.isComingSoon} />
                      </div>
                   )}
-                   <p className="text-zinc-300 text-[10px] mt-1 font-medium uppercase tracking-tight">
+                   <p className="text-zinc-300 text-[11px] mt-1 font-medium tracking-tight">
                     {stat.label}
                   </p>
 
@@ -182,7 +182,7 @@ export function StatsCards({ stats, isLoading, className }: StatsCardsProps) {
                     variant="outline" 
                     size="sm" 
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); stat.action?.onClick?.(); }}
-                    className="h-8 w-full rounded-xl bg-white/5 border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-black transition-all group/btn"
+                    className="h-8 w-full rounded-xl bg-white/5 border-white/10 text-[11px] font-semibold hover:bg-primary hover:text-black transition-all group/btn"
                   >
                     <stat.action.icon className="h-3 w-3 mr-2 group/btn-hover:rotate-90 transition-transform" />
                     {stat.action.label}

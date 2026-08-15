@@ -4,6 +4,7 @@ import { Button } from "./button";
 import { Trash2, Barcode as BarcodeIcon } from "lucide-react";
 import { generateBarcodeDataUrl } from "@/lib/utils/barcodeGenerator";
 import { symbologyLabel, DEFAULT_SYMBOLOGY } from "@/lib/utils/barcodeSymbologies";
+import { SortableList } from "./SortableList";
 
 interface BarcodeRow {
   id: string;
@@ -137,13 +138,18 @@ const BarcodeInputField = forwardRef<BarcodeInputFieldRef, BarcodeInputFieldProp
 
           {/* Rows */}
           <div className="flex-1 w-full space-y-3">
-            <span className="inline-block text-[10px] uppercase font-black tracking-widest text-primary/70 bg-primary/10 border border-primary/20 rounded-full px-2 py-0.5">
+            <span className="inline-block text-[11px] font-semibold text-primary/70 bg-primary/10 border border-primary/20 rounded-full px-2 py-0.5">
               {symbologyLabel(bcid)}
             </span>
-            {rows.map((row) => (
-              <div key={row.id} className="flex gap-2 items-end group animate-in fade-in slide-in-from-left-2 duration-200">
+            <SortableList
+              items={rows}
+              getId={(row) => row.id}
+              onReorder={setRows}
+            >
+              {(row) => (
+              <div className="flex gap-2 items-end group animate-in fade-in slide-in-from-left-2 duration-200">
                 <div className="flex-1 space-y-1">
-                  <label className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-1">Label</label>
+                  <label className="text-[11px] font-semibold text-white/40 ml-1">Label</label>
                   <Input
                     value={row.label}
                     onChange={(e) => handleRowChange(row.id, "label", e.target.value)}
@@ -153,7 +159,7 @@ const BarcodeInputField = forwardRef<BarcodeInputFieldRef, BarcodeInputFieldProp
                   />
                 </div>
                 <div className="flex-[2] space-y-1">
-                  <label className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-1">Value</label>
+                  <label className="text-[11px] font-semibold text-white/40 ml-1">Value</label>
                   <Input
                     value={row.value}
                     onChange={(e) => handleRowChange(row.id, "value", e.target.value)}
@@ -173,7 +179,8 @@ const BarcodeInputField = forwardRef<BarcodeInputFieldRef, BarcodeInputFieldProp
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
-            ))}
+              )}
+            </SortableList>
             {error && <p className="text-[11px] text-red-400/80 leading-tight">{error}</p>}
           </div>
         </div>

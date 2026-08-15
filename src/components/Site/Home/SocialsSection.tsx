@@ -96,7 +96,7 @@ export default function SocialsSection() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.1 }}
-                        className="text-4xl md:text-5xl lg:text-7xl font-fancy font-black text-white tracking-tighter uppercase italic mb-6 leading-[0.9]"
+                        className="text-4xl md:text-5xl lg:text-7xl font-fancy font-semibold text-white tracking-tighter italic mb-6 leading-[0.9]"
                     >
                         Join the <span className="text-primary">Community</span>
                     </motion.h2>
@@ -151,7 +151,7 @@ export default function SocialsSection() {
                                         {platform.icon}
                                     </div>
 
-                                    <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-3 flex items-center gap-2">
+                                    <h3 className="text-2xl font-semibold text-white italic tracking-tighter mb-3 flex items-center gap-2">
                                         {platform.name}
                                         <ArrowUpRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all -translate-y-1 translate-x-1 duration-300" />
                                     </h3>
@@ -162,7 +162,7 @@ export default function SocialsSection() {
 
                                     <div className="flex items-center justify-between pt-6 border-t border-white/5">
                                         <span
-                                            className="text-xs font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300"
+                                            className="text-xs font-semibold opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300"
                                             style={{ color: platform.color }}
                                         >
                                             Join now

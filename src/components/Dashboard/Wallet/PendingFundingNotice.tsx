@@ -88,7 +88,7 @@ const PendingFundingNotice: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Loader2 className="w-4 h-4 text-yellow-400 animate-spin" />
-          <span className="text-white text-xs font-black uppercase tracking-widest italic">Incomplete Funding</span>
+          <span className="text-white text-xs font-semibold italic">Incomplete Funding</span>
         </div>
         <AlertTriangle className="w-4 h-4 text-yellow-500/50" />
       </div>
@@ -96,8 +96,8 @@ const PendingFundingNotice: React.FC = () => {
       <div className="space-y-4">
         <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 space-y-4">
           <div className="flex items-center justify-between gap-4">
-            <span className="text-white/40 text-xs font-black uppercase tracking-widest">Payment Address</span>
-            <div className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-xs font-black uppercase tracking-tighter">
+            <span className="text-white/40 text-xs font-semibold">Payment Address</span>
+            <div className="flex items-center gap-2 px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-xs font-semibold tracking-tighter">
               BEP20
             </div>
           </div>
@@ -122,7 +122,7 @@ const PendingFundingNotice: React.FC = () => {
           </div>
 
           <p className="text-xs text-white/40 leading-relaxed italic">
-            Send only <span className="text-yellow-500 font-bold uppercase tracking-tighter">USDT (BEP20)</span> to avoid loss of funds.
+            Send only <span className="text-yellow-500 font-bold tracking-tighter">USDT (BEP20)</span> to avoid loss of funds.
           </p>
         </div>
       </div>
@@ -130,7 +130,7 @@ const PendingFundingNotice: React.FC = () => {
       <div className="flex gap-3">
         <button
           onClick={() => setShowAmountDialog(true)}
-          className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+          className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-4 rounded-full font-semibold text-xs transition-all hover:scale-[1.02] active:scale-95"
         >
           <MessageSquare className="w-3.5 h-3.5" />
           Pay on WhatsApp
@@ -142,7 +142,7 @@ const PendingFundingNotice: React.FC = () => {
           trigger={
             <button
               disabled={isPending}
-              className="px-6 flex items-center justify-center bg-white/5 text-white/40 border border-white/5 py-4 rounded-full font-black text-xs uppercase tracking-widest hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 disabled:opacity-50"
+              className="px-6 flex items-center justify-center bg-white/5 text-white/40 border border-white/5 py-4 rounded-full font-semibold text-xs hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 disabled:opacity-50"
             >
               <XCircle className="w-3.5 h-3.5 mr-2" />
               {isPending ? "..." : "Cancel"}
@@ -156,7 +156,7 @@ const PendingFundingNotice: React.FC = () => {
       <Dialog open={showAmountDialog} onOpenChange={setShowAmountDialog}>
         <DialogContent className="p-8 max-w-sm">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-xl font-black text-white tracking-tighter uppercase italic flex items-center gap-3">
+            <DialogTitle className="text-xl font-semibold text-white tracking-tighter italic flex items-center gap-3">
               <Wallet className="w-5 h-5 text-green-400" />
               Enter Naira Amount
             </DialogTitle>
@@ -164,7 +164,7 @@ const PendingFundingNotice: React.FC = () => {
 
           <div className="space-y-6">
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Amount in Naira (₦)</label>
+              <label className="text-[11px] font-semibold text-white/40">Amount in Naira (₦)</label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-white/40">₦</div>
                 <Input
@@ -178,7 +178,7 @@ const PendingFundingNotice: React.FC = () => {
 
               {equivalentUsd && (
                 <div className="flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-2xl animate-in fade-in duration-300">
-                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Equivalent</span>
+                  <span className="text-[11px] font-bold text-white/40">Equivalent</span>
                   <span className="text-base font-black text-primary">${equivalentUsd}</span>
                 </div>
               )}
@@ -194,7 +194,7 @@ const PendingFundingNotice: React.FC = () => {
             <button
               onClick={handleWhatsAppRedirect}
               disabled={!amountNaira || !!isBelowMin || rateLoading}
-              className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 bg-green-600 text-white py-4 rounded-full font-semibold text-xs transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <MessageSquare className="w-4 h-4" />
               {rateLoading ? "Loading Rate..." : "Chat on WhatsApp"}

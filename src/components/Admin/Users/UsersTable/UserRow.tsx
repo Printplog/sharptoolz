@@ -47,12 +47,12 @@ export default function UserRow({ user, index, onPrefetch }: UserRowProps) {
                                 <UserIcon className="h-6 w-6" />}
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-white text-[13px] tracking-tight uppercase group-hover:text-primary transition-colors truncate">
+                        <span className="font-bold text-white text-[13px] tracking-tight group-hover:text-primary transition-colors truncate">
                             {user.username}
                         </span>
                         <div className="flex items-center gap-2 mt-1">
                             <span className={cn(
-                                "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest",
+                                "px-2 py-0.5 rounded-full text-[11px] font-semibold",
                                 user.is_active ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-500 border border-red-500/20"
                             )}>
                                 {user.is_active ? "Active" : "Restricted"}
@@ -70,7 +70,7 @@ export default function UserRow({ user, index, onPrefetch }: UserRowProps) {
             <td className="px-6 py-4 min-w-[180px]">
                 <div className="flex flex-col gap-1.5">
                     <div className={cn(
-                        "px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-[0.05em] w-fit uppercase flex items-center gap-1.5",
+                        "px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-[0.05em] w-fit flex items-center gap-1.5",
                         user.role === ROLES.ADMIN ? "bg-primary/10 text-primary border border-primary/20" :
                             user.role === ROLES.STAFF ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
                                 "bg-white/5 text-white/50 border border-white/10"
@@ -98,7 +98,7 @@ export default function UserRow({ user, index, onPrefetch }: UserRowProps) {
                             <HandCoins className="h-3.5 w-3.5 text-emerald-400" />
                             <span className="text-white font-black text-sm">{user.total_purchases}</span>
                         </div>
-                        <span className="text-[9px] text-white/20 font-black uppercase tracking-widest mt-0.5">Orders</span>
+                        <span className="text-[11px] text-white/20 font-semibold mt-0.5">Orders</span>
                     </div>
                     <div className="w-[1px] h-8 bg-white/10" />
                     <div className="flex flex-col">
@@ -106,7 +106,7 @@ export default function UserRow({ user, index, onPrefetch }: UserRowProps) {
                             <Download className="h-3.5 w-3.5 text-blue-400" />
                             <span className="text-white font-black text-sm">{user.downloads}</span>
                         </div>
-                        <span className="text-[9px] text-white/20 font-black uppercase tracking-widest mt-0.5">Files</span>
+                        <span className="text-[11px] text-white/20 font-semibold mt-0.5">Files</span>
                     </div>
                 </div>
             </td>
@@ -122,7 +122,7 @@ export default function UserRow({ user, index, onPrefetch }: UserRowProps) {
                             <span className="text-emerald-400 text-sm italic mr-0.5 font-bold">$</span>
                             {parseFloat(user.wallet_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
-                        <span className="text-[9px] text-emerald-400/50 font-bold uppercase tracking-widest mt-0.5">Balance</span>
+                        <span className="text-[11px] text-emerald-400/50 font-bold mt-0.5">Balance</span>
                     </div>
                 </div>
             </td>

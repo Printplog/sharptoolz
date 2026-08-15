@@ -29,7 +29,7 @@ export default function Footer() {
 
           {/* Directory */}
           <div className="space-y-8">
-            <h4 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Directory</h4>
+            <h4 className="text-[11px] font-bold text-white">Directory</h4>
             <ul className="space-y-4 text-sm text-white/60 font-medium">
               <li>
                 <Link to="/" className="hover:text-primary transition-all hover:translate-x-1 inline-block">Home</Link>
@@ -66,7 +66,7 @@ export default function Footer() {
 
           {/* Connect Section */}
           <div className="space-y-8">
-            <h4 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Social Feed</h4>
+            <h4 className="text-[11px] font-bold text-white">Social Feed</h4>
             <div className="flex flex-wrap gap-3">
               {[
                 { key: 'twitter_link', color: "#1DA1F2", icon: <Twitter className="w-5 h-5" />, label: "Twitter" },
@@ -112,7 +112,7 @@ export default function Footer() {
 
           {/* Legal / System Status */}
           <div className="space-y-8">
-            <h4 className="text-[11px] font-bold text-white uppercase tracking-[0.2em]">Governance</h4>
+            <h4 className="text-[11px] font-bold text-white">Governance</h4>
             <ul className="space-y-4 text-sm text-white/60 font-medium">
               <li>
                 <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>

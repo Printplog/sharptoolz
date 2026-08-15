@@ -57,13 +57,13 @@ export default function PurchaseHistory({ purchases }: PurchaseHistoryProps) {
             <Table>
               <TableHeader>
                 <TableRow className="border-white/5 bg-white/5 transition-colors">
-                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Template</TableHead>
-                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Name</TableHead>
-                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Type</TableHead>
-                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Status</TableHead>
-                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Tracking ID</TableHead>
-                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4">Created</TableHead>
-                  <TableHead className="text-white/40 font-black uppercase tracking-tighter text-[10px] py-4 text-right">Actions</TableHead>
+                  <TableHead className="text-white/40 font-semibold tracking-tighter text-[11px] py-4">Template</TableHead>
+                  <TableHead className="text-white/40 font-semibold tracking-tighter text-[11px] py-4">Name</TableHead>
+                  <TableHead className="text-white/40 font-semibold tracking-tighter text-[11px] py-4">Type</TableHead>
+                  <TableHead className="text-white/40 font-semibold tracking-tighter text-[11px] py-4">Status</TableHead>
+                  <TableHead className="text-white/40 font-semibold tracking-tighter text-[11px] py-4">Tracking ID</TableHead>
+                  <TableHead className="text-white/40 font-semibold tracking-tighter text-[11px] py-4">Created</TableHead>
+                  <TableHead className="text-white/40 font-semibold tracking-tighter text-[11px] py-4 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -83,7 +83,7 @@ export default function PurchaseHistory({ purchases }: PurchaseHistoryProps) {
                     <TableCell>
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold",
                           purchase.test
                             ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
                             : "bg-green-500/10 text-green-400 border border-green-500/20"
@@ -99,13 +99,13 @@ export default function PurchaseHistory({ purchases }: PurchaseHistoryProps) {
                           purchase.status === "completed" ? "bg-green-500" : 
                           purchase.status === "pending" ? "bg-yellow-500" : "bg-red-500"
                         )} />
-                        <span className={cn("text-[11px] font-black uppercase tracking-widest", getStatusColor(purchase.status))}>
+                        <span className={cn("text-[11px] font-semibold", getStatusColor(purchase.status))}>
                           {purchase.status}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-white/30 text-[11px] font-mono tracking-tighter uppercase">{purchase.tracking_id}</span>
+                      <span className="text-white/30 text-[11px] font-mono tracking-tighter">{purchase.tracking_id}</span>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-0.5">

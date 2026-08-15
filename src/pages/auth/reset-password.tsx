@@ -73,7 +73,7 @@ export default function ResetPasswordConfirm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs text-white/50 uppercase tracking-wider font-medium">
+                <FormLabel className="text-xs text-white/50 font-medium">
                   New password
                 </FormLabel>
                 <div className="relative">

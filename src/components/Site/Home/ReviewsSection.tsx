@@ -129,11 +129,11 @@ export default function ReviewsSection() {
           <User className="w-5 h-5 text-white/20 group-hover:text-primary transition-colors" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-white font-black text-xs uppercase tracking-wider group-hover:text-primary/90 transition-colors">
+          <p className="text-white font-semibold text-xs group-hover:text-primary/90 transition-colors">
             {review.userName}
           </p>
           <div className="flex items-center gap-2 mt-0.5">
-             <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{review.itemName}</span>
+             <span className="text-[11px] font-bold text-white/20">{review.itemName}</span>
           </div>
         </div>
       </div>
@@ -289,7 +289,7 @@ export default function ReviewsSection() {
 
       <div className="z-1 relative">
         <div className="text-center mb-12 md:mb-24 px-4">
-          <h2 className="text-4xl md:text-5xl lg:text-7xl font-fancy font-black text-white tracking-tighter uppercase italic mb-6 leading-[0.9]">
+          <h2 className="text-4xl md:text-5xl lg:text-7xl font-fancy font-semibold text-white tracking-tighter italic mb-6 leading-[0.9]">
             User <span className="text-primary">Reviews</span>
           </h2>
           <p className="text-white/40 max-w-2xl mx-auto text-lg leading-relaxed font-medium">

@@ -72,7 +72,7 @@ export default function DepositPromoPopup({ onDeposit }: { onDeposit?: () => voi
                 <Gift className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-black uppercase tracking-widest text-primary">
+                <p className="text-xs font-semibold text-primary">
                   Limited Deposit Bonus
                 </p>
                 <p className="mt-1 text-sm leading-relaxed text-white/80">{message}</p>

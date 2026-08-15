@@ -33,7 +33,7 @@ export default function ChatSidebar() {
       <div className="p-5 border-b border-white/10">
         <Button
           onClick={() => newChat("create")}
-          className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-6 font-bold uppercase tracking-wider text-[10px] transition-all active:scale-95 border-none"
+          className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-6 font-bold text-[11px] transition-all active:scale-95 border-none"
         >
           <Plus size={16} />
           New Chat
@@ -44,7 +44,7 @@ export default function ChatSidebar() {
         {sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-white/10 px-4 text-center">
             <MessageSquare size={32} className="mb-2 opacity-5" />
-            <p className="text-[10px] font-medium uppercase tracking-widest">No history</p>
+            <p className="text-[11px] font-medium">No history</p>
           </div>
         ) : (
           sessions.map((session) => (
@@ -82,7 +82,7 @@ export default function ChatSidebar() {
                     <p className="text-[12px] font-semibold truncate pr-6 leading-tight">
                       {session.title || "Untitled Chat"}
                     </p>
-                    <p className="text-[9px] opacity-40 uppercase tracking-tighter mt-1">
+                    <p className="text-[11px] opacity-40 tracking-tighter mt-1">
                       {formatDistanceToNow(new Date(session.updated_at))} ago
                     </p>
                   </>

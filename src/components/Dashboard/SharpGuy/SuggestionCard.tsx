@@ -55,7 +55,7 @@ export default function SuggestionCard({
             key={i}
             className="flex flex-col gap-1 bg-white/[0.03] border border-white/5 rounded-lg p-2"
           >
-            <span className="text-[10px] text-white/40 font-mono uppercase tracking-wider">
+            <span className="text-[11px] text-white/40 font-mono">
               {upd.id}
             </span>
             <div className="flex items-center gap-2 text-[11px] text-white/80">

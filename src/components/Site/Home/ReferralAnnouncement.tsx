@@ -242,14 +242,14 @@ const Step = ({ image, title, description, progress, range, theme, align = "left
             <div className="absolute inset-0 bg-[#070707]/60 z-0 rounded-[2rem] md:rounded-[4rem]" />
             <div className="relative z-30 space-y-2 md:space-y-3">
               <h4
-                className="font-black text-white uppercase italic tracking-tighter leading-none"
+                className="font-semibold text-white italic tracking-tighter leading-none"
                 style={{ fontSize: "clamp(1.4rem, 4vw, 3rem)" }}
               >
                 {title}
               </h4>
               <div className={cn("h-1 rounded-full", theme.accent.replace("text-", "bg-") + "/20")} style={{ width: "clamp(2.5rem, 6vw, 5rem)" }} />
               <p
-                className="text-white/40 font-black uppercase leading-none"
+                className="text-white/40 font-semibold leading-none"
                 style={{ fontSize: "clamp(0.5rem, 1.2vw, 0.75rem)", letterSpacing: "0.4em" }}
               >
                 {description}
@@ -291,7 +291,7 @@ export default function ReferralAnnouncement() {
 
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-20">
-          <h2 className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter uppercase italic text-white leading-[0.9] mb-10 max-w-3xl mx-auto">
+          <h2 className="text-4xl md:text-5xl lg:text-7xl font-semibold tracking-tighter italic text-white leading-[0.9] mb-10 max-w-3xl mx-auto">
             Earn by referring <span className="text-primary">your friends</span>
           </h2>
           <p className="text-white/40 max-w-2xl font-medium text-lg md:text-xl leading-relaxed">
@@ -312,7 +312,7 @@ export default function ReferralAnnouncement() {
         {/* ── Yield Estimator (MacOS Style) ────────────────────────────────── */}
         <div className="flex flex-col items-center mt-20">
           {/* Simplified Title (Smaller & Integrated) */}
-          <h4 className="text-xl md:text-2xl font-black text-white/80 uppercase italic tracking-tighter mb-8 text-center">
+          <h4 className="text-xl md:text-2xl font-semibold text-white/80 italic tracking-tighter mb-8 text-center">
             Calculate How Much <span className="text-primary">You Can Earn</span>
           </h4>
 
@@ -329,7 +329,7 @@ export default function ReferralAnnouncement() {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E] opacity-80" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#28C840] opacity-80" />
               </div>
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/20 font-black text-[9px] uppercase tracking-[0.2em]">
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/20 font-semibold text-[11px]">
                 <Calculator className="w-3 h-3" />
                 Sharp Calculator
               </div>
@@ -342,7 +342,7 @@ export default function ReferralAnnouncement() {
                 {/* Inputs Side */}
                 <div className="space-y-6 md:space-y-8 order-2 md:order-1">
                   <div className="space-y-3">
-                    <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] px-1">Active Invitations</label>
+                    <label className="text-[11px] font-semibold text-white/30 px-1">Active Invitations</label>
                     <div className="flex items-center gap-4 bg-white/5 rounded-full p-2 border border-white/5 group hover:border-emerald-500/20 transition-all">
                       <button 
                         onClick={() => setNumFriends(prev => Math.max(1, prev - 1))}
@@ -361,7 +361,7 @@ export default function ReferralAnnouncement() {
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] px-1">Avg. Deposit ($)</label>
+                    <label className="text-[11px] font-semibold text-white/30 px-1">Avg. Deposit ($)</label>
                     <div className="relative h-14 group">
                       <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-black text-lg">$</span>
                       <input 
@@ -379,7 +379,7 @@ export default function ReferralAnnouncement() {
                   <div className="absolute inset-0 bg-emerald-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   <div className="relative z-10 space-y-0.5">
-                    <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.5em]">Potential Earning</span>
+                    <span className="text-[11px] font-semibold text-white/20">Potential Earning</span>
                     <div className="flex items-baseline justify-center gap-2">
                        <motion.span 
                          key={potentialEarning}
@@ -390,7 +390,7 @@ export default function ReferralAnnouncement() {
                          ${potentialEarning}
                        </motion.span>
                     </div>
-                    <span className="text-[9px] font-bold text-white/10 uppercase italic tracking-widest">per cycle</span>
+                    <span className="text-[11px] font-bold text-white/10 italic">per cycle</span>
                   </div>
                 </div>
 
@@ -399,7 +399,7 @@ export default function ReferralAnnouncement() {
 
             {/* Window Status Bar */}
             <div className="h-7 border-t border-white/5 bg-black/10 px-6 flex items-center justify-center">
-              <div className="flex items-center gap-2 text-[7px] font-medium text-white/5 uppercase tracking-widest">
+              <div className="flex items-center gap-2 text-[10px] font-medium text-white/5">
                 Optimized Yield Generation Core V2.4
               </div>
             </div>

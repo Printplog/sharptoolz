@@ -289,7 +289,7 @@ function CreateCampaignDialog() {
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="rounded-3xl border border-emerald-500/15 bg-emerald-500/[0.04] p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-300">
+            <p className="text-[11px] font-semibold text-emerald-300">
               Required fields
             </p>
             <p className="mt-2 text-sm text-white/60">
@@ -396,7 +396,7 @@ function CreateCampaignDialog() {
                   <SlidersHorizontal className="w-4 h-4 text-white/60" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/70">Advanced options</p>
+                  <p className="text-[11px] font-semibold text-white/70">Advanced options</p>
                   <p className="text-[11px] text-white/35">Only use these if you really need extra campaign detail.</p>
                 </div>
               </div>
@@ -449,7 +449,7 @@ function CreateCampaignDialog() {
                 <LinkIcon className="w-4 h-4 text-emerald-300" />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Preview link</p>
+                <p className="text-xs font-semibold text-white/60">Preview link</p>
                 <p className="text-[11px] text-white/30">This is the exact URL your team will share.</p>
               </div>
             </div>
@@ -545,18 +545,18 @@ Professional document automation, instant SVG editing, and clean export workflow
       <div className="relative z-10 space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h4 className="text-lg font-black text-white uppercase italic tracking-tight truncate">
+            <h4 className="text-lg font-semibold text-white italic tracking-tight truncate">
               {campaign.name}
             </h4>
             <p className="text-[11px] text-white/45 font-medium mt-1 truncate">
               {campaign.description || prettifyMedium(campaign.medium)}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <div className="rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-violet-200">
+              <div className="rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-[11px] text-violet-200">
                 {prettifyMedium(campaign.medium)}
               </div>
               {campaign.campaign && (
-                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-emerald-200">
+                <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-200">
                   {prettifyToken(campaign.campaign)}
                 </div>
               )}
@@ -572,7 +572,7 @@ Professional document automation, instant SVG editing, and clean export workflow
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="text-white text-center font-black uppercase italic tracking-tight">
+                  <DialogTitle className="text-white text-center font-semibold italic tracking-tight">
                     Share campaign link
                   </DialogTitle>
                 </DialogHeader>
@@ -634,14 +634,14 @@ Professional document automation, instant SVG editing, and clean export workflow
           <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
             <div className="flex items-center gap-2 text-violet-400 mb-1">
               <Eye className="w-3 h-3" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Visits</span>
+              <span className="text-[11px] font-semibold">Visits</span>
             </div>
             <p className="text-xl font-black text-white">{campaign.visits}</p>
           </div>
           <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
             <div className="flex items-center gap-2 text-emerald-400 mb-1">
               <Users className="w-3 h-3" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Users</span>
+              <span className="text-[11px] font-semibold">Users</span>
             </div>
             <p className="text-xl font-black text-white">{campaign.users}</p>
           </div>
@@ -656,7 +656,7 @@ Professional document automation, instant SVG editing, and clean export workflow
           variant="outline"
           text={copied ? "Copied" : "Copy Tracking Link"}
           icon={copied ? Check : Copy}
-          className="w-full border-white/10 text-[10px] uppercase tracking-widest"
+          className="w-full border-white/10 text-[11px]"
         />
       </div>
     </motion.div>
@@ -779,7 +779,7 @@ export default function LinkGenerator() {
     <div className="dashboard-content space-y-10 pb-10 text-white">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+          <h1 className="text-3xl font-bold text-white tracking-tighter italic">
             Campaign <span className="text-primary">Link Builder</span>
           </h1>
           <p className="mt-1 text-sm font-medium text-white/40 italic">
@@ -796,7 +796,7 @@ export default function LinkGenerator() {
           <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
             <ExternalLink className="w-4 h-4 text-white/40" />
           </div>
-          <h2 className="text-lg font-bold text-white uppercase italic tracking-tight">Saved campaign links</h2>
+          <h2 className="text-lg font-bold text-white italic tracking-tight">Saved campaign links</h2>
         </div>
 
         {stats?.campaigns.length === 0 ? (

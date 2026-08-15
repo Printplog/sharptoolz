@@ -54,7 +54,7 @@ export default function ReferralLeaderboard({ entries, isLoading }: Props) {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <p className={`text-xs font-black uppercase tracking-tight italic ${
+                    <p className={`text-xs font-semibold tracking-tight italic ${
                       index === 0 ? 'text-yellow-500' : 'text-white'
                     }`}>
                       {entry.username}

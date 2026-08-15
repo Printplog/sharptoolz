@@ -81,7 +81,7 @@ export const LazyImage = ({
                         className="absolute inset-0 bg-white/5 z-10 flex flex-col items-center justify-center gap-2 opacity-20"
                     >
                         <Layout className="w-12 h-12" />
-                        <span className="text-[10px] uppercase font-black tracking-tighter">Preview Error</span>
+                        <span className="text-[11px] font-semibold tracking-tighter">Preview Error</span>
                     </motion.div>
                 )}
             </AnimatePresence>

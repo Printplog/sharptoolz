@@ -71,7 +71,7 @@ export default function UsersTable() {
                              <UserIcon className="h-6 w-6" />}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="font-bold text-white text-[13px] tracking-tight uppercase group-hover:text-primary transition-colors truncate">
+                            <span className="font-bold text-white text-[13px] tracking-tight group-hover:text-primary transition-colors truncate">
                                 {row.original.username}
                             </span>
                             <div className="flex items-center gap-1.5 text-white/30 text-[11px] truncate">
@@ -88,7 +88,7 @@ export default function UsersTable() {
                 cell: ({ row }) => (
                     <div className="flex flex-col gap-1.5">
                         <div className={cn(
-                            'px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-[0.05em] w-fit uppercase',
+                            'px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-[0.05em] w-fit',
                             row.original.role === ROLES.ADMIN ? 'bg-primary/10 text-primary border border-primary/20' :
                             row.original.role === ROLES.STAFF ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
                             'bg-white/5 text-white/50 border border-white/10'
@@ -114,7 +114,7 @@ export default function UsersTable() {
                                 <HandCoins className="h-3.5 w-3.5 text-emerald-400" />
                                 <span className="text-white font-black text-sm">{row.original.total_purchases}</span>
                             </div>
-                            <span className="text-[9px] text-white/20 font-black uppercase tracking-widest mt-0.5">Orders</span>
+                            <span className="text-[11px] text-white/20 font-semibold mt-0.5">Orders</span>
                         </div>
                         <div className="w-[1px] h-8 bg-white/10" />
                         <div className="flex flex-col">
@@ -122,7 +122,7 @@ export default function UsersTable() {
                                 <Download className="h-3.5 w-3.5 text-blue-400" />
                                 <span className="text-white font-black text-sm">{row.original.downloads}</span>
                             </div>
-                            <span className="text-[9px] text-white/20 font-black uppercase tracking-widest mt-0.5">Files</span>
+                            <span className="text-[11px] text-white/20 font-semibold mt-0.5">Files</span>
                         </div>
                     </div>
                 ),
@@ -140,7 +140,7 @@ export default function UsersTable() {
                                 <span className="text-emerald-400 text-sm italic mr-0.5 font-bold">$</span>
                                 {parseFloat(row.original.wallet_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
-                            <span className="text-[9px] text-emerald-400/50 font-bold uppercase tracking-widest mt-0.5">Balance</span>
+                            <span className="text-[11px] text-emerald-400/50 font-bold mt-0.5">Balance</span>
                         </div>
                     </div>
                 ),
@@ -151,7 +151,7 @@ export default function UsersTable() {
                 cell: ({ row }) => (
                     <div className="flex flex-col gap-1">
                         <div className={cn(
-                            "px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-[0.05em] w-fit uppercase",
+                            "px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-[0.05em] w-fit",
                             row.original.source ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" : "bg-white/5 text-white/20 border border-white/10"
                         )}>
                             {row.original.source || 'Direct'}

@@ -169,7 +169,7 @@ export default function SharpGuyChat() {
             <ChevronLeft size={24} />
           </button>
           <div className="flex flex-col items-center">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Sharp Guy AI</span>
+            <span className="text-[11px] font-semibold text-primary">Sharp Guy AI</span>
             <span className="text-[9px] text-white/30 font-medium">Always here to help</span>
           </div>
           <div className="w-10" /> {/* Spacer */}

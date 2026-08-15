@@ -351,6 +351,10 @@ export type AdminOverview = {
   total_purchased_docs: number;
   total_downloads: number;
   total_wallet_balance: number;
+  /** Distinct (API customer, external_user_id) pairs — all time. */
+  external_users: number;
+  /** Distinct end users seen within the dashboard's selected range. */
+  active_external_users: number;
   source_stats: Array<{
     source: string;
     visits: number;

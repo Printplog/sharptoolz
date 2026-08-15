@@ -34,7 +34,7 @@ const WalletPage: React.FC = () => {
     <div className="dashboard-content space-y-10 animate-in fade-in duration-700">
       {/* Header Section */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+        <h1 className="text-3xl font-bold text-white tracking-tighter italic">
           My <span className="text-primary">Wallet</span>
         </h1>
 
@@ -43,7 +43,7 @@ const WalletPage: React.FC = () => {
           className="group relative flex items-center gap-3 bg-white text-black px-6 py-3 rounded-2xl hover:bg-white/90 transition-all active:scale-95"
         >
           <Plus className="w-4 h-4" />
-          <span className="text-[11px] font-black uppercase tracking-widest">Add Funds</span>
+          <span className="text-[11px] font-semibold">Add Funds</span>
         </button>
       </div>
 
@@ -74,7 +74,7 @@ const WalletPage: React.FC = () => {
                   <Receipt className="w-5 h-5 text-white/40" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white tracking-tight italic uppercase">
+                  <h2 className="text-lg font-bold text-white tracking-tight italic">
                     History
                   </h2>
                 </div>

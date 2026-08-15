@@ -37,7 +37,7 @@ function InfoTile({ label, value, icon: Icon, color = "slate", active }: InfoTil
             </div>
             <div className="flex flex-col gap-0.5 min-w-0">
                 <span className={cn(
-                    "text-[10px] font-black uppercase tracking-widest truncate",
+                    "text-[11px] font-semibold truncate",
                     active ? "text-green-500" : "text-white/30"
                 )}>
                     {label}
@@ -82,7 +82,7 @@ export default function ProfileCard({ user }: ProfileCardProps) {
     return (
         <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full rounded-3xl overflow-hidden">
             <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-white/50 text-[10px] font-black uppercase tracking-widest">
+                <CardTitle className="flex items-center gap-2 text-white/50 text-[11px] font-semibold">
                     <User className="h-3.5 w-3.5" />
                     Identity & Details
                 </CardTitle>
@@ -96,7 +96,7 @@ export default function ProfileCard({ user }: ProfileCardProps) {
                     </div>
 
                     <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-white/40 text-[10px] font-black uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-white/40 text-[11px] font-semibold">
                             <Megaphone className="h-3.5 w-3.5" />
                             Acquisition Data
                         </div>

@@ -212,7 +212,7 @@ export default function AdminTools() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-white tracking-tighter italic flex items-center gap-2">
             Tool <span className="text-primary">Categories</span>
           </h1>
           <p className="text-white/60 mt-1">

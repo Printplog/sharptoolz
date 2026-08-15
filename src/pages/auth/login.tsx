@@ -36,6 +36,7 @@ import { useState } from "react";
 import { isAdminOrStaff } from "@/lib/constants/roles";
 import { ArrowLeft, Check, Copy, Eye, EyeOff, KeyRound, Lock, ShieldCheck, User, UserPlus } from "lucide-react";
 import { PremiumButton } from "@/components/ui/PremiumButton";
+import { OtpInput } from "@/components/ui/OtpInput";
 import { QRCodeSVG } from "qrcode.react";
 
 const loginSchema = z.object({
@@ -55,7 +56,8 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   const [twoFactorSetup, setTwoFactorSetup] = useState<AdminTwoFactorSetup | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"key" | "recovery" | null>(null);
+  const [useRecoveryCode, setUseRecoveryCode] = useState(false);
   const { closeDialog } = useDialogStore();
 
   const form = useForm<LoginSchema>({
@@ -88,6 +90,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
     setTwoFactorChallenge(challenge);
     setTwoFactorSetup(null);
     setTwoFactorCode("");
+    setUseRecoveryCode(false);
     if (challenge.setup_required) setupMutation.mutate();
   };
 
@@ -123,10 +126,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   const { mutate: googleMutate, isPending: googlePending } = useMutation({
     mutationFn: (access_token: string) => loginWithGoogle(access_token),
     onSuccess: handleLoginResponse,
-    onError: (error: Error) => {
-      const msg = errorMessage(error as Parameters<typeof errorMessage>[0]);
-      toast.error(typeof msg === "string" && msg.startsWith("<") ? "Google sign-in failed. Please try again." : msg);
-    },
+    onError: (error: Error) => toast.error(errorMessage(error)),
   });
 
   const handleGoogleLogin = () => {
@@ -172,10 +172,22 @@ export default function Login({ dialog = false }: AuthDialogProps) {
     mutate(values);
   };
 
-  const copyRecoveryCodes = async () => {
-    await navigator.clipboard.writeText(recoveryCodes.join("\n"));
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+  // Shared by the form submit and the OTP field's auto-submit, so a code that
+  // completes as you type can't also be fired by Enter.
+  const submitCode = (code: string) => {
+    if (!code || verifyMutation.isPending) return;
+    if (twoFactorChallenge?.setup_required && !twoFactorSetup) return;
+    verifyMutation.mutate(code);
+  };
+
+  const copyText = async (text: string, target: "key" | "recovery") => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(target);
+      window.setTimeout(() => setCopied(null), 1800);
+    } catch {
+      toast.error("Couldn't reach the clipboard — select the text and copy it manually.");
+    }
   };
 
   if (recoveryCodes.length) {
@@ -193,9 +205,14 @@ export default function Login({ dialog = false }: AuthDialogProps) {
         <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-4 font-mono text-sm text-white/75">
           {recoveryCodes.map((code) => <span key={code}>{code}</span>)}
         </div>
-        <Button type="button" variant="outline" className="h-11 w-full" onClick={copyRecoveryCodes}>
-          {copied ? <Check /> : <Copy />}
-          {copied ? "Copied" : "Copy recovery codes"}
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full"
+          onClick={() => copyText(recoveryCodes.join("\n"), "recovery")}
+        >
+          {copied === "recovery" ? <Check /> : <Copy />}
+          {copied === "recovery" ? "Copied" : "Copy recovery codes"}
         </Button>
         <Button type="button" className="h-12 w-full bg-[#cee88c] font-bold text-black hover:bg-[#cee88c]/90" onClick={() => finishLogin(useAuthStore.getState().user!)}>
           Continue to admin
@@ -225,12 +242,12 @@ export default function Login({ dialog = false }: AuthDialogProps) {
             <ShieldCheck className="size-5" />
           </div>
           <h2 className="pt-2 text-2xl font-black tracking-tight">
-            {isSetup ? "Protect your admin account" : "Admin verification"}
+            {isSetup ? "Set up two-factor" : "Verify it's you"}
           </h2>
           <p className="text-sm leading-6 text-white/45">
             {isSetup
-              ? "Scan this code with Google Authenticator, Authy, 1Password, or another authenticator app."
-              : "Enter the current code from your authenticator app, or use a recovery code."}
+              ? `Scan the code with Google Authenticator, Authy, 1Password, or any authenticator app. It'll save as “${twoFactorSetup?.issuer ?? "SharpToolz"}”.`
+              : "Enter the 6-digit code from your authenticator app, or one of your recovery codes."}
           </p>
         </div>
 
@@ -247,8 +264,21 @@ export default function Login({ dialog = false }: AuthDialogProps) {
                   <QRCodeSVG value={twoFactorSetup.provisioning_uri} size={156} level="M" />
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">Manual setup key</p>
-                  <code className="break-all text-xs text-white/70">{twoFactorSetup.manual_key}</code>
+                  <p className="mb-1 text-[11px] font-medium text-white/35">Can't scan? Enter this key instead</p>
+                  <div className="flex items-start gap-2">
+                    <code className="min-w-0 flex-1 break-all font-mono text-xs leading-5 text-white/70">
+                      {twoFactorSetup.manual_key}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => copyText(twoFactorSetup.manual_key, "key")}
+                      title="Copy setup key"
+                      aria-label="Copy setup key"
+                      className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/50 transition hover:bg-white/10 hover:text-white"
+                    >
+                      {copied === "key" ? <Check className="size-3.5 text-[#cee88c]" /> : <Copy className="size-3.5" />}
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -259,32 +289,59 @@ export default function Login({ dialog = false }: AuthDialogProps) {
           className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
-            verifyMutation.mutate(twoFactorCode);
+            submitCode(twoFactorCode);
           }}
         >
           <div className="space-y-2">
-            <label htmlFor="admin-two-factor-code" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-              Authenticator or recovery code
+            <label htmlFor="admin-two-factor-code" className="text-xs font-medium text-white/40">
+              {useRecoveryCode ? "Recovery code" : "6-digit code from your authenticator"}
             </label>
-            <div className="relative">
-              <KeyRound className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/20" />
-              <Input
+            {useRecoveryCode ? (
+              <div className="relative">
+                <KeyRound className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/20" />
+                <Input
+                  id="admin-two-factor-code"
+                  autoFocus
+                  value={twoFactorCode}
+                  onChange={(event) => setTwoFactorCode(event.target.value.toUpperCase().replace(/\s/g, ""))}
+                  placeholder="XXXXX-XXXXX"
+                  className="h-12 border-white/10 bg-white/[0.03] pl-11 text-center font-mono tracking-[0.2em] placeholder:text-white/15"
+                />
+              </div>
+            ) : (
+              <OtpInput
                 id="admin-two-factor-code"
                 autoFocus
-                autoComplete="one-time-code"
                 value={twoFactorCode}
-                onChange={(event) => setTwoFactorCode(event.target.value.toUpperCase().replace(/\s/g, ""))}
-                placeholder="000000"
-                className="h-12 border-white/10 bg-white/[0.03] pl-11 text-center font-mono tracking-[0.25em]"
+                onChange={setTwoFactorCode}
+                onComplete={submitCode}
+                disabled={verifyMutation.isPending || (isSetup && !twoFactorSetup)}
               />
-            </div>
+            )}
           </div>
+
+          {!isSetup && (
+            <button
+              type="button"
+              onClick={() => {
+                setUseRecoveryCode((prev) => !prev);
+                setTwoFactorCode("");
+              }}
+              className="block w-fit text-xs text-white/35 underline-offset-4 transition hover:text-white hover:underline"
+            >
+              {useRecoveryCode ? "Use your authenticator app instead" : "Use a recovery code instead"}
+            </button>
+          )}
           <Button
             type="submit"
             className="h-12 w-full bg-[#cee88c] font-bold text-black hover:bg-[#cee88c]/90"
-            disabled={!twoFactorCode || verifyMutation.isPending || (isSetup && !twoFactorSetup)}
+            disabled={
+              verifyMutation.isPending ||
+              (isSetup && !twoFactorSetup) ||
+              (useRecoveryCode ? !twoFactorCode : twoFactorCode.length < 6)
+            }
           >
-            {verifyMutation.isPending ? "Verifying…" : isSetup ? "Enable and continue" : "Verify and continue"}
+            {verifyMutation.isPending ? "Verifying…" : isSetup ? "Turn on two-factor" : "Verify and continue"}
           </Button>
         </form>
       </div>
@@ -294,7 +351,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h2 className="text-3xl font-black tracking-tighter uppercase italic">
+        <h2 className="text-3xl font-semibold tracking-tighter italic">
           Sign <span className="text-[#cee88c]">In</span>
         </h2>
       </div>
@@ -306,7 +363,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black">
+                <FormLabel className="text-[11px] text-white/40 font-semibold">
                   Username or Email
                 </FormLabel>
                 <div className="relative">
@@ -329,7 +386,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black">
+                <FormLabel className="text-[11px] text-white/40 font-semibold">
                   Password
                 </FormLabel>
                 <div className="relative">
@@ -401,7 +458,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
             <div className="space-y-6">
               <div className="flex items-center gap-4 pt-4">
                 <div className="h-[1px] flex-1 bg-white/5"></div>
-                <span className="text-[10px] text-white/20 font-black uppercase tracking-[0.2em]">Or</span>
+                <span className="text-[11px] text-white/20 font-semibold">Or</span>
                 <div className="h-[1px] flex-1 bg-white/5"></div>
               </div>
               <div className="text-center">

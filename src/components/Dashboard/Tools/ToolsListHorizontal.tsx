@@ -38,7 +38,7 @@ export default function ToolsListHorizontal() {
                <ArrowRight className="w-6 h-6 text-white/20 group-hover:text-primary transition-colors -rotate-45" />
             </div>
             <div className="flex flex-col">
-              <h3 className="text-lg font-black text-white uppercase tracking-tighter italic leading-none">
+              <h3 className="text-lg font-semibold text-white tracking-tighter italic leading-none">
                 Spotlight <span className="text-primary/80">Empty</span>
               </h3>
             </div>

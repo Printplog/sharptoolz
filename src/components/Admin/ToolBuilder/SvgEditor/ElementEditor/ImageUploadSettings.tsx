@@ -67,7 +67,7 @@ export const ImageUploadSettings = ({
             <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Upload className="w-5 h-5 text-white/40" />
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+            <div className="text-[11px] font-bold text-white/40">
               Click to upload
             </div>
           </button>

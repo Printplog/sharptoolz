@@ -22,12 +22,12 @@ export default function ApiComingSoon() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
             <div className="space-y-7 text-left">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-4 py-2 text-[11px] font-bold text-primary">
                 <span className="size-1.5 rounded-full bg-primary shadow-[0_0_12px_rgba(206,232,140,0.8)]" />
                 API now available
               </div>
 
-              <h2 className="text-5xl md:text-6xl font-fancy font-black text-white tracking-tighter uppercase italic leading-[0.9]">
+              <h2 className="text-5xl md:text-6xl font-fancy font-semibold text-white tracking-tighter italic leading-[0.9]">
                 Build with <span className="text-primary">SharpToolz</span>
               </h2>
 
@@ -82,15 +82,15 @@ export default function ApiComingSoon() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Code2 className="w-3 h-3 text-white/30" />
-                    <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest leading-none">Hosted integration</span>
+                    <span className="text-[11px] font-bold text-white/30 leading-none">Hosted integration</span>
                   </div>
                 </div>
                 
                 <div className="p-6 md:p-8 space-y-4 relative z-10">
                   <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-5">
                     <div className="mb-4 flex items-center justify-between gap-4">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">Your backend</span>
-                      <span className="rounded-full border border-primary/20 bg-primary/8 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-primary">Secure</span>
+                      <span className="text-[11px] font-bold text-white/35">Your backend</span>
+                      <span className="rounded-full border border-primary/20 bg-primary/8 px-2.5 py-1 text-[11px] font-bold text-primary">Secure</span>
                     </div>
                     <div className="flex items-center gap-3 font-mono text-sm">
                       <span className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">POST</span>

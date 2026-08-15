@@ -113,6 +113,9 @@ export default function WalletManagementPage() {
       if (sortBy !== 'balance-desc') params.set('sort', sortBy);
       return getApi(`${API_BASE}/wallet/?${params.toString()}`);
     },
+    // Keep the previous page on screen while the next one loads, otherwise
+    // total_pages momentarily collapses to 1 and disables the Next button.
+    placeholderData: (previousData) => previousData,
   });
 
   // Fetch pending requests
@@ -202,19 +205,19 @@ export default function WalletManagementPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/10 pb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+          <h1 className="text-3xl font-bold text-white tracking-tighter italic">
             Wallet <span className="text-primary">Management</span>
           </h1>
           <p className="text-white/40 text-sm mt-1 font-medium italic">Manage user wallets, balances, and funding requests</p>
         </div>
 
-        <div className="flex flex-col items-end gap-2 font-bold uppercase tracking-tight">
+        <div className="flex flex-col items-end gap-2 font-bold tracking-tight">
           <div className="flex flex-wrap items-center justify-end gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-widest hidden sm:inline">Select Day:</span>
+              <span className="text-[11px] text-zinc-500 hidden sm:inline">Select Day:</span>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant={"outline"} className="w-[180px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
+                  <Button variant={"outline"} className="w-[180px] justify-start text-left font-semibold text-[11px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
                     <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
                     {date ? format(new Date(date), "PPP") : <span>Filter by Date</span>}
                   </Button>
@@ -252,7 +255,7 @@ export default function WalletManagementPage() {
                 <button
                   key={option.days}
                   onClick={() => { setDays(option.days); setDate(""); }}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
                     days === option.days
                       ? 'bg-primary text-black shadow'
                       : 'text-white/50 hover:text-white hover:bg-white/5'
@@ -316,8 +319,9 @@ export default function WalletManagementPage() {
         />
       ) : null}
 
-      {/* Wallet Table */}
-      {walletsLoading ? (
+      {/* Wallet Table — only skeleton on the very first load, so paging
+          through pages keeps the table (and its controls) mounted. */}
+      {walletsLoading && !walletsData ? (
         <div className="bg-white/5 border border-white/10 rounded-2xl p-12 backdrop-blur-md animate-pulse">
           <div className="flex items-center justify-center gap-4">
             <div className="w-10 h-10 rounded-full bg-white/5" />

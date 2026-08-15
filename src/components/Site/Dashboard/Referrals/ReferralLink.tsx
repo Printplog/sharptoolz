@@ -85,8 +85,8 @@ Start creating in seconds here:`;
             <Gift className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-white font-black uppercase tracking-tight text-xl italic leading-none">Referral Link</h3>
-            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mt-1">Share & Earn Rewards</p>
+            <h3 className="text-white font-semibold tracking-tight text-xl italic leading-none">Referral Link</h3>
+            <p className="text-white/40 text-[11px] font-semibold mt-1">Share & Earn Rewards</p>
           </div>
         </div>
 

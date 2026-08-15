@@ -101,7 +101,7 @@ export default function UsersOverview({ data, isLoading }: UsersOverviewProps) {
           <div className="flex flex-col h-full justify-between relative z-10">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">
+                <p className="text-white/50 text-xs font-bold mb-1">
                   {stat.title}
                 </p>
               </div>
@@ -148,7 +148,7 @@ export default function UsersOverview({ data, isLoading }: UsersOverviewProps) {
         <div className="flex flex-col h-full justify-between relative z-10">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">
+              <p className="text-white/50 text-xs font-bold mb-1">
                 Users Count
               </p>
               <Select value={accountType} onValueChange={(v) => setAccountType(v as AccountType)}>

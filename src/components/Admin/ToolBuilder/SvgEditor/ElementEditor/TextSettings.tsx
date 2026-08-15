@@ -27,7 +27,7 @@ export const TextSettings = ({
         />
       </div>
       <div className="space-y-2">
-        <Label className="text-xs uppercase font-bold text-white/60">Auto-Wrap Width</Label>
+        <Label className="text-xs font-bold text-white/60">Auto-Wrap Width</Label>
         <DebouncedInput
           type="number"
           value={localElement.attributes["data-max-width"] || ""}

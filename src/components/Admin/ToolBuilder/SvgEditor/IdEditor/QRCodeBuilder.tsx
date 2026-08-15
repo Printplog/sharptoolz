@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { QRCodeSVG } from 'qrcode.react';
 import BarcodePreview from "@/components/ui/BarcodePreview";
 import { Plus, Trash2, ArrowUp, ArrowDown, Copy } from "lucide-react";
+import { SortableList } from "@/components/ui/SortableList";
+import { remapIndex } from "@/lib/utils/remapIndex";
 
 interface QRCodeBuilderProps {
   value: string;
@@ -194,6 +196,13 @@ export default function QRCodeBuilder({
     setEditingPartIndex(null);
   };
 
+  const handleReorderRows = (reordered: QRCodeRow[], from: number, to: number) => {
+    setRows(reordered);
+    // The inline part editor is addressed by row position, so it has to follow
+    // the row it was opened on.
+    setEditingRowIndex(prev => (prev === null ? null : remapIndex(prev, from, to)));
+  };
+
   const handleMoveRow = (index: number, direction: 'up' | 'down') => {
     const newRows = [...rows];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -320,11 +329,11 @@ export default function QRCodeBuilder({
           {/* Left Section - Rows */}
           <div className="flex-1 flex flex-col min-w-0 pr-3">
             <div className="flex items-center justify-between mb-2 shrink-0">
-              <div className="text-[10px] font-black uppercase tracking-widest text-white/40">Data Rows</div>
+              <div className="text-[11px] font-semibold text-white/40">Data Rows</div>
               <button
                 type="button"
                 onClick={handleAddRow}
-                className="text-[10px] text-primary hover:text-primary/80 font-bold uppercase tracking-tighter"
+                className="text-[11px] text-primary hover:text-primary/80 font-bold tracking-tighter"
               >
                 + Add Row
               </button>
@@ -335,9 +344,13 @@ export default function QRCodeBuilder({
                   No rows yet.
                 </div>
               ) : (
-                rows.map((row, rowIndex) => (
+                <SortableList
+                  items={rows}
+                  getId={(row) => row.id}
+                  onReorder={handleReorderRows}
+                >
+                  {(row, rowIndex) => (
                   <div
-                    key={row.id}
                     className={cn(
                       "group flex flex-col gap-2 p-2 rounded-md border transition-colors",
                       editingRowIndex === rowIndex ? "bg-white/10 border-primary/40" : "bg-white/5 border-white/10"
@@ -429,14 +442,15 @@ export default function QRCodeBuilder({
                       />
                     )}
                   </div>
-                ))
+                  )}
+                </SortableList>
               )}
             </div>
           </div>
 
           {/* Right Section - Preview */}
           <div className="w-[240px] flex flex-col gap-3 shrink-0 border-l border-white/10 pl-3">
-            <div className="text-[10px] font-black uppercase tracking-widest text-white/40 shrink-0">Preview</div>
+            <div className="text-[11px] font-semibold text-white/40 shrink-0">Preview</div>
             <div className="flex-1 flex flex-col gap-3 min-h-0">
               <div className="flex-1 bg-white/5 border border-white/10 rounded-lg p-3 flex flex-col items-center justify-center gap-3 overflow-hidden">
                 <div className="shrink-0 p-1">
@@ -455,7 +469,7 @@ export default function QRCodeBuilder({
                   )}
                 </div>
                 <div className="w-full min-h-0 flex flex-col gap-1">
-                  <div className="text-[9px] uppercase font-black text-white/20">Data</div>
+                  <div className="text-[11px] font-semibold text-white/20">Data</div>
                   <div className="flex-1 overflow-y-auto custom-scrollbar">
                     <pre className="text-[10px] text-emerald-400/80 font-mono whitespace-pre-wrap break-all leading-tight">
                       {preview || "No content"}
@@ -513,7 +527,7 @@ function PatternPartEditor({
       onClick={(event) => event.stopPropagation()}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-[9px] uppercase font-black text-primary/60 shrink-0">
+        <span className="text-[11px] font-semibold text-primary/60 shrink-0">
           Edit {part.type}:
         </span>
 

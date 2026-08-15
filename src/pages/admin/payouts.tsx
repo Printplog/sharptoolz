@@ -79,6 +79,9 @@ export default function AdminPayoutsPage() {
       if (search) params.set('search', search);
       return getApi(`/admin/payouts/?${params.toString()}`);
     },
+    // Keep the previous page on screen while the next one loads, otherwise
+    // total_pages momentarily collapses to 1 and disables the Next button.
+    placeholderData: (previousData) => previousData,
   });
 
   const approveMutation = useMutation({
@@ -315,7 +318,7 @@ export default function AdminPayoutsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/10 pb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+          <h1 className="text-3xl font-bold text-white tracking-tighter italic">
             Payout <span className="text-primary">Requests</span>
           </h1>
           <p className="text-white/40 text-sm mt-1 font-medium italic">

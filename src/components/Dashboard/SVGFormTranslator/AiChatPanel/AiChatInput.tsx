@@ -141,14 +141,14 @@ export default function AiChatInput({
         <div className="flex gap-2 mb-1 overflow-x-auto pb-1 no-scrollbar">
           <button
             onClick={handleMagicFill}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card border-primary/20 text-[10px] text-primary font-bold uppercase tracking-wider transition-all whitespace-nowrap group"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card border-primary/20 text-[11px] text-primary font-bold transition-all whitespace-nowrap group"
           >
             <Sparkles size={11} className="group-hover:animate-pulse" />
             Magic Fill
           </button>
           <button
             onClick={() => setInput("Search for recent company addresses in New York")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[10px] text-white/40 font-bold uppercase tracking-wider whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[11px] text-white/40 font-bold whitespace-nowrap"
           >
             Web Search
           </button>

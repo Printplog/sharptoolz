@@ -182,7 +182,7 @@ export default function Navbar() {
                       onClick={() => setIsMenuOpen(false)}
                       className="group flex items-center justify-between py-1.5 border-b border-white/5"
                     >
-                      <h2 className={`text-2xl font-fancy font-medium uppercase italic tracking-tighter ${
+                      <h2 className={`text-2xl font-fancy font-medium italic tracking-tighter ${
                         link.href === pathname ? "text-primary" : "text-white/40 group-hover:text-white"
                       }`}>
                         {link.label}
@@ -201,7 +201,7 @@ export default function Navbar() {
                     icon={User} 
                     href="/dashboard" 
                     variant="ghost" 
-                    className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+                    className="w-full h-12 text-xs font-bold"
                     noShadow={true}
                     onClick={() => setIsMenuOpen(false)}
                   />
@@ -212,7 +212,7 @@ export default function Navbar() {
                       icon={ArrowRight} 
                       href="/auth/register" 
                       variant="primary" 
-                      className="w-full h-12 text-xs font-bold uppercase tracking-widest"
+                      className="w-full h-12 text-xs font-bold"
                       noShadow={true}
                       onClick={() => setIsMenuOpen(false)}
                     />
@@ -221,14 +221,14 @@ export default function Navbar() {
                       icon={ArrowRight} 
                       href="/auth/login" 
                       variant="ghost" 
-                      className="w-full h-12 text-xs font-bold uppercase tracking-widest bg-white/5 border border-white/10"
+                      className="w-full h-12 text-xs font-bold bg-white/5 border border-white/10"
                       noShadow={true}
                       onClick={() => setIsMenuOpen(false)}
                     />
                   </div>
                 )}
                 
-                <p className="text-center text-white/10 font-bold uppercase tracking-[0.3em] text-[10px] mt-8">
+                <p className="text-center text-white/10 font-bold text-[11px] mt-8">
                   SharpToolz - Premium Workflow
                 </p>
               </div>

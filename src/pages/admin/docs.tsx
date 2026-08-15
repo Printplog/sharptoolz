@@ -91,7 +91,7 @@ export default function AdminDocsPage() {
               <div className="w-8 h-8 rounded-xl bg-[#cee88c]/10 flex items-center justify-center border border-[#cee88c]/20 shadow-[0_0_15px_rgba(206,232,140,0.1)]">
                 <BookOpen className="h-4 w-4 text-[#cee88c]" />
               </div>
-              <h1 className="text-xl font-black text-white tracking-tighter uppercase italic">Documentation</h1>
+              <h1 className="text-xl font-semibold text-white tracking-tighter italic">Documentation</h1>
             </div>
             
             <div className="relative group">
@@ -109,14 +109,14 @@ export default function AdminDocsPage() {
             ref={sidebarNavRef}
             className="relative flex flex-col gap-1.5 max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar pr-4 -mr-4"
           >
-            <h3 className="text-[10px] font-black text-white/20 uppercase tracking-[0.25em] px-4 mb-3">Extensions Index</h3>
+            <h3 className="text-[11px] font-semibold text-white/20 px-4 mb-3">Extensions Index</h3>
             {filteredDocs.map((section) => (
               <button
                 key={section.id}
                 ref={(el) => { itemRefs.current[section.id] = el; }}
                 onClick={() => scrollToSection(section.id)}
                 className={cn(
-                  "group relative flex items-center justify-between px-5 py-4 rounded-full text-[11px] font-black transition-all duration-500 text-left uppercase tracking-wider",
+                  "group relative flex items-center justify-between px-5 py-4 rounded-full text-[11px] font-semibold transition-all duration-500 text-left",
                   activeSection === section.id
                     ? "text-[#cee88c]"
                     : "text-white/30 hover:text-white hover:bg-white/[0.02]"
@@ -150,9 +150,9 @@ export default function AdminDocsPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-[#cee88c]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             <div className="relative z-10 flex items-center gap-2 text-[#cee88c]">
               <Info className="h-4 w-4" />
-              <p className="text-[10px] font-black uppercase tracking-[0.2em]">Usage Tip</p>
+              <p className="text-[11px] font-semibold">Usage Tip</p>
             </div>
-            <p className="relative z-10 text-[10px] text-white/40 font-bold leading-relaxed uppercase tracking-tight">
+            <p className="relative z-10 text-[11px] text-white/40 font-bold leading-relaxed tracking-tight">
               Paste these IDs into your SVG editor to enable advanced interactive form features instantly.
             </p>
           </div>
@@ -167,8 +167,8 @@ export default function AdminDocsPage() {
           ) : (
             <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[40px] bg-white/[0.01] backdrop-blur-sm">
               <Search className="h-12 w-12 text-white/5 mx-auto mb-6" />
-              <p className="text-white/20 font-bold uppercase tracking-widest text-xs">No documentation matches "{searchQuery}"</p>
-              <button onClick={() => setSearchQuery("")} className="mt-6 text-[10px] font-black text-[#cee88c] uppercase border-b border-[#cee88c]/20 hover:border-[#cee88c] transition-all">
+              <p className="text-white/20 font-bold text-xs">No documentation matches "{searchQuery}"</p>
+              <button onClick={() => setSearchQuery("")} className="mt-6 text-[11px] font-semibold text-[#cee88c] border-b border-[#cee88c]/20 hover:border-[#cee88c] transition-all">
                 Reset Search
               </button>
             </div>
@@ -185,7 +185,7 @@ function DocSectionCard({ section, handleCopy }: { section: DocSection, handleCo
       <div className="flex flex-col gap-4 group">
         <div className="flex items-center gap-4">
           <div className="h-10 w-1.5 bg-[#cee88c] rounded-full shadow-[0_0_15px_rgba(206,232,140,0.3)]" />
-          <h2 className="text-3xl font-black text-white tracking-tighter uppercase italic flex items-center gap-3">
+          <h2 className="text-3xl font-semibold text-white tracking-tighter italic flex items-center gap-3">
             {section.title}
             <Hash className="h-6 w-6 text-white/5 group-hover:text-[#cee88c]/20 transition-colors" />
           </h2>
@@ -203,8 +203,8 @@ function DocSectionCard({ section, handleCopy }: { section: DocSection, handleCo
             
             <div className="flex items-center justify-between relative z-10">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-black text-[#cee88c] uppercase tracking-[0.25em]">{example.title}</span>
-                {example.description && <p className="text-[10px] text-white/20 font-bold uppercase tracking-tight">{example.description}</p>}
+                <span className="text-[11px] font-semibold text-[#cee88c]">{example.title}</span>
+                {example.description && <p className="text-[11px] text-white/20 font-bold tracking-tight">{example.description}</p>}
               </div>
               <button 
                 onClick={() => handleCopy(example.code)}
@@ -231,7 +231,7 @@ function DocSectionCard({ section, handleCopy }: { section: DocSection, handleCo
       {section.visualPreview && (
         <div className="mx-auto w-fit px-6 py-3 rounded-full bg-[#cee88c]/5 border border-[#cee88c]/10 flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-[#cee88c] animate-pulse" />
-          <p className="text-[10px] text-[#cee88c] font-black uppercase tracking-[0.2em]">
+          <p className="text-[11px] text-[#cee88c] font-semibold">
             Real-world Implementation: <span className="text-white ml-2">{section.visualPreview.site}</span>
           </p>
         </div>
@@ -243,7 +243,7 @@ function DocSectionCard({ section, handleCopy }: { section: DocSection, handleCo
             <div key={sub.id} id={sub.id} className="space-y-6 relative group/sub">
               <div className="flex items-center gap-4">
                 <div className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover/sub:bg-[#cee88c] group-hover/sub:scale-150 transition-all duration-500" />
-                <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">
+                <h3 className="text-xl font-semibold text-white italic tracking-tighter">
                   {sub.title}
                 </h3>
               </div>

@@ -85,7 +85,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
                     <div className="space-y-6">
                         {isTest && (
                             <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-300">
+                                <p className="text-[11px] font-semibold text-amber-300">
                                     Test Download Notice
                                 </p>
                                 <p className="mt-2 text-xs leading-relaxed text-amber-100/80">
@@ -132,7 +132,7 @@ export const DownloadDocDialog: React.FC<DownloadDocDialogProps> = ({
                     <Button
                         onClick={onDownloadClick}
                         disabled={isGenerating}
-                        className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-white/5"
+                        className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl font-semibold text-xs transition-all shadow-xl shadow-white/5"
                     >
                         {isGenerating ? "Processing..." : `Download ${splitInfo.enabled ? side : ''} ${type.toUpperCase()}`}
                     </Button>

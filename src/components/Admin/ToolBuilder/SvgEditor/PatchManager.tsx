@@ -171,8 +171,8 @@ const PatchManager: React.FC<PatchManagerProps> = ({
                 <FileJson className="h-6 w-6" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-black tracking-tight uppercase leading-none mb-1 text-white/95">Patch Manager</DialogTitle>
-                <DialogDescription className="text-white/30 text-[10px] font-bold uppercase tracking-[0.12em] flex items-center gap-2">
+                <DialogTitle className="text-xl font-semibold tracking-tight leading-none mb-1 text-white/95">Patch Manager</DialogTitle>
+                <DialogDescription className="text-white/30 text-[11px] font-bold flex items-center gap-2">
                   <Layers className="h-3 w-3" />
                   {patches.length} Changes • {identityIds.length} Elements
                 </DialogDescription>
@@ -213,7 +213,7 @@ const PatchManager: React.FC<PatchManagerProps> = ({
                         className="w-full flex items-center gap-3 mb-3 group/header"
                       >
                         <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover/header:bg-primary transition-colors duration-300 shadow-[0_0_8px_rgba(206,232,140,0.4)]" />
-                        <h3 className="text-xs font-black text-white uppercase tracking-widest truncate max-w-[360px] flex items-center gap-2">
+                        <h3 className="text-xs font-semibold text-white truncate max-w-[360px] flex items-center gap-2">
                           {displayId}
                           {isRenamed && <span className="text-[10px] text-white/40 font-bold lowercase tracking-normal">(renamed from {identityId})</span>}
                         </h3>
@@ -229,7 +229,7 @@ const PatchManager: React.FC<PatchManagerProps> = ({
                           {identityPatches.map((patch, pIdx) => (
                             <div key={`${pIdx}`} className="flex flex-col gap-1.5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.03] hover:border-white/10 hover:bg-white/[0.05] transition-all duration-300">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase text-primary tracking-[0.15em] bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">
+                                <span className="text-[11px] font-semibold text-primary bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">
                                   {patch.attribute}
                                 </span>
                               </div>
@@ -250,7 +250,7 @@ const PatchManager: React.FC<PatchManagerProps> = ({
               <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.02] border border-dashed border-white/10 flex items-center justify-center mb-6">
                 <FileJson className="h-10 w-10 opacity-10" />
               </div>
-              <p className="text-xs font-black uppercase tracking-[0.2em]">No Active Changes</p>
+              <p className="text-xs font-semibold">No Active Changes</p>
               <p className="text-[10px] opacity-40 mt-3 max-w-[240px] leading-relaxed font-medium">
                 Edits made in the inspector will appear here, grouped by element for clarity.
               </p>
@@ -259,7 +259,7 @@ const PatchManager: React.FC<PatchManagerProps> = ({
         </div>
 
         <div className="p-4 bg-black/60 border-t border-white/5 backdrop-blur-md">
-           <p className="text-[9px] text-white/15 font-bold uppercase tracking-widest text-center italic">
+           <p className="text-[11px] text-white/15 font-bold text-center italic">
              All incremental patches are synchronized with the backend upon save.
            </p>
         </div>
@@ -288,14 +288,14 @@ const PatchManager: React.FC<PatchManagerProps> = ({
                 {validationErrors.map((err, i) => (
                   <div key={i} className="text-[10px] border-b border-white/5 pb-2 last:border-0 last:pb-0">
                     <div className="font-mono text-white/80 truncate mb-1">{err.id}</div>
-                    <div className="text-red-400/80 font-bold uppercase tracking-tighter">{err.error}</div>
+                    <div className="text-red-400/80 font-bold tracking-tighter">{err.error}</div>
                   </div>
                 ))}
               </div>
             </ScrollArea>
             <AlertDialogFooter className="mt-6 flex flex-row gap-3">
               <AlertDialogCancel onClick={() => setShowValidationDialog(false)} className="bg-white/5 text-white border border-white/10 rounded-full h-11 px-6 flex-1 hover:bg-white/10 transition-all">Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmImport} className="bg-yellow-600 text-white border-0 font-black uppercase tracking-widest rounded-full h-11 text-[9px] flex-1 hover:opacity-90 transition-all">Import Anyway</AlertDialogAction>
+              <AlertDialogAction onClick={confirmImport} className="bg-yellow-600 text-white border-0 font-semibold rounded-full h-11 text-[11px] flex-1 hover:opacity-90 transition-all">Import Anyway</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

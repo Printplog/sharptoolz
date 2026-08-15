@@ -40,7 +40,7 @@ export default function SourceStatsChart({ data, rangeLabel }: SourceStatsChartP
   if (!data || data.length === 0) {
     return (
       <Card className="bg-white/5 border-white/10 backdrop-blur-xl h-full min-h-[300px] flex flex-col items-center justify-center">
-         <p className="text-white/20 uppercase tracking-[0.2em] text-[10px] font-black">No Campaign Signal</p>
+         <p className="text-white/20 text-[11px] font-semibold">No Campaign Signal</p>
       </Card>
     );
   }
@@ -56,8 +56,8 @@ export default function SourceStatsChart({ data, rangeLabel }: SourceStatsChartP
 
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-white/5">
         <div className="space-y-1">
-          <CardTitle className="text-lg font-black italic uppercase tracking-tighter text-amber-400">Traffic <span className="text-white">Sources</span></CardTitle>
-          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+          <CardTitle className="text-lg font-semibold italic tracking-tighter text-amber-400">Traffic <span className="text-white">Sources</span></CardTitle>
+          <CardDescription className="text-[11px] font-bold text-zinc-400">
             Source / medium attribution for {rangeLabel?.toLowerCase() || "the selected range"}
           </CardDescription>
         </div>
@@ -104,7 +104,7 @@ export default function SourceStatsChart({ data, rangeLabel }: SourceStatsChartP
               verticalAlign="top" 
               align="right" 
               iconType="circle"
-              wrapperStyle={{ paddingTop: '10px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+              wrapperStyle={{ paddingTop: '10px', fontSize: '11px', fontWeight: 500 }}
             />
             <Bar dataKey="visits" fill="#a855f7" radius={[0, 4, 4, 0]} barSize={12} />
             <Bar dataKey="unique_visitors" fill="#22d3ee" radius={[0, 4, 4, 0]} barSize={12} />

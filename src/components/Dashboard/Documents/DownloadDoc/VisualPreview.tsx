@@ -34,7 +34,7 @@ export const VisualPreview: React.FC<VisualPreviewProps> = ({ svg, side, directi
                         }`}
                 >
                     {/* Label indicating the selection */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-[11px] font-bold px-1.5 py-0.5 rounded">
                         {side}
                     </div>
                 </div>

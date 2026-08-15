@@ -281,7 +281,7 @@ export default function ImageCropUpload({
               {isInserting && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50 animate-in fade-in duration-300">
                   <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">Inserting Image...</span>
+                  <span className="text-[11px] font-semibold text-primary/80">Inserting Image...</span>
                 </div>
               )}
             </div>
@@ -367,7 +367,7 @@ export default function ImageCropUpload({
                                 <Loader2 className="h-16 w-16 animate-spin text-primary relative z-10" />
                               </div>
                               <div className="w-64 space-y-2 text-center">
-                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-primary/80">
+                                <div className="flex justify-between text-[11px] font-semibold text-primary/80">
                                   <span>AI Engine</span>
                                   <span>{bgProgress}%</span>
                                 </div>
@@ -377,7 +377,7 @@ export default function ImageCropUpload({
                                     style={{ width: `${bgProgress}%` }}
                                   />
                                 </div>
-                                <p className="text-[9px] font-medium text-white/40 uppercase tracking-[0.2em] animate-pulse">
+                                <p className="text-[11px] font-medium text-white/40 animate-pulse">
                                   Extracting Subject...
                                 </p>
                               </div>
@@ -414,7 +414,7 @@ export default function ImageCropUpload({
                             disabled={isRemovingBackground}
                             variant="ghost"
                             size="sm"
-                            className="h-9 md:h-10 px-4 text-primary text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 rounded-lg group"
+                            className="h-9 md:h-10 px-4 text-primary text-[11px] md:text-[11px] font-semibold hover:bg-primary/10 rounded-lg group"
                           >
                             <Sparkles className="h-3 w-3 mr-2 group-hover:scale-125 transition-transform" />
                             Remove Background
@@ -424,7 +424,7 @@ export default function ImageCropUpload({
                             onClick={() => finalizeAndClose(croppedImage!)}
                             variant="ghost"
                             size="sm"
-                            className="h-9 md:h-10 px-4 text-green-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-green-400/10 rounded-lg"
+                            className="h-9 md:h-10 px-4 text-green-400 text-[11px] md:text-[11px] font-semibold hover:bg-green-400/10 rounded-lg"
                           >
                             <Check className="h-3 w-3 mr-2" />
                             Save As-Is
@@ -436,7 +436,7 @@ export default function ImageCropUpload({
                             onClick={() => finalizeAndClose(bgRemovedImage!)}
                             variant="ghost"
                             size="sm"
-                            className="h-9 md:h-10 px-5 text-green-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-green-400/10 rounded-lg"
+                            className="h-9 md:h-10 px-5 text-green-400 text-[11px] md:text-[11px] font-semibold hover:bg-green-400/10 rounded-lg"
                           >
                             <Check className="h-3 w-3 mr-2" />
                             Apply & Close
@@ -445,7 +445,7 @@ export default function ImageCropUpload({
                       ) : phase === 'processing' ? (
                         <div className="px-6 py-3 flex items-center gap-3">
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary/60">Processing AI Mask...</span>
+                          <span className="text-[11px] md:text-[11px] font-semibold text-primary/60">Processing AI Mask...</span>
                         </div>
                       ) : (
                         <>
@@ -455,7 +455,7 @@ export default function ImageCropUpload({
                             }}
                             variant="ghost"
                             size="sm"
-                            className="h-9 md:h-10 px-3 md:px-4 text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg"
+                            className="h-9 md:h-10 px-3 md:px-4 text-white text-[11px] md:text-[11px] font-semibold hover:bg-white/10 rounded-lg"
                           >
                             <RefreshCcw className="h-3 w-3 mr-2" />
                             Reset
@@ -470,14 +470,14 @@ export default function ImageCropUpload({
                           type="button"
                           variant="ghost"
                           onClick={() => setIsDialogOpen(false)}
-                          className="flex-1 md:flex-none h-9 md:h-10 px-4 md:px-5 bg-white/5 backdrop-blur-xl border border-white/10 text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg transition-all shadow-2xl"
+                          className="flex-1 md:flex-none h-9 md:h-10 px-4 md:px-5 bg-white/5 backdrop-blur-xl border border-white/10 text-white text-[11px] md:text-[11px] font-semibold hover:bg-white/10 rounded-lg transition-all shadow-2xl"
                         >
                           Discard
                         </Button>
                         <Button
                           type="button"
                           onClick={() => cropperRef.current?.crop()}
-                          className="flex-1 md:flex-none h-9 md:h-10 px-6 md:px-7 bg-primary text-black text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:bg-primary/90 transition-all"
+                          className="flex-1 md:flex-none h-9 md:h-10 px-6 md:px-7 bg-primary text-black text-[11px] md:text-[11px] font-semibold rounded-lg shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:bg-primary/90 transition-all"
                         >
                           <Check className="h-3 w-3 mr-2" />
                           Done

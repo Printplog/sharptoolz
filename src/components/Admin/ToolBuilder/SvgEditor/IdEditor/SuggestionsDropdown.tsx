@@ -41,7 +41,7 @@ export default function SuggestionsDropdown({
             </div>
             <div className="text-xs text-white/60 mt-0.5">{extension.helper}</div>
           </div>
-          <div className="text-[10px] uppercase tracking-wide text-white/40">
+          <div className="text-[11px] text-white/40">
             {extension.mustBeLast ? "Last" : "Extension"}
           </div>
         </button>

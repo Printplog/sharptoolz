@@ -20,7 +20,7 @@ const InputWrapper = ({ label, icon: Icon, children, error, rootClassName }: Inp
     <div className="flex items-center justify-between px-2">
       <div className="flex items-center gap-2">
          <Icon className="w-3.5 h-3.5 text-white/20 group-focus-within:text-primary transition-all group-focus-within:scale-110" />
-         <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] group-focus-within:text-white transition-colors">
+         <span className="text-[11px] font-semibold text-white/40 group-focus-within:text-white transition-colors">
           {label}
          </span>
       </div>
@@ -30,7 +30,7 @@ const InputWrapper = ({ label, icon: Icon, children, error, rootClassName }: Inp
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
-            className="text-[9px] font-bold text-red-500 uppercase tracking-widest"
+            className="text-[11px] font-bold text-red-500"
           >
             {error}
           </motion.span>
@@ -138,7 +138,7 @@ export default function ContactForm() {
             >
               <CheckCircle2 className="w-12 h-12 text-primary" />
             </motion.div>
-            <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-6 leading-none">
+            <h2 className="text-4xl font-semibold text-white italic tracking-tighter mb-6 leading-none">
                Message <span className="text-primary">Transmitted</span>
             </h2>
             <p className="text-white/40 text-lg font-medium max-w-sm mx-auto leading-relaxed">
@@ -148,7 +148,7 @@ export default function ContactForm() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setSubmitted(false)}
-              className="mt-12 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-primary transition-colors cursor-pointer"
+              className="mt-12 text-[11px] font-semibold text-white/20 hover:text-primary transition-colors cursor-pointer"
             >
               Send another message
             </motion.button>
@@ -211,7 +211,7 @@ export default function ContactForm() {
               />
             </div>
             
-            <p className="text-center text-[9px] font-bold uppercase tracking-[0.4em] text-white/10">
+            <p className="text-center text-[11px] font-bold text-white/10">
               End-to-End Encrypted Transmission
             </p>
           </form>

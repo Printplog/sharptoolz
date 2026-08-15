@@ -63,7 +63,7 @@ export default function Dashboard() {
     <div className="dashboard-content space-y-8">
       {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic italic-primary">
+        <h1 className="text-3xl font-bold text-white tracking-tighter italic italic-primary">
           Welcome <span className="text-primary">Back</span>, {user?.username || "Value Visitor"} 👋
         </h1>
       </div>

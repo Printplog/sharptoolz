@@ -270,7 +270,11 @@ export function DataTable<TData, TValue>({
   };
 
   const handlePageChange = (page: number) => {
-    const nextPage = Math.min(Math.max(page, 1), totalPages);
+    // A server table that is mid-fetch can report totalPages as 1 before the
+    // new page lands. Clamping against that would bounce the user back to page
+    // 1, so never clamp below the page we are already on.
+    const upperBound = Math.max(totalPages, currentPage);
+    const nextPage = Math.min(Math.max(page, 1), upperBound);
 
     if (nextPage === currentPage) {
       return;
@@ -503,7 +507,7 @@ export function DataTable<TData, TValue>({
             Showing {showingFrom}-{showingTo} of {totalRows}
           </span>
           {selectionEnabled && (
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/35">
+            <span className="text-xs font-semibold text-white/35">
               {selectedCount} selected
             </span>
           )}

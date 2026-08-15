@@ -43,14 +43,14 @@ function DocumentPreview({ theme }: { theme: ApiTheme }) {
       <div className="aspect-[1.58/1] w-full max-w-md rounded-sm bg-[#f2eee4] p-5 text-[#101820] shadow-2xl">
         <div className="flex items-start justify-between border-b border-black/15 pb-3">
           <div>
-            <p className="text-[7px] font-black uppercase tracking-[0.24em] text-black/45">Boarding pass</p>
+            <p className="text-[10px] font-semibold text-black/45">Boarding pass</p>
             <p className="mt-1 text-sm font-black">LOS → LHR</p>
           </div>
           <p className="text-[8px] font-bold">03A</p>
         </div>
         <div className="grid grid-cols-2 gap-5 pt-4 text-[8px]">
-          <span><b className="block text-[6px] uppercase tracking-widest text-black/40">Passenger</b>Ada Okafor</span>
-          <span><b className="block text-[6px] uppercase tracking-widest text-black/40">Reference</b>customer_42</span>
+          <span><b className="block text-[10px] text-black/40">Passenger</b>Ada Okafor</span>
+          <span><b className="block text-[10px] text-black/40">Reference</b>customer_42</span>
         </div>
       </div>
     </div>
@@ -80,7 +80,7 @@ export default function HostedFormThemePreview({
       <div className={compact ? "p-4" : "p-4 sm:p-5"}>
         <header className="flex items-start justify-between gap-3 border-b pb-4" style={{ borderColor: theme.borderColor }}>
           <div className="min-w-0 text-left">
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: theme.primaryColor }}>
+            <p className="text-[11px] font-bold" style={{ color: theme.primaryColor }}>
               SharpToolz hosted translator
             </p>
             <p className="mt-1 truncate text-base font-black">Boarding Pass1_Fixed</p>

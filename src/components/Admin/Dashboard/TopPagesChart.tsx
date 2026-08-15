@@ -44,8 +44,8 @@ export default function TopPagesChart({ data, rangeLabel }: TopPagesChartProps) 
 
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-white/5">
         <div className="space-y-1">
-          <CardTitle className="text-lg font-black italic uppercase tracking-tighter text-cyan-400">Page <span className="text-white">Traffic</span></CardTitle>
-          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+          <CardTitle className="text-lg font-semibold italic tracking-tighter text-cyan-400">Page <span className="text-white">Traffic</span></CardTitle>
+          <CardDescription className="text-[11px] font-bold text-zinc-400">
             Most visited paths for {rangeLabel?.toLowerCase() || "the selected range"}
           </CardDescription>
 

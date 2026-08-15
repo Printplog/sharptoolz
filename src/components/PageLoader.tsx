@@ -36,7 +36,7 @@ export default function PageLoader() {
       </div>
 
       <motion.span
-        className="mt-6 font-black uppercase tracking-[0.3em] text-[10px] text-white/25"
+        className="mt-6 font-semibold text-[11px] text-white/25"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}

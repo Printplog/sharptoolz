@@ -69,8 +69,8 @@ export default function VisitorChart({ data, isLoading, rangeLabel }: VisitorCha
     <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/[0.07] transition-all duration-300 shadow-2xl">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-white/5">
         <div className="space-y-1">
-          <CardTitle className="text-lg font-black italic uppercase tracking-tighter text-cyan-400">Visitor <span className="text-white">Traffic</span></CardTitle>
-          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+          <CardTitle className="text-lg font-semibold italic tracking-tighter text-cyan-400">Visitor <span className="text-white">Traffic</span></CardTitle>
+          <CardDescription className="text-[11px] font-bold text-zinc-400">
             Telemetry for {rangeLabel?.toLowerCase() || "the selected range"}
           </CardDescription>
         </div>

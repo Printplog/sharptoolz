@@ -22,7 +22,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, onTopUp, bonusBalanc
             <Wallet className="w-6 h-6 md:w-8 md:h-8 text-white relative z-10" />
           </div>
           <div className="space-y-1 min-w-0">
-            <h3 className="text-white/40 text-xs font-black uppercase tracking-[0.2em] truncate">
+            <h3 className="text-white/40 text-xs font-semibold truncate">
               Wallet Balance
             </h3>
             <div className="flex items-baseline gap-2 md:gap-3">
@@ -43,7 +43,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ balance, onTopUp, bonusBalanc
         <div className="flex">
           <button
             onClick={onTopUp}
-            className="group/btn relative inline-flex items-center justify-center gap-4 bg-white text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:scale-105 hover:shadow-[0_0_50px_rgba(255,255,255,0.2)] active:scale-95"
+            className="group/btn relative inline-flex items-center justify-center gap-4 bg-white text-black px-10 py-5 rounded-2xl font-semibold text-xs transition-all hover:scale-105 hover:shadow-[0_0_50px_rgba(255,255,255,0.2)] active:scale-95"
           >
             <span className="relative z-10 flex items-center gap-2">
               Add Funds

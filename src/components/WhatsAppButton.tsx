@@ -180,7 +180,7 @@ export default function WhatsAppButton() {
                   className="pointer-events-auto group relative flex items-center"
                 >
                   {/* Tooltip Label */}
-                  <span className="absolute right-16 px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md text-white text-[11px] font-bold uppercase tracking-widest whitespace-nowrap opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10 shadow-xl">
+                  <span className="absolute right-16 px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md text-white text-[11px] font-bold whitespace-nowrap opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10 shadow-xl">
                     {action.label}
                   </span>
 
@@ -280,7 +280,7 @@ export default function WhatsAppButton() {
                         href={settings.global_announcement_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-3 text-[9px] font-black uppercase tracking-[0.2em] text-primary hover:text-white transition-all border-b border-primary/40 hover:border-white"
+                        className="mt-3 text-[11px] font-semibold text-primary hover:text-white transition-all border-b border-primary/40 hover:border-white"
                       >
                         Learn More
                       </a>

@@ -13,7 +13,7 @@ export default function Contact() {
         <div className="max-w-5xl mx-auto">
           {/* Simple Header */}
           <div className="mb-12">
-            <h1 className="text-5xl md:text-7xl font-fancy font-black text-white tracking-tighter uppercase italic mb-6 leading-[0.9]">
+            <h1 className="text-5xl md:text-7xl font-fancy font-semibold text-white tracking-tighter italic mb-6 leading-[0.9]">
               Contact <span className="text-primary">Us</span>
             </h1>
             <p className="text-white/40 max-w-2xl text-lg leading-relaxed font-medium">

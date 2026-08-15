@@ -22,7 +22,7 @@ export default function AccessManagement({
     return (
         <Card className="bg-white/5 border-white/10 backdrop-blur-sm h-full rounded-2xl">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white/50 text-[10px] font-black uppercase tracking-widest">
+                <CardTitle className="flex items-center gap-2 text-white/50 text-[11px] font-semibold">
                     <Shield className="h-3.5 w-3.5" />
                     Access Management
                 </CardTitle>
@@ -41,7 +41,7 @@ export default function AccessManagement({
                                 variant="ghost"
                                 size="sm"
                                 className={cn(
-                                    "rounded-full px-4 h-9 text-[11px] font-black uppercase tracking-wider transition-all border border-transparent",
+                                    "rounded-full px-4 h-9 text-[11px] font-semibold transition-all border border-transparent",
                                     user.role === ROLES.STAFF
                                         ? "bg-blue-500 text-white"
                                         : "text-white/30 hover:text-blue-400 hover:border-blue-500/30"
@@ -55,7 +55,7 @@ export default function AccessManagement({
                                 variant="ghost"
                                 size="sm"
                                 className={cn(
-                                    "rounded-full px-4 h-9 text-[11px] font-black uppercase tracking-wider transition-all border border-transparent",
+                                    "rounded-full px-4 h-9 text-[11px] font-semibold transition-all border border-transparent",
                                     user.role === ROLES.STANDARD
                                         ? "bg-white/10 text-white"
                                         : "text-white/30 hover:text-white hover:border-white/20"
@@ -79,7 +79,7 @@ export default function AccessManagement({
                             text={user.is_active ? "DEACTIVATE USER" : "ACTIVATE USER"}
                             icon={user.is_active ? UserMinus : UserCheck}
                             className={cn(
-                                "h-11 px-8 rounded-full font-black text-[11px] uppercase tracking-widest transition-all border-0 shadow-none",
+                                "h-11 px-8 rounded-full font-semibold text-[11px] transition-all border-0 shadow-none",
                                 user.is_active
                                     ? "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
                                     : "bg-emerald-600 text-white hover:bg-emerald-700"

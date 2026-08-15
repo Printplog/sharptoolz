@@ -43,7 +43,7 @@ const VariableDropdown = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-[#0f0f12]/95 border-white/10 text-white w-64 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in duration-200">
-        <DropdownMenuLabel className="text-[11px] uppercase tracking-widest text-white/40 font-bold px-3 py-2">
+        <DropdownMenuLabel className="text-[11px] text-white/40 font-bold px-3 py-2">
           {category.replace('translate', 'Position ')} Variables
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-white/5 mx-1" />
@@ -143,7 +143,7 @@ export const TransformSettings = ({
         ].map((t) => (
           <div key={t.key} className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label className="text-[10px] uppercase font-bold text-white/40">{t.label}</Label>
+              <Label className="text-[11px] font-bold text-white/40">{t.label}</Label>
               <VariableDropdown
                 category={t.key as TransformVariable['category']}
                 currentValue={(currentTransform as Record<string, number>)[t.key]}

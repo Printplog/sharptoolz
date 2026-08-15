@@ -244,7 +244,7 @@ export default function SignatureField({
               </div>
               <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
                 <div className="text-center transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                  <div className="text-sm font-bold text-white uppercase tracking-tighter">Change Signature</div>
+                  <div className="text-sm font-bold text-white tracking-tighter">Change Signature</div>
                   <div className="text-[10px] text-white/60 font-medium mt-1">Draw or upload a new one</div>
                 </div>
               </div>
@@ -315,7 +315,7 @@ export default function SignatureField({
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                   <Pen className="w-4 h-4 text-primary" />
                 </div>
-                <DialogTitle className="text-sm font-bold uppercase tracking-tight text-white/90">
+                <DialogTitle className="text-sm font-bold tracking-tight text-white/90">
                   Add {fieldName}
                 </DialogTitle>
               </div>
@@ -323,13 +323,13 @@ export default function SignatureField({
 
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'draw' | 'upload' | 'preset')} className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-black/40 border border-white/5 h-9 p-0.5 rounded-lg mb-4">
-                <TabsTrigger value="preset" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
+                <TabsTrigger value="preset" className="rounded-md font-bold text-[11px] text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
                   Preset
                 </TabsTrigger>
-                <TabsTrigger value="draw" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
+                <TabsTrigger value="draw" className="rounded-md font-bold text-[11px] text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
                   Draw
                 </TabsTrigger>
-                <TabsTrigger value="upload" className="rounded-md font-bold text-[9px] uppercase tracking-wider text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
+                <TabsTrigger value="upload" className="rounded-md font-bold text-[11px] text-white/40 data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all h-full">
                   Upload
                 </TabsTrigger>
               </TabsList>
@@ -382,8 +382,8 @@ export default function SignatureField({
                     
                     <div className="w-full max-w-[400px] mt-4 space-y-3">
                       <div className="flex items-center justify-between px-1">
-                        <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Pen Size</span>
-                        <span className="text-[9px] font-bold text-primary uppercase">{strokeWidth[0]}px</span>
+                        <span className="text-[11px] font-bold text-white/40">Pen Size</span>
+                        <span className="text-[11px] font-bold text-primary">{strokeWidth[0]}px</span>
                       </div>
                       <Slider 
                         value={strokeWidth} 
@@ -401,7 +401,7 @@ export default function SignatureField({
                         variant="ghost"
                         size="sm"
                         onClick={handleClearSignature}
-                        className="h-8 text-[9px] font-bold uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 rounded-lg"
+                        className="h-8 text-[11px] font-bold text-white/40 hover:text-white hover:bg-white/5 rounded-lg"
                         disabled={disabled}
                       >
                         <RotateCcw className="w-3 h-3 mr-2" />
@@ -424,7 +424,7 @@ export default function SignatureField({
                     <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center transition-all group-hover:scale-105">
                       <Upload className={cn("w-4 h-4 transition-colors", isDragActive ? "text-primary" : "text-white/40")} />
                     </div>
-                    <div className="text-[9px] font-bold uppercase tracking-widest text-white/60">
+                    <div className="text-[11px] font-bold text-white/60">
                       {isDragActive ? "Drop here" : "Choose File"}
                     </div>
                   </div>
@@ -439,7 +439,7 @@ export default function SignatureField({
               variant="ghost"
               size="sm"
               onClick={() => setIsDialogOpen(false)}
-              className="h-8 text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white"
+              className="h-8 text-[11px] font-bold text-white/60 hover:text-white"
             >
               Cancel
             </Button>
@@ -449,7 +449,7 @@ export default function SignatureField({
                 type="button"
                 size="sm"
                 onClick={handleDrawSignature}
-                className="bg-primary text-black font-bold uppercase tracking-widest text-[9px] rounded-lg h-8 px-5"
+                className="bg-primary text-black font-bold text-[11px] rounded-lg h-8 px-5"
                 disabled={disabled}
               >
                 Done

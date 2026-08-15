@@ -164,7 +164,7 @@ export default function ToolsList({ hot }: Props) {
               </Select>
             </div>
           </div>
-          <div className="text-white/40 text-[11px] font-black uppercase tracking-widest shrink-0 hidden md:block">
+          <div className="text-white/40 text-[11px] font-semibold shrink-0 hidden md:block">
             {totalCount} tool{totalCount !== 1 ? 's' : ''} Found
           </div>
         </div>

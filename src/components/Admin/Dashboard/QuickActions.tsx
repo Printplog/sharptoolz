@@ -105,7 +105,7 @@ export default function QuickActions() {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-xl font-bold text-white uppercase italic tracking-tighter">
+                <h2 className="text-xl font-bold text-white italic tracking-tighter">
                     Admin <span className="text-primary">Quick Actions</span> ⚡
                 </h2>
             </div>

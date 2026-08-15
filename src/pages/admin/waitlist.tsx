@@ -7,7 +7,7 @@ export default function WaitlistPage() {
                 <Clock className="size-10 text-yellow-500" />
             </div>
             <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+                <h1 className="text-3xl font-bold text-white tracking-tighter italic">
                     Waitlist <span className="text-yellow-500">Management</span>
                 </h1>
                 <p className="text-white/40 max-w-md mx-auto">

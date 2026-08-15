@@ -451,7 +451,7 @@ export default function SvgTemplateEditor() {
                       />
                     </div>
                   </div>
-                  <DropdownMenuLabel className="text-[10px] text-white/30 uppercase tracking-widest px-3 py-2">
+                  <DropdownMenuLabel className="text-[11px] text-white/30 px-3 py-2">
                     {filteredSiblings.length} Templates
                   </DropdownMenuLabel>
                   <ScrollArea className="h-[280px]">

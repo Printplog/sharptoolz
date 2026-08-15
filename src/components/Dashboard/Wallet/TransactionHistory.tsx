@@ -75,7 +75,7 @@ const TransactionHistory: React.FC = () => {
                 <p className="text-white text-sm font-medium">
                   {transaction.description}
                 </p>
-                <p className="text-white/40 text-xs text-mono tracking-tighter uppercase">
+                <p className="text-white/40 text-xs text-mono tracking-tighter">
                   {new Date(transaction.created_at).toLocaleDateString()} at {new Date(transaction.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
@@ -92,7 +92,7 @@ const TransactionHistory: React.FC = () => {
                   {transaction.amount >= 0 ? "+" : ""}$
                   {Math.abs(transaction.amount).toFixed(2)}
                 </p>
-                <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">
+                <p className="text-[11px] text-white/40 font-semibold">
                   {transaction.status}
                 </p>
               </div>
@@ -124,7 +124,7 @@ const TransactionHistory: React.FC = () => {
         {transactions?.length === 0 && (
           <div className="flex flex-col items-center justify-center py-10 opacity-20">
             <History className="w-10 h-10 mb-2" />
-            <p className="text-xs uppercase font-black tracking-widest">No Transactions Found</p>
+            <p className="text-xs font-semibold">No Transactions Found</p>
           </div>
         )}
       </div>
@@ -132,7 +132,7 @@ const TransactionHistory: React.FC = () => {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-4 border-t border-white/5">
-          <div className="text-white/40 text-[10px] font-black uppercase tracking-widest">
+          <div className="text-white/40 text-[11px] font-semibold">
             {startIndex + 1}-{Math.min(startIndex + itemsPerPage, transactions?.length)} / {transactions?.length}
           </div>
           <div className="flex items-center gap-2">

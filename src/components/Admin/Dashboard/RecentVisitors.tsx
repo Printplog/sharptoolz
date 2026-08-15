@@ -74,10 +74,10 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
   return (
     <Card className="bg-[#0a0a0a] border-white/5 font-mono text-[12px] leading-none overflow-hidden">
       <CardHeader className="py-2 px-4 border-b border-white/5 bg-white/[0.02] flex flex-row items-center justify-between">
-        <CardTitle className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">
+        <CardTitle className="text-[11px] font-semibold text-zinc-500">
           Visitor <span className="text-zinc-400">Activity Stream</span> ({rangeLabel || "Live"})
         </CardTitle>
-        <div className="flex gap-2 text-[10px] uppercase tracking-widest text-zinc-500">
+        <div className="flex gap-2 text-[11px] text-zinc-500">
           <span>Identity-based tracking enabled</span>
           <span>•</span>
           <span>Buffer: 100</span>
@@ -87,7 +87,7 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
 
       <CardContent className="p-0 max-h-[600px] overflow-y-auto no-scrollbar">
         {!data || data.length === 0 ? (
-          <div className="p-8 text-center text-white/10 uppercase tracking-[0.5em]">
+          <div className="p-8 text-center text-white/10">
             Waiting for signals...
           </div>
         ) : (
@@ -114,7 +114,7 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
 
                   {/* Level / Method Badge */}
                   <span className={cn(
-                    "px-2 py-1 rounded-[4px] text-[10px] font-black uppercase min-w-[58px] text-center",
+                    "px-2 py-1 rounded-[4px] text-[11px] font-semibold min-w-[58px] text-center",
                     color.bg,
                     color.text
                   )}>
@@ -127,14 +127,14 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
                       <span className="text-white font-black text-[15px] truncate" title={identifier}>
                         {identifier}
                       </span>
-                      <span className="text-amber-400/90 font-black text-[11px] uppercase tracking-[0.18em] truncate">
+                      <span className="text-amber-400/90 font-semibold text-[11px] truncate">
                         {sourceText}
                       </span>
                     </div>
                     <div className="mt-1 flex items-center gap-3 text-[11px] text-zinc-500">
                       <span>{visitor.ip_address || "No IP"}</span>
                       {visitor.campaign && (
-                        <span className="text-emerald-400/80 uppercase tracking-[0.16em] truncate" title={visitor.campaign}>
+                        <span className="text-emerald-400/80 truncate" title={visitor.campaign}>
                           {visitor.campaign}
                         </span>
                       )}
@@ -144,7 +144,7 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
                   {/* Secondary Details */}
                   <div className="flex items-center gap-3 shrink-0 text-zinc-500 whitespace-nowrap">
                     <div className="flex items-center gap-2 min-w-[88px] justify-end">
-                        <span className="text-zinc-600 uppercase text-[10px]">SESSIONS</span>
+                        <span className="text-zinc-600 text-[11px]">SESSIONS</span>
                         <span className="text-emerald-500 font-black text-[18px] leading-none">{visitor.visit_count}</span>
                     </div>
 
@@ -162,7 +162,7 @@ export default function RecentVisitors({ data, isLoading, rangeLabel }: RecentVi
                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                Telemetry Active
             </span>
-           <span className="text-white/10 text-[10px] uppercase tracking-widest">Protocol: Identity-V1</span>
+           <span className="text-white/10 text-[11px]">Protocol: Identity-V1</span>
         </div>
         <span className="text-white/5 italic opacity-20">vuid_persistence_layer</span>
       </div>

@@ -119,10 +119,7 @@ export default function Register({ dialog = false }: Props) {
       }
       navigate("/dashboard");
     },
-    onError: (error: Error) => {
-      const msg = errorMessage(error as Parameters<typeof errorMessage>[0]);
-      toast.error(typeof msg === "string" && msg.startsWith("<") ? "Google sign-in failed. Please try again." : msg);
-    },
+    onError: (error: Error) => toast.error(errorMessage(error)),
   });
 
   const handleGoogleLogin = () => {
@@ -210,7 +207,7 @@ export default function Register({ dialog = false }: Props) {
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h2 className="text-3xl font-black tracking-tighter uppercase italic">
+        <h2 className="text-3xl font-semibold tracking-tighter italic">
           Join <span className="text-[#cee88c]">SharpToolz</span>
         </h2>
       </div>
@@ -224,7 +221,7 @@ export default function Register({ dialog = false }: Props) {
               name={f.name}
               render={({ field: inputField }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black">
+                  <FormLabel className="text-[11px] text-white/40 font-semibold">
                     {f.label}
                   </FormLabel>
                   <div className="relative">
@@ -289,7 +286,7 @@ export default function Register({ dialog = false }: Props) {
             <div className="space-y-6">
               <div className="flex items-center gap-4 pt-4">
                 <div className="h-[1px] flex-1 bg-white/5"></div>
-                <span className="text-[10px] text-white/20 font-black uppercase tracking-[0.2em]">Or</span>
+                <span className="text-[11px] text-white/20 font-semibold">Or</span>
                 <div className="h-[1px] flex-1 bg-white/5"></div>
               </div>
               <div className="text-center">

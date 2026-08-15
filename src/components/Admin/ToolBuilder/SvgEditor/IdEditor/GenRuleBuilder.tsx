@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Copy, Trash2 } from "lucide-react";
+import { SortableList } from "@/components/ui/SortableList";
+import { remapIndex } from "@/lib/utils/remapIndex";
 
 interface GenRuleBuilderProps {
   value: string;
@@ -161,6 +163,20 @@ export default function GenRuleBuilder({
     }
   }, [parts, editingIndex]);
 
+  const handleReorderParts = useCallback((reordered: PatternPart[], from: number, to: number) => {
+    setParts(reordered);
+    // countInputs and editingIndex are keyed by position, so they have to
+    // travel with their row or they'd start editing a different part.
+    setCountInputs(prev => {
+      const next: Record<number, string> = {};
+      Object.entries(prev).forEach(([key, value]) => {
+        next[remapIndex(Number(key), from, to)] = value;
+      });
+      return next;
+    });
+    setEditingIndex(prev => (prev === null ? null : remapIndex(prev, from, to)));
+  }, []);
+
   const handleDuplicatePart = useCallback((index: number) => {
     const part = parts[index];
     if (!part) return;
@@ -245,16 +261,18 @@ export default function GenRuleBuilder({
         <div className="flex flex-1 min-h-0 pt-3">
           {/* Left Section - Rules */}
           <div className="flex-1 flex flex-col min-w-0 pr-3">
-            <div className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2 shrink-0">Rules</div>
+            <div className="text-[11px] font-semibold text-white/40 mb-2 shrink-0">Rules</div>
             <div className="flex-1 overflow-y-auto space-y-2 pr-2">
               {parts.length === 0 ? (
                 <div className="text-white/40 text-sm text-center py-4">No parts yet. Click buttons to add.</div>
               ) : (
-                parts.map((part, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 p-2 rounded-md border border-white/10 bg-white/5"
-                  >
+                <SortableList
+                  items={parts}
+                  onReorder={handleReorderParts}
+                  rowClassName="p-2 rounded-md border border-white/10 bg-white/5"
+                >
+                  {(part, index) => (
+                  <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
                       {part.type === 'static' && (
                         <input
@@ -509,7 +527,8 @@ export default function GenRuleBuilder({
                       </button>
                     </div>
                   </div>
-                ))
+                  )}
+                </SortableList>
               )}
             </div>
           </div>
@@ -518,10 +537,10 @@ export default function GenRuleBuilder({
           <div className="w-[280px] flex flex-col gap-3 shrink-0 border-l border-white/10 pl-3">
             {/* Preview & Playground */}
             <div className="flex flex-col shrink-0">
-              <div className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2 shrink-0">Preview</div>
+              <div className="text-[11px] font-semibold text-white/40 mb-2 shrink-0">Preview</div>
               <div className="p-3 rounded-xl border border-white/20 bg-white/5 flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <div className="text-white/40 text-[10px] uppercase tracking-widest font-black">Pattern</div>
+                  <div className="text-white/40 text-[11px] font-semibold">Pattern</div>
                   <div className="font-mono text-white text-xs break-all flex flex-wrap gap-1 items-center bg-black/40 p-2 rounded-lg min-h-[2.5rem] border border-white/5">
                     {parts.length === 0 ? (
                       <span className="text-white/20 italic">No rules defined</span>
@@ -558,7 +577,7 @@ export default function GenRuleBuilder({
                 {/* Sample Data Inputs */}
                 {parts.some(p => p.type === 'dep') && (
                   <div className="flex flex-col gap-1.5">
-                    <div className="text-white/40 text-[10px] uppercase tracking-widest font-black">Test Data</div>
+                    <div className="text-white/40 text-[11px] font-semibold">Test Data</div>
                     <div className="grid grid-cols-1 gap-1.5 max-h-[80px] overflow-y-auto no-scrollbar pr-1">
                       {Array.from(new Set(parts.filter(p => p.type === 'dep').map(p => (p as any).fieldName))).filter(Boolean).map(field => (
                         <div key={field} className="flex items-center gap-2 bg-white/5 p-1 rounded border border-white/5">
@@ -577,7 +596,7 @@ export default function GenRuleBuilder({
                 )}
 
                 <div className="flex flex-col gap-1">
-                  <div className="text-white/40 text-[10px] uppercase tracking-widest font-black">Output</div>
+                  <div className="text-white/40 text-[11px] font-semibold">Output</div>
                   <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg shadow-inner">
                     <div className="font-mono text-emerald-400 text-sm break-all leading-tight mb-2">
                       {preview}
@@ -594,7 +613,7 @@ export default function GenRuleBuilder({
                     )}
                     {maxLength !== undefined && (
                       <div className="mt-1 flex items-center justify-between">
-                        <span className="text-[9px] text-white/30 uppercase tracking-tighter">Length</span>
+                        <span className="text-[11px] text-white/30 tracking-tighter">Length</span>
                         <span className={cn(
                           "text-[10px] font-bold tabular-nums",
                           preview.length > maxLength ? "text-red-400" : "text-emerald-400/60"
@@ -611,7 +630,7 @@ export default function GenRuleBuilder({
             {/* Add Buttons */}
             <div className="shrink-0">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-[10px] font-black uppercase tracking-widest text-white/40">Add</div>
+                <div className="text-[11px] font-semibold text-white/40">Add</div>
                 <button
                   type="button"
                   onClick={() => setIsAuto((prev) => !prev)}

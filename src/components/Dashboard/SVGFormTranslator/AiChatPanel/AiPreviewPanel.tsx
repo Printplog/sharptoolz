@@ -45,7 +45,7 @@ export default function AiPreviewPanel({
       <div className="flex items-center justify-between px-3 py-1.5">
         <div className="flex items-center gap-2">
           <Eye size={11} className="text-indigo-400" />
-          <span className="text-[10px] font-semibold text-white/50 uppercase tracking-widest">
+          <span className="text-[11px] font-semibold text-white/50">
             Live Preview
           </span>
           <span

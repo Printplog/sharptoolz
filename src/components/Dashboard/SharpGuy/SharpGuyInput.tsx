@@ -129,28 +129,28 @@ export default function SharpGuyInput({
         <div className="flex gap-2 mb-1 overflow-x-auto pb-1 no-scrollbar -mx-2 px-2 md:mx-0 md:px-0">
           <button
             onClick={() => setInput("How do I create a new document?")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card border-primary/20 text-[10px] text-primary font-bold uppercase tracking-wider transition-all whitespace-nowrap group shrink-0"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card border-primary/20 text-[11px] text-primary font-bold transition-all whitespace-nowrap group shrink-0"
           >
             <HelpCircle size={11} className="group-hover:animate-pulse" />
             How to create?
           </button>
           <button
             onClick={() => setInput("Build me a USA Passport")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[10px] text-white/40 font-bold uppercase tracking-wider whitespace-nowrap shrink-0 hover:text-white"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[11px] text-white/40 font-bold whitespace-nowrap shrink-0 hover:text-white"
           >
             <FileText size={11} />
             USA Passport
           </button>
           <button
             onClick={() => setInput("Help me create an Alabama DL")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[10px] text-white/40 font-bold uppercase tracking-wider whitespace-nowrap shrink-0 hover:text-white"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[11px] text-white/40 font-bold whitespace-nowrap shrink-0 hover:text-white"
           >
             <FileText size={11} />
             Alabama DL
           </button>
           <button
             onClick={() => setInput("I need a Flight Itinerary")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[10px] text-white/40 font-bold uppercase tracking-wider whitespace-nowrap shrink-0 hover:text-white"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-[11px] text-white/40 font-bold whitespace-nowrap shrink-0 hover:text-white"
           >
             <Sparkles size={11} />
             Flight Itinerary

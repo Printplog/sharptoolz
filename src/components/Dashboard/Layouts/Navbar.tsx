@@ -24,7 +24,7 @@ export default function Navbar() {
           <Logo size={28} showText={false} />
         </div>
         <div className="hidden md:block">
-          <h2 className="text-xl font-bold text-white tracking-tight italic uppercase italic-primary">
+          <h2 className="text-xl font-bold text-white tracking-tight italic italic-primary">
             Hey <span className="text-primary">{user?.username || "Value Visitor"}</span> 👋
           </h2>
         </div>

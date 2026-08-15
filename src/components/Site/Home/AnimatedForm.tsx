@@ -153,7 +153,7 @@ export default function AnimatedFormSection() {
                   <DownloadCloud className="w-5 h-5 text-[#cee88c]" />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="text-[10px] font-black text-white uppercase tracking-wider">Download Started</div>
+                  <div className="text-[11px] font-semibold text-white">Download Started</div>
                   <div className="text-[9px] text-white/50">sharptoolz_premium_card.pdf</div>
                 </div>
                 <CheckCircle2 className="w-4 h-4 text-[#cee88c]" />
@@ -184,7 +184,7 @@ export default function AnimatedFormSection() {
             <div className="w-3 h-3 rounded-full bg-[#FEBC2E] shadow-inner shadow-black/10" />
             <div className="w-3 h-3 rounded-full bg-[#28C840] shadow-inner shadow-black/10" />
           </div>
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/30 font-medium text-[10px] uppercase tracking-[0.2em]">
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/30 font-medium text-[11px]">
             <Sparkles className="w-3 h-3" />
             SharpToolz
           </div>
@@ -199,19 +199,19 @@ export default function AnimatedFormSection() {
                 <div className="w-8 h-8 rounded-lg bg-[#cee88c]/10 border border-[#cee88c]/20 flex items-center justify-center">
                   <CreditCard className="w-4 h-4 text-[#cee88c]" />
                 </div>
-                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Document Details</h4>
+                <h4 className="text-sm font-bold text-white">Document Details</h4>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-1.5 opacity-60">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Internal Reference</label>
+                  <label className="text-[11px] font-bold text-white/40 px-1">Internal Reference</label>
                   <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white/50 font-mono italic">
                     REF-883-129-442
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className={`text-[10px] font-bold uppercase tracking-widest px-1 transition-colors ${step <= 1 ? 'text-[#cee88c]' : 'text-white/40'}`}>Cardholder Full Name</label>
+                  <label className={`text-[11px] font-bold px-1 transition-colors ${step <= 1 ? 'text-[#cee88c]' : 'text-white/40'}`}>Cardholder Full Name</label>
                   <motion.div 
                     animate={{ scale: step === 1 ? 1.02 : 1 }}
                     className={`transition-all duration-300 rounded-xl border px-4 py-3 text-sm font-medium ${step === 1 ? 'bg-white/10 border-[#cee88c]/50 shadow-[0_0_15px_rgba(206,232,140,0.1)]' : 'bg-white/5 border-white/10'}`}
@@ -237,14 +237,14 @@ export default function AnimatedFormSection() {
 
                 <div className="grid grid-cols-2 gap-3 opacity-60">
                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Valid From</label>
+                      <label className="text-[11px] font-bold text-white/40 px-1">Valid From</label>
                       <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white/50 flex items-center gap-2">
                         <Calendar className="w-3 h-3" />
                         01/2024
                       </div>
                    </div>
                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1">Valid Until</label>
+                      <label className="text-[11px] font-bold text-white/40 px-1">Valid Until</label>
                       <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white/50 flex items-center gap-2">
                         <Calendar className="w-3 h-3" />
                         01/2028
@@ -253,7 +253,7 @@ export default function AnimatedFormSection() {
                 </div>
 
                 <div className="space-y-1.5 opacity-60">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-1 block w-full">Mailing Address</label>
+                  <label className="text-[11px] font-bold text-white/40 px-1 block w-full">Mailing Address</label>
                   <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white/50 flex items-center gap-2">
                     <MapPin className="w-3 h-3 shrink-0" />
                     123 Empire Ave, New York, NY
@@ -267,7 +267,7 @@ export default function AnimatedFormSection() {
                   animate={{ 
                     scale: step === 3 ? 0.95 : (step === 2 || step === 4) ? 1.05 : 1,
                   }}
-                  className="relative pl-6 pr-1.5 py-1.5 bg-[#cee88c] text-black text-[10px] font-black uppercase tracking-[0.2em] rounded-full flex items-center justify-between min-w-[160px] shadow-xl shadow-[#cee88c]/10 overflow-hidden"
+                  className="relative pl-6 pr-1.5 py-1.5 bg-[#cee88c] text-black text-[11px] font-semibold rounded-full flex items-center justify-between min-w-[160px] shadow-xl shadow-[#cee88c]/10 overflow-hidden"
                 >
                   <span className="relative z-10">
                     {step === 3 ? 'Syncing...' : step === 4 ? 'Verified' : 'Finalize Card'}
@@ -373,7 +373,7 @@ export default function AnimatedFormSection() {
 
         {/* User-Facing status Footer */}
         <div className="h-10 border-t border-white/5 bg-black/40 px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[10px] font-medium text-white/30 uppercase tracking-widest">
+          <div className="flex items-center gap-2 text-[11px] font-medium text-white/30">
              <Info className="w-3.5 h-3.5 text-[#cee88c]" />
              <span>
                {step === 0 && "Ready to sync"}
@@ -389,7 +389,7 @@ export default function AnimatedFormSection() {
                   <div key={idx} className={`w-1.5 h-1.5 rounded-full transition-colors ${step === idx ? 'bg-[#cee88c]' : 'bg-white/10'}`} />
                 ))}
              </div>
-             <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px]">
+             <div className="flex items-center gap-2 text-primary font-semibold text-[11px]">
                 <Sparkles className="w-3 h-3" />
                 SharpToolz
              </div>

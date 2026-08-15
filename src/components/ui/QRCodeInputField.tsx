@@ -128,7 +128,7 @@ const QRCodeInputField = forwardRef<QRCodeInputFieldRef, QRCodeInputFieldProps>(
           {rows.map((row) => (
             <div key={row.id} className="flex gap-2 items-end group animate-in fade-in slide-in-from-left-2 duration-200">
               <div className="flex-1 space-y-1">
-                <label className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-1">Label</label>
+                <label className="text-[11px] font-semibold text-white/40 ml-1">Label</label>
                 <Input
                   value={row.label}
                   onChange={(e) => handleRowChange(row.id, 'label', e.target.value)}
@@ -138,7 +138,7 @@ const QRCodeInputField = forwardRef<QRCodeInputFieldRef, QRCodeInputFieldProps>(
                 />
               </div>
               <div className="flex-[2] space-y-1">
-                <label className="text-[10px] uppercase font-black tracking-widest text-white/40 ml-1">Value</label>
+                <label className="text-[11px] font-semibold text-white/40 ml-1">Value</label>
                 <Input
                   value={row.value}
                   onChange={(e) => handleRowChange(row.id, 'value', e.target.value)}
@@ -164,7 +164,7 @@ const QRCodeInputField = forwardRef<QRCodeInputFieldRef, QRCodeInputFieldProps>(
       
       {value && (
         <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
-           <p className="text-[10px] uppercase font-black tracking-widest text-primary/60 mb-1">Encoded Content:</p>
+           <p className="text-[11px] font-semibold text-primary/60 mb-1">Encoded Content:</p>
            <pre className="text-[11px] text-white/70 whitespace-pre-wrap font-mono leading-tight">
              {value}
            </pre>

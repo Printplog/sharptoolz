@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { adminUsers } from '@/api/apiEndpoints';
+import errorMessage from '@/lib/utils/errorMessage';
 import type { AdminUsers } from '@/types';
+
+// Monotonic counter used to discard stale in-flight responses.
+let latestRequestId = 0;
 
 interface UsersState {
   // Data
@@ -91,9 +95,14 @@ export const useUsersStore = create<UsersState>((set, get) => ({
 
   fetchUsers: async () => {
     const { currentPage, pageSize, searchQuery, roleFilter, sourceFilter, days, date } = get();
-    
+
+    // Page clicks fire faster than the API answers, and responses can land out
+    // of order — only the newest request is allowed to write to the store.
+    const requestId = latestRequestId + 1;
+    latestRequestId = requestId;
+
     set({ isLoading: true, error: null });
-    
+
     try {
       const data = await adminUsers({
         page: currentPage,
@@ -104,11 +113,13 @@ export const useUsersStore = create<UsersState>((set, get) => ({
         days: days || undefined,
         date: date || undefined,
       });
+      if (requestId !== latestRequestId) return;
       set({ data, isLoading: false });
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to fetch users',
-        isLoading: false 
+      if (requestId !== latestRequestId) return;
+      set({
+        error: errorMessage(error),
+        isLoading: false,
       });
     }
   },

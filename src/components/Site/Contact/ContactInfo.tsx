@@ -71,9 +71,9 @@ export default function ContactInfo() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Official Support</span>
+                <span className="text-[11px] font-semibold text-white/30">Official Support</span>
               </div>
-              <h4 className="text-white font-black text-xs uppercase tracking-wider mb-1">Email Support</h4>
+              <h4 className="text-white font-semibold text-xs mb-1">Email Support</h4>
               <p className="text-white/70 text-sm font-medium truncate italic tracking-tight">support@sharptoolz.com</p>
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function ContactInfo() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.1em]">{platform.label}</span>
+                    <span className="text-[11px] font-bold text-white/20">{platform.label}</span>
                   </div>
                   <h4 className="text-white/60 font-bold text-[11px] group-hover:text-white transition-colors">{platform.title}</h4>
                 </div>
@@ -127,7 +127,7 @@ export default function ContactInfo() {
         <div className="flex items-center gap-4">
            <ShieldCheck className="w-5 h-5 text-primary" />
            <div>
-             <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none mb-1">Secure Communications</p>
+             <p className="text-[11px] font-semibold text-white leading-none mb-1">Secure Communications</p>
              <p className="text-white/30 text-[10px] font-medium leading-relaxed">
                All inquiries are handled in strict confidence by our executive support team.
              </p>

@@ -186,7 +186,7 @@ const MemoizedMessageItem = memo(
               <div className="w-full mt-2 animate-in fade-in duration-300">
                 <button 
                   onClick={() => navigate(`/tools/${msg.loadedTemplate?.id}`)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 transition-all text-[11px] text-indigo-300 font-bold uppercase tracking-wider shadow-sm"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 hover:bg-indigo-500/20 transition-all text-[11px] text-indigo-300 font-bold shadow-sm"
                 >
                   <FileText size={12} className="shrink-0" />
                   <span>
@@ -217,7 +217,7 @@ const MemoizedMessageItem = memo(
             {msg.fieldUpdates && msg.fieldUpdates.length > 0 && onSwitchPreview && (
               <button
                 onClick={onSwitchPreview}
-                className="mt-2 inline-flex items-center gap-2 py-2 px-4 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-[11px] text-indigo-300 font-bold uppercase tracking-widest transition-all"
+                className="mt-2 inline-flex items-center gap-2 py-2 px-4 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-[11px] text-indigo-300 font-bold transition-all"
               >
                 <Eye size={13} className="shrink-0" />
                 <span>View Preview</span>
@@ -297,7 +297,7 @@ export default function AiChatMessages({
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:150ms]" />
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:300ms]" />
             </span>
-            <span className="text-[11px] text-primary font-bold uppercase tracking-wider">
+            <span className="text-[11px] text-primary font-bold">
               {statusText}
             </span>
             <Loader2

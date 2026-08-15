@@ -62,8 +62,8 @@ export default function UserGrowthChart({ data, isLoading, rangeLabel }: UserGro
     <Card className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/[0.07] transition-all duration-300 shadow-2xl h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-white/5">
         <div className="space-y-1">
-          <CardTitle className="text-lg font-black italic uppercase tracking-tighter text-violet-400">User <span className="text-white">Growth</span></CardTitle>
-          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+          <CardTitle className="text-lg font-semibold italic tracking-tighter text-violet-400">User <span className="text-white">Growth</span></CardTitle>
+          <CardDescription className="text-[11px] font-bold text-zinc-400">
             Registration velocity for {rangeLabel?.toLowerCase() || "the selected range"}
           </CardDescription>
         </div>

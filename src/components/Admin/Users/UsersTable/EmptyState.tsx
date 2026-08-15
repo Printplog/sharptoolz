@@ -17,7 +17,7 @@ export default function EmptyState({ searchQuery, onReset }: EmptyStateProps) {
             <div className="p-6 bg-white/5 rounded-[2rem] mb-6 border border-white/10 rotate-12">
                 <UserIcon className="h-12 w-12 text-white/10 -rotate-12" />
             </div>
-            <h3 className="text-2xl font-black text-white tracking-tight uppercase">
+            <h3 className="text-2xl font-semibold text-white tracking-tight">
                 User Search Exhausted
             </h3>
             <p className="text-white/30 text-sm max-w-[280px] mt-3 font-medium">

@@ -40,7 +40,7 @@ export default function NotFound() {
             transition={{ delay: 0.6 }}
             className="space-y-6"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-white uppercase tracking-[0.2em] italic">
+            <h2 className="text-2xl md:text-3xl font-bold text-white italic">
               Lost in <span className="text-primary italic">Empty Space</span>
             </h2>
             <p className="text-white/30 text-lg font-medium max-w-md mx-auto leading-relaxed">
@@ -66,7 +66,7 @@ export default function NotFound() {
           
           <button 
             onClick={() => window.history.back()}
-            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-white/20 hover:text-white transition-all group"
+            className="flex items-center gap-2 text-[11px] font-semibold text-white/20 hover:text-white transition-all group"
           >
             <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
             Previous Location
@@ -95,7 +95,7 @@ export default function NotFound() {
       {/* Bottom info */}
       <div className="absolute bottom-12 left-0 w-full flex flex-col items-center gap-4">
         <div className="h-px w-8 bg-white/10" />
-        <span className="text-[9px] font-black uppercase tracking-[0.6em] text-white/10">
+        <span className="text-[11px] font-semibold text-white/10">
           SharpToolz Operations Center
         </span>
       </div>

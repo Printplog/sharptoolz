@@ -32,7 +32,7 @@ export function CustomTabs({ tabs, activeTab, onChange, className }: CustomTabsP
             key={tab.id}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "relative px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/20",
+              "relative px-6 py-2.5 rounded-full text-[11px] font-semibold transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/20",
               isActive ? "text-white" : "text-white/40 hover:text-white/70"
             )}
           >

@@ -494,7 +494,7 @@ const FormPanel = React.memo(function FormPanel({
             isComplete={documentProgress === 100}
           />
 
-          <p className="text-[10px] text-white/30 text-center mt-2 uppercase tracking-widest font-bold">
+          <p className="text-[11px] text-white/30 text-center mt-2 font-bold">
             {documentProgress < 100
               ? "Optimization in progress..."
               : "Ready for download"

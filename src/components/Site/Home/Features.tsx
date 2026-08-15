@@ -36,7 +36,7 @@ export default function FeaturesSection() {
       <div className="z-1 relative">
         {/* Header */}
         <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl lg:text-7xl font-fancy font-black text-white tracking-tighter uppercase italic mb-6 leading-[0.9]">
+          <h2 className="text-4xl md:text-5xl lg:text-7xl font-fancy font-semibold text-white tracking-tighter italic mb-6 leading-[0.9]">
             Why Choose <span className="text-primary">Sharptoolz?</span>
           </h2>
           <p className="text-white/40 max-w-2xl mx-auto text-lg leading-relaxed font-medium">
@@ -61,7 +61,7 @@ export default function FeaturesSection() {
                </div>
 
                {/* Title */}
-               <h3 className="text-xl font-black text-white mb-4 uppercase tracking-tighter italic">
+               <h3 className="text-xl font-semibold text-white mb-4 tracking-tighter italic">
                  {feature.title}
                </h3>
 

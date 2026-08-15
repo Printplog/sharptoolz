@@ -195,7 +195,7 @@ export default function AdminSettings() {
     <div className="dashboard-content space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+          <h1 className="text-3xl font-bold text-white tracking-tighter italic">
             Site <span className="text-primary">Settings</span>
           </h1>
           <p className="text-white/50 text-sm mt-1">Configure your platform's global behavior</p>
@@ -245,7 +245,7 @@ export default function AdminSettings() {
                   <Headset className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold italic uppercase">Support Configurations</CardTitle>
+                  <CardTitle className="text-xl font-bold italic">Support Configurations</CardTitle>
                   <CardDescription className="text-white/50">Manage how users contact you and join your communities.</CardDescription>
                 </div>
               </div>
@@ -255,7 +255,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="whatsapp_number" className="text-white/70 text-xs font-black uppercase tracking-widest">WhatsApp Customer Care</Label>
+                    <Label htmlFor="whatsapp_number" className="text-white/70 text-xs font-semibold">WhatsApp Customer Care</Label>
                   </div>
                   <Input
                     id="whatsapp_number"
@@ -269,7 +269,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="whatsapp_community" className="text-white/70 text-xs font-black uppercase tracking-widest">WhatsApp Community Link</Label>
+                    <Label htmlFor="whatsapp_community" className="text-white/70 text-xs font-semibold">WhatsApp Community Link</Label>
                   </div>
                   <Input
                     id="whatsapp_community"
@@ -283,7 +283,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Mail className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="support_email" className="text-white/70 text-xs font-black uppercase tracking-widest">Support Email</Label>
+                    <Label htmlFor="support_email" className="text-white/70 text-xs font-semibold">Support Email</Label>
                   </div>
                   <Input
                     id="support_email"
@@ -297,7 +297,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="telegram_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Telegram Link</Label>
+                    <Label htmlFor="telegram_link" className="text-white/70 text-xs font-semibold">Telegram Link</Label>
                   </div>
                   <Input
                     id="telegram_link"
@@ -311,7 +311,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Twitter className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="twitter_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Twitter (X) Link</Label>
+                    <Label htmlFor="twitter_link" className="text-white/70 text-xs font-semibold">Twitter (X) Link</Label>
                   </div>
                   <Input
                     id="twitter_link"
@@ -325,7 +325,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Instagram className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="instagram_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Instagram Link</Label>
+                    <Label htmlFor="instagram_link" className="text-white/70 text-xs font-semibold">Instagram Link</Label>
                   </div>
                   <Input
                     id="instagram_link"
@@ -341,7 +341,7 @@ export default function AdminSettings() {
                     <svg className="w-3.5 h-3.5 text-primary fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.03 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
                     </svg>
-                    <Label htmlFor="tiktok_link" className="text-white/70 text-xs font-black uppercase tracking-widest">TikTok Link</Label>
+                    <Label htmlFor="tiktok_link" className="text-white/70 text-xs font-semibold">TikTok Link</Label>
                   </div>
                   <Input
                     id="tiktok_link"
@@ -358,7 +358,7 @@ export default function AdminSettings() {
               <div className="mt-8 pt-8 border-t border-white/5">
                 <div className="flex items-center gap-2 mb-6">
                   <Zap className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-black uppercase tracking-widest text-primary">Hover Button Visibility</h3>
+                  <h3 className="text-sm font-semibold text-primary">Hover Button Visibility</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[
@@ -374,7 +374,7 @@ export default function AdminSettings() {
                         <div className="p-2 rounded-lg bg-white/5 text-white/70">
                           {item.icon}
                         </div>
-                        <Label htmlFor={item.id} className="text-[11px] font-bold uppercase tracking-wider text-white/90 cursor-pointer">{item.label}</Label>
+                        <Label htmlFor={item.id} className="text-[11px] font-bold text-white/90 cursor-pointer">{item.label}</Label>
                       </div>
                       <Switch
                         id={item.id}
@@ -400,7 +400,7 @@ export default function AdminSettings() {
                   <Wallet className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold italic uppercase">Wallet & Exchange</CardTitle>
+                  <CardTitle className="text-xl font-bold italic">Wallet & Exchange</CardTitle>
                   <CardDescription className="text-white/50">Manage top-up constraints and crypto fallbacks.</CardDescription>
                 </div>
               </div>
@@ -410,7 +410,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="min_topup" className="text-white/70 text-xs font-black uppercase tracking-widest">Min Top-Up (USD)</Label>
+                    <Label htmlFor="min_topup" className="text-white/70 text-xs font-semibold">Min Top-Up (USD)</Label>
                   </div>
                   <Input
                     id="min_topup"
@@ -424,7 +424,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="exchange_rate" className="text-white/70 text-xs font-black uppercase tracking-widest">Dollar/Naira Override</Label>
+                    <Label htmlFor="exchange_rate" className="text-white/70 text-xs font-semibold">Dollar/Naira Override</Label>
                   </div>
                   <Input
                     id="exchange_rate"
@@ -438,7 +438,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="funding_whatsapp" className="text-white/70 text-xs font-black uppercase tracking-widest">Funding WhatsApp (Naira Payments)</Label>
+                    <Label htmlFor="funding_whatsapp" className="text-white/70 text-xs font-semibold">Funding WhatsApp (Naira Payments)</Label>
                   </div>
                   <Input
                     id="funding_whatsapp"
@@ -451,7 +451,7 @@ export default function AdminSettings() {
                 <div className="space-y-3 md:col-span-2">
                   <div className="flex items-center gap-2">
                     <Lock className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="crypto_address" className="text-white/70 text-xs font-black uppercase tracking-widest">Master Crypto Address (USDT BEP20)</Label>
+                    <Label htmlFor="crypto_address" className="text-white/70 text-xs font-semibold">Master Crypto Address (USDT BEP20)</Label>
                   </div>
                   <Input
                     id="crypto_address"
@@ -464,7 +464,7 @@ export default function AdminSettings() {
                 <div className="space-y-3 md:col-span-2">
                   <div className="flex items-center gap-2">
                     <Info className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="manual" className="text-white/70 text-xs font-black uppercase tracking-widest">Manual Purchase Instructions</Label>
+                    <Label htmlFor="manual" className="text-white/70 text-xs font-semibold">Manual Purchase Instructions</Label>
                   </div>
                   <Textarea
                     id="manual"
@@ -489,7 +489,7 @@ export default function AdminSettings() {
                   <Activity className="w-6 h-6 text-red-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold italic uppercase">Kill Switches</CardTitle>
+                  <CardTitle className="text-xl font-bold italic">Kill Switches</CardTitle>
                   <CardDescription className="text-white/50">Emergency controls for your platform.</CardDescription>
                 </div>
               </div>
@@ -553,7 +553,7 @@ export default function AdminSettings() {
                   <Flag className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold italic uppercase">Global Announcement</CardTitle>
+                  <CardTitle className="text-xl font-bold italic">Global Announcement</CardTitle>
                   <CardDescription className="text-white/50">Show a banner message at the top of the user dashboard.</CardDescription>
                 </div>
               </div>
@@ -573,7 +573,7 @@ export default function AdminSettings() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                  <Label htmlFor="announcement_text" className="text-white/70 text-xs font-black uppercase tracking-widest">Banner Text</Label>
+                  <Label htmlFor="announcement_text" className="text-white/70 text-xs font-semibold">Banner Text</Label>
                 </div>
                 <Input
                   id="announcement_text"
@@ -587,7 +587,7 @@ export default function AdminSettings() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <LinkIcon className="w-3.5 h-3.5 text-primary" />
-                  <Label htmlFor="announcement_link" className="text-white/70 text-xs font-black uppercase tracking-widest">Clickable Link (Optional)</Label>
+                  <Label htmlFor="announcement_link" className="text-white/70 text-xs font-semibold">Clickable Link (Optional)</Label>
                 </div>
                 <Input
                   id="announcement_link"
@@ -613,7 +613,7 @@ export default function AdminSettings() {
                   <Gift className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold italic uppercase">Referral System</CardTitle>
+                  <CardTitle className="text-xl font-bold italic">Referral System</CardTitle>
                   <CardDescription className="text-white/50">Manage affiliate rewards and withdrawal boundaries.</CardDescription>
                 </div>
               </div>
@@ -634,7 +634,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="referral_percentage" className="text-white/70 text-xs font-black uppercase tracking-widest">Reward Percentage (%)</Label>
+                    <Label htmlFor="referral_percentage" className="text-white/70 text-xs font-semibold">Reward Percentage (%)</Label>
                   </div>
                   <Input
                     id="referral_percentage"
@@ -651,7 +651,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="min_referral_deposit" className="text-white/70 text-xs font-black uppercase tracking-widest">Trigger Deposit (USD)</Label>
+                    <Label htmlFor="min_referral_deposit" className="text-white/70 text-xs font-semibold">Trigger Deposit (USD)</Label>
                   </div>
                   <Input
                     id="min_referral_deposit"
@@ -668,7 +668,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Wallet className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="min_withdrawal" className="text-white/70 text-xs font-black uppercase tracking-widest">Min Withdrawal (USD)</Label>
+                    <Label htmlFor="min_withdrawal" className="text-white/70 text-xs font-semibold">Min Withdrawal (USD)</Label>
                   </div>
                   <Input
                     id="min_withdrawal"
@@ -694,7 +694,7 @@ export default function AdminSettings() {
                   <Wallet className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold italic uppercase">Deposit Promo</CardTitle>
+                  <CardTitle className="text-xl font-bold italic">Deposit Promo</CardTitle>
                   <CardDescription className="text-white/50">Reward qualifying deposits with a one-time bonus credit.</CardDescription>
                 </div>
               </div>
@@ -715,7 +715,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="deposit_promo_min_amount" className="text-white/70 text-xs font-black uppercase tracking-widest">Min Deposit ($)</Label>
+                    <Label htmlFor="deposit_promo_min_amount" className="text-white/70 text-xs font-semibold">Min Deposit ($)</Label>
                   </div>
                   <Input
                     id="deposit_promo_min_amount"
@@ -732,7 +732,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="deposit_promo_percentage" className="text-white/70 text-xs font-black uppercase tracking-widest">Bonus (%)</Label>
+                    <Label htmlFor="deposit_promo_percentage" className="text-white/70 text-xs font-semibold">Bonus (%)</Label>
                   </div>
                   <Input
                     id="deposit_promo_percentage"
@@ -749,7 +749,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="deposit_promo_max_bonus" className="text-white/70 text-xs font-black uppercase tracking-widest">Max Bonus ($)</Label>
+                    <Label htmlFor="deposit_promo_max_bonus" className="text-white/70 text-xs font-semibold">Max Bonus ($)</Label>
                   </div>
                   <Input
                     id="deposit_promo_max_bonus"
@@ -766,7 +766,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="deposit_promo_expiry_days" className="text-white/70 text-xs font-black uppercase tracking-widest">Expiry (Days, 0 = Never)</Label>
+                    <Label htmlFor="deposit_promo_expiry_days" className="text-white/70 text-xs font-semibold">Expiry (Days, 0 = Never)</Label>
                   </div>
                   <Input
                     id="deposit_promo_expiry_days"
@@ -784,7 +784,7 @@ export default function AdminSettings() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                  <Label htmlFor="deposit_promo_message" className="text-white/70 text-xs font-black uppercase tracking-widest">Popup Message (Optional)</Label>
+                  <Label htmlFor="deposit_promo_message" className="text-white/70 text-xs font-semibold">Popup Message (Optional)</Label>
                 </div>
                 <Input
                   id="deposit_promo_message"
@@ -808,7 +808,7 @@ export default function AdminSettings() {
                   <Code2 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold italic uppercase">API Platform</CardTitle>
+                  <CardTitle className="text-xl font-bold italic">API Platform</CardTitle>
                   <CardDescription className="text-white/50">Control availability, wallet upgrade pricing, tool discounts, rate limits, and hosted-session lifetime.</CardDescription>
                 </div>
               </div>
@@ -839,7 +839,7 @@ export default function AdminSettings() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <div className="space-y-3">
-                  <Label htmlFor="api_upgrade_price" className="text-white/70 text-xs font-black uppercase tracking-widest">Upgrade price ($)</Label>
+                  <Label htmlFor="api_upgrade_price" className="text-white/70 text-xs font-semibold">Upgrade price ($)</Label>
                   <Input
                     id="api_upgrade_price"
                     type="number"
@@ -852,7 +852,7 @@ export default function AdminSettings() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="api_tool_discount_percentage" className="text-white/70 text-xs font-black uppercase tracking-widest">Tool discount (%)</Label>
+                  <Label htmlFor="api_tool_discount_percentage" className="text-white/70 text-xs font-semibold">Tool discount (%)</Label>
                   <Input
                     id="api_tool_discount_percentage"
                     type="number"
@@ -866,7 +866,7 @@ export default function AdminSettings() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="api_rate_limit" className="text-white/70 text-xs font-black uppercase tracking-widest">Requests / minute</Label>
+                  <Label htmlFor="api_rate_limit" className="text-white/70 text-xs font-semibold">Requests / minute</Label>
                   <Input
                     id="api_rate_limit"
                     type="number"
@@ -879,7 +879,7 @@ export default function AdminSettings() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="api_session_ttl" className="text-white/70 text-xs font-black uppercase tracking-widest">Session lifetime (minutes)</Label>
+                  <Label htmlFor="api_session_ttl" className="text-white/70 text-xs font-semibold">Session lifetime (minutes)</Label>
                   <Input
                     id="api_session_ttl"
                     type="number"
@@ -917,7 +917,7 @@ export default function AdminSettings() {
           <div className="grid gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="otp" className="text-xs font-black uppercase tracking-widest text-white/70">Secure PIN</Label>
+                <Label htmlFor="otp" className="text-xs font-semibold text-white/70">Secure PIN</Label>
                 <Button
                   variant="link"
                   size="sm"

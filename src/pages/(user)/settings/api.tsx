@@ -178,7 +178,7 @@ function ThemeColorField({ theme, colorKey, label, onChange }: {
             }
           }}
           maxLength={7}
-          className="min-w-0 flex-1 bg-transparent font-mono text-[11px] uppercase text-white/65 outline-none"
+          className="min-w-0 flex-1 bg-transparent font-mono text-[11px] text-white/65 outline-none"
           aria-label={`${label} hex value`}
           spellCheck={false}
         />
@@ -402,7 +402,7 @@ export default function ApiSettingsPage() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-medium text-white">API access</h2>
-              <Badge className="rounded-full border-primary/20 bg-primary/10 px-2 text-[10px] uppercase text-primary">Active</Badge>
+              <Badge className="rounded-full border-primary/20 bg-primary/10 px-2 text-[11px] text-primary">Active</Badge>
             </div>
             <p className="mt-1 text-xs text-white/40">
               {data.rate_limit_per_minute} requests/min · {data.session_ttl_minutes}-minute sessions
@@ -414,7 +414,7 @@ export default function ApiSettingsPage() {
       </section>
 
       <section aria-labelledby="api-setup-heading" className="space-y-3">
-        <h2 id="api-setup-heading" className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-white/30">Setup</h2>
+        <h2 id="api-setup-heading" className="px-1 text-xs font-semibold text-white/30">Setup</h2>
         <div className="divide-y divide-white/10 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]">
           <Dialog>
             <DialogTrigger asChild>

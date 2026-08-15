@@ -157,7 +157,7 @@ export default function Sidebar() {
         {aiEnabled && (
           <>
             <div className="mt-8 mb-2 px-4 flex items-center justify-between">
-              <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">
+              <span className="text-[11px] font-bold text-foreground/40">
                 Recent Chats
               </span>
               <button 

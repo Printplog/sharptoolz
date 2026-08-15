@@ -186,7 +186,7 @@ const MessageItem = memo(
                     <p className="text-[14px] font-bold text-indigo-300 truncate">
                       {msg.loadedTemplate.name}
                     </p>
-                    <p className="text-[10px] text-indigo-500/60 uppercase tracking-widest mt-0.5">
+                    <p className="text-[11px] text-indigo-500/60 mt-0.5">
                       Open Editor →
                     </p>
                   </div>
@@ -224,10 +224,10 @@ const MessageItem = memo(
                         {card.description || `Build your professional ${card.name}`}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-bold uppercase tracking-wider border border-indigo-500/20">
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-bold border border-indigo-500/20">
                           ${card.price}
                         </span>
-                        <span className="text-[9px] text-white/20 uppercase tracking-tighter">
+                        <span className="text-[11px] text-white/20 tracking-tighter">
                           {card.toolName}
                         </span>
                       </div>
@@ -341,7 +341,7 @@ export default function SharpGuyMessages({
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:150ms]" />
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:300ms]" />
             </span>
-            <span className="text-[11px] text-primary font-bold uppercase tracking-wider">
+            <span className="text-[11px] text-primary font-bold">
               {statusText}
             </span>
             <Loader2

@@ -49,7 +49,7 @@ export default function ForgotPassword() {
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h2 className="text-3xl font-black tracking-tighter uppercase italic">
+        <h2 className="text-3xl font-semibold tracking-tighter italic">
           Reset <span className="text-[#cee88c]">Password</span>
         </h2>
       </div>
@@ -61,7 +61,7 @@ export default function ForgotPassword() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black">
+                <FormLabel className="text-[11px] text-white/40 font-semibold">
                   Email address
                 </FormLabel>
                 <div className="relative">

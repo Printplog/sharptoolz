@@ -50,7 +50,7 @@ export default function CookiePolicy() {
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3">
                           <h3 className="text-lg font-bold text-white">{cookie.type}</h3>
-                          <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                             {cookie.duration}
                           </span>
                         </div>

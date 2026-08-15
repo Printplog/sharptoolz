@@ -509,7 +509,7 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
               </button>
               <div className="w-px h-4 bg-white/[0.08] mx-0.5" />
               <Button variant="outline" size="sm"
-                className="h-7 text-[10px] font-black uppercase tracking-wider bg-white/[0.04] border-white/10 hover:bg-white/10 rounded-md px-3"
+                className="h-7 text-[11px] font-semibold bg-white/[0.04] border-white/10 hover:bg-white/10 rounded-md px-3"
                 onClick={() => document.getElementById("tpl-svg-input")?.click()}>
                 Replace
               </Button>
@@ -570,7 +570,7 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
                 ))}
                 <div
                   ref={selLabelRef}
-                  className="absolute -top-7 left-0 bg-primary text-black text-[11px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tight whitespace-nowrap shadow-md z-10"
+                  className="absolute -top-7 left-0 bg-primary text-black text-[11px] font-semibold px-2 py-0.5 rounded-sm tracking-tight whitespace-nowrap shadow-md z-10"
                 />
               </div>
 
@@ -682,7 +682,7 @@ function EmptyState() {
         </svg>
       </div>
       <div className="text-center">
-        <p className="text-sm font-black uppercase tracking-widest text-white/20">Drop SVG Canvas</p>
+        <p className="text-sm font-semibold text-white/20">Drop SVG Canvas</p>
         <p className="text-[10px] text-white/10 mt-1 tracking-wider">Click anywhere to upload</p>
       </div>
     </div>

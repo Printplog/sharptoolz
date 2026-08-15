@@ -272,7 +272,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           <div className="sticky top-0 z-50 flex items-center justify-between p-1.5 px-3 bg-[#0a0a0c]/60 backdrop-blur-md border border-white/5 rounded-full -mx-1">
             <div className="flex items-center gap-2 ml-1">
               <div className="w-1 h-1 rounded-full bg-primary/60" />
-              <span className="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em]">Draft Mode</span>
+              <span className="text-[11px] font-bold text-white/30">Draft Mode</span>
             </div>
             <div className="flex gap-1">
               <Button size="sm" variant="ghost" className="h-7 text-[10px] text-white/30 px-3 rounded-full" onClick={handleDiscard}>Discard</Button>

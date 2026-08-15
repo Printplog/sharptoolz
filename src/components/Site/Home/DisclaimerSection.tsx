@@ -22,7 +22,7 @@ export default function DisclaimerSection() {
 
           <div className="flex-1 space-y-4">
             <div className="flex items-center gap-3">
-              <h4 className="text-lg font-black text-white uppercase tracking-tighter italic leading-none">
+              <h4 className="text-lg font-semibold text-white tracking-tighter italic leading-none">
                 Legal Advisory <span className="text-primary/80">& Usage Transparency</span>
               </h4>
               <div className="hidden md:block h-px flex-1 bg-white/5" />

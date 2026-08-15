@@ -282,7 +282,7 @@ export default function Analytics() {
 
       <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+          <h1 className="text-3xl font-bold text-white tracking-tighter italic">
             Platform <span className="text-primary">Analytics</span>
           </h1>
           <p className="text-sm font-medium text-white/40 italic">
@@ -290,12 +290,12 @@ export default function Analytics() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3 font-bold uppercase tracking-tight">
+        <div className="flex flex-wrap items-center justify-end gap-3 font-bold tracking-tight">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-widest hidden sm:inline">Select Day:</span>
+            <span className="text-[11px] text-zinc-500 hidden sm:inline">Select Day:</span>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant={"outline"} className="w-[200px] justify-start text-left font-black uppercase tracking-wider text-[10px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
+                <Button variant={"outline"} className="w-[200px] justify-start text-left font-semibold text-[11px] h-10 rounded-full bg-white/5 border-white/10 hover:bg-white/10 hover:text-white transition-all">
                   <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
                   {date ? format(new Date(date), "PPP") : <span>Filter by Date</span>}
                 </Button>
@@ -321,7 +321,7 @@ export default function Analytics() {
 
           <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 overflow-x-auto no-scrollbar">
             {RANGES.map((r) => (
-              <button key={r.days} onClick={() => { setDays(r.days); setDate(""); }} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${days === r.days ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}>{r.label}</button>
+              <button key={r.days} onClick={() => { setDays(r.days); setDate(""); }} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 whitespace-nowrap ${days === r.days ? "bg-primary text-black" : "text-zinc-500 hover:text-white"}`}>{r.label}</button>
             ))}
           </div>
         </div>

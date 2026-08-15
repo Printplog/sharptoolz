@@ -714,7 +714,7 @@ function CodeBlock({
         <div className="flex min-w-0 items-center gap-2 text-xs text-white/35">
           <Code2 className="size-3.5 shrink-0" />
           <span className="truncate">{label}</span>
-          <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-white/25">
+          <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[11px] text-white/25">
             {language}
           </span>
         </div>
@@ -840,7 +840,7 @@ function useActiveSection() {
 function MethodReference({ language }: { language: ServerLanguage }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-white/[0.08]">
-      <div className="hidden grid-cols-[minmax(250px,1.2fr)_1fr_130px] gap-4 border-b border-white/[0.07] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-white/30 md:grid">
+      <div className="hidden grid-cols-[minmax(250px,1.2fr)_1fr_130px] gap-4 border-b border-white/[0.07] px-5 py-3 text-[11px] font-bold text-white/30 md:grid">
         <span>Method</span>
         <span>Use</span>
         <span>Key scope</span>
@@ -958,7 +958,7 @@ export default function ApiDocsPage() {
       <div className="mx-auto grid max-w-[1380px] gap-12 px-4 pb-24 pt-10 sm:px-6 lg:grid-cols-[210px_minmax(0,900px)] lg:justify-center lg:gap-16 lg:px-8 lg:pt-14 xl:gap-24">
         <aside className="hidden self-start lg:sticky lg:top-16 lg:block">
           <div>
-            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white/25">SDK reference</p>
+            <p className="mb-3 px-3 text-[11px] font-bold text-white/25">SDK reference</p>
             <nav className="space-y-0.5" aria-label="SDK documentation sections">
               {NAV_ITEMS.map((item) => (
                 <a
@@ -1001,7 +1001,7 @@ export default function ApiDocsPage() {
             </p>
 
             <div className="mt-8 max-w-xl">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/30">
+              <p className="mb-2 text-[11px] font-bold text-white/30">
                 Choose your backend
               </p>
               <LanguagePicker value={serverLanguage} onChange={changeServerLanguage} />

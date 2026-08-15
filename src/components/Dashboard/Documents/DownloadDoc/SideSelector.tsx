@@ -15,7 +15,7 @@ export const SideSelector: React.FC<SideSelectorProps> = ({ side, setSide, direc
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <Label className="text-base font-semibold">Select Side</Label>
-                <div className="text-[10px] text-white/40 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                <div className="text-[11px] text-white/40 bg-white/5 px-2 py-0.5 rounded border border-white/10">
                     {direction} Split
                 </div>
             </div>

@@ -153,7 +153,7 @@ export default function AdminFontsPage() {
     <div className="dashboard-content space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+          <h1 className="text-3xl font-bold text-white tracking-tighter italic">
             Font <span className="text-primary">Library</span>
           </h1>
           <p className="text-white/60">

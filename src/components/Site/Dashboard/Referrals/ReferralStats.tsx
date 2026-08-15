@@ -55,14 +55,14 @@ export default function ReferralStats({ stats, isLoading }: Props) {
         >
           <div className="flex justify-between h-full">
             <div className="flex flex-col justify-between">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">
+              <p className="text-[11px] font-semibold text-white/40 mb-1">
                 {card.label}
               </p>
               <div>
                 {isLoading ? (
                   <div className="h-8 w-16 bg-white/5 animate-pulse rounded-md mt-1" />
                 ) : (
-                  <h3 className="text-4xl font-black tracking-tighter italic text-white uppercase leading-none">
+                  <h3 className="text-4xl font-semibold tracking-tighter italic text-white leading-none">
                     {card.value}
                   </h3>
                 )}

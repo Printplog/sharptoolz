@@ -65,7 +65,7 @@ export default function Documents() {
   return (
     <div className="dashboard-content space-y-10 animate-in fade-in duration-700 w-full">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white tracking-tighter uppercase italic">
+        <h1 className="text-3xl font-bold text-white tracking-tighter italic">
           My <span className="text-primary">Documents</span>
         </h1>
       </div>
@@ -83,7 +83,7 @@ export default function Documents() {
                 className="w-full pl-12 pr-4 py-6 h-12 border-white/5 rounded-xl bg-white/[0.03] text-white placeholder:text-white/20 focus:border-primary/50 focus:ring-primary/20 transition-all text-sm"
               />
             </div>
-            <div className="text-white/40 text-[11px] font-black uppercase tracking-widest shrink-0">
+            <div className="text-white/40 text-[11px] font-semibold shrink-0">
               {totalCount} document{totalCount !== 1 ? 's' : ''} Found
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function Documents() {
         ) : isError ? (
           <div className="text-center py-12 border border-red-500/20 rounded-2xl bg-red-500/[0.02] flex flex-col items-center gap-4">
             <p className="text-red-400 italic text-sm">Failed to load documents. Please try refreshing.</p>
-            <Button onClick={() => window.location.reload()} className="h-9 px-6 rounded-full text-[10px] uppercase tracking-widest font-bold bg-red-500 text-white hover:bg-red-600">
+            <Button onClick={() => window.location.reload()} className="h-9 px-6 rounded-full text-[11px] font-bold bg-red-500 text-white hover:bg-red-600">
               Retry
             </Button>
           </div>
@@ -124,7 +124,7 @@ export default function Documents() {
             <p className="text-white/40 italic text-sm">No documents found.</p>
             {searchQuery === "" && (
               <Link to="/tools">
-                <Button className="h-9 px-6 rounded-full text-[10px] uppercase tracking-widest font-bold">
+                <Button className="h-9 px-6 rounded-full text-[11px] font-bold">
                   Browse Toolz
                 </Button>
               </Link>
