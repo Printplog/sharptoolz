@@ -4,16 +4,16 @@ import ScrollToTop from '@/components/ScrollToTop'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import SEO from '@/components/SEO'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import ApiDocsPage from '@/pages/api-docs'
 
 export default function App() {
   const location = useLocation()
-  const isDeveloperRoot = window.location.hostname.toLowerCase() === 'developer.sharptoolz.com'
-    && location.pathname === '/'
+  const isDeveloperHost = window.location.hostname.toLowerCase() === 'developer.sharptoolz.com'
   const isHostedEmbed = location.pathname === '/embed'
-  const isApiDocs = location.pathname === '/api-docs'
+  const isApiDocs = isDeveloperHost || location.pathname === '/api-docs'
 
-  if (isDeveloperRoot) {
-    return <Navigate to="/api-docs" replace />
+  if (isDeveloperHost && location.pathname !== '/') {
+    return <Navigate to="/" replace />
   }
 
   return (
@@ -22,7 +22,7 @@ export default function App() {
       {!isHostedEmbed && <ScrollToTop />}
       {!isHostedEmbed && !isApiDocs && <WhatsAppButton />}
       <ErrorBoundary>
-        <Outlet />
+        {isDeveloperHost ? <ApiDocsPage /> : <Outlet />}
       </ErrorBoundary>
     </HelmetProvider>
   )
