@@ -1,4 +1,4 @@
-import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme } from "@/types";
+import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme } from "@/types";
 import { apiClient } from "./apiClient";
 export const getApi = apiClient.get;
 export const postApi = apiClient.post;
@@ -10,7 +10,7 @@ export const fetchCurrentUser = async (): Promise<User> => {
   return res.data;
 };
 
-export const login = async (data: LoginPayload): Promise<User> => {
+export const login = async (data: LoginPayload): Promise<LoginResponse> => {
   const res = await apiClient.post('/accounts/login/', data);
   return res.data;
 };
@@ -52,8 +52,18 @@ export const refreshToken = async (): Promise<User> => {
   return res.data;
 };
 
-export const loginWithGoogle = async (access_token: string): Promise<User> => {
+export const loginWithGoogle = async (access_token: string): Promise<LoginResponse> => {
   const res = await apiClient.post('/accounts/google/', { access_token });
+  return res.data;
+};
+
+export const setupAdminTwoFactor = async (): Promise<AdminTwoFactorSetup> => {
+  const res = await apiClient.post('/accounts/two-factor/setup/', {});
+  return res.data;
+};
+
+export const verifyAdminTwoFactor = async (code: string): Promise<AdminTwoFactorVerification> => {
+  const res = await apiClient.post('/accounts/two-factor/verify/', { code });
   return res.data;
 };
 

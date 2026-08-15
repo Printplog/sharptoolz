@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDialogStore } from "@/store/dialogStore";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { LoginPayload, RegisterPayload } from "@/types";
+import { isTwoFactorChallenge, type LoginPayload, type RegisterPayload } from "@/types";
 import { login, register, getSiteSettings, loginWithGoogle } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
@@ -89,6 +89,11 @@ export default function Register({ dialog = false }: Props) {
   const { mutate: loginMutate, isPending: loginPending } = useMutation({
     mutationFn: (data: LoginPayload) => login(data),
     onSuccess: (user) => {
+      if (isTwoFactorChallenge(user)) {
+        toast.error("Admin verification must be completed from the sign-in page.");
+        navigate("/auth/login");
+        return;
+      }
       setUser(user);
       toast.success("You are logged in now....");
       navigate(-1);
@@ -101,6 +106,11 @@ export default function Register({ dialog = false }: Props) {
   const { mutate: googleMutate, isPending: googlePending } = useMutation({
     mutationFn: (access_token: string) => loginWithGoogle(access_token),
     onSuccess: (user) => {
+      if (isTwoFactorChallenge(user)) {
+        toast.error("Admin verification must be completed from the sign-in page.");
+        navigate("/auth/login");
+        return;
+      }
       setUser(user);
       toast.success("Signed in with Google");
       if (dialog) {

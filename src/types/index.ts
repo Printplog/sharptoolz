@@ -31,6 +31,29 @@ export type LoginPayload = {
   password: string;
 };
 
+export type TwoFactorChallenge = {
+  requires_two_factor: true;
+  setup_required: boolean;
+  detail: string;
+};
+
+export type LoginResponse = User | TwoFactorChallenge;
+
+export type AdminTwoFactorSetup = {
+  provisioning_uri: string;
+  manual_key: string;
+  issuer: string;
+  expires_in: number;
+};
+
+export type AdminTwoFactorVerification = User & {
+  recovery_codes?: string[];
+};
+
+export function isTwoFactorChallenge(value: LoginResponse): value is TwoFactorChallenge {
+  return "requires_two_factor" in value && value.requires_two_factor === true;
+}
+
 export type RegisterPayload = {
   email: string;
   username: string;

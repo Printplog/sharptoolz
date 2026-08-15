@@ -13,16 +13,30 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import type { LoginPayload, AuthDialogProps } from "@/types";
-import { login, loginWithGoogle } from "@/api/apiEndpoints";
+import {
+  isTwoFactorChallenge,
+  type AdminTwoFactorSetup,
+  type AuthDialogProps,
+  type LoginPayload,
+  type LoginResponse,
+  type TwoFactorChallenge,
+  type User as UserType,
+} from "@/types";
+import {
+  login,
+  loginWithGoogle,
+  setupAdminTwoFactor,
+  verifyAdminTwoFactor,
+} from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { useAuthStore } from "@/store/authStore";
 import { useDialogStore } from "@/store/dialogStore";
 import { useState } from "react";
 import { isAdminOrStaff } from "@/lib/constants/roles";
-import { Eye, EyeOff, User, Lock, UserPlus } from "lucide-react";
+import { ArrowLeft, Check, Copy, Eye, EyeOff, KeyRound, Lock, ShieldCheck, User, UserPlus } from "lucide-react";
 import { PremiumButton } from "@/components/ui/PremiumButton";
+import { QRCodeSVG } from "qrcode.react";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username is required"),
@@ -37,6 +51,11 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   const next = params.get("next") || "/dashboard";
   const { setUser } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const [twoFactorChallenge, setTwoFactorChallenge] = useState<TwoFactorChallenge | null>(null);
+  const [twoFactorSetup, setTwoFactorSetup] = useState<AdminTwoFactorSetup | null>(null);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [copied, setCopied] = useState(false);
   const { closeDialog } = useDialogStore();
 
   const form = useForm<LoginSchema>({
@@ -47,23 +66,55 @@ export default function Login({ dialog = false }: AuthDialogProps) {
     },
   });
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: (data: LoginPayload) => login(data),
-    onSuccess: (user) => {
-      toast.success("Login Success");
-      setUser(user);
+  const finishLogin = (user: UserType) => {
+    toast.success("Login Success");
+    setUser(user);
 
-      if (dialog) {
-        closeDialog("register");
+    if (dialog) {
+      closeDialog("register");
+      return;
+    }
+
+    navigate(isAdminOrStaff(user.role) ? "/admin/dashboard" : next);
+  };
+
+  const setupMutation = useMutation({
+    mutationFn: setupAdminTwoFactor,
+    onSuccess: setTwoFactorSetup,
+    onError: (error: Error) => toast.error(errorMessage(error)),
+  });
+
+  const beginTwoFactor = (challenge: TwoFactorChallenge) => {
+    setTwoFactorChallenge(challenge);
+    setTwoFactorSetup(null);
+    setTwoFactorCode("");
+    if (challenge.setup_required) setupMutation.mutate();
+  };
+
+  const handleLoginResponse = (response: LoginResponse) => {
+    if (isTwoFactorChallenge(response)) {
+      beginTwoFactor(response);
+      return;
+    }
+    finishLogin(response);
+  };
+
+  const verifyMutation = useMutation({
+    mutationFn: verifyAdminTwoFactor,
+    onSuccess: (user) => {
+      setUser(user);
+      if (user.recovery_codes?.length) {
+        setRecoveryCodes(user.recovery_codes);
         return;
       }
-
-      if (isAdminOrStaff(user.role)) {
-        navigate("/admin/dashboard");
-      } else {
-        navigate(next);
-      }
+      finishLogin(user);
     },
+    onError: (error: Error) => toast.error(errorMessage(error)),
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: LoginPayload) => login(data),
+    onSuccess: handleLoginResponse,
     onError: (error: Error) => {
       toast.error(errorMessage(error));
     },
@@ -71,19 +122,7 @@ export default function Login({ dialog = false }: AuthDialogProps) {
 
   const { mutate: googleMutate, isPending: googlePending } = useMutation({
     mutationFn: (access_token: string) => loginWithGoogle(access_token),
-    onSuccess: (user) => {
-      toast.success("Login Success");
-      setUser(user);
-      if (dialog) {
-        closeDialog("register");
-        return;
-      }
-      if (isAdminOrStaff(user.role)) {
-        navigate("/admin/dashboard");
-      } else {
-        navigate(next);
-      }
-    },
+    onSuccess: handleLoginResponse,
     onError: (error: Error) => {
       const msg = errorMessage(error as Parameters<typeof errorMessage>[0]);
       toast.error(typeof msg === "string" && msg.startsWith("<") ? "Google sign-in failed. Please try again." : msg);
@@ -132,6 +171,125 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   const onSubmitLogin = async (values: LoginSchema) => {
     mutate(values);
   };
+
+  const copyRecoveryCodes = async () => {
+    await navigator.clipboard.writeText(recoveryCodes.join("\n"));
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
+
+  if (recoveryCodes.length) {
+    return (
+      <div className="space-y-6">
+        <div className="flex size-12 items-center justify-center rounded-full border border-[#cee88c]/20 bg-[#cee88c]/10 text-[#cee88c]">
+          <ShieldCheck className="size-5" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black tracking-tight">Save your recovery codes</h2>
+          <p className="text-sm leading-6 text-white/45">
+            Each code works once if you lose access to your authenticator. Store them somewhere private.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-4 font-mono text-sm text-white/75">
+          {recoveryCodes.map((code) => <span key={code}>{code}</span>)}
+        </div>
+        <Button type="button" variant="outline" className="h-11 w-full" onClick={copyRecoveryCodes}>
+          {copied ? <Check /> : <Copy />}
+          {copied ? "Copied" : "Copy recovery codes"}
+        </Button>
+        <Button type="button" className="h-12 w-full bg-[#cee88c] font-bold text-black hover:bg-[#cee88c]/90" onClick={() => finishLogin(useAuthStore.getState().user!)}>
+          Continue to admin
+        </Button>
+      </div>
+    );
+  }
+
+  if (twoFactorChallenge) {
+    const isSetup = twoFactorChallenge.setup_required;
+    return (
+      <div className="space-y-6">
+        <button
+          type="button"
+          onClick={() => {
+            setTwoFactorChallenge(null);
+            setTwoFactorSetup(null);
+            setTwoFactorCode("");
+          }}
+          className="inline-flex items-center gap-2 text-xs text-white/35 transition hover:text-white"
+        >
+          <ArrowLeft className="size-3.5" /> Use another account
+        </button>
+
+        <div className="space-y-2">
+          <div className="flex size-12 items-center justify-center rounded-full border border-[#cee88c]/20 bg-[#cee88c]/10 text-[#cee88c]">
+            <ShieldCheck className="size-5" />
+          </div>
+          <h2 className="pt-2 text-2xl font-black tracking-tight">
+            {isSetup ? "Protect your admin account" : "Admin verification"}
+          </h2>
+          <p className="text-sm leading-6 text-white/45">
+            {isSetup
+              ? "Scan this code with Google Authenticator, Authy, 1Password, or another authenticator app."
+              : "Enter the current code from your authenticator app, or use a recovery code."}
+          </p>
+        </div>
+
+        {isSetup && (
+          <div className="space-y-3">
+            {setupMutation.isPending && (
+              <div className="flex h-44 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-sm text-white/35">
+                Preparing secure setup…
+              </div>
+            )}
+            {twoFactorSetup && (
+              <>
+                <div className="mx-auto w-fit rounded-2xl bg-white p-3">
+                  <QRCodeSVG value={twoFactorSetup.provisioning_uri} size={156} level="M" />
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">Manual setup key</p>
+                  <code className="break-all text-xs text-white/70">{twoFactorSetup.manual_key}</code>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            verifyMutation.mutate(twoFactorCode);
+          }}
+        >
+          <div className="space-y-2">
+            <label htmlFor="admin-two-factor-code" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+              Authenticator or recovery code
+            </label>
+            <div className="relative">
+              <KeyRound className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/20" />
+              <Input
+                id="admin-two-factor-code"
+                autoFocus
+                autoComplete="one-time-code"
+                value={twoFactorCode}
+                onChange={(event) => setTwoFactorCode(event.target.value.toUpperCase().replace(/\s/g, ""))}
+                placeholder="000000"
+                className="h-12 border-white/10 bg-white/[0.03] pl-11 text-center font-mono tracking-[0.25em]"
+              />
+            </div>
+          </div>
+          <Button
+            type="submit"
+            className="h-12 w-full bg-[#cee88c] font-bold text-black hover:bg-[#cee88c]/90"
+            disabled={!twoFactorCode || verifyMutation.isPending || (isSetup && !twoFactorSetup)}
+          >
+            {verifyMutation.isPending ? "Verifying…" : isSetup ? "Enable and continue" : "Verify and continue"}
+          </Button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
