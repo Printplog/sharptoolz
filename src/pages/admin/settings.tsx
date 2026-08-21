@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSiteSettings, updateSiteSettings, requestSettingsVerificationCode } from "@/api/apiEndpoints";
+import { getSiteSettings, updateSiteSettings } from "@/api/apiEndpoints";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ import {
 import { toast } from "sonner";
 import type { SiteSettings } from "@/types";
 import SettingsSkeleton from "@/components/Admin/Layouts/SettingsSkeleton";
+import { OtpInput } from "@/components/ui/OtpInput";
 
 export default function AdminSettings() {
   const queryClient = useQueryClient();
@@ -88,8 +89,7 @@ export default function AdminSettings() {
   });
 
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
-  const [answers, setAnswers] = useState({ otp: "" });
-  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
 
   const { data: settings, isLoading } = useQuery<SiteSettings>({
     queryKey: ["siteSettings"],
@@ -145,13 +145,13 @@ export default function AdminSettings() {
   }, [settings]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: Partial<SiteSettings> & { otp: string }) =>
+    mutationFn: (data: Partial<SiteSettings> & { two_factor_code: string }) =>
       updateSiteSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["siteSettings"] });
       toast.success("Settings updated successfully!");
       setIsChallengeOpen(false);
-      setAnswers({ otp: "" });
+      setTwoFactorCode("");
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
@@ -160,32 +160,19 @@ export default function AdminSettings() {
     },
   });
 
-  const handleRequestCode = async () => {
-    setIsSendingCode(true);
-    try {
-      const res = await requestSettingsVerificationCode();
-      toast.success(res.message);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      const msg = error.response?.data?.error || "Failed to send code.";
-      toast.error(msg);
-    } finally {
-      setIsSendingCode(false);
-    }
-  };
-
   const handleSaveClick = () => {
+    setTwoFactorCode("");
     setIsChallengeOpen(true);
   };
 
   const handleConfirmUpdate = () => {
-    if (!answers.otp) {
-      toast.error("Please provide the verification code.");
+    if (twoFactorCode.length !== 6) {
+      toast.error("Enter the 6-digit code from your authenticator app.");
       return;
     }
     updateMutation.mutate({
       ...formData,
-      otp: answers.otp,
+      two_factor_code: twoFactorCode,
     });
   };
 
@@ -902,7 +889,13 @@ export default function AdminSettings() {
       </Tabs>
 
       {/* Security Challenge Dialog */}
-      <Dialog open={isChallengeOpen} onOpenChange={setIsChallengeOpen}>
+      <Dialog
+        open={isChallengeOpen}
+        onOpenChange={(open) => {
+          setIsChallengeOpen(open);
+          if (!open) setTwoFactorCode("");
+        }}
+      >
         <DialogContent className="sm:max-w-[425px] p-8">
           <DialogHeader className="mb-4">
             <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
@@ -910,50 +903,53 @@ export default function AdminSettings() {
               Verify Identity
             </DialogTitle>
             <DialogDescription className="text-white/50">
-              Settings changes require authorization. We'll send a code to your admin email.
+              Enter a fresh code from the authenticator app connected to your admin account.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="otp" className="text-xs font-semibold text-white/70">Secure PIN</Label>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="p-0 h-auto text-primary font-bold"
-                  onClick={handleRequestCode}
-                  disabled={isSendingCode}
-                >
-                  {isSendingCode ? "Sending..." : "Send Code"}
-                </Button>
+          <form
+            className="grid gap-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleConfirmUpdate();
+            }}
+          >
+            <div className="grid gap-6">
+              <div className="space-y-4">
+                <Label htmlFor="settings-two-factor-code" className="text-xs font-semibold text-white/70">
+                  Authenticator code
+                </Label>
+                <OtpInput
+                  id="settings-two-factor-code"
+                  autoFocus
+                  disabled={updateMutation.isPending}
+                  value={twoFactorCode}
+                  onChange={setTwoFactorCode}
+                />
+                <p className="text-xs leading-5 text-white/40">
+                  No email is sent. Codes refresh every 30 seconds and can only be used once.
+                </p>
               </div>
-              <Input
-                id="otp"
-                value={answers.otp}
-                onChange={(e) => setAnswers({ ...answers, otp: e.target.value })}
-                className="bg-white/5 border-white/10 h-14 rounded-xl text-center text-2xl tracking-[0.5em] font-mono"
-                placeholder="------"
-                maxLength={6}
-              />
             </div>
-          </div>
 
-          <DialogFooter className="mt-8 gap-3 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setIsChallengeOpen(false)}
-              className="border-white/10 hover:bg-white/5 rounded-xl h-12"
-            >
-              Cancel
-            </Button>
-            <PremiumButton
-              onClick={handleConfirmUpdate}
-              isLoading={updateMutation.isPending}
-              text="Confirm Changes"
-              icon={ShieldCheck}
-            />
-          </DialogFooter>
+            <DialogFooter className="mt-2 gap-3 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsChallengeOpen(false)}
+                className="border-white/10 hover:bg-white/5 rounded-xl h-12"
+              >
+                Cancel
+              </Button>
+              <PremiumButton
+                type="submit"
+                isLoading={updateMutation.isPending}
+                disabled={twoFactorCode.length !== 6}
+                text="Confirm Changes"
+                icon={ShieldCheck}
+              />
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

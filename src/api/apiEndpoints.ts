@@ -466,13 +466,8 @@ export const getSiteSettings = async (): Promise<SiteSettings> => {
   return res.data;
 };
 
-export const updateSiteSettings = async (data: Partial<SiteSettings> & { otp: string }): Promise<SiteSettings> => {
+export const updateSiteSettings = async (data: Partial<SiteSettings> & { two_factor_code: string }): Promise<SiteSettings> => {
   const res = await apiClient.patch('/settings/1/', data);
-  return res.data;
-};
-
-export const requestSettingsVerificationCode = async (): Promise<{ message: string }> => {
-  const res = await apiClient.post('/settings/request-code/');
   return res.data;
 };
 
