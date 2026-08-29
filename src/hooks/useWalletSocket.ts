@@ -2,6 +2,7 @@
 import { useCallback } from "react";
 import { useWalletStore } from "@/store/walletStore";
 import { useWebSocketClient } from "./useWebSocketClient";
+import { resolveWebSocketUrl } from "@/api/resolveApiBaseUrl";
 import type { WalletData } from "@/types";
 
 type WalletEvent = {
@@ -15,7 +16,10 @@ export function useWalletSocket() {
 
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const baseWsUrl = import.meta.env.VITE_WS_URL;
-  const wsUrl = `${protocol}://${baseWsUrl}/ws/wallet/`;
+  const wsUrl = resolveWebSocketUrl(
+    `${protocol}://${baseWsUrl}/ws/wallet/`,
+    window.location.href,
+  );
 
   // Memoize the callback to prevent unnecessary re-renders
   const handleMessage = useCallback(

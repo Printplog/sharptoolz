@@ -15,6 +15,7 @@ import {
   Wallet,
   ArrowLeftRight,
   HandCoins,
+  ChartPie,
   ChevronDown,
   BookOpen,
   Video,
@@ -151,6 +152,11 @@ export default function Sidebar() {
       to: "/admin/payouts",
     },
     {
+      icon: <ChartPie className="h-4 w-4" />,
+      label: "Revenue Split",
+      to: "/admin/revenue-distribution",
+    },
+    {
       icon: <Settings className="h-4 w-4" />,
       label: "Settings",
       to: "/admin/settings",
@@ -207,7 +213,7 @@ export default function Sidebar() {
           }
           if (isAdmin) return true;
 
-          const restrictedForUser = ["Users", "Analytics", "Traffic Sources", "Settings", "Tools", "Templates", "Fonts", "Tutorials", "Logs", "Payout Requests"];
+          const restrictedForUser = ["Users", "Analytics", "Traffic Sources", "Settings", "Tools", "Templates", "Fonts", "Tutorials", "Logs", "Payout Requests", "Revenue Split"];
 
 
           return !restrictedForUser.includes(item.label);

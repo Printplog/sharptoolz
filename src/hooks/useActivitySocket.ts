@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { useWebSocketClient } from "./useWebSocketClient";
 import { useAuthStore } from "@/store/authStore";
 import type { ActivityLog } from "@/types";
+import { resolveWebSocketUrl } from "@/api/resolveApiBaseUrl";
 export type { ActivityLog } from "@/types";
 
 type NewVisitMessage = {
@@ -70,7 +71,10 @@ export function useActivitySocket() {
 
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const baseWsUrl = import.meta.env.VITE_WS_URL;
-  const wsUrl = `${protocol}://${baseWsUrl}/ws/activity/`;
+  const wsUrl = resolveWebSocketUrl(
+    `${protocol}://${baseWsUrl}/ws/activity/`,
+    window.location.href,
+  );
 
   const handleMessage = useCallback(
     (message: unknown) => {

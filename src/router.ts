@@ -14,6 +14,7 @@ export type Path =
   | `/admin/fonts`
   | `/admin/fonts/FontUploadDialog`
   | `/admin/payouts`
+  | `/admin/revenue-distribution`
   | `/admin/settings`
   | `/admin/svg-test-render`
   | `/admin/templates`

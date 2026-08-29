@@ -6,6 +6,7 @@ import { trackPageView } from '@/lib/utils/googleAnalytics';
 import { useWebSocketClient } from '@/hooks/useWebSocketClient';
 import { ensureVisitorId } from '@/lib/utils/visitorIdentity';
 import { useAuthStore } from '@/store/authStore';
+import { resolveWebSocketUrl } from '@/api/resolveApiBaseUrl';
 
 type PendingAnalyticsEvent = {
   key: string;
@@ -32,7 +33,10 @@ export function AnalyticsTracker() {
   // Innocuous URL — ad blockers (uBO, Brave, AdBlock Plus) silently kill
   // anything containing "analytics", "tracking", "visitor". This route is an
   // alias of /ws/visitor-analytics/ but evades the default filter lists.
-  const wsUrl = `${protocol}://${baseWsUrl}/ws/u/p/?vux_id=${encodeURIComponent(visitorId)}`;
+  const wsUrl = resolveWebSocketUrl(
+    `${protocol}://${baseWsUrl}/ws/u/p/?vux_id=${encodeURIComponent(visitorId)}`,
+    window.location.href,
+  );
 
   const { sendMessage, isOpen } = useWebSocketClient({
     url: wsUrl,
@@ -41,7 +45,11 @@ export function AnalyticsTracker() {
     dependencies: [visitorId, user?.pk], // Force reconnect on auth change
   });
 
-  const flushViaApi = useCallback((path: string, attribution: any, referrer: string) => {
+  const flushViaApi = useCallback((
+    path: string,
+    attribution: ReturnType<typeof sourceTracker.getAttribution>,
+    referrer: string,
+  ) => {
     // Innocuous URL — bypasses ad-blocker filter lists matching "analytics" / "log-visit".
     const endpoint = `${import.meta.env.VITE_PUBLIC_API_URL}/u/p/`;
     const payload = {

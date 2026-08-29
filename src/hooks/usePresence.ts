@@ -1,6 +1,7 @@
 import { useAuthStore } from "@/store/authStore";
 import { useWebSocketClient } from "./useWebSocketClient";
 import { ensureVisitorId } from "@/lib/utils/visitorIdentity";
+import { resolveWebSocketUrl } from "@/api/resolveApiBaseUrl";
 
 /**
  * Global hook to maintain a presence connection for all visitors.
@@ -15,7 +16,10 @@ export function usePresence(enabled = true) {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const baseWsUrl = import.meta.env.VITE_WS_URL;
   const visitorId = enabled ? ensureVisitorId() : "embed";
-  const wsUrl = `${protocol}://${baseWsUrl}/ws/presence/?vux_id=${encodeURIComponent(visitorId)}`;
+  const wsUrl = resolveWebSocketUrl(
+    `${protocol}://${baseWsUrl}/ws/presence/?vux_id=${encodeURIComponent(visitorId)}`,
+    window.location.href,
+  );
 
   useWebSocketClient({
     url: wsUrl,

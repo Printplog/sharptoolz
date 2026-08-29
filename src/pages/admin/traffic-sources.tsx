@@ -55,6 +55,7 @@ import { createCampaign, deleteCampaign, getCampaignStats } from "@/api/apiEndpo
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 import type { Campaign, CampaignWithStats } from "@/types";
 import { useWebSocketClient } from "@/hooks/useWebSocketClient";
+import { resolveWebSocketUrl } from "@/api/resolveApiBaseUrl";
 
 const SOURCE_OPTIONS = [
   { value: "instagram", label: "Instagram" },
@@ -672,7 +673,10 @@ export default function LinkGenerator() {
 
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const baseWsUrl = import.meta.env.VITE_WS_URL;
-  const wsUrl = `${protocol}://${baseWsUrl}/ws/activity/`;
+  const wsUrl = resolveWebSocketUrl(
+    `${protocol}://${baseWsUrl}/ws/activity/`,
+    window.location.href,
+  );
 
   useWebSocketClient<{
     type?: string;

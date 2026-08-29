@@ -31,7 +31,6 @@ import {
   Instagram,
   Mail,
   Zap,
-  Lock,
   MessageCircle,
   Gift,
   Link as LinkIcon,
@@ -52,7 +51,6 @@ export default function AdminSettings() {
     twitter_link: "",
     instagram_link: "",
     min_topup_amount: "",
-    crypto_address: "",
     funding_whatsapp_number: "",
     exchange_rate_override: "",
     maintenance_mode: false,
@@ -106,7 +104,6 @@ export default function AdminSettings() {
         twitter_link: settings.twitter_link || "",
         instagram_link: settings.instagram_link || "",
         min_topup_amount: settings.min_topup_amount || "",
-        crypto_address: settings.crypto_address || "",
         funding_whatsapp_number: settings.funding_whatsapp_number || "",
         exchange_rate_override: settings.exchange_rate_override || "",
         maintenance_mode: settings.maintenance_mode || false,
@@ -388,7 +385,7 @@ export default function AdminSettings() {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold italic">Wallet & Exchange</CardTitle>
-                  <CardDescription className="text-white/50">Manage top-up constraints and crypto fallbacks.</CardDescription>
+                  <CardDescription className="text-white/50">Manage top-up constraints and exchange settings.</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -433,19 +430,6 @@ export default function AdminSettings() {
                     onChange={(e) => setFormData({ ...formData, funding_whatsapp_number: e.target.value })}
                     className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300"
                     placeholder="234..."
-                  />
-                </div>
-                <div className="space-y-3 md:col-span-2">
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="crypto_address" className="text-white/70 text-xs font-semibold">Master Crypto Address (USDT BEP20)</Label>
-                  </div>
-                  <Input
-                    id="crypto_address"
-                    value={formData.crypto_address}
-                    onChange={(e) => setFormData({ ...formData, crypto_address: e.target.value })}
-                    className="bg-white/5 border-white/10 h-12 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all duration-300 font-mono text-sm"
-                    placeholder="0x..."
                   />
                 </div>
                 <div className="space-y-3 md:col-span-2">

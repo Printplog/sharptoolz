@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveApiBaseUrl } from "./resolveApiBaseUrl";
+import { resolveApiBaseUrl, resolveWebSocketUrl } from "./resolveApiBaseUrl";
 
 describe("resolveApiBaseUrl", () => {
   it("aligns a loopback API hostname with the hostname used to open the dashboard", () => {
@@ -24,5 +24,26 @@ describe("resolveApiBaseUrl", () => {
 
   it("handles a missing browser URL and removes one trailing slash", () => {
     expect(resolveApiBaseUrl("http://127.0.0.1:8137/api/")).toBe("http://127.0.0.1:8137/api");
+  });
+});
+
+describe("resolveWebSocketUrl", () => {
+  it("aligns loopback WebSocket hosts without removing the required trailing slash", () => {
+    expect(resolveWebSocketUrl(
+      "ws://127.0.0.1:8137/ws/wallet/",
+      "http://localhost:5173/wallet",
+    )).toBe("ws://localhost:8137/ws/wallet/");
+
+    expect(resolveWebSocketUrl(
+      "ws://localhost:8137/ws/wallet/",
+      "http://127.0.0.1:5173/wallet",
+    )).toBe("ws://127.0.0.1:8137/ws/wallet/");
+  });
+
+  it("does not rewrite deployed WebSocket hosts", () => {
+    expect(resolveWebSocketUrl(
+      "wss://api.sharptoolz.com/ws/wallet/",
+      "https://sharptoolz.com/wallet",
+    )).toBe("wss://api.sharptoolz.com/ws/wallet/");
   });
 });
