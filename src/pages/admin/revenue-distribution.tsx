@@ -144,7 +144,7 @@ export default function RevenueDistributionPage() {
   );
   const availableBalance = Number(data?.configuration.last_available_balance ?? 0);
   const thresholdAmount = Math.max(Number(threshold) || 0, 0);
-  const readyTranches = thresholdAmount > 0 ? Math.floor(availableBalance / thresholdAmount) : 0;
+  const distributionReady = thresholdAmount > 0 && availableBalance >= thresholdAmount;
   const progress = thresholdAmount > 0 ? Math.min((availableBalance / thresholdAmount) * 100, 100) : 0;
   const allocationReady = Math.abs(allocationTotal - 100) < 0.001;
 
@@ -286,7 +286,7 @@ export default function RevenueDistributionPage() {
             Revenue <span className="text-primary">Distribution</span>
           </h1>
           <p className="mt-2 text-sm leading-6 text-white/45">
-            Route fast CryptAPI deposits into the CPay treasury, then split complete balance tranches across verified BEP20 recipients.
+            Route fast CryptAPI deposits into the CPay treasury, then split the full available balance across verified BEP20 recipients once the threshold is reached.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -329,14 +329,16 @@ export default function RevenueDistributionPage() {
                 </div>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/40">
                   <span>{money(availableBalance)} available</span>
-                  <span>{money(thresholdAmount)} per tranche</span>
+                  <span>Trigger at {money(thresholdAmount)}</span>
                 </div>
               </div>
 
               <div className="min-w-40 rounded-2xl border border-white/10 bg-white/[0.035] p-5">
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Ready now</p>
-                <p className="mt-2 text-3xl font-black text-primary">{readyTranches}</p>
-                <p className="mt-1 text-xs text-white/45">complete tranche{readyTranches === 1 ? '' : 's'}</p>
+                <p className="mt-2 text-3xl font-black text-primary">{distributionReady ? 'Yes' : 'No'}</p>
+                <p className="mt-1 text-xs text-white/45">
+                  {distributionReady ? 'Full balance will be distributed' : 'Waiting for the threshold'}
+                </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/8 bg-white/[0.02] px-7 py-4 text-xs md:px-9">
@@ -364,7 +366,7 @@ export default function RevenueDistributionPage() {
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="distribution-threshold" className="text-xs text-white/55">Distribute every</Label>
+              <Label htmlFor="distribution-threshold" className="text-xs text-white/55">Trigger distribution at</Label>
               <div className="relative">
                 <Input
                   id="distribution-threshold"
@@ -404,7 +406,7 @@ export default function RevenueDistributionPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/35">Allocation map</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">Who receives each tranche</h2>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">Who receives the available balance</h2>
           </div>
           <div className="flex items-center gap-3">
             <Badge className={cn(
