@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { logout as logoutApi } from "@/api/apiEndpoints";
-import { useAuthStore } from "@/store/authStore";
 import { useWalletStore } from "@/store/walletStore";
 import useChatStore from "@/store/chatStore";
 import useToolStore from "@/store/formStore";
@@ -9,10 +8,10 @@ import { useUsersStore } from "@/store/usersStore";
 import { useSvgStore } from "@/store/useSvgStore";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "sonner";
+import { expireAuthenticatedSession } from "@/lib/authSession";
 
 export const useLogout = () => {
   const navigate = useNavigate();
-  const authLogout = useAuthStore((state) => state.logout);
   const walletReset = useWalletStore((state) => state.resetWallet);
   const chatClear = useChatStore((state) => state.clearChat);
   const formReset = useToolStore((state) => state.resetForm);
@@ -26,7 +25,7 @@ export const useLogout = () => {
       queryClient.clear();
 
       // 2. Reset all Zustand Stores
-      authLogout();
+      expireAuthenticatedSession();
       walletReset();
       chatClear();
       formReset();
@@ -44,7 +43,7 @@ export const useLogout = () => {
       console.error("Logout API failed:", error);
       
       queryClient.clear();
-      authLogout();
+      expireAuthenticatedSession();
       walletReset();
       chatClear();
       formReset();

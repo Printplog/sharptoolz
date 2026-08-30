@@ -32,6 +32,10 @@ import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
 import { useAuthStore } from "@/store/authStore";
 import { useDialogStore } from "@/store/dialogStore";
+import {
+  establishAuthenticatedSession,
+  SESSION_EXPIRED_TOAST_ID,
+} from "@/lib/authSession";
 import { useState } from "react";
 import { isAdminOrStaff } from "@/lib/constants/roles";
 import { ArrowLeft, Check, Copy, Eye, EyeOff, KeyRound, Lock, ShieldCheck, User, UserPlus } from "lucide-react";
@@ -50,7 +54,6 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const next = params.get("next") || "/dashboard";
-  const { setUser } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [twoFactorChallenge, setTwoFactorChallenge] = useState<TwoFactorChallenge | null>(null);
   const [twoFactorSetup, setTwoFactorSetup] = useState<AdminTwoFactorSetup | null>(null);
@@ -69,8 +72,9 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   });
 
   const finishLogin = (user: UserType) => {
+    establishAuthenticatedSession(user);
+    toast.dismiss(SESSION_EXPIRED_TOAST_ID);
     toast.success("Login Success");
-    setUser(user);
 
     if (dialog) {
       closeDialog("register");
@@ -105,8 +109,9 @@ export default function Login({ dialog = false }: AuthDialogProps) {
   const verifyMutation = useMutation({
     mutationFn: verifyAdminTwoFactor,
     onSuccess: (user) => {
-      setUser(user);
       if (user.recovery_codes?.length) {
+        establishAuthenticatedSession(user);
+        toast.dismiss(SESSION_EXPIRED_TOAST_ID);
         setRecoveryCodes(user.recovery_codes);
         return;
       }

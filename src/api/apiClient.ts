@@ -1,6 +1,10 @@
 import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
 import { resolveApiBaseUrl } from "@/api/resolveApiBaseUrl";
+import {
+  expireAuthenticatedSession,
+  getAuthSessionGeneration,
+} from "@/lib/authSession";
 
 
 const configuredBaseUrl = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:8003";
@@ -37,6 +41,13 @@ const ensureCsrfToken = async () => {
 };
 
 apiClient.interceptors.request.use(async (config) => {
+  const requestConfig = config as typeof config & {
+    _authSessionGeneration?: number;
+    _hadAuthenticatedSession?: boolean;
+  };
+  requestConfig._authSessionGeneration = getAuthSessionGeneration();
+  requestConfig._hadAuthenticatedSession = useAuthStore.getState().isAuthenticated;
+
   const method = (config.method || "get").toLowerCase();
   if (!["get", "head", "options", "trace"].includes(method)) {
     const token = await ensureCsrfToken();
@@ -90,7 +101,20 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    const authStore = useAuthStore.getState();
+    if (!originalRequest) return Promise.reject(error);
+
+    const requestGeneration = originalRequest._authSessionGeneration as number | undefined;
+    const hadAuthenticatedSession = originalRequest._hadAuthenticatedSession === true;
+    const url = String(originalRequest.url || "");
+    const isAuthenticationRequest = [
+      "/accounts/login/",
+      "/accounts/google/",
+      "/accounts/register/",
+      "/accounts/two-factor/",
+      "/accounts/logout/",
+      "/accounts/refresh-token/",
+      "/accounts/csrf/",
+    ].some((path) => url.includes(path));
 
     const detail = error.response?.data?.detail;
     if (
@@ -106,7 +130,12 @@ apiClient.interceptors.response.use(
       return apiClient(originalRequest);
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      hadAuthenticatedSession &&
+      !isAuthenticationRequest
+    ) {
       
       // If a refresh is already in progress, queue this request
       if (isRefreshing) {
@@ -140,7 +169,7 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
         processQueue(err as Error);
         
-        authStore.logout(); // ✅ Clear user data
+        expireAuthenticatedSession(requestGeneration);
         // window.location.href = "/auth/login"; // ✅ Redirect to login if needed
         return Promise.reject(err);
       }

@@ -19,7 +19,10 @@ import { isTwoFactorChallenge, type LoginPayload, type RegisterPayload } from "@
 import { login, register, getSiteSettings, loginWithGoogle } from "@/api/apiEndpoints";
 import { toast } from "sonner";
 import errorMessage from "@/lib/utils/errorMessage";
-import { useAuthStore } from "@/store/authStore";
+import {
+  establishAuthenticatedSession,
+  SESSION_EXPIRED_TOAST_ID,
+} from "@/lib/authSession";
 import { User, Mail, Lock } from "lucide-react";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { sourceTracker } from "@/lib/utils/sourceTracker";
@@ -63,7 +66,6 @@ interface Props {
 
 export default function Register({ dialog = false }: Props) {
   const navigate = useNavigate();
-  const { setUser } = useAuthStore();
   const { closeDialog } = useDialogStore();
   const [searchParams] = useSearchParams();
   const refFromUrl = searchParams.get("ref");
@@ -94,7 +96,8 @@ export default function Register({ dialog = false }: Props) {
         navigate("/auth/login");
         return;
       }
-      setUser(user);
+      establishAuthenticatedSession(user);
+      toast.dismiss(SESSION_EXPIRED_TOAST_ID);
       toast.success("You are logged in now....");
       navigate(-1);
     },
@@ -111,7 +114,8 @@ export default function Register({ dialog = false }: Props) {
         navigate("/auth/login");
         return;
       }
-      setUser(user);
+      establishAuthenticatedSession(user);
+      toast.dismiss(SESSION_EXPIRED_TOAST_ID);
       toast.success("Signed in with Google");
       if (dialog) {
         closeDialog("register");

@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import PageLoader from "@/components/PageLoader";
 import { AnimatePresence } from "framer-motion";
 import { ROLES, type RoleCode } from "@/lib/constants/roles";
+import { SESSION_EXPIRED_TOAST_ID } from "@/lib/authSession";
+import axios from "axios";
 
 const ROLE_MAP: Record<string, string> = {
   [ROLES.ADMIN]: "admin",
@@ -27,15 +29,20 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
   const { data, isError, isLoading } = useQuery<User, Error>({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
-    retry: 2,
+    retry: (failureCount, error) => {
+      if (axios.isAxiosError(error) && error.response?.status === 401) return false;
+      return failureCount < 2;
+    },
     refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
-    if ((!isLoading && isError) || !isAuthenticated) {
+    if ((!isLoading && isError && !data) || !isAuthenticated) {
       // Ensure state reflects unauthenticated immediately
       if (isError) logout();
-      toast.error("Session expired, login to continue");
+      toast.error("Session expired, login to continue", {
+        id: SESSION_EXPIRED_TOAST_ID,
+      });
       navigate("/auth/login");
       return;
     }
