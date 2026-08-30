@@ -4,25 +4,29 @@ import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import {
   AlertTriangle,
+  BadgeDollarSign,
   CheckCircle2,
+  ChevronDown,
   CircleDollarSign,
   Clock3,
   Copy,
-  Network,
+  Gauge,
+  Landmark,
+  Pencil,
   Plus,
   RefreshCw,
   RotateCcw,
   Save,
   Send,
+  Settings2,
   ShieldCheck,
   Trash2,
-  WalletCards,
+  UsersRound,
 } from 'lucide-react';
 
 import { getApi, postApi } from '@/api/walletApi';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +40,7 @@ import { Label } from '@/components/ui/label';
 import { OtpInput } from '@/components/ui/OtpInput';
 import { PremiumButton } from '@/components/ui/PremiumButton';
 import { Switch } from '@/components/ui/switch';
+import { StatsCards, type StatData } from '@/components/Admin/Shared/StatsCards';
 import { cn } from '@/lib/utils';
 
 type Recipient = {
@@ -90,6 +95,11 @@ type DistributionDashboard = {
   batches: DistributionBatch[];
 };
 
+type LiveTreasuryBalance = {
+  available_balance: string;
+  checked_at: string;
+};
+
 type ProtectedAction =
   | { kind: 'save' }
   | { kind: 'run' }
@@ -97,6 +107,7 @@ type ProtectedAction =
 
 const RECIPIENT_COLORS = ['#cee88c', '#65d7e8', '#b69cff', '#f4b860', '#f18bbf', '#7fd1a8'];
 const BEP20_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const EMPTY_RECIPIENT: Recipient = { name: '', email: '', bep20_address: '', percentage: '' };
 
 const money = (value: string | number | null | undefined) =>
   `${Number(value ?? 0).toLocaleString('en-US', {
@@ -123,11 +134,28 @@ export default function RevenueDistributionPage() {
   const [protectedAction, setProtectedAction] = useState<ProtectedAction | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null);
+  const [recipientDialogOpen, setRecipientDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [editingRecipientIndex, setEditingRecipientIndex] = useState<number | null>(null);
+  const [recipientDraft, setRecipientDraft] = useState<Recipient>(EMPTY_RECIPIENT);
 
   const { data, isLoading, isFetching } = useQuery<DistributionDashboard>({
     queryKey: ['cpay-distribution'],
     queryFn: () => getApi('/admin/cpay-distribution/'),
     refetchInterval: 30_000,
+  });
+
+  const {
+    data: liveTreasury,
+    isFetching: isTreasuryFetching,
+    refetch: refetchTreasury,
+  } = useQuery<LiveTreasuryBalance>({
+    queryKey: ['cpay-distribution-live-balance'],
+    queryFn: () => postApi('/admin/cpay-distribution/balance/', {}),
+    enabled: Boolean(data?.configuration.payout_provider_configured),
+    refetchInterval: 30_000,
+    staleTime: 20_000,
+    retry: 1,
   });
 
   useEffect(() => {
@@ -142,20 +170,24 @@ export default function RevenueDistributionPage() {
     () => recipients.reduce((sum, recipient) => sum + (Number(recipient.percentage) || 0), 0),
     [recipients],
   );
-  const availableBalance = Number(data?.configuration.last_available_balance ?? 0);
+  const availableBalance = Number(
+    liveTreasury?.available_balance ?? data?.configuration.last_available_balance ?? 0,
+  );
   const thresholdAmount = Math.max(Number(threshold) || 0, 0);
   const distributionReady = thresholdAmount > 0 && availableBalance >= thresholdAmount;
-  const progress = thresholdAmount > 0 ? Math.min((availableBalance / thresholdAmount) * 100, 100) : 0;
   const allocationReady = Math.abs(allocationTotal - 100) < 0.001;
+  const amountUntilTrigger = Math.max(thresholdAmount - availableBalance, 0);
+  const completedBatches = data?.batches.filter((batch) => batch.status === 'completed') ?? [];
+  const distributedTotal = completedBatches.reduce((sum, batch) => sum + Number(batch.amount || 0), 0);
 
-  const refreshBalance = useMutation({
-    mutationFn: () => postApi<{ available_balance: string }>('/admin/cpay-distribution/balance/', {}),
-    onSuccess: (result) => {
-      toast.success(`CPay balance refreshed: ${money(result.available_balance)}`);
-      queryClient.invalidateQueries({ queryKey: ['cpay-distribution'] });
-    },
-    onError: (error: unknown) => toast.error(apiError(error, 'Could not refresh the CPay balance.')),
-  });
+  const handleTreasuryRefresh = async () => {
+    const result = await refetchTreasury();
+    if (result.error) {
+      toast.error(apiError(result.error, 'Could not refresh the CPay balance.'));
+      return;
+    }
+    if (result.data) toast.success(`CPay balance synced: ${money(result.data.available_balance)}`);
+  };
 
   const protectedMutation = useMutation({
     mutationFn: async ({ action, code }: { action: ProtectedAction; code: string }) => {
@@ -191,21 +223,43 @@ export default function RevenueDistributionPage() {
     },
   });
 
-  const addRecipient = () => {
+  const openAddRecipient = () => {
     if (recipients.length >= 20) {
       toast.error('CPay supports a maximum of 20 configured recipients here.');
       return;
     }
-    setRecipients((current) => [
-      ...current,
-      { name: '', email: '', bep20_address: '', percentage: '' },
-    ]);
+    setEditingRecipientIndex(null);
+    setRecipientDraft(EMPTY_RECIPIENT);
+    setRecipientDialogOpen(true);
   };
 
-  const updateRecipient = (index: number, field: keyof Recipient, value: string) => {
-    setRecipients((current) => current.map((recipient, currentIndex) =>
-      currentIndex === index ? { ...recipient, [field]: value } : recipient,
-    ));
+  const openEditRecipient = (index: number) => {
+    setEditingRecipientIndex(index);
+    setRecipientDraft({ ...recipients[index] });
+    setRecipientDialogOpen(true);
+  };
+
+  const saveRecipientDraft = () => {
+    const nextRecipient = {
+      ...recipientDraft,
+      name: recipientDraft.name.trim(),
+      email: recipientDraft.email.trim(),
+      bep20_address: recipientDraft.bep20_address.trim(),
+      percentage: recipientDraft.percentage.trim(),
+    };
+    if (!nextRecipient.name || !nextRecipient.email || !BEP20_PATTERN.test(nextRecipient.bep20_address)) {
+      toast.error('Enter a name, email, and valid BEP20 address.');
+      return;
+    }
+    const share = Number(nextRecipient.percentage);
+    if (!(share > 0) || share > 100) {
+      toast.error('Share must be greater than 0 and no more than 100.');
+      return;
+    }
+    setRecipients((current) => editingRecipientIndex === null
+      ? [...current, nextRecipient]
+      : current.map((recipient, index) => index === editingRecipientIndex ? nextRecipient : recipient));
+    setRecipientDialogOpen(false);
   };
 
   const removeRecipient = (index: number) => {
@@ -235,6 +289,7 @@ export default function RevenueDistributionPage() {
       toast.error('Enabled distributions must allocate exactly 100%.');
       return;
     }
+    setSettingsDialogOpen(false);
     openChallenge({ kind: 'save' });
   };
 
@@ -274,261 +329,188 @@ export default function RevenueDistributionPage() {
   );
   const liveReady = Boolean(providerReady && configuration?.live_payouts_enabled);
 
+  const treasuryStats: StatData[] = [
+    {
+      title: 'Treasury balance',
+      value: money(availableBalance),
+      label: liveTreasury?.checked_at || configuration?.last_balance_checked_at
+        ? `Checked ${new Date(liveTreasury?.checked_at ?? configuration?.last_balance_checked_at ?? '').toLocaleString()}`
+        : 'Refresh to read the CPay wallet',
+      icon: Landmark,
+      gradient: 'from-emerald-500/20 to-emerald-600/5',
+      borderColor: 'border-emerald-500/20',
+      iconBg: 'bg-emerald-500/10',
+      iconColor: 'text-emerald-300',
+    },
+    {
+      title: 'Next trigger',
+      value: money(thresholdAmount),
+      label: distributionReady ? 'Threshold reached — full sweep is ready' : `${money(amountUntilTrigger)} still required`,
+      icon: Gauge,
+      gradient: 'from-cyan-500/20 to-cyan-600/5',
+      borderColor: 'border-cyan-500/20',
+      iconBg: 'bg-cyan-500/10',
+      iconColor: 'text-cyan-300',
+    },
+    {
+      title: 'Recipients',
+      value: recipients.length,
+      label: allocationReady ? 'Shares add up to exactly 100%' : `${allocationTotal.toFixed(2)}% currently allocated`,
+      icon: UsersRound,
+      gradient: 'from-violet-500/20 to-violet-600/5',
+      borderColor: 'border-violet-500/20',
+      iconBg: 'bg-violet-500/10',
+      iconColor: 'text-violet-300',
+    },
+    {
+      title: 'Recent distributed',
+      value: money(distributedTotal),
+      label: `${completedBatches.length} completed ${completedBatches.length === 1 ? 'batch' : 'batches'} in latest activity`,
+      icon: BadgeDollarSign,
+      gradient: 'from-amber-500/20 to-amber-600/5',
+      borderColor: 'border-amber-500/20',
+      iconBg: 'bg-amber-500/10',
+      iconColor: 'text-amber-300',
+    },
+  ];
+
   return (
-    <div className="dashboard-content space-y-8 pb-12">
-      <header className="flex flex-col gap-6 border-b border-white/10 pb-8 xl:flex-row xl:items-end xl:justify-between">
-        <div className="max-w-2xl">
-          <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.24em] text-primary/80">
-            <Network className="size-3.5" />
-            USDT · BNB Smart Chain
-          </div>
+    <div className="dashboard-content space-y-8 pb-12 text-white">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold italic tracking-tighter text-white md:text-4xl">
             Revenue <span className="text-primary">Distribution</span>
           </h1>
-          <p className="mt-2 text-sm leading-6 text-white/45">
-            Route fast CryptAPI deposits into the CPay treasury, then split the full available balance across verified BEP20 recipients once the threshold is reached.
-          </p>
+          <Badge className="w-fit rounded-full border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
+            USDT · BEP20
+          </Badge>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
-            onClick={() => refreshBalance.mutate()}
-            disabled={refreshBalance.isPending || !configuration?.payout_provider_configured}
-            className="h-11 rounded-full border-white/10 bg-white/[0.03] px-5 text-white hover:bg-white/[0.08]"
+            onClick={handleTreasuryRefresh}
+            disabled={isTreasuryFetching || !configuration?.payout_provider_configured}
+            className="h-11 rounded-full border-white/10 bg-white/5 px-5 text-white hover:bg-white/10 hover:text-white"
           >
-            <RefreshCw className={cn('mr-2 size-4', refreshBalance.isPending && 'animate-spin')} />
-            Check balance
+            <RefreshCw className={cn('mr-2 size-4', isTreasuryFetching && 'animate-spin')} />
+            Refresh treasury
           </Button>
-          <PremiumButton onClick={requestSave} text="Save allocation" icon={Save} />
+          <Button
+            onClick={() => setSettingsDialogOpen(true)}
+            className="h-11 rounded-full bg-primary px-5 font-bold text-black hover:bg-primary/90"
+          >
+            <Settings2 className="mr-2 size-4" /> Distribution settings
+          </Button>
         </div>
       </header>
 
-      <section className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
-        <Card className="overflow-hidden rounded-[2rem] border-white/10 bg-[#0e0f11] py-0">
-          <CardContent className="p-0">
-            <div className="grid gap-8 p-7 md:p-9 lg:grid-cols-[1fr_auto] lg:items-end">
-              <div>
-                <div className="mb-5 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">Available treasury</p>
-                    <p className="mt-2 text-4xl font-black tracking-[-0.05em] text-white md:text-5xl">
-                      {money(availableBalance).replace(' USDT', '')}
-                      <span className="ml-2 text-sm font-bold tracking-normal text-primary">USDT</span>
-                    </p>
-                  </div>
-                  <div className="flex size-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-                    <WalletCards className="size-6 text-primary" />
-                  </div>
-                </div>
-
-                <div className="h-3 overflow-hidden rounded-full border border-white/10 bg-white/[0.04]">
-                  <div
-                    className="h-full rounded-full bg-primary transition-[width] duration-700"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-white/40">
-                  <span>{money(availableBalance)} available</span>
-                  <span>Trigger at {money(thresholdAmount)}</span>
-                </div>
-              </div>
-
-              <div className="min-w-40 rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Ready now</p>
-                <p className="mt-2 text-3xl font-black text-primary">{distributionReady ? 'Yes' : 'No'}</p>
-                <p className="mt-1 text-xs text-white/45">
-                  {distributionReady ? 'Full balance will be distributed' : 'Waiting for the threshold'}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/8 bg-white/[0.02] px-7 py-4 text-xs md:px-9">
-              <ReadinessDot ready={Boolean(configuration?.deposit_provider_configured)} label="Bridge credentials" />
-              <ReadinessDot ready={Boolean(configuration?.deposit_routing_enabled)} label="CryptAPI → CPay routing" />
-              <ReadinessDot ready={Boolean(configuration?.live_payouts_enabled)} label="Live payout gate" />
-              {configuration?.last_balance_checked_at && (
-                <span className="ml-auto text-white/30">
-                  Checked {new Date(configuration.last_balance_checked_at).toLocaleString()}
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[2rem] border-white/10 bg-white/[0.035]">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Automation</p>
-                <CardTitle className="mt-2 text-xl text-white">Threshold policy</CardTitle>
-              </div>
-              <Switch checked={enabled} onCheckedChange={setEnabled} aria-label="Enable automatic distributions" />
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="distribution-threshold" className="text-xs text-white/55">Trigger distribution at</Label>
-              <div className="relative">
-                <Input
-                  id="distribution-threshold"
-                  type="number"
-                  min="1"
-                  step="0.01"
-                  value={threshold}
-                  onChange={(event) => setThreshold(event.target.value)}
-                  className="h-12 rounded-xl border-white/10 bg-black/20 pr-16 font-mono text-white"
-                />
-                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-primary">USDT</span>
-              </div>
-            </div>
-            <div className={cn(
-              'rounded-2xl border p-4 text-xs leading-5',
-              enabled && liveReady
-                ? 'border-primary/20 bg-primary/[0.06] text-white/60'
-                : 'border-amber-400/15 bg-amber-400/[0.05] text-amber-100/65',
-            )}>
-              {enabled && liveReady
-                ? 'Automatic distribution is ready after this allocation is saved with your authenticator code.'
-                : 'Configuration can be saved safely, but funds will not move until the server payout gate and CPay wallet credentials are enabled.'}
-            </div>
-            <Button
-              onClick={() => openChallenge({ kind: 'run' })}
-              disabled={!liveReady || !allocationReady || protectedMutation.isPending}
-              className="h-11 w-full rounded-full bg-white text-black hover:bg-primary"
-            >
-              <Send className="mr-2 size-4" />
-              Run distribution check
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
+      <StatsCards stats={treasuryStats} className="mb-10" />
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/35">Allocation map</p>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">Who receives the available balance</h2>
-          </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold tracking-tight text-white">Recipients</h2>
+            <Badge className="rounded-full border-white/10 bg-white/5 px-3 text-white/50">{recipients.length}</Badge>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
             <Badge className={cn(
-              'h-8 rounded-full border px-4 font-mono',
-              allocationReady
-                ? 'border-primary/20 bg-primary/10 text-primary'
-                : 'border-red-400/20 bg-red-400/10 text-red-300',
+              'h-9 rounded-full border px-4 font-mono',
+              allocationReady ? 'border-primary/20 bg-primary/10 text-primary' : 'border-red-400/20 bg-red-400/10 text-red-300',
             )}>
-              {allocationTotal.toFixed(2)}% allocated
+              {allocationTotal.toFixed(2)}%
             </Badge>
             <Button
               variant="outline"
-              onClick={addRecipient}
-              className="h-10 rounded-full border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]"
+              onClick={openAddRecipient}
+              className="h-10 rounded-full border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
             >
-              <Plus className="mr-2 size-4" /> Add person
+              <Plus className="mr-2 size-4" /> Add recipient
             </Button>
           </div>
         </div>
 
-        <AllocationRail recipients={recipients} total={allocationTotal} />
+        <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02]">
+          <div className="hidden grid-cols-[1.1fr_1.15fr_1.35fr_110px_130px_88px] gap-4 border-b border-white/10 bg-white/[0.025] px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-white/30 lg:grid">
+            <span>Recipient</span>
+            <span>Email</span>
+            <span>BEP20 address</span>
+            <span>Share</span>
+            <span>Next payout</span>
+            <span className="text-right">Actions</span>
+          </div>
 
-        <div className="grid gap-4">
-          {recipients.map((recipient, index) => {
-            const addressValid = !recipient.bep20_address || BEP20_PATTERN.test(recipient.bep20_address);
+          {!recipients.length ? (
+            <div className="flex flex-col items-center px-6 py-14 text-center">
+              <UsersRound className="size-7 text-white/20" />
+              <p className="mt-3 text-sm font-semibold text-white/60">No recipients</p>
+              <Button onClick={openAddRecipient} className="mt-4 h-9 rounded-full bg-primary px-4 text-xs font-bold text-black hover:bg-primary/90">
+                <Plus className="mr-2 size-3.5" /> Add recipient
+              </Button>
+            </div>
+          ) : recipients.map((recipient, index) => {
+            const estimatedPayout = availableBalance * ((Number(recipient.percentage) || 0) / 100);
             return (
-              <Card key={recipient.id ?? `new-${index}`} className="rounded-[1.6rem] border-white/10 bg-white/[0.025]">
-                <CardContent className="grid gap-5 p-5 lg:grid-cols-[44px_1fr_1.1fr_1.55fr_120px_44px] lg:items-end">
-                  <div
-                    className="flex size-11 items-center justify-center rounded-2xl text-sm font-black text-black"
-                    style={{ backgroundColor: RECIPIENT_COLORS[index % RECIPIENT_COLORS.length] }}
+              <div key={recipient.id ?? `new-${index}`} className="grid gap-4 border-b border-white/8 px-5 py-5 last:border-0 lg:grid-cols-[1.1fr_1.15fr_1.35fr_110px_130px_88px] lg:items-center lg:px-6">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: RECIPIENT_COLORS[index % RECIPIENT_COLORS.length] }} />
+                  <span className="truncate text-sm font-bold text-white">{recipient.name}</span>
+                </div>
+                <p className="truncate text-xs text-white/50">{recipient.email}</p>
+                <button
+                  type="button"
+                  onClick={() => copyAddress(recipient.bep20_address)}
+                  className="flex min-w-0 items-center gap-2 text-left font-mono text-xs text-white/45 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <span className="truncate">{shortAddress(recipient.bep20_address)}</span>
+                  <Copy className="size-3 shrink-0" />
+                </button>
+                <p className="font-mono text-sm font-bold text-primary">{Number(recipient.percentage).toFixed(2)}%</p>
+                <p className="font-mono text-xs font-bold text-white/70">{money(estimatedPayout)}</p>
+                <div className="flex justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => openEditRecipient(index)}
+                    className="size-9 rounded-xl text-white/40 hover:bg-white/10 hover:text-white"
+                    aria-label={`Edit ${recipient.name}`}
                   >
-                    {String(index + 1).padStart(2, '0')}
-                  </div>
-                  <Field label="Name">
-                    <Input
-                      value={recipient.name}
-                      onChange={(event) => updateRecipient(index, 'name', event.target.value)}
-                      placeholder="Recipient name"
-                      className="h-11 rounded-xl border-white/10 bg-black/20 text-white"
-                    />
-                  </Field>
-                  <Field label="Payout email">
-                    <Input
-                      type="email"
-                      value={recipient.email}
-                      onChange={(event) => updateRecipient(index, 'email', event.target.value)}
-                      placeholder="name@example.com"
-                      className="h-11 rounded-xl border-white/10 bg-black/20 text-white"
-                    />
-                  </Field>
-                  <Field label="USDT BEP20 address" error={!addressValid ? 'Address must be 0x plus 40 hexadecimal characters.' : undefined}>
-                    <div className="relative">
-                      <Input
-                        value={recipient.bep20_address}
-                        onChange={(event) => updateRecipient(index, 'bep20_address', event.target.value.trim())}
-                        placeholder="0x…"
-                        className={cn(
-                          'h-11 rounded-xl border-white/10 bg-black/20 pr-10 font-mono text-xs text-white',
-                          !addressValid && 'border-red-400/40',
-                        )}
-                      />
-                      {recipient.bep20_address && addressValid && (
-                        <button
-                          type="button"
-                          onClick={() => copyAddress(recipient.bep20_address)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 transition-colors hover:text-white"
-                          aria-label={`Copy ${recipient.name || 'recipient'} address`}
-                        >
-                          <Copy className="size-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </Field>
-                  <Field label="Share">
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        min="0.01"
-                        max="100"
-                        step="0.01"
-                        value={recipient.percentage}
-                        onChange={(event) => updateRecipient(index, 'percentage', event.target.value)}
-                        className="h-11 rounded-xl border-white/10 bg-black/20 pr-9 font-mono text-white"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/35">%</span>
-                    </div>
-                  </Field>
+                    <Pencil className="size-3.5" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => removeRecipient(index)}
-                    className="size-11 rounded-xl text-white/30 hover:bg-red-400/10 hover:text-red-300"
-                    aria-label={`Remove ${recipient.name || 'recipient'}`}
+                    className="size-9 rounded-xl text-white/30 hover:bg-red-400/10 hover:text-red-300"
+                    aria-label={`Remove ${recipient.name}`}
                   >
                     <Trash2 className="size-4" />
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
       </section>
 
       <section className="space-y-4">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/35">Settlement ledger</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">Recent distributions</h2>
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-2xl font-bold tracking-tight text-white">Recent distributions</h2>
+          <Badge className="rounded-full border-white/10 bg-white/5 px-3 py-1 text-white/50">
+            {data?.batches.length ?? 0} total
+          </Badge>
         </div>
-        <div className="overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.02]">
+        <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02]">
           {!data?.batches.length ? (
             <div className="flex flex-col items-center px-6 py-16 text-center">
               <CircleDollarSign className="size-8 text-white/20" />
-              <p className="mt-4 font-semibold text-white/70">No distribution batches yet</p>
-              <p className="mt-1 max-w-md text-sm text-white/35">The first batch will appear after the CPay balance reaches the saved threshold.</p>
+              <p className="mt-4 font-semibold text-white/70">No distributions yet</p>
             </div>
           ) : data.batches.map((batch) => (
             <div key={batch.id} className="border-b border-white/8 last:border-0">
               <button
                 type="button"
                 onClick={() => setExpandedBatch((current) => current === batch.id ? null : batch.id)}
-                className="grid w-full gap-4 px-5 py-5 text-left transition-colors hover:bg-white/[0.025] md:grid-cols-[1fr_0.8fr_0.8fr_auto] md:items-center md:px-7"
+                className="grid w-full gap-4 px-5 py-5 text-left transition-colors hover:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary md:grid-cols-[1fr_0.8fr_0.8fr_auto_auto] md:items-center md:px-7"
               >
                 <div>
                   <p className="font-mono text-xs text-white/35">{batch.id}</p>
@@ -545,6 +527,7 @@ export default function RevenueDistributionPage() {
                 <Badge className={cn('w-fit rounded-full border px-3 py-1 capitalize', statusClass(batch.status))}>
                   {batch.status}
                 </Badge>
+                <ChevronDown className={cn('size-4 text-white/30 transition-transform', expandedBatch === batch.id && 'rotate-180')} />
               </button>
               {expandedBatch === batch.id && (
                 <div className="space-y-3 border-t border-white/8 bg-black/15 px-5 py-5 md:px-7">
@@ -588,6 +571,153 @@ export default function RevenueDistributionPage() {
         </div>
       </section>
 
+      <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+        <DialogContent className="border-white/10 bg-[#111214] p-7 sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">Distribution settings</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="flex h-12 items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/35">Automatic distribution</p>
+                <p className={cn('mt-1 text-xs font-bold', enabled ? 'text-primary' : 'text-white/45')}>
+                  {enabled ? 'Enabled' : 'Disabled'}
+                </p>
+              </div>
+              <Switch checked={enabled} onCheckedChange={setEnabled} aria-label="Enable automatic distributions" />
+            </div>
+
+            <Field label="Threshold">
+              <div className="relative">
+                <Input
+                  id="distribution-threshold"
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  value={threshold}
+                  onChange={(event) => setThreshold(event.target.value)}
+                  className="h-12 rounded-xl border-white/10 bg-black/20 pr-16 font-mono font-bold text-white"
+                />
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-primary">USDT</span>
+              </div>
+            </Field>
+
+            <div className="flex min-h-12 flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+              <ReadinessDot ready={Boolean(configuration?.deposit_provider_configured)} label="CryptAPI" />
+              <ReadinessDot ready={Boolean(configuration?.payout_provider_configured)} label="CPay" />
+              <ReadinessDot ready={Boolean(configuration?.live_payouts_enabled)} label="Live payouts" />
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSettingsDialogOpen(false);
+                openChallenge({ kind: 'run' });
+              }}
+              disabled={!liveReady || !allocationReady || !distributionReady || protectedMutation.isPending}
+              className="h-11 rounded-full border-white/10 bg-white/[0.03] font-bold text-white hover:bg-white/10 hover:text-white"
+            >
+              <Send className="mr-2 size-4" /> Distribute now
+            </Button>
+          </div>
+          <DialogFooter className="gap-3 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setSettingsDialogOpen(false)}
+              className="h-11 rounded-full border-white/10 bg-white/[0.03] px-6 text-white hover:bg-white/10 hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={requestSave}
+              className="h-11 rounded-full bg-primary px-6 font-bold text-black hover:bg-primary/90"
+            >
+              <Save className="mr-2 size-4" /> Save settings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={recipientDialogOpen}
+        onOpenChange={(open) => {
+          setRecipientDialogOpen(open);
+          if (!open) setEditingRecipientIndex(null);
+        }}
+      >
+        <DialogContent className="border-white/10 bg-[#111214] p-7 sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-white">
+              {editingRecipientIndex === null ? 'Add recipient' : 'Edit recipient'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <Field label="Name">
+              <Input
+                value={recipientDraft.name}
+                onChange={(event) => setRecipientDraft((current) => ({ ...current, name: event.target.value }))}
+                placeholder="Recipient name"
+                autoFocus
+                className="h-11 rounded-xl border-white/10 bg-black/20 text-white"
+              />
+            </Field>
+            <Field label="Email">
+              <Input
+                type="email"
+                value={recipientDraft.email}
+                onChange={(event) => setRecipientDraft((current) => ({ ...current, email: event.target.value }))}
+                placeholder="recipient@example.com"
+                className="h-11 rounded-xl border-white/10 bg-black/20 text-white"
+              />
+            </Field>
+            <Field
+              label="USDT BEP20 address"
+              error={recipientDraft.bep20_address && !BEP20_PATTERN.test(recipientDraft.bep20_address.trim())
+                ? 'Enter a valid 0x BEP20 address.'
+                : undefined}
+            >
+              <Input
+                value={recipientDraft.bep20_address}
+                onChange={(event) => setRecipientDraft((current) => ({ ...current, bep20_address: event.target.value }))}
+                placeholder="0x..."
+                className="h-11 rounded-xl border-white/10 bg-black/20 font-mono text-white"
+              />
+            </Field>
+            <Field label="Share">
+              <div className="relative">
+                <Input
+                  type="number"
+                  min="0.01"
+                  max="100"
+                  step="0.01"
+                  value={recipientDraft.percentage}
+                  onChange={(event) => setRecipientDraft((current) => ({ ...current, percentage: event.target.value }))}
+                  placeholder="0.00"
+                  className="h-11 rounded-xl border-white/10 bg-black/20 pr-10 font-mono font-bold text-white"
+                />
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-primary">%</span>
+              </div>
+            </Field>
+          </div>
+          <DialogFooter className="gap-3 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setRecipientDialogOpen(false)}
+              className="h-11 rounded-full border-white/10 bg-white/[0.03] px-6 text-white hover:bg-white/10 hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={saveRecipientDraft}
+              className="h-11 rounded-full bg-primary px-6 font-bold text-black hover:bg-primary/90"
+            >
+              {editingRecipientIndex === null ? <Plus className="mr-2 size-4" /> : <Save className="mr-2 size-4" />}
+              {editingRecipientIndex === null ? 'Add recipient' : 'Save recipient'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={Boolean(protectedAction)} onOpenChange={(open) => !open && closeChallenge()}>
         <DialogContent className="border-white/10 bg-[#111214] p-7 sm:max-w-md">
           <DialogHeader>
@@ -629,42 +759,11 @@ export default function RevenueDistributionPage() {
         </DialogContent>
       </Dialog>
 
-      {isFetching && !isLoading && (
+      {(isFetching || isTreasuryFetching) && !isLoading && (
         <div className="fixed bottom-6 right-6 flex items-center gap-2 rounded-full border border-white/10 bg-[#111214]/95 px-4 py-2 text-xs text-white/45 shadow-2xl backdrop-blur-xl">
           <RefreshCw className="size-3 animate-spin" /> Refreshing treasury state
         </div>
       )}
-    </div>
-  );
-}
-
-function AllocationRail({ recipients, total }: { recipients: Recipient[]; total: number }) {
-  return (
-    <div className="rounded-[1.4rem] border border-white/10 bg-black/20 p-4">
-      <div className="flex h-4 overflow-hidden rounded-full bg-white/[0.04]">
-        {recipients.map((recipient, index) => (
-          <div
-            key={recipient.id ?? index}
-            className="h-full border-r border-black/25 transition-[width] duration-500 last:border-0"
-            style={{
-              width: `${Math.max(0, Math.min(Number(recipient.percentage) || 0, 100))}%`,
-              backgroundColor: RECIPIENT_COLORS[index % RECIPIENT_COLORS.length],
-            }}
-            title={`${recipient.name || `Recipient ${index + 1}`}: ${recipient.percentage || 0}%`}
-          />
-        ))}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
-        {recipients.map((recipient, index) => (
-          <div key={recipient.id ?? index} className="flex items-center gap-2 text-xs text-white/45">
-            <span className="size-2 rounded-full" style={{ backgroundColor: RECIPIENT_COLORS[index % RECIPIENT_COLORS.length] }} />
-            <span>{recipient.name || `Recipient ${index + 1}`}</span>
-            <span className="font-mono text-white/70">{Number(recipient.percentage || 0).toFixed(2)}%</span>
-          </div>
-        ))}
-        {!recipients.length && <span className="text-xs text-white/30">Add a recipient to begin mapping the split.</span>}
-        {total > 100 && <span className="ml-auto text-xs font-semibold text-red-300">Allocation exceeds 100%</span>}
-      </div>
     </div>
   );
 }
