@@ -5,8 +5,8 @@
 # -- Stage 1: Build --
 FROM node:22-alpine AS builder
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Match the pnpm version used to generate the committed lockfile.
+RUN corepack enable && corepack prepare pnpm@11.17.0 --activate
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm config set ignore-scripts true
 
 # Install dependencies
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Copy project files
 COPY . .

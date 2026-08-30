@@ -1,0 +1,22 @@
+.git
+.gitignore
+node_modules
+dist
+coverage
+test-results
+playwright-report
+
+.env
+.env.*
+!.env.example
+
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Local test artifacts that are not part of the Vite application.
+20mb.svg
+test-output-*.svg
+
+# This project builds with pnpm; do not send the unused npm lockfile.
+package-lock.json
