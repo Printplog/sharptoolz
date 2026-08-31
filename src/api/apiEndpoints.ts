@@ -270,6 +270,94 @@ export const adminOverview = async (days?: number) => {
   return res.data;
 };
 
+export type AdminApiCustomerStatus = 'active' | 'suspended' | 'revoked';
+
+export interface AdminApiKeySummary {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  allowed_origins: string[];
+  is_active: boolean;
+  last_used_at: string | null;
+  expires_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+export interface AdminApiCustomer {
+  user: { id: number; username: string; email: string; name: string };
+  status: AdminApiCustomerStatus;
+  activated_at: string;
+  paid_amount: string;
+  allowed_origins: string[];
+  total_keys: number;
+  active_keys: number;
+  external_users: number;
+  active_external_users: number;
+  requests: number;
+  errors: number;
+  success_rate: number | null;
+  sessions: number;
+  completed_sessions: number;
+  paid_sessions: number;
+  documents: number;
+  paid_documents: number;
+  renders: number;
+  completed_renders: number;
+  failed_renders: number;
+  last_activity_at: string | null;
+  keys: AdminApiKeySummary[];
+}
+
+export interface AdminApiCustomersResponse {
+  range_days: number;
+  summary: {
+    customers: number;
+    active_customers: number;
+    active_keys: number;
+    external_users: number;
+    active_external_users: number;
+    requests: number;
+    errors: number;
+    success_rate: number | null;
+  };
+  trend: Array<{ date: string; requests: number; errors: number }>;
+  operations: Array<{ operation: string; method: string; requests: number; errors: number }>;
+  customers: {
+    results: AdminApiCustomer[];
+    count: number;
+    current_page: number;
+    total_pages: number;
+  };
+}
+
+export const getAdminApiCustomers = async (params: {
+  days: number;
+  page?: number;
+  search?: string;
+  status?: string;
+}): Promise<AdminApiCustomersResponse> => {
+  const searchParams = new URLSearchParams({ days: params.days.toString() });
+  if (params.page) searchParams.set('page', params.page.toString());
+  if (params.search) searchParams.set('search', params.search);
+  if (params.status && params.status !== 'all') searchParams.set('status', params.status);
+  const res = await apiClient.get(`/admin/api-customers/?${searchParams.toString()}`);
+  return res.data;
+};
+
+export const updateAdminApiCustomerStatus = async (
+  userId: number,
+  status: AdminApiCustomerStatus,
+): Promise<{ user_id: number; status: AdminApiCustomerStatus }> => {
+  const res = await apiClient.patch(`/admin/api-customers/${userId}/`, { status });
+  return res.data;
+};
+
+export const revokeAdminApiKey = async (userId: number, keyId: string): Promise<void> => {
+  await apiClient.delete(`/admin/api-customers/${userId}/keys/${keyId}/`);
+};
+
 export const getAdminAnalytics = async (days?: number, date?: string) => {
   const params = new URLSearchParams();
   if (days) params.append('days', days.toString());

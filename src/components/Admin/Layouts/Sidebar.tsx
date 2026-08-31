@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Network,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
@@ -85,6 +86,11 @@ export default function Sidebar() {
       icon: <LineChart className="h-4 w-4" />,
       label: "Analytics",
       to: "/admin/analytics",
+    },
+    {
+      icon: <Network className="h-4 w-4" />,
+      label: "API Network",
+      to: "/admin/api-network",
     },
     {
       icon: <LinkIcon className="h-4 w-4" />,
@@ -213,7 +219,7 @@ export default function Sidebar() {
           }
           if (isAdmin) return true;
 
-          const restrictedForUser = ["Users", "Analytics", "Traffic Sources", "Settings", "Tools", "Templates", "Fonts", "Tutorials", "Logs", "Payout Requests", "Revenue Split"];
+          const restrictedForUser = ["Users", "Analytics", "API Network", "Traffic Sources", "Settings", "Tools", "Templates", "Fonts", "Tutorials", "Logs", "Payout Requests", "Revenue Split"];
 
 
           return !restrictedForUser.includes(item.label);
