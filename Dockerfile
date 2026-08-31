@@ -11,7 +11,7 @@ RUN corepack enable && corepack prepare pnpm@11.17.0 --activate
 WORKDIR /app
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Configure pnpm to ignore build scripts to prevent ERR_PNPM_IGNORED_BUILDS in CI
 RUN pnpm config set ignore-scripts true
