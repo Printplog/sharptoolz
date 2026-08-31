@@ -332,6 +332,34 @@ export interface AdminApiCustomersResponse {
   };
 }
 
+export interface AdminApiExternalUser {
+  external_user_id: string;
+  requests: number;
+  sessions: number;
+  documents: number;
+  last_seen_at: string;
+}
+
+export interface AdminApiActivityEvent {
+  id: number;
+  operation: string;
+  method: string;
+  status_code: number;
+  duration_ms: number;
+  external_user_id: string;
+  key_prefix: string | null;
+  created_at: string;
+}
+
+export interface AdminApiCustomerDetailsResponse {
+  range_days: number;
+  customer: AdminApiCustomer;
+  trend: Array<{ date: string; requests: number; errors: number }>;
+  operations: Array<{ operation: string; method: string; requests: number; errors: number }>;
+  external_users: AdminApiExternalUser[];
+  recent_activity: AdminApiActivityEvent[];
+}
+
 export const getAdminApiCustomers = async (params: {
   days: number;
   page?: number;
@@ -343,6 +371,14 @@ export const getAdminApiCustomers = async (params: {
   if (params.search) searchParams.set('search', params.search);
   if (params.status && params.status !== 'all') searchParams.set('status', params.status);
   const res = await apiClient.get(`/admin/api-customers/?${searchParams.toString()}`);
+  return res.data;
+};
+
+export const getAdminApiCustomer = async (
+  userId: string | number,
+  days = 30,
+): Promise<AdminApiCustomerDetailsResponse> => {
+  const res = await apiClient.get(`/admin/api-customers/${userId}/?days=${days}`);
   return res.data;
 };
 

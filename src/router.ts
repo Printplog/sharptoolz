@@ -8,6 +8,7 @@ export type Path =
   | `/about`
   | `/admin/analytics`
   | `/admin/api-network`
+  | `/admin/api-network/:userId`
   | `/admin/audit-logs`
   | `/admin/dashboard`
   | `/admin/docs`
@@ -58,6 +59,7 @@ export type Path =
   | `/wallet`
 
 export type Params = {
+  '/admin/api-network/:userId': { userId: string }
   '/admin/templates/:id': { id: string }
   '/admin/tools/:id/templates': { id: string }
   '/admin/users/:id': { id: string }
