@@ -70,6 +70,7 @@ interface WalletStats {
   totalInflow: number;
   totalOutflow: number;
   allTimeEarned: number;
+  allTimePurchases: number;
   transactionCount: number;
   fundedWallets: number;
   rangeDays: number;
@@ -274,8 +275,8 @@ export default function WalletManagementPage() {
 
       {/* Stats */}
       {statsLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
+          {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 animate-pulse">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-white/5 rounded-lg" />
@@ -294,6 +295,7 @@ export default function WalletManagementPage() {
           totalInflow={stats.totalInflow}
           totalOutflow={stats.totalOutflow}
           allTimeEarned={stats.allTimeEarned}
+          allTimePurchases={stats.allTimePurchases}
           transactionCount={stats.transactionCount}
           fundedWallets={stats.fundedWallets}
           rangeLabel={stats.rangeLabel}

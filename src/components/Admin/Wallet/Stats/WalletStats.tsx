@@ -1,4 +1,4 @@
-import { BadgeDollarSign, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { BadgeDollarSign, ShoppingBag, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { StatsCards, type StatData } from '@/components/Admin/Shared/StatsCards';
 
 import type { LucideIcon } from 'lucide-react';
@@ -8,6 +8,7 @@ interface WalletStatsProps {
   totalInflow: number;
   totalOutflow: number;
   allTimeEarned: number;
+  allTimePurchases: number;
   transactionCount: number;
   fundedWallets: number;
   rangeLabel: string;
@@ -34,6 +35,7 @@ export default function WalletStats({
   totalInflow,
   totalOutflow,
   allTimeEarned,
+  allTimePurchases,
   transactionCount,
   fundedWallets,
   rangeLabel,
@@ -75,13 +77,24 @@ export default function WalletStats({
     {
       title: 'All-time earned',
       value: formatCurrency(allTimeEarned),
-      label: 'Completed customer purchases since launch',
+      label: 'Completed customer deposits since launch',
       icon: BadgeDollarSign,
       color: 'text-emerald-400',
       bgColor: 'bg-emerald-500/10',
       gradient: 'from-emerald-500/20 to-emerald-600/5',
       borderColor: 'border-emerald-500/20',
       iconColor: 'text-emerald-400',
+    },
+    {
+      title: 'All purchases',
+      value: formatCurrency(allTimePurchases),
+      label: 'Completed customer purchases since launch',
+      icon: ShoppingBag,
+      color: 'text-violet-400',
+      bgColor: 'bg-violet-500/10',
+      gradient: 'from-violet-500/20 to-violet-600/5',
+      borderColor: 'border-violet-500/20',
+      iconColor: 'text-violet-400',
     },
   ];
 
@@ -96,5 +109,5 @@ export default function WalletStats({
     iconColor: stat.iconColor,
   }));
 
-  return <StatsCards stats={statItems} />;
+  return <StatsCards stats={statItems} className="xl:grid-cols-5" />;
 }
