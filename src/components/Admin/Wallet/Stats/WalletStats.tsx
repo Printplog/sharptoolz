@@ -1,4 +1,4 @@
-import { ArrowLeftRight, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { BadgeDollarSign, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { StatsCards, type StatData } from '@/components/Admin/Shared/StatsCards';
 
 import type { LucideIcon } from 'lucide-react';
@@ -7,7 +7,7 @@ interface WalletStatsProps {
   totalBalance: number;
   totalInflow: number;
   totalOutflow: number;
-  netFlow: number;
+  allTimeEarned: number;
   transactionCount: number;
   fundedWallets: number;
   rangeLabel: string;
@@ -33,13 +33,11 @@ export default function WalletStats({
   totalBalance,
   totalInflow,
   totalOutflow,
-  netFlow,
+  allTimeEarned,
   transactionCount,
   fundedWallets,
   rangeLabel,
 }: WalletStatsProps) {
-  const netPositive = netFlow >= 0;
-
   const stats: Stat[] = [
     {
       title: 'Total Balance',
@@ -75,15 +73,15 @@ export default function WalletStats({
       iconColor: 'text-red-400',
     },
     {
-      title: 'Net Inflow',
-      value: `${netPositive ? '+' : '-'}${formatCurrency(netFlow)}`,
-      label: `${rangeLabel} recognized platform revenue`,
-      icon: ArrowLeftRight,
-      color: netPositive ? 'text-emerald-400' : 'text-amber-300',
-      bgColor: netPositive ? 'bg-emerald-500/10' : 'bg-amber-500/10',
-      gradient: netPositive ? 'from-emerald-500/20 to-emerald-600/5' : 'from-amber-500/20 to-amber-600/5',
-      borderColor: netPositive ? 'border-emerald-500/20' : 'border-amber-500/20',
-      iconColor: netPositive ? 'text-emerald-400' : 'text-amber-300',
+      title: 'All-time earned',
+      value: formatCurrency(allTimeEarned),
+      label: 'Completed customer purchases since launch',
+      icon: BadgeDollarSign,
+      color: 'text-emerald-400',
+      bgColor: 'bg-emerald-500/10',
+      gradient: 'from-emerald-500/20 to-emerald-600/5',
+      borderColor: 'border-emerald-500/20',
+      iconColor: 'text-emerald-400',
     },
   ];
 

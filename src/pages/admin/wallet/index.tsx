@@ -69,7 +69,7 @@ interface WalletStats {
   totalBalance: number;
   totalInflow: number;
   totalOutflow: number;
-  netFlow: number;
+  allTimeEarned: number;
   transactionCount: number;
   fundedWallets: number;
   rangeDays: number;
@@ -293,7 +293,7 @@ export default function WalletManagementPage() {
           totalBalance={stats.totalBalance}
           totalInflow={stats.totalInflow}
           totalOutflow={stats.totalOutflow}
-          netFlow={stats.netFlow}
+          allTimeEarned={stats.allTimeEarned}
           transactionCount={stats.transactionCount}
           fundedWallets={stats.fundedWallets}
           rangeLabel={stats.rangeLabel}
