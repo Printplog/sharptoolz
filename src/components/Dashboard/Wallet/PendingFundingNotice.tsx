@@ -48,7 +48,9 @@ const PendingFundingNotice: React.FC = () => {
     },
   });
 
-  const transaction = wallet?.transactions?.[0];
+  const transaction = wallet?.transactions?.find(
+    (candidate) => candidate.status === "pending"
+  );
   if (!transaction || transaction.status !== "pending") return null;
 
   const { address } = transaction;
@@ -84,7 +86,7 @@ const PendingFundingNotice: React.FC = () => {
   const isBelowMin = equivalentUsd && parseFloat(equivalentUsd) < minTopupUsd;
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-yellow-500/20 bg-yellow-500/[0.03] backdrop-blur-3xl p-6 space-y-6 animate-in fade-in zoom-in-95 duration-700">
+    <div id="pending-funding" className="relative scroll-mt-24 overflow-hidden rounded-[2rem] border border-yellow-500/20 bg-yellow-500/[0.03] backdrop-blur-3xl p-6 space-y-6 animate-in fade-in zoom-in-95 duration-700">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Loader2 className="w-4 h-4 text-yellow-400 animate-spin" />

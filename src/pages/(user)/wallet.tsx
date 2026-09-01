@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Plus, Receipt, History } from "lucide-react";
+import { History, Plus, Receipt } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import AddFundsDialog from "@/components/Dashboard/Wallet/AddFundsDialog";
 import TransactionHistory from "@/components/Dashboard/Wallet/TransactionHistory";
 import BalanceCard from "@/components/Dashboard/Wallet/BalanceCard";
@@ -10,18 +11,62 @@ import PendingFundingNotice from "@/components/Dashboard/Wallet/PendingFundingNo
 import SuccessPaymentDialog from "@/components/Dashboard/Wallet/SuccessPaymentDialog";
 import { toast } from "sonner";
 import LoadingWallet from "@/components/Dashboard/Wallet/LoadingWallet";
+import { cancelCryptoPayment } from "@/api/apiEndpoints";
+import PendingDepositChoiceDialog from "@/components/Dashboard/Wallet/PendingDepositChoiceDialog";
 
 const WalletPage: React.FC = () => {
   const [showAddFundsDialog, setShowAddFundsDialog] = useState<boolean>(false);
+  const [showPendingChoice, setShowPendingChoice] = useState<boolean>(false);
   useWalletSocket();
-  const { wallet } = useWalletStore();
+  const { wallet, setWallet } = useWalletStore();
+  const pendingTransaction = wallet?.transactions?.find(
+    (transaction) => transaction.status === "pending"
+  );
+
+  const { mutateAsync: cancelPendingTransaction, isPending: isClosingPending } = useMutation({
+    mutationFn: (id: string) => cancelCryptoPayment(id),
+    onError: () => {
+      toast.error("Could not close the pending deposit. Try again.");
+    },
+  });
 
   const handleOpenAddFunds = (): void => {
-    if (wallet?.transactions?.[0]?.status === "pending") {
-      toast.warning("You have a pending transaction. Please wait until it is completed before adding more funds.");
+    if (pendingTransaction) {
+      setShowPendingChoice(true);
       return;
     }
     setShowAddFundsDialog(true);
+  };
+
+  const handleContinuePending = (): void => {
+    setShowPendingChoice(false);
+    window.requestAnimationFrame(() => {
+      document.getElementById("pending-funding")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  };
+
+  const handleCloseAndStartNew = async (): Promise<void> => {
+    if (!pendingTransaction || !wallet) return;
+
+    try {
+      await cancelPendingTransaction(pendingTransaction.id);
+      setWallet({
+        ...wallet,
+        transactions: wallet.transactions.map((transaction) =>
+          transaction.id === pendingTransaction.id
+            ? { ...transaction, status: "failed" as const }
+            : transaction
+        ),
+      });
+      setShowPendingChoice(false);
+      setShowAddFundsDialog(true);
+      toast.success("Previous deposit closed. You can start a new one.");
+    } catch {
+      // The mutation displays the actionable error and keeps this dialog open.
+    }
   };
 
   const handleCloseAddFunds = (open: boolean): void => {
@@ -58,7 +103,7 @@ const WalletPage: React.FC = () => {
             bonusExpiresAt={wallet?.bonus_expires_at}
           />
 
-          {wallet?.transactions?.[0]?.status === "pending" && (
+          {pendingTransaction && (
             <PendingFundingNotice />
           )}
         </div>
@@ -93,6 +138,15 @@ const WalletPage: React.FC = () => {
       <AddFundsDialog
         open={showAddFundsDialog}
         onOpenChange={handleCloseAddFunds}
+      />
+
+      <PendingDepositChoiceDialog
+        open={showPendingChoice}
+        onOpenChange={setShowPendingChoice}
+        onContinue={handleContinuePending}
+        onStartNew={handleCloseAndStartNew}
+        isStartingNew={isClosingPending}
+        canStartNew={Boolean(pendingTransaction)}
       />
 
       <SuccessPaymentDialog />
