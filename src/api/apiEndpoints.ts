@@ -490,6 +490,11 @@ export const adminDocuments = async (params?: { page?: number; page_size?: numbe
   return res.data;
 };
 
+export const deleteAdminDocument = async (id: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/admin/documents/${id}/`);
+  return res.data;
+};
+
 // Tools API (same as categories but with different naming)
 export const getTools = async (): Promise<Tool[]> => {
   const res = await apiClient.get('/tools/');

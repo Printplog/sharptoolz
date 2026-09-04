@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { adminDocuments } from "@/api/apiEndpoints";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { adminDocuments, deleteAdminDocument } from "@/api/apiEndpoints";
+import { ConfirmAction } from "@/components/ConfirmAction";
+import { toast } from "sonner";
 import { DataTable } from "@/components/ui/data-table";
 import {
     FileText,
@@ -11,6 +13,8 @@ import {
     TrendingUp,
     Clock,
     Eye,
+    Trash2,
+    Loader,
     Calendar as CalendarIcon,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -53,6 +57,8 @@ type AdminDocsResponse = {
 };
 
 export default function AdminDocumentsPage() {
+    const queryClient = useQueryClient();
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const [page, setPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState<'all' | 'paid' | 'test'>('all');
@@ -130,6 +136,24 @@ export default function AdminDocumentsPage() {
             iconColor: 'text-red-400',
         },
     ];
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteAdminDocument,
+        onSuccess: () => {
+            toast.success("Document deleted successfully!");
+            queryClient.invalidateQueries({ queryKey: ["adminDocuments"] });
+        },
+        onError: () => {
+            toast.error("Failed to delete document");
+        },
+    });
+
+    const handleDeleteDocument = (docId: string) => {
+        setDeletingId(docId);
+        deleteMutation.mutate(docId, {
+            onSettled: () => setDeletingId(null),
+        });
+    };
 
     const columns = useMemo<ColumnDef<AdminDoc>[]>(() => [
         {
@@ -209,19 +233,45 @@ export default function AdminDocumentsPage() {
         {
             id: 'actions',
             header: 'Actions',
-            cell: ({ row }) => (
-                <PremiumButton
-                    href={`/documents/${row.original.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    variant="outline"
-                    text="View"
-                    icon={Eye}
-                    className="border-white/10"
-                />
-            ),
+            cell: ({ row }) => {
+                const isDeleting =
+                    deletingId === row.original.id && deleteMutation.isPending;
+                return (
+                    <div className="flex items-center gap-2">
+                        <PremiumButton
+                            href={`/documents/${row.original.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            variant="outline"
+                            text="View"
+                            icon={Eye}
+                            className="border-white/10"
+                        />
+                        <ConfirmAction
+                            title="Delete Document"
+                            description={`Are you sure you want to permanently delete "${row.original.name}"? This removes the buyer's document and cannot be undone.`}
+                            onConfirm={() => handleDeleteDocument(row.original.id)}
+                            trigger={
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-9 w-9 rounded-full border-red-500/20 bg-red-500/5 text-red-400 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/30"
+                                    title="Delete document"
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? (
+                                        <Loader className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Trash2 className="w-4 h-4" />
+                                    )}
+                                </Button>
+                            }
+                        />
+                    </div>
+                );
+            },
         },
-    ], []);
+    ], [deletingId, deleteMutation]);
 
     const filters = useMemo(() => [
         {
