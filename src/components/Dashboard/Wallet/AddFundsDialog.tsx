@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import type { CryptoPaymentData, SiteSettings } from '@/types';
 import errorMessage from '@/lib/utils/errorMessage';
 import { calcBonus, qualifies, amountToUnlock, type DepositPromoConfig } from '@/lib/promo/depositPromo';
+import AutomaticPaymentMonitor from '@/components/Dashboard/Wallet/AutomaticPaymentMonitor';
 
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -214,7 +215,6 @@ export default function AddFundsDialog({
                       size={180}
                       level="H"
                       includeMargin={false}
-                      className="rounded-lg"
                     />
                   </div>
                 </div>
@@ -241,11 +241,19 @@ export default function AddFundsDialog({
                   <span>Only send USDT via BEP20 network to avoid permanent loss of funds.</span>
                 </div>
 
+                {data.gateway === 'direct_bsc' && (
+                  <AutomaticPaymentMonitor
+                    transactionId={data.transaction_id}
+                    onConfirmed={() => onOpenChange(false)}
+                  />
+                )}
+
                 <button
+                  type="button"
                   onClick={() => onOpenChange(false)}
-                  className="w-full bg-white text-black py-4 rounded-full font-semibold text-xs transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-white/5"
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3.5 text-xs font-semibold text-white/65 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                 >
-                  Close & Proceed
+                  Close
                 </button>
               </div>
             ) : null}

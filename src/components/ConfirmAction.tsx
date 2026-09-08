@@ -18,6 +18,7 @@ interface ConfirmActionProps {
   trigger: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
+  variant?: "default" | "destructive";
 }
 
 export const ConfirmAction: React.FC<ConfirmActionProps> = ({
@@ -27,6 +28,7 @@ export const ConfirmAction: React.FC<ConfirmActionProps> = ({
   trigger,
   confirmText = "Continue",
   cancelText = "Cancel",
+  variant = "default",
 }) => {
   return (
     <AlertDialog>
@@ -44,7 +46,11 @@ export const ConfirmAction: React.FC<ConfirmActionProps> = ({
             onClick={async () => {
               await onConfirm();
             }}
-            className="rounded-full px-6 h-11 bg-[#cee88c] text-black font-bold hover:opacity-90 transition-all border-0 shadow-none"
+            className={
+              variant === "destructive"
+                ? "h-11 rounded-full border-0 bg-red-500 px-6 font-bold text-white shadow-none transition-colors hover:bg-red-400 hover:text-white"
+                : "h-11 rounded-full border-0 bg-[#cee88c] px-6 font-bold text-black shadow-none transition-all hover:opacity-90"
+            }
           >
             {confirmText}
           </AlertDialogAction>

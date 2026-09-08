@@ -1,4 +1,4 @@
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, XCircle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -54,15 +54,19 @@ export default function PendingDepositChoiceDialog({
             type="button"
             onClick={() => void onStartNew()}
             disabled={isStartingNew || !canStartNew}
-            className="inline-flex h-12 items-center justify-center rounded-xl border border-red-400/20 bg-red-400/5 px-4 text-xs font-semibold text-red-300 transition-colors hover:bg-red-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-12 items-center justify-center rounded-full bg-red-500 px-4 text-xs font-semibold text-white shadow-lg shadow-red-950/25 transition-colors hover:bg-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isStartingNew ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Cancel & start new
+            {isStartingNew ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <XCircle className="mr-2 h-4 w-4" />
+            )}
+            Cancel current & start new
           </button>
           <AlertDialogCancel
             onClick={onContinue}
             disabled={isStartingNew}
-            className="m-0 h-12 rounded-xl border-0 bg-white px-4 text-xs font-semibold text-black transition-colors hover:bg-white/90 hover:text-black focus-visible:ring-2 focus-visible:ring-white/60"
+            className="m-0 h-12 rounded-full border-0 bg-white px-4 text-xs font-semibold text-black transition-colors hover:bg-white/90 hover:text-black focus-visible:ring-2 focus-visible:ring-white/60"
           >
             Continue deposit
           </AlertDialogCancel>

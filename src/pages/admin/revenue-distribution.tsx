@@ -85,6 +85,8 @@ type DistributionDashboard = {
     last_balance_checked_at: string | null;
     network: 'BEP20';
     currency: 'USDT';
+    provider: 'bsc' | 'cpay';
+    provider_label: string;
     allocation_total: string;
     deposit_routing_enabled: boolean;
     deposit_provider_configured: boolean;
@@ -140,8 +142,8 @@ export default function RevenueDistributionPage() {
   const [recipientDraft, setRecipientDraft] = useState<Recipient>(EMPTY_RECIPIENT);
 
   const { data, isLoading, isFetching } = useQuery<DistributionDashboard>({
-    queryKey: ['cpay-distribution'],
-    queryFn: () => getApi('/admin/cpay-distribution/'),
+    queryKey: ['revenue-distribution'],
+    queryFn: () => getApi('/admin/revenue-distribution/'),
     refetchInterval: 30_000,
   });
 
@@ -150,8 +152,8 @@ export default function RevenueDistributionPage() {
     isFetching: isTreasuryFetching,
     refetch: refetchTreasury,
   } = useQuery<LiveTreasuryBalance>({
-    queryKey: ['cpay-distribution-live-balance'],
-    queryFn: () => postApi('/admin/cpay-distribution/balance/', {}),
+    queryKey: ['revenue-distribution-live-balance'],
+    queryFn: () => postApi('/admin/revenue-distribution/balance/', {}),
     enabled: Boolean(data?.configuration.payout_provider_configured),
     refetchInterval: 30_000,
     staleTime: 20_000,
@@ -182,17 +184,18 @@ export default function RevenueDistributionPage() {
 
   const handleTreasuryRefresh = async () => {
     const result = await refetchTreasury();
+    const providerLabel = data?.configuration.provider_label ?? 'Payment gateway';
     if (result.error) {
-      toast.error(apiError(result.error, 'Could not refresh the CPay balance.'));
+      toast.error(apiError(result.error, `Could not refresh the ${providerLabel} balance.`));
       return;
     }
-    if (result.data) toast.success(`CPay balance synced: ${money(result.data.available_balance)}`);
+    if (result.data) toast.success(`${providerLabel} balance synced: ${money(result.data.available_balance)}`);
   };
 
   const protectedMutation = useMutation({
     mutationFn: async ({ action, code }: { action: ProtectedAction; code: string }) => {
       if (action.kind === 'save') {
-        return postApi('/admin/cpay-distribution/configuration/', {
+        return postApi('/admin/revenue-distribution/configuration/', {
           enabled,
           threshold_amount: threshold,
           recipients,
@@ -200,11 +203,11 @@ export default function RevenueDistributionPage() {
         });
       }
       if (action.kind === 'retry') {
-        return postApi(`/admin/cpay-distribution/batches/${action.batchId}/retry/`, {
+        return postApi(`/admin/revenue-distribution/batches/${action.batchId}/retry/`, {
           two_factor_code: code,
         });
       }
-      return postApi('/admin/cpay-distribution/run/', { two_factor_code: code });
+      return postApi('/admin/revenue-distribution/run/', { two_factor_code: code });
     },
     onSuccess: (_, variables) => {
       const message = variables.action.kind === 'save'
@@ -215,7 +218,7 @@ export default function RevenueDistributionPage() {
       toast.success(message);
       if (variables.action.kind === 'save') hasHydratedForm.current = false;
       closeChallenge();
-      queryClient.invalidateQueries({ queryKey: ['cpay-distribution'] });
+      queryClient.invalidateQueries({ queryKey: ['revenue-distribution'] });
     },
     onError: (error: unknown) => {
       toast.error(apiError(error, 'The protected action could not be completed.'));
@@ -225,7 +228,7 @@ export default function RevenueDistributionPage() {
 
   const openAddRecipient = () => {
     if (recipients.length >= 20) {
-      toast.error('CPay supports a maximum of 20 configured recipients here.');
+      toast.error('You can configure a maximum of 20 recipients.');
       return;
     }
     setEditingRecipientIndex(null);
@@ -322,6 +325,7 @@ export default function RevenueDistributionPage() {
   }
 
   const configuration = data?.configuration;
+  const providerLabel = configuration?.provider_label ?? 'Payment gateway';
   const providerReady = Boolean(
     configuration?.deposit_routing_enabled
     && configuration.deposit_provider_configured
@@ -335,7 +339,7 @@ export default function RevenueDistributionPage() {
       value: money(availableBalance),
       label: liveTreasury?.checked_at || configuration?.last_balance_checked_at
         ? `Checked ${new Date(liveTreasury?.checked_at ?? configuration?.last_balance_checked_at ?? '').toLocaleString()}`
-        : 'Refresh to read the CPay wallet',
+        : `Refresh to read the ${providerLabel} wallet`,
       icon: Landmark,
       gradient: 'from-emerald-500/20 to-emerald-600/5',
       borderColor: 'border-emerald-500/20',
@@ -603,8 +607,11 @@ export default function RevenueDistributionPage() {
             </Field>
 
             <div className="flex min-h-12 flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-              <ReadinessDot ready={Boolean(configuration?.deposit_provider_configured)} label="CryptAPI" />
-              <ReadinessDot ready={Boolean(configuration?.payout_provider_configured)} label="CPay" />
+              <ReadinessDot
+                ready={Boolean(configuration?.deposit_provider_configured)}
+                label={configuration?.provider === 'bsc' ? 'Direct deposits' : 'CryptAPI'}
+              />
+              <ReadinessDot ready={Boolean(configuration?.payout_provider_configured)} label={providerLabel} />
               <ReadinessDot ready={Boolean(configuration?.live_payouts_enabled)} label="Live payouts" />
             </div>
 

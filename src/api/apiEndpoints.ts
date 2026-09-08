@@ -1,4 +1,4 @@
-import type { Tool, Tutorial, CryptoPaymentData, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme } from "@/types";
+import type { Tool, Tutorial, CryptoPaymentData, CryptoPaymentConfirmation, CryptoPaymentStatus, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme, WalletData } from "@/types";
 import { apiClient } from "./apiClient";
 export const getApi = apiClient.get;
 export const postApi = apiClient.post;
@@ -242,6 +242,11 @@ export const createCryptoPayment = async (ticker: string): Promise<CryptoPayment
   return res.data;
 };
 
+export const getWallet = async (): Promise<WalletData> => {
+  const res = await apiClient.get('/wallet/');
+  return res.data;
+};
+
 export const forceReparseTemplate = async (id: string): Promise<{ status: string; message: string; form_fields_count: number }> => {
   // Call the dedicated reparse action
   const res = await apiClient.post(`/admin/templates/${id}/reparse/`);
@@ -250,6 +255,22 @@ export const forceReparseTemplate = async (id: string): Promise<{ status: string
 
 export const cancelCryptoPayment = async (id: string): Promise<CryptoPaymentData> => {
   const res = await apiClient.post('/cancel-payment/', { id });
+  return res.data;
+};
+
+export const confirmCryptoPayment = async (
+  id: string,
+  transactionHash: string,
+): Promise<CryptoPaymentConfirmation> => {
+  const res = await apiClient.post('/confirm-payment/', {
+    id,
+    transaction_hash: transactionHash,
+  });
+  return res.data;
+};
+
+export const getCryptoPaymentStatus = async (id: string): Promise<CryptoPaymentStatus> => {
+  const res = await apiClient.get(`/payment-status/${id}/`);
   return res.data;
 };
 

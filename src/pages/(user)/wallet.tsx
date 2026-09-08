@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { History, Plus, Receipt } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import AddFundsDialog from "@/components/Dashboard/Wallet/AddFundsDialog";
 import TransactionHistory from "@/components/Dashboard/Wallet/TransactionHistory";
 import BalanceCard from "@/components/Dashboard/Wallet/BalanceCard";
@@ -11,7 +11,7 @@ import PendingFundingNotice from "@/components/Dashboard/Wallet/PendingFundingNo
 import SuccessPaymentDialog from "@/components/Dashboard/Wallet/SuccessPaymentDialog";
 import { toast } from "sonner";
 import LoadingWallet from "@/components/Dashboard/Wallet/LoadingWallet";
-import { cancelCryptoPayment } from "@/api/apiEndpoints";
+import { cancelCryptoPayment, getWallet } from "@/api/apiEndpoints";
 import PendingDepositChoiceDialog from "@/components/Dashboard/Wallet/PendingDepositChoiceDialog";
 
 const WalletPage: React.FC = () => {
@@ -19,6 +19,14 @@ const WalletPage: React.FC = () => {
   const [showPendingChoice, setShowPendingChoice] = useState<boolean>(false);
   useWalletSocket();
   const { wallet, setWallet } = useWalletStore();
+  const walletQuery = useQuery({
+    queryKey: ["wallet"],
+    queryFn: getWallet,
+  });
+
+  useEffect(() => {
+    if (walletQuery.data) setWallet(walletQuery.data);
+  }, [walletQuery.data, setWallet]);
   const pendingTransaction = wallet?.transactions?.find(
     (transaction) => transaction.status === "pending"
   );

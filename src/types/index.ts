@@ -309,10 +309,36 @@ export type PurchasedTemplate = {
 };
 
 export type CryptoPaymentData = {
+  transaction_id: string;
   tx_id: string;
   ticker: string;
-  amount: number;
+  amount?: number;
   payment_address: string;
+  network: "BEP20";
+  gateway: "direct_bsc" | "cryptapi_cpay";
+  required_confirmations: number;
+};
+
+export type CryptoPaymentConfirmation = {
+  transaction_id: string;
+  transaction_hash: string;
+  amount: string;
+  confirmations: number;
+  required_confirmations: number;
+  confirmed: boolean;
+  credited: boolean;
+};
+
+export type CryptoPaymentStatus = {
+  transaction_id: string;
+  status: "pending" | "completed" | "failed";
+  detected: boolean;
+  transaction_hash: string;
+  amount: string;
+  confirmations: number;
+  required_confirmations: number;
+  credited: boolean;
+  automatic_monitoring: boolean;
 };
 
 export type Transaction = {
@@ -324,6 +350,7 @@ export type Transaction = {
   description: string;
   tx_hash: string;
   address: string;
+  gateway?: "direct_bsc" | "cryptapi_cpay" | "";
   created_at: string;
 };
 

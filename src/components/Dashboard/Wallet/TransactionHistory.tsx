@@ -101,11 +101,15 @@ const TransactionHistory: React.FC = () => {
                 <ConfirmAction
                   title="Cancel Transaction?"
                   description="This will permanently cancel this funding request."
+                  confirmText="Cancel transaction"
+                  cancelText="Keep transaction"
+                  variant="destructive"
                   onConfirm={() => mutate(transaction.id)}
                   trigger={
                     <button
+                      type="button"
                       disabled={isPending}
-                      className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-90"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-2 text-xs font-semibold text-white shadow-md shadow-red-950/20 transition-colors hover:bg-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60 disabled:cursor-not-allowed disabled:opacity-50"
                       title="Cancel Transaction"
                     >
                       {isPending ? (
@@ -113,6 +117,7 @@ const TransactionHistory: React.FC = () => {
                       ) : (
                         <XCircle className="w-4 h-4" />
                       )}
+                      <span>{isPending ? "Cancelling…" : "Cancel"}</span>
                     </button>
                   }
                 />

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import type { SiteSettings } from "@/types";
 import { QRCodeSVG } from 'qrcode.react';
+import AutomaticPaymentMonitor from "@/components/Dashboard/Wallet/AutomaticPaymentMonitor";
 
 const PendingFundingNotice: React.FC = () => {
   const [copied, setCopied] = useState(false);
@@ -111,7 +112,6 @@ const PendingFundingNotice: React.FC = () => {
                 size={140}
                 level="H"
                 includeMargin={false}
-                className="rounded-lg"
               />
             </div>
           </div>
@@ -129,6 +129,10 @@ const PendingFundingNotice: React.FC = () => {
         </div>
       </div>
 
+      {transaction.gateway === "direct_bsc" && (
+        <AutomaticPaymentMonitor transactionId={transaction.id} />
+      )}
+
       <div className="flex gap-3">
         <button
           onClick={() => setShowAmountDialog(true)}
@@ -138,20 +142,30 @@ const PendingFundingNotice: React.FC = () => {
           Pay on WhatsApp
         </button>
 
-        <ConfirmAction
-          title="Cancel Payment?"
-          description="Action cannot be undone."
-          trigger={
-            <button
-              disabled={isPending}
-              className="px-6 flex items-center justify-center bg-white/5 text-white/40 border border-white/5 py-4 rounded-full font-semibold text-xs hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 disabled:opacity-50"
-            >
-              <XCircle className="w-3.5 h-3.5 mr-2" />
-              {isPending ? "..." : "Cancel"}
-            </button>
-          }
-          onConfirm={onCancel}
-        />
+        {!transaction.tx_hash && (
+          <ConfirmAction
+            title="Cancel Payment?"
+            description="Action cannot be undone."
+            confirmText="Cancel payment"
+            cancelText="Keep payment"
+            variant="destructive"
+            trigger={
+              <button
+                type="button"
+                disabled={isPending}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-red-500 px-4 py-3.5 text-xs font-semibold text-white shadow-lg shadow-red-950/25 transition-colors hover:bg-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
+                {isPending ? "Cancelling…" : "Cancel payment"}
+              </button>
+            }
+            onConfirm={onCancel}
+          />
+        )}
       </div>
 
       {/* Amount Input Dialog */}
