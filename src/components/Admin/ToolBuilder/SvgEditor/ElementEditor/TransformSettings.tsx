@@ -148,7 +148,7 @@ export const TransformSettings = ({
               <Label className="text-[11px] font-bold text-white/40">{t.label}</Label>
               <VariableDropdown
                 category={t.key as TransformVariable['category']}
-                currentValue={(currentTransform as Record<string, number>)[t.key]}
+                currentValue={currentTransform[t.key as 'rotate' | 'scale' | 'translateX' | 'translateY']}
                 onApply={(val) => updateTransform(t.key as 'rotate' | 'scale' | 'translateX' | 'translateY', val)}
                 variables={variables}
                 saveMutation={saveVariableMutation}
@@ -163,7 +163,7 @@ export const TransformSettings = ({
                 onClick={() =>
                   updateTransform(
                     t.key as "rotate" | "scale" | "translateX" | "translateY",
-                    (currentTransform as Record<string, number>)[t.key] - (t.step || 1)
+                    currentTransform[t.key as 'rotate' | 'scale' | 'translateX' | 'translateY'] - (t.step || 1)
                   )
                 }
               >
@@ -171,7 +171,7 @@ export const TransformSettings = ({
               </Button>
               <DebouncedInput
                 type="number"
-                value={(currentTransform as Record<string, number>)[t.key]}
+                value={currentTransform[t.key as 'rotate' | 'scale' | 'translateX' | 'translateY']}
                 step={t.step || 1}
                 onChange={(val) =>
                   updateTransform(
@@ -188,7 +188,7 @@ export const TransformSettings = ({
                 onClick={() =>
                   updateTransform(
                     t.key as "rotate" | "scale" | "translateX" | "translateY",
-                    (currentTransform as Record<string, number>)[t.key] + (t.step || 1)
+                    currentTransform[t.key as 'rotate' | 'scale' | 'translateX' | 'translateY'] + (t.step || 1)
                   )
                 }
               >

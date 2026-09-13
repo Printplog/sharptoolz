@@ -160,10 +160,11 @@ export const useElementTransform = (
       const c = matrixMatch[3];
       const d = matrixMatch[4];
 
+      const numericValue = Number(value);
       const relativeTx =
-        key === "translateX" ? value - safeBaseX : currentTransform.translateX - safeBaseX;
+        key === "translateX" ? numericValue - safeBaseX : currentTransform.translateX - safeBaseX;
       const relativeTy =
-        key === "translateY" ? value - safeBaseY : currentTransform.translateY - safeBaseY;
+        key === "translateY" ? numericValue - safeBaseY : currentTransform.translateY - safeBaseY;
 
       const newMatrix = `matrix(${a} ${b} ${c} ${d} ${relativeTx} ${relativeTy})`;
       const updatedTransform = transformAttr.replace(matrixRegex, newMatrix);
