@@ -434,7 +434,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           isTextElement={isTextElement}
         />
 
-        {localElement.tag === 'image' && (
+        {['image', 'text', 'rect', 'circle', 'ellipse', 'path', 'g', 'use'].includes(localElement.tag) && (
           <CollapsiblePanel id="element-styling" title="Styling" defaultOpen>
             <TextMaskSettings element={localElement} elements={allElements} onChange={handleLocalUpdate} />
           </CollapsiblePanel>

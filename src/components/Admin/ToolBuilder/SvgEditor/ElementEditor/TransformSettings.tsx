@@ -117,8 +117,8 @@ const VariableDropdown = ({
 
 interface TransformSettingsProps {
   index: number;
-  currentTransform: { rotate: number; scale: number; translateX: number; translateY: number };
-  updateTransform: (key: 'rotate' | 'scale' | 'translateX' | 'translateY', value: number) => void;
+  currentTransform: { rotate: number; scale: number; translateX: number; translateY: number; flipH: boolean; flipV: boolean };
+  updateTransform: (key: 'rotate' | 'scale' | 'translateX' | 'translateY' | 'flipH' | 'flipV', value: number | boolean) => void;
   variables: TransformVariable[];
   saveVariableMutation: { mutate: (data: Partial<TransformVariable>) => void; isPending: boolean };
   deleteVariableMutation: { mutate: (id: number) => void; isPending: boolean };
@@ -132,6 +132,8 @@ export const TransformSettings = ({
   saveVariableMutation,
   deleteVariableMutation,
 }: TransformSettingsProps) => {
+  const flipH = currentTransform.flipH === true;
+  const flipV = currentTransform.flipV === true;
   return (
     <CollapsiblePanel id={`transform-${index}`} title="Transformations" defaultOpen={false}>
       <div className="space-y-6 bg-white/3 p-4 rounded-xl border border-white/5">
@@ -195,6 +197,28 @@ export const TransformSettings = ({
             </div>
           </div>
         ))}
+        <div className="space-y-2 pt-2 border-t border-white/5">
+          <Label className="text-[11px] font-bold text-white/40">Flip (any element)</Label>
+          <div className="flex gap-2">
+            <Button
+              variant="glass"
+              className={`flex-1 h-8 text-[11px] font-bold rounded-full ${flipH ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground" : ""}`}
+              onClick={() => updateTransform('flipH', !flipH)}
+              title="Mirror left-right around the element center"
+            >
+              Flip H
+            </Button>
+            <Button
+              variant="glass"
+              className={`flex-1 h-8 text-[11px] font-bold rounded-full ${flipV ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground" : ""}`}
+              onClick={() => updateTransform('flipV', !flipV)}
+              title="Mirror top-bottom around the element center"
+            >
+              Flip V
+            </Button>
+          </div>
+          <p className="text-[10px] text-white/30">Mirrors via the transform attribute, like rotate. Works on text, images and any element. No ID change needed.</p>
+        </div>
       </div>
     </CollapsiblePanel>
   );

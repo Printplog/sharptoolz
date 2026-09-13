@@ -25,6 +25,8 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
     let generationRule: string | undefined;
     let symbology: string | undefined;
     let generationMode: string | undefined;
+    let requiresGrayscale = false;
+    let grayscaleIntensity: number | undefined;
     const svgElementId = id;
 
     // If it's a select option
@@ -61,7 +63,15 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
     }
 
     for (const part of parts.slice(1)) {
-      if (part.startsWith("mask_")) {
+      if (part === "grayscale") {
+        requiresGrayscale = true;
+        grayscaleIntensity = 100;
+      } else if (part.startsWith("grayscale_")) {
+        requiresGrayscale = true;
+        const raw = part.slice("grayscale_".length);
+        const parsed = parseInt(raw, 10);
+        grayscaleIntensity = Number.isNaN(parsed) ? 100 : Math.max(0, Math.min(100, parsed));
+      } else if (part.startsWith("mask_")) {
         maskSource = part.slice(5);
       } else if (part.startsWith("max_")) {
         max = parseInt(part.replace("max_", ""));
@@ -89,9 +99,9 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
       } else if (
         [
           "text", "textarea", "checkbox", "date", "upload", "number",
-          "email", "tel", "gen", "password", "range", "color", "file", "qrcode", "barcode"
+          "email", "tel", "gen", "password", "range", "color", "file", "qrcode", "barcode", "fixed"
         ].includes(part)
-      ) {
+        ) {
         // Only update type if it's currently the default 'text' or we're explicitly setting it to a specialized type.
         // We don't want a trailing '.text' or '.textarea' to overwrite '.qrcode_...' or '.gen_...'
         if (type === "text" || (part !== "text" && part !== "textarea")) {
@@ -112,11 +122,12 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
       defaultValue: type === "checkbox" ? false : textContent,
       currentValue: type === "checkbox" ? false : textContent,
       ...(maskSource ? { maskSource } : {}),
+      ...(requiresGrayscale ? { requiresGrayscale: true as const, grayscaleIntensity: grayscaleIntensity ?? 100 } : {}),
       ...(max ? { max } : {}),
       ...(dateFormat ? { dateFormat } : {}),
       ...(generationRule ? { generationRule } : {}),
       ...(generationMode ? { generationMode } : {}),
-      ...(symbology ? { symbology } : {})
+      ...(symbology ? { symbology } : {}),
     };
   }
 

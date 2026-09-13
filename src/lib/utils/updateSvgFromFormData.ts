@@ -296,7 +296,7 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
         const tagName = el.tagName.toLowerCase();
         const fieldType = (field.type || "text").toLowerCase();
         const isImageTag = tagName === 'image' || tagName === 'use';
-        const isImageField = fieldType === "upload" || fieldType === "file" || fieldType === "sign" || fieldType === "qrcode" || fieldType === "barcode";
+        const isImageField = fieldType === "upload" || fieldType === "file" || fieldType === "fixed" || fieldType === "sign" || fieldType === "qrcode" || fieldType === "barcode";
         const elId = el.getAttribute("id") || "";
 
         // Support both .qrcode and .qrcode_ prefixes
@@ -420,27 +420,28 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
             // they won't scan; plain linear codes (and other images) may stretch to fit.
             const keepAspect = isBarcodeElement && isFixedAspect(field.symbology);
             el.setAttribute("preserveAspectRatio", keepAspect ? "xMidYMid meet" : "none");
+          }
 
-            // Apply grayscale SVG filter when this depends field explicitly has .grayscale
-            if (field.dependsOn && field.requiresGrayscale) {
-              const intensity = Number(field.grayscaleIntensity ?? 100);
-              let defs = doc.querySelector('defs');
-              if (!defs) {
-                defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                doc.documentElement.prepend(defs);
-              }
-              const filterId = `_gs_${field.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
-              if (!doc.getElementById(filterId)) {
-                const filter = doc.createElementNS('http://www.w3.org/2000/svg', 'filter');
-                filter.setAttribute('id', filterId);
-                const cm = doc.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
-                cm.setAttribute('type', 'saturate');
-                cm.setAttribute('values', String(1 - intensity / 100));
-                filter.appendChild(cm);
-                defs.appendChild(filter);
-              }
-              el.setAttribute('filter', `url(#${filterId})`);
+          // Apply grayscale SVG filter when this depends/fixed field explicitly has .grayscale.
+          // Runs even with an empty value so baked .fixed art keeps its filter.
+          if ((field.dependsOn || fieldType === "fixed") && field.requiresGrayscale) {
+            const intensity = Number(field.grayscaleIntensity ?? 100);
+            let defs = doc.querySelector('defs');
+            if (!defs) {
+              defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
+              doc.documentElement.prepend(defs);
             }
+            const filterId = `_gs_${field.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            if (!doc.getElementById(filterId)) {
+              const filter = doc.createElementNS('http://www.w3.org/2000/svg', 'filter');
+              filter.setAttribute('id', filterId);
+              const cm = doc.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
+              cm.setAttribute('type', 'saturate');
+              cm.setAttribute('values', String(1 - intensity / 100));
+              filter.appendChild(cm);
+              defs.appendChild(filter);
+            }
+            el.setAttribute('filter', `url(#${filterId})`);
           }
         }
         // 3. TEXT-LIKE TAGS: <text>, <tspan>, etc.
@@ -503,6 +504,9 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
         }
 
         // 4. UNIVERSAL TRANSFORMATIONS (Rotation)
+        // Flip needs no runtime handling: it is baked into the template's
+        // transform attribute from the Transform panel, so it rides along
+        // untouched inside the base transform below.
         // Inheritance logic (sync with backend)
         let rotationValue = field.rotation;
         if ((rotationValue === undefined || rotationValue === null) && field.dependsOn) {
@@ -512,7 +516,6 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
              rotationValue = parentField.rotation;
           }
         }
-
         const rotation = rotationValue !== undefined && rotationValue !== null ? Number(rotationValue) : 0;
         if (rotation !== 0 || el.hasAttribute("data-base-transform")) {
           if (!el.hasAttribute("data-base-transform")) {
@@ -523,9 +526,12 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
           if (!center) return;
           const { cx, cy } = center;
           const baseWithoutRotation = baseTransform.replace(/rotate\s*\([^)]*\)/g, '').trim();
-          const newRotation = `rotate(${rotation}, ${cx}, ${cy})`;
-          const updatedTransform = baseWithoutRotation ? `${baseWithoutRotation} ${newRotation}` : newRotation;
-          el.setAttribute("transform", updatedTransform);
+          const parts: string[] = [];
+          if (baseWithoutRotation) parts.push(baseWithoutRotation);
+          if (rotation !== 0) parts.push(`rotate(${rotation}, ${cx}, ${cy})`);
+          const updatedTransform = parts.join(" ").trim();
+          if (updatedTransform) el.setAttribute("transform", updatedTransform);
+          else el.removeAttribute("transform");
         }
       });
     }

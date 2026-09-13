@@ -312,6 +312,11 @@ const FormFieldComponent: React.FC<{
     const hasGenerationRule = !!field.generationRule;
     const effectiveType = (hasGenerationRule && field.type !== "qrcode" && field.type !== "barcode") ? "gen" : field.type;
 
+    // Fixed fields are baked-in content: managed by the template, never shown in the form.
+    if (field.type === "fixed") {
+      return null;
+    }
+
     switch (effectiveType) {
       case "text":
       case "email":

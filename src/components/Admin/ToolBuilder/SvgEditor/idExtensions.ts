@@ -81,6 +81,11 @@ export const FIELD_TYPES: ExtensionDefinition[] = [
     helper: "Creates a file input field",
   },
   {
+    key: "fixed",
+    label: "Fixed",
+    helper: "Baked-in content with no user input. The element keeps its template value and never shows in the form; mask, grayscale and transforms still apply. Example: Logo.fixed, Photo.fixed.mask_Title",
+  },
+  {
     key: "status",
     label: "Status",
     helper: "Creates a status field",
@@ -136,7 +141,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     helper: "Show this image inside a text layer. Choose its base ID, for example Title. Remove .mask_Title to release the mask.",
     requiresValue: true,
     valuePlaceholder: "Text layer ID",
-    allowedAfter: ["upload", "file", "editable", "grayscale"],
+    allowedAfter: ["upload", "file", "fixed", "editable", "grayscale"],
   },
   {
     key: "depends",
@@ -176,6 +181,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "date",
       "checkbox",
       "upload",
+      "fixed",
       "mask",
       "tel",
       "password",
@@ -191,6 +197,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "hide_checked",
       "hide_unchecked",
       "depends",
+      "grayscale",
     ],
   },
   {
@@ -210,6 +217,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "date",
       "checkbox",
       "upload",
+      "fixed",
       "mask",
       "tel",
       "password",
@@ -221,10 +229,12 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "select",
       "editable",
       "max",
+      "min",
       "tracking_id",
       "link",
       "date_format",
       "gen_rule",
+      "mode",
       "grayscale",
       "depends",
       "showIf",
@@ -274,10 +284,10 @@ export const EXTENSIONS: ExtensionDefinition[] = [
   {
     key: "grayscale",
     label: "Grayscale",
-    helper: "Force grayscale rendering. Use on .upload/.file fields, or on .depends_ fields for independent grayscale. .grayscale for 100% or .grayscale_50 for custom intensity.",
+    helper: "Force grayscale rendering. Use on .upload/.file/.fixed fields, or on .depends_ fields for independent grayscale. .grayscale for 100% or .grayscale_50 for custom intensity.",
     requiresValue: false, // Optional intensity
     valuePlaceholder: "Enter intensity (0-100, e.g., 80)",
-    allowedAfter: ["upload", "file", "depends"],
+    allowedAfter: ["upload", "file", "fixed", "depends", "editable", "mask"],
   },
   {
     key: "showIf",
@@ -287,9 +297,10 @@ export const EXTENSIONS: ExtensionDefinition[] = [
     valuePlaceholder: "FieldId[Value] (e.g., Status[Error])",
     allowedAfter: [
       "text", "textarea", "gen", "email", "number", "date", "checkbox",
-      "upload", "tel", "password", "range", "color", "file", "status", "sign", "qrcode", "barcode",
+      "upload", "fixed", "tel", "password", "range", "color", "file", "status", "sign", "qrcode", "barcode",
       "hide", "hide_checked", "hide_unchecked",
       "editable", "max", "min", "tracking_id", "date_format", "gen_rule", "select",
+      "grayscale",
     ],
   },
 ];
@@ -451,5 +462,4 @@ export function getSuggestions(id: string): ExtensionDefinition[] {
 
   return allowed;
 }
-
 

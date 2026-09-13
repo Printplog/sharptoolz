@@ -9,7 +9,7 @@ interface Props {
 }
 
 export function TextMaskSettings({ element, elements, onChange }: Props) {
-  if (element.tag !== 'image') return null;
+  if (!['image', 'text', 'rect', 'circle', 'ellipse', 'path', 'g', 'use'].includes(element.tag)) return null;
   const id = element.id || element.attributes.id || '';
   const parts = id.split(/\.(?![^(]*\))/);
   const source = parts.find(part => part.startsWith('mask_'))?.slice(5) || '';
@@ -23,7 +23,7 @@ export function TextMaskSettings({ element, elements, onChange }: Props) {
           const selected = value === "__none__" ? "" : value;
           const next = parts.filter(part => !part.startsWith('mask_'));
           if (selected) {
-            if (next.length === 1) next.push('upload');
+            if (next.length === 1) next.push('fixed');
             next.splice(2, 0, `mask_${selected}`);
           }
           const newId = next.join('.');
@@ -39,7 +39,7 @@ export function TextMaskSettings({ element, elements, onChange }: Props) {
           {sources.map(name => <SelectItem key={name} value={name}>{name.replace(/_/g, ' ')}</SelectItem>)}
         </SelectContent>
       </Select>
-      <p className="text-xs text-white/50">The image appears inside the letters. Edit the text from the layer list; use image transforms to position the picture. Choose None to remove the mask.</p>
+      <p className="text-xs text-white/50">This layer appears inside the letters. Baked (.fixed) by default — switch the type to .upload if the user should provide the picture. Choose None to remove the mask.</p>
     </div>
   );
 }

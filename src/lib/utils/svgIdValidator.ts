@@ -160,7 +160,10 @@ export function validateSvgId(id: string): ValidationResult {
       }
 
       // Check allowedAfter
-      if (lastPartBase) {
+      if (extension.allowedAfter) {
+        if (!lastPartBase) {
+          return { valid: false, error: `❌ Extension '.${partBase}' must come after a field type (e.g. '.upload', '.file' or '.fixed').`, parts, baseId };
+        }
         const isAllowedAfter = extension.allowedAfter?.includes(lastPartBase);
         if (!isAllowedAfter) {
           return { valid: false, error: `❌ Extension '.${part}' is not allowed after '.${lastPartBase}'.`, parts, baseId };

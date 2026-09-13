@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
+import { buildFlipPart, getLiveElementCenter, parseFlipFlags, stripFlipParts } from "./flipTransform";
 
 export const useElementTransform = (
   localElement: SvgElement,
@@ -9,7 +10,10 @@ export const useElementTransform = (
   const currentTransform = useMemo(() => {
     const style = localElement.attributes.style || "";
     const transformAttr = localElement.attributes.transform || "";
-    const combined = `${style} ${transformAttr}`.replace(/,/g, " ");
+    // Flip parts (translate + scale(-1)) are tracked separately so they never
+    // leak into the rotate/scale/translate readers or get duplicated on rebuild.
+    const { flipH, flipV } = parseFlipFlags(transformAttr, style);
+    const combined = `${stripFlipParts(style)} ${stripFlipParts(transformAttr)}`.replace(/,/g, " ");
 
     const getVal = (regex: RegExp) => {
       const match = combined.match(regex);
@@ -17,7 +21,16 @@ export const useElementTransform = (
     };
 
     let rotate = getVal(/rotate\s*\(\s*(-?\d+\.?\d*)/);
-    let scale = getVal(/scale\s*\(\s*(-?\d+\.?\d*)/);
+    // User scale only: skip flip scales (any scale(...) with a -1 argument)
+    let scale: number | null = null;
+    const scaleRe = /scale\s*\(\s*(-?\d+\.?\d*)(?:\s*[,\s]\s*(-?\d+\.?\d*))?\s*\)/g;
+    for (const m of combined.matchAll(scaleRe)) {
+      const sx = parseFloat(m[1]);
+      const sy = m[2] !== undefined ? parseFloat(m[2]) : sx;
+      if (sx === -1 || sy === -1) continue;
+      scale = sx;
+      break;
+    }
 
     const transMatch = combined.match(/translate\s*\(\s*(-?\d+\.?\d*)\s*(-?\d+\.?\d*|)/);
     let translateX = 0;
@@ -57,6 +70,8 @@ export const useElementTransform = (
       scale: scale ?? 1,
       translateX: absoluteX,
       translateY: absoluteY,
+      flipH,
+      flipV,
     };
   }, [
     localElement.attributes.style,
@@ -118,8 +133,8 @@ export const useElementTransform = (
   }, [localElement, allElements]);
 
   const updateTransform = (
-    key: "rotate" | "scale" | "translateX" | "translateY",
-    value: number
+    key: "rotate" | "scale" | "translateX" | "translateY" | "flipH" | "flipV",
+    value: number | boolean
   ) => {
     const transformAttr = localElement.attributes.transform || "";
     const matrixRegex =
@@ -183,7 +198,7 @@ export const useElementTransform = (
       }
     }
 
-    const newTransformAbsolute = { ...currentTransform, [key]: value };
+    const newTransformAbsolute = { ...currentTransform, [key]: value } as typeof currentTransform & Record<string, number | boolean>;
     const relTx = newTransformAbsolute.translateX - safeBaseX;
     const relTy = newTransformAbsolute.translateY - safeBaseY;
 
@@ -202,6 +217,19 @@ export const useElementTransform = (
 
     if (newTransformAbsolute.scale !== 1) {
       components.push(`scale(${newTransformAbsolute.scale})`);
+    }
+
+    // Mirror about the true on-screen center so the element never jumps:
+    // the live preview box when available, otherwise the attribute-based center.
+    const liveCenter = getLiveElementCenter(localElement.internalId);
+    const flipPart = buildFlipPart(
+      liveCenter?.cx ?? center.cx,
+      liveCenter?.cy ?? center.cy,
+      newTransformAbsolute.flipH === true,
+      newTransformAbsolute.flipV === true
+    );
+    if (flipPart) {
+      components.push(flipPart);
     }
 
     const tStr = components.join(" ");

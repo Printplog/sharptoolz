@@ -45,7 +45,7 @@ export function applyTextMasks(root: Element): void {
   for (const image of layers) {
     const part = (image.id || '').split(/\.(?![^(]*\))/).find(p => p.startsWith('mask_'));
     if (!part) continue;
-    if (image.localName !== 'image') throw new Error('Text masks can only be applied to image layers.');
+    if (!['image', 'text', 'rect', 'circle', 'ellipse', 'path', 'g', 'use'].includes(image.localName)) throw new Error('Text masks can only be applied to drawable layers.');
     const sourceId = part.slice(5);
     const matches = layers.filter(el => el.id.split('.')[0] === sourceId);
     if (matches.length !== 1 || matches[0].localName !== 'text') throw new Error(`Mask source "${sourceId}" must identify one text layer.`);

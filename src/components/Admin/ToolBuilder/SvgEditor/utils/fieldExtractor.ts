@@ -32,7 +32,7 @@ export function extractFieldsFromElements(elements: SvgElement[]): FormField[] {
     } else {
       // Look for explicit type extension at position 1
       const typePart = extensions[0];
-      const validTypes = ["text", "textarea", "upload", "file", "sign", "date", "gen", "number", "checkbox", "range", "color", "email", "tel", "status", "password"];
+      const validTypes = ["text", "textarea", "upload", "file", "fixed", "sign", "date", "gen", "number", "checkbox", "range", "color", "email", "tel", "status", "password"];
       if (validTypes.includes(typePart)) {
         type = typePart;
       }

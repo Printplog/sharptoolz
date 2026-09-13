@@ -186,6 +186,12 @@ export const svgEditorDocs: DocSection[] = [
     ]
   },
   {
+    id: "flip-transform",
+    title: "Flip Horizontal / Vertical",
+    content: "Flip lives under Transform in the element editor, next to rotate — not in the ID. Flip H mirrors left-right, Flip V mirrors top-bottom, around the element center. It is stored directly in the transform attribute (translate + scale(-1, 1)) so it previews instantly and composes with rotate/translate/scale. Works on text, images, groups and any element. Combine both for a 180-degree mirror.",
+    codeExamples: []
+  },
+  {
     id: "sign-fields",
     title: ".sign Extension",
     content: "Creates a signature field from an SVG element. Allows users to draw or upload their signature.",
@@ -664,6 +670,11 @@ export const svgEditorDocs: DocSection[] = [
         title: "Image Inside Text",
         code: "Title.text\nPhoto.upload.mask_Title",
         description: "Select the image, open Styling, choose Text mask, then Title. The text defines the visible shape and stays editable in the layer list. Replacing the image preserves the mask. Choose None to restore both layers. Supports text (including generated text), images and SVG group transforms. The image must overlap the text; use image transforms to position it."
+      },
+      {
+        title: "Fixed (Baked) Content",
+        code: "Logo.fixed\nPhoto.fixed.mask_Title",
+        description: "Fixed is a field type that never shows in the user form: the element keeps its template value. Use it for logos, backgrounds and baked art. Mask, grayscale and transforms still apply, so Photo.fixed.mask_Title shows a baked photo inside the Title letters with no upload box. Any drawable layer (image, text, shape, group) can be masked; the mask source is a text layer."
       },
       {
         title: "Fill Pattern",
