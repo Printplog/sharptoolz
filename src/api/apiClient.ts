@@ -4,6 +4,7 @@ import { resolveApiBaseUrl } from "@/api/resolveApiBaseUrl";
 import {
   expireAuthenticatedSession,
   getAuthSessionGeneration,
+  isCurrentAuthSession,
 } from "@/lib/authSession";
 
 
@@ -57,19 +58,28 @@ apiClient.interceptors.request.use(async (config) => {
 });
 
 
+const isCsrfFailure = (error: unknown) => axios.isAxiosError(error) &&
+  error.response?.status === 403 &&
+  typeof error.response.data?.detail === "string" &&
+  error.response.data.detail.startsWith("CSRF validation failed:");
+
 const refreshToken = async () => {
-  const csrf = await ensureCsrfToken();
-  const response = await axios.post(
-    `${BASE_URL}/accounts/refresh-token/`,
-    {},
-    {
+  const send = async () => {
+    const csrf = await ensureCsrfToken();
+    return axios.post(`${BASE_URL}/accounts/refresh-token/`, {}, {
       withCredentials: true,
       headers: { "X-CSRFToken": csrf },
-    }
-  );
-  return response.data;
+    });
+  };
+  try {
+    return (await send()).data;
+  } catch (error) {
+    // Another login/tab can rotate the CSRF cookie while this tab stays open.
+    if (!isCsrfFailure(error)) throw error;
+    csrfToken = null;
+    return (await send()).data;
+  }
 };
-
 
 // State for the token refresh queue
 let isRefreshing = false;
@@ -116,11 +126,12 @@ apiClient.interceptors.response.use(
       "/accounts/csrf/",
     ].some((path) => url.includes(path));
 
-    const detail = error.response?.data?.detail;
+    // A late response from an older login must not refresh or expire this one.
+    if (requestGeneration !== undefined && !isCurrentAuthSession(requestGeneration)) {
+      return Promise.reject(error);
+    }
     if (
-      error.response?.status === 403 &&
-      typeof detail === "string" &&
-      detail.startsWith("CSRF validation failed:") &&
+      isCsrfFailure(error) &&
       !originalRequest._csrfRetry
     ) {
       originalRequest._csrfRetry = true;
@@ -137,6 +148,7 @@ apiClient.interceptors.response.use(
       !isAuthenticationRequest
     ) {
       
+      originalRequest._retry = true;
       // If a refresh is already in progress, queue this request
       if (isRefreshing) {
         return new Promise(function (resolve, reject) {
@@ -152,7 +164,6 @@ apiClient.interceptors.response.use(
       }
 
       console.warn("[AuthInterceptor] 401 Unauthorized detected - Attempting token refresh...");
-      originalRequest._retry = true; // ✅ Prevent infinite loops
       isRefreshing = true;
 
       try {
@@ -169,10 +180,19 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
         processQueue(err as Error);
         
-        expireAuthenticatedSession(requestGeneration);
+        // Only an explicit rejection of the refresh cookie ends the session.
+        // Offline, CSRF, throttling and server failures must remain retryable.
+        if (axios.isAxiosError(err) && err.response?.status === 401) {
+          expireAuthenticatedSession(requestGeneration);
+        }
         // window.location.href = "/auth/login"; // ✅ Redirect to login if needed
         return Promise.reject(err);
       }
+    }
+
+    if (error.response?.status === 401 && originalRequest._retry &&
+        hadAuthenticatedSession && !isAuthenticationRequest) {
+      expireAuthenticatedSession(requestGeneration);
     }
 
     console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}:`, error.response?.data || error.message);

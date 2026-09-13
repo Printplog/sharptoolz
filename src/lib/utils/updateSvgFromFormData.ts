@@ -1,3 +1,4 @@
+import { applyTextMasks, clearTextMasks } from "./svgTextMasks";
 import { extractFromDependency } from "./fieldExtractor";
 import { applyWrappedText, getSvgElementStyle } from "./textWrapping";
 import { generateQrDataUrlSync } from "./qrGenerator";
@@ -19,6 +20,8 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
     const parser = new DOMParser();
     doc = parser.parseFromString(svgSource as string, "image/svg+xml");
   }
+
+  clearTextMasks(doc.documentElement);
 
   // Pre-calculate field map for quick lookup (needed for dependency inheritance)
   const fieldsMap = new Map<string, FormField>();
@@ -528,6 +531,7 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
     }
   });
 
+  applyTextMasks(doc.documentElement);
   if (isDocument) return doc;
   return new XMLSerializer().serializeToString(doc);
 }

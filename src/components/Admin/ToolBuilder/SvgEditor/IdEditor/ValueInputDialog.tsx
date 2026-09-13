@@ -22,9 +22,10 @@ export default function ValueInputDialog({
   useEffect(() => {
     // For depends, extract base IDs from all elements
     // We include both dot-separated base IDs and raw IDs for elements without dots
-    if (extension.key === "depends" && allElements.length > 0) {
+    if ((extension.key === "depends" || extension.key === "mask") && allElements.length > 0) {
       const baseIds = new Set<string>();
       allElements.forEach(el => {
+        if (extension.key === "mask" && el.tag !== "text") return;
         const fullId = el.id || el.attributes.id || "";
         if (fullId) {
           const firstDotIndex = fullId.indexOf(".");
@@ -76,13 +77,13 @@ export default function ValueInputDialog({
           }}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (extension.key === "depends") {
+            if ((extension.key === "depends" || extension.key === "mask")) {
               setShowBaseIdSuggestions(true);
             }
           }}
         />
         {/* Base ID suggestions for depends */}
-        {extension.key === "depends" && showBaseIdSuggestions && baseIdSuggestions.length > 0 && (
+        {(extension.key === "depends" || extension.key === "mask") && showBaseIdSuggestions && baseIdSuggestions.length > 0 && (
           <div className="absolute left-0 right-0 mt-1 max-h-48 overflow-auto rounded-md border border-white/20 bg-black/90 backdrop-blur-sm shadow-xl z-30">
             <div className="px-2 py-1.5 text-xs font-semibold text-white/60 border-b border-white/10">
               Available Base IDs

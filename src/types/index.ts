@@ -126,6 +126,7 @@ export interface FormField {
   currentValue?: string | number | boolean | null;
   max?: number; // Max value for number OR max length for text
   options?: SelectOption[]; // If options exist, it's automatically a select field
+  maskSource?: string; // Base ID of the text layer used as an image mask
   dependsOn?: string; // Field dependency with optional extraction (e.g., "field_name[w1]", "field[ch1-4]")
   link?: string; // Link property for fields like Tracking_ID
   isTrackingId?: boolean; // Flag to identify tracking ID fields

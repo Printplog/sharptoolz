@@ -21,6 +21,7 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
     let type = "text";
     let max: number | undefined;
     let dateFormat: string | undefined;
+    let maskSource: string | undefined;
     let generationRule: string | undefined;
     let symbology: string | undefined;
     let generationMode: string | undefined;
@@ -60,7 +61,9 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
     }
 
     for (const part of parts.slice(1)) {
-      if (part.startsWith("max_")) {
+      if (part.startsWith("mask_")) {
+        maskSource = part.slice(5);
+      } else if (part.startsWith("max_")) {
         max = parseInt(part.replace("max_", ""));
       } else if (part.startsWith("format_")) {
         // Extract format and replace underscores with spaces
@@ -108,6 +111,7 @@ const parseSvgToFormFields = (svgText: string): FormField[] => {
       svgElementId,
       defaultValue: type === "checkbox" ? false : textContent,
       currentValue: type === "checkbox" ? false : textContent,
+      ...(maskSource ? { maskSource } : {}),
       ...(max ? { max } : {}),
       ...(dateFormat ? { dateFormat } : {}),
       ...(generationRule ? { generationRule } : {}),

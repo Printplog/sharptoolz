@@ -24,9 +24,9 @@ interface ProtectedLayoutProps {
 
 export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutProps) {
   const navigate = useNavigate();
-  const { setUser, isAuthenticated, logout } = useAuthStore();
+  const { setUser, isAuthenticated } = useAuthStore();
 
-  const { data, isError, isLoading } = useQuery<User, Error>({
+  const { data, isError, isLoading, refetch, isFetching } = useQuery<User, Error>({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
     retry: (failureCount, error) => {
@@ -37,9 +37,7 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
   });
 
   useEffect(() => {
-    if ((!isLoading && isError && !data) || !isAuthenticated) {
-      // Ensure state reflects unauthenticated immediately
-      if (isError) logout();
+    if (!isAuthenticated) {
       toast.error("Session expired, login to continue", {
         id: SESSION_EXPIRED_TOAST_ID,
       });
@@ -66,7 +64,19 @@ export default function ProtectedLayout({ children, isAdmin }: ProtectedLayoutPr
         return;
       }
     }
-  }, [data, setUser, isError, isAdmin, navigate, isAuthenticated, isLoading, logout]);
+  }, [data, setUser, isError, isAdmin, navigate, isAuthenticated, isLoading]);
+
+  if (!isAuthenticated) return null;
+
+  if (isError && !data) {
+    return <div role="alert" className="p-6 space-y-3">
+      <p>Unable to check your session. Please check your connection and try again.</p>
+      <button type="button" onClick={() => void refetch()} disabled={isFetching}
+        className="rounded-lg border px-4 py-2 disabled:opacity-50">
+        {isFetching ? "Retrying…" : "Try again"}
+      </button>
+    </div>;
+  }
 
   if (isLoading) {
     return (

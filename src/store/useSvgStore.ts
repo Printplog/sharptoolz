@@ -73,6 +73,7 @@ export const useSvgStore = create<SvgStore>()(
         historyIndex: -1,
 
         setInitialSvg: (svg, preserveFrom, manualMap) => {
+            if (get().commitTimeout) clearTimeout(get().commitTimeout!);
             const parser = new DOMParser();
             const svgDoc = parser.parseFromString(svg.trim(), "image/svg+xml");
             const allElements = Array.from(svgDoc.querySelectorAll("*")).filter(el => el.tagName.toLowerCase() !== "svg");
@@ -91,7 +92,10 @@ export const useSvgStore = create<SvgStore>()(
                     'pattern', 'clippath', 'mask', 'filter', 'fegaussianblur', 'feoffset', 'feflood', 'fecomposite', 'femerge', 'femergenode'
                 ];
 
-                if (nonEditableTags.includes(tag)) return;
+                if (nonEditableTags.includes(tag)) {
+                    domEl.removeAttribute('data-internal-id');
+                    return;
+                }
 
                 const id = domEl.getAttribute("id");
 
@@ -101,7 +105,13 @@ export const useSvgStore = create<SvgStore>()(
                 // 2. It is a text or image node
                 const isInteresting = !!id || ['text', 'image', 'foreignobject'].includes(tag);
 
-                if (!isInteresting) return;
+                if (!isInteresting) {
+                    // The admin patch loader can annotate structural nodes too.
+                    // Only tracked layers may retain this marker: regeneration
+                    // treats an untracked marked node as a deleted layer.
+                    domEl.removeAttribute('data-internal-id');
+                    return;
+                }
 
                 const originalFileId = domEl.getAttribute("id");
                 const internalIdAttr = domEl.getAttribute("data-internal-id");
@@ -229,6 +239,7 @@ export const useSvgStore = create<SvgStore>()(
             const newSelectedId = (currentSelectedId && elementsMap[currentSelectedId]) ? currentSelectedId : null;
 
             set({
+                commitTimeout: null,
                 originalSvg: modifiedSvg,
                 workingSvg: modifiedSvg,
                 elements: elementsMap,
@@ -256,6 +267,9 @@ export const useSvgStore = create<SvgStore>()(
         },
 
         updateElement: (id, updates, undoable = true) => {
+            if (updates.id !== undefined) {
+                updates = { ...updates, attributes: { ...updates.attributes, id: updates.id } };
+            }
             const { elements, history, historyIndex } = get();
             const currentElement = elements[id];
             if (!currentElement) return;
@@ -309,11 +323,12 @@ export const useSvgStore = create<SvgStore>()(
         },
 
         commitChanges: (immediate = false) => {
-            const { originalSvg, elements, elementOrder, commitTimeout } = get();
+            const { commitTimeout } = get();
 
             if (commitTimeout) clearTimeout(commitTimeout);
 
             const run = () => {
+                const { originalSvg, elements, elementOrder } = get();
                 const orderedElements = elementOrder.map(id => elements[id]);
                 const newWorkingSvg = regenerateSvg(originalSvg, orderedElements, { keepInternalIds: true });
 
@@ -486,7 +501,10 @@ export const useSvgStore = create<SvgStore>()(
             get().commitChanges();
         },
 
-        reset: () => set({
+        reset: () => {
+            if (get().commitTimeout) clearTimeout(get().commitTimeout!);
+            set({
+            commitTimeout: null,
             originalSvg: '',
             workingSvg: '',
             elements: {},
@@ -494,7 +512,8 @@ export const useSvgStore = create<SvgStore>()(
             selectedElementId: null,
             history: [],
             historyIndex: -1
-        }),
+        });
+        },
 
         applyPatches: (patches: ExternalPatch[]) => {
             const { elements, elementOrder } = get();

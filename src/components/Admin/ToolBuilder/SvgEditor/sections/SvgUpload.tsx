@@ -66,6 +66,7 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const svgContentRef = useRef<HTMLDivElement>(null);
   const selBoxRef = useRef<HTMLDivElement>(null);
   const selLabelRef = useRef<HTMLDivElement>(null);
 
@@ -246,8 +247,10 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
     const svgEl = containerRef.current?.querySelector("svg");
     if (!svgEl || !wrapperRef.current) return;
     const vb = svgEl.viewBox.baseVal;
-    const svgW = vb.width || svgEl.width?.baseVal?.value || 800;
-    const svgH = vb.height || svgEl.height?.baseVal?.value || 600;
+    // viewBox units can differ from the rendered viewport (e.g. 600 vs 1200).
+    const bounds = svgEl.getBoundingClientRect();
+    const svgW = bounds.width / vp.current.z || svgEl.width?.baseVal?.value || vb.width || 800;
+    const svgH = bounds.height / vp.current.z || svgEl.height?.baseVal?.value || vb.height || 600;
     const pad = 80;
     const wrap = wrapperRef.current;
     const fitZ = Math.min((wrap.clientWidth - pad) / svgW, (wrap.clientHeight - pad) / svgH, 2);
@@ -419,39 +422,19 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
   // ══════════════════════════════════════════════════════════════════════════
   // Base SVG
   // ══════════════════════════════════════════════════════════════════════════
-  const structuralKey = useMemo(
-    () => `${elements.length}_${elements.map(e => e.internalId).join("-")}`,
-    [elements]
+  const baseSvg = useMemo(
+    () => sanitizeSvgGradients(currentSvg ?? "", svgNamespace(currentSvg ?? "")),
+    [currentSvg]
   );
-  const [baseSvg, setBaseSvg] = useState(() => sanitizeSvgGradients(currentSvg ?? "", svgNamespace(currentSvg ?? "")));
-  const prevKey = useRef(structuralKey);
-  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const sanitize = (svg: string) => sanitizeSvgGradients(svg, svgNamespace(svg));
-
-  useEffect(() => {
-    if (!currentSvg) {
-      setBaseSvg('');
-      return;
-    }
-    if (structuralKey !== prevKey.current) {
-      setBaseSvg(sanitize(currentSvg));
-      prevKey.current = structuralKey;
-      if (syncTimer.current) clearTimeout(syncTimer.current);
-    } else {
-      if (syncTimer.current) clearTimeout(syncTimer.current);
-      syncTimer.current = setTimeout(() => setBaseSvg(sanitize(currentSvg)), 2000);
-    }
-    return () => { if (syncTimer.current) clearTimeout(syncTimer.current); };
-  }, [currentSvg, structuralKey]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // Live DOM surgical updates
   // ══════════════════════════════════════════════════════════════════════════
   useSvgLiveUpdate(
-    containerRef as React.RefObject<HTMLDivElement>, 
+    svgContentRef as React.RefObject<HTMLDivElement>,
     elements, 
-    activeElementId
+    activeElementId,
+    baseSvg
   );
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -463,7 +446,6 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
     cancelAnimationFrame(zoomRaf.current);
     cancelAnimationFrame(selRaf.current);
     if (labelTimer.current) clearTimeout(labelTimer.current);
-    if (syncTimer.current) clearTimeout(syncTimer.current);
   }, []);
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -551,7 +533,7 @@ const SvgUpload = forwardRef<SvgUploadRef, Props>(({
               >
                 <div
                   className="[&_svg]:block [&_svg]:max-w-none [&_svg]:max-h-none pointer-events-auto"
-                  dangerouslySetInnerHTML={{ __html: baseSvg }}
+                  ref={svgContentRef}
                 />
               </div>
 

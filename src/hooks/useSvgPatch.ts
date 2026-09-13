@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { SvgPatch } from '@/types';
+import {mergeSvgPatches} from '@/lib/utils/mergeSvgPatches';
 
 /**
  * Custom hook to manage a list of SVG patch updates.
@@ -15,14 +16,7 @@ export function useSvgPatch() {
    * for the same element and attribute with the new value.
    */
   const addPatch = useCallback((newPatch: SvgPatch) => {
-    setPatches(prevPatches => {
-      // Filter out any existing patch for the same element's attribute
-      const filteredPatches = prevPatches.filter(
-        p => !(p.id === newPatch.id && p.attribute === newPatch.attribute)
-      );
-      // Add the new patch
-      return [...filteredPatches, newPatch];
-    });
+    setPatches(prevPatches => mergeSvgPatches([...prevPatches, newPatch]));
   }, []);
 
   /**

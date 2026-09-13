@@ -3,7 +3,7 @@
  * Matches elements by ID/identity instead of index to preserve content during reordering
  */
 
-import { applyWrappedText } from "@/lib/utils/textWrapping";
+import { applyWrappedText, readSvgText, getSvgElementStyle } from "@/lib/utils/textWrapping";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
 
 export interface RegenerateOptions {
@@ -65,7 +65,7 @@ export function regenerateSvg(
         // Clear attributes (except the ID we need to find it again)
         const attrsToRemove = Array.from(el.attributes).filter(a => a.name !== 'data-internal-id');
         attrsToRemove.forEach(attr => {
-          if (attr.namespaceURI) el.removeAttributeNS(attr.namespaceURI, attr.name);
+          if (attr.namespaceURI) el.removeAttributeNS(attr.namespaceURI, attr.localName);
           else el.removeAttribute(attr.name);
         });
 
@@ -82,7 +82,7 @@ export function regenerateSvg(
             }
 
             if (editedEl.tag === 'image' && (key === 'href' || key === 'xlink:href')) {
-              el.setAttributeNS(hrefNS, 'href', stringValue);
+              el.setAttribute('href', editedEl.attributes.href ?? stringValue);
             } else if (key.startsWith('xlink:') || key.startsWith('xmlns:')) {
               const parts = key.split(':');
               if (parts.length === 2) {
@@ -102,15 +102,15 @@ export function regenerateSvg(
         // Apply text content
         if (typeof editedEl.innerText === 'string') {
           if (editedEl.tag === 'text') {
-            const fontSizeAttr = editedEl.attributes['font-size'];
-            const fontSize = fontSizeAttr ? parseFloat(fontSizeAttr) : 16;
-            const fontFamily = editedEl.attributes['font-family'] || 'Arial';
-            applyWrappedText(el as SVGTextElement, editedEl.innerText, fontSize, fontFamily, doc);
-          } else {
+            if (readSvgText(el) !== editedEl.innerText) {
+              const { fontSize, fontFamily } = getSvgElementStyle(el, doc);
+              applyWrappedText(el as SVGTextElement, editedEl.innerText, fontSize, fontFamily, doc);
+            }
+          } else if (['tspan', 'textPath'].includes(editedEl.tag)) {
             el.textContent = editedEl.innerText;
           }
-        } else {
-          el.textContent = ''; // Clear text content if it's no longer a string
+        } else if (['text', 'tspan', 'textPath'].includes(editedEl.tag)) {
+          el.textContent = ''; // Clear text only; groups retain their children
         }
 
         // Apply highlight
@@ -140,7 +140,7 @@ export function regenerateSvg(
           if (value !== undefined && value !== null) {
             const stringValue = String(value);
             if (editedEl.tag === 'image' && (key === 'href' || key === 'xlink:href')) {
-              domEl.setAttributeNS(hrefNS, 'href', stringValue);
+              domEl.setAttribute('href', editedEl.attributes.href ?? stringValue);
             } else if (key.startsWith('xlink:') || key.startsWith('xmlns:')) {
               const parts = key.split(':');
               if (parts.length === 2) {
@@ -163,7 +163,7 @@ export function regenerateSvg(
             const fSize = fSizeAttr ? parseFloat(fSizeAttr) : 16;
             const fFamily = editedEl.attributes['font-family'] || 'Arial';
             applyWrappedText(domEl as SVGTextElement, editedEl.innerText, fSize, fFamily, doc);
-          } else {
+          } else if (['tspan', 'textPath'].includes(editedEl.tag)) {
             domEl.textContent = editedEl.innerText;
           }
         }

@@ -1,4 +1,5 @@
 import type { SvgPatch } from '@/types';
+import {mergeSvgPatches} from './mergeSvgPatches';
 
 /**
  * Applies a list of SVG patches to an SVG string in the browser.
@@ -67,7 +68,7 @@ export function applySvgPatches(svgContent: string, patches: SvgPatch[]): string
 
             let appliedCount = 0;
 
-            patches.forEach((patch) => {
+            mergeSvgPatches(patches).forEach((patch) => {
                 const { id, attribute, value } = patch;
                 if (!id || !attribute) return;
 

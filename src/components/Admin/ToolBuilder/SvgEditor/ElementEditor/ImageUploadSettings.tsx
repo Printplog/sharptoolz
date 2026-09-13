@@ -8,6 +8,7 @@ interface ImageUploadSettingsProps {
   isUploadField: boolean;
   currentImageUrl: string;
   index: number;
+  isReadingImage: boolean;
   handleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleLocalUpdate: (updates: Partial<SvgElement>) => void;
   isImageElement: (el: SvgElement) => boolean;
@@ -18,6 +19,7 @@ export const ImageUploadSettings = ({
   isUploadField,
   currentImageUrl,
   index,
+  isReadingImage,
   handleImageUpload,
   handleLocalUpdate,
   isImageElement,
@@ -25,12 +27,13 @@ export const ImageUploadSettings = ({
   if (!isImageElement(localElement) && !isUploadField) return null;
 
   return (
-    <div className="space-y-3 border-t border-white/5 pt-4">
+    <div className="space-y-3 border-t border-white/5 pt-4" aria-busy={isReadingImage}>
       <Label className="text-sm font-medium flex items-center gap-2">
         <Upload className="w-3.5 h-3.5 text-primary" />
         Upload Image
       </Label>
 
+      {isReadingImage && <p role="status" className="text-xs text-white/60">Loading image…</p>}
       <div className="group relative">
         {currentImageUrl ? (
           <div className="relative aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/10 transition-all group-hover:border-white/20">
@@ -82,7 +85,7 @@ export const ImageUploadSettings = ({
         />
       </div>
 
-      <p className="text-[10px] text-white/20 italic">Supports JPG, PNG, SGV. Max 5MB recommended.</p>
+      <p className="text-[10px] text-white/20 italic">Supports JPG, PNG, SVG. Max 5MB recommended.</p>
     </div>
   );
 };

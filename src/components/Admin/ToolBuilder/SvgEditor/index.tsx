@@ -62,6 +62,10 @@ export interface SvgEditorRef {
   name: string;
 }
 
+const EMPTY_FONTS: Font[] = [];
+const EMPTY_KEYWORDS: string[] = [];
+const EMPTY_PATCHES: SvgPatch[] = [];
+
 const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditorProps> = (props, ref) => {
   const {
     svgRaw,
@@ -71,8 +75,8 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     isActive = true,
     tool = "",
     tutorial,
-    keywords = [],
-    fonts: initialFonts = [],
+    keywords = EMPTY_KEYWORDS,
+    fonts: initialFonts = EMPTY_FONTS,
     onSave,
     isLoading,
     isSvgLoading = false,
@@ -80,7 +84,7 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
     templateId,
     onPatchUpdate,
     onSvgReplace,
-    patches = [],
+    patches = EMPTY_PATCHES,
     onImportPatches,
     hasUnsavedChanges = false,
     syncToken = 0,
@@ -302,6 +306,17 @@ const SvgEditorComponent: React.ForwardRefRenderFunction<SvgEditorRef, SvgEditor
       toast.error("Please 'Apply' your element changes before saving the template.");
       setActiveTab("inspector");
       return;
+    }
+
+    for (const layer of elements) {
+      const maskPart = (layer.id || '').split(/\.(?![^(]*\))/).find(part => part.startsWith('mask_'));
+      if (!maskPart) continue;
+      const sourceId = maskPart.slice(5);
+      const sources = elements.filter(el => (el.id || '').split('.')[0] === sourceId);
+      if (layer.tag !== 'image' || sources.length !== 1 || sources[0].tag !== 'text') {
+        toast.error(`Cannot save: mask "${sourceId}" must reference one text layer on an image.`);
+        return;
+      }
     }
 
     // STRICT VALIDATION: Block save if any element has an invalid field ID

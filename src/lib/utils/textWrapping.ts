@@ -129,6 +129,16 @@ export function getFontMetrics(fontSize: number, fontFamily: string = 'Arial'): 
  * @param fontFamily Optional font family for accurate spacing. Defaults to 'Arial'.
  * @param doc Optional document context (for server-side/DOMParser usage). Defaults to window.document.
  */
+/** Read editable text without discarding the authored tspan layout. */
+export function readSvgText(el: Element): string {
+  if (!el.querySelector('tspan')) return el.textContent?.trim() || '';
+  return Array.from(el.childNodes).map(node => {
+    if (node.nodeType === 3) return node.textContent?.trim() || '';
+    if (node.nodeType === 1 && (node as Element).localName === 'tspan') return node.textContent || '';
+    return '';
+  }).filter(Boolean).join('\n');
+}
+
 export function applyWrappedText(
   el: SVGTextElement | Element, 
   linesOrText: string | string[], 
@@ -141,11 +151,15 @@ export function applyWrappedText(
     ? linesOrText 
     : (linesOrText || "").split('\n');
 
-  // Clear existing content
+  // Some imported SVGs position text on the first tspan instead of <text>.
+  const firstSpan = el.querySelector('tspan');
+  const firstX = firstSpan?.getAttribute('x');
+  const firstY = firstSpan?.getAttribute('y');
+  const firstDy = firstSpan?.getAttribute('dy');
   el.textContent = "";
 
   // Get original coordinates
-  const x = el.getAttribute("x") || "0";
+  const x = el.getAttribute("x") || firstX || "0";
   
   // Check for saved line height ratio (calculated by Admin browser)
   // This ensures consistent spacing on server-side where canvas metrics might fail
@@ -176,7 +190,8 @@ export function applyWrappedText(
       // Use unitless value for dy to ensure it uses the local coordinate system (User Units)
       tspan.setAttribute("dy", String(lineHeight));
     } else {
-       // First line needs no dy usually, or could reset if needed 
+      if (firstY !== null && firstY !== undefined) tspan.setAttribute('y', firstY);
+      if (firstDy !== null && firstDy !== undefined) tspan.setAttribute('dy', firstDy);
     }
     
     el.appendChild(tspan);
@@ -194,7 +209,7 @@ export function applyWrappedText(
  * @param doc The document containing the element and style definitions
  * @returns Object with resolved fontSize and fontFamily
  */
-export function getSvgElementStyle(el: Element, doc: Document) {
+export function getSvgElementStyle(el: Element, doc: Document): { fontSize: number; fontFamily: string } {
   let fontSize = parseFloat(el.getAttribute('font-size') || '0');
   let fontFamily = el.getAttribute('font-family') || '';
 
@@ -251,6 +266,12 @@ export function getSvgElementStyle(el: Element, doc: Document) {
     });
   }
   
+  if ((!fontSize || !fontFamily) && el.parentElement && el.localName !== 'svg') {
+    const inherited = getSvgElementStyle(el.parentElement, doc);
+    fontSize ||= inherited.fontSize;
+    fontFamily ||= inherited.fontFamily;
+  }
+
   return { 
     fontSize: fontSize || 16, // Fallback default
     fontFamily: fontFamily || 'Arial' // Fallback default

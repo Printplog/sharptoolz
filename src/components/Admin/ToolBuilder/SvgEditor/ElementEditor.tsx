@@ -1,3 +1,5 @@
+import { CollapsiblePanel } from "./components/CollapsiblePanel";
+import { TextMaskSettings } from "./ElementEditor/TextMaskSettings";
 // ElementEditor component for editing individual SVG elements
 import { forwardRef, useEffect, useState, useMemo, useRef } from "react";
 import { Input } from "@/components/ui/input";
@@ -54,6 +56,30 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
     }, [element, isDirty]);
 
     const imageMap = useRef<Record<string, string>>({});
+    const imageReader = useRef<FileReader | null>(null);
+    const [isReadingImage, setIsReadingImage] = useState(false);
+
+    // Cancel reads when selection changes; an old upload must not edit a new layer.
+    useEffect(() => {
+      setIsReadingImage(false);
+      return () => {
+        const reader = imageReader.current;
+        imageReader.current = null;
+        reader?.abort();
+      };
+    }, [element.internalId]);
+
+    // Retain only previews still used by the current draft or committed layer.
+    useEffect(() => {
+      const urls = [localElement.attributes.href, localElement.attributes['xlink:href'],
+        element.attributes.href, element.attributes['xlink:href']];
+      for (const url of Object.keys(imageMap.current)) {
+        if (!urls.includes(url)) {
+          URL.revokeObjectURL(url);
+          delete imageMap.current[url];
+        }
+      }
+    }, [localElement, element]);
 
     // Cleanup Blob URLs on unmount to prevent memory leaks
     useEffect(() => {
@@ -85,7 +111,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
       const updated = {
         ...localElement,
         ...updates,
-        attributes: { ...localElement.attributes, ...(updates.attributes || {}) }
+        attributes: { ...localElement.attributes, ...(updates.attributes || {}), ...(updates.id !== undefined ? { id: updates.id } : {}) }
       };
       setLocalElement(updated);
       if (!isDirty) {
@@ -99,6 +125,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const handleApply = () => {
       console.log('[ElementEditor] Apply button clicked - finalizing state');
+      if (isReadingImage) return;
       const finalElement = { ...localElement };
       const href = finalElement.attributes.href;
 
@@ -128,19 +155,24 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           onPatchUpdate({ id: patchId, attribute: 'id', value: finalElement.id });
         }
         Object.entries(finalElement.attributes).forEach(([key, value]) => {
-          if (value !== element.attributes[key]) {
+          if (key !== "id" && value !== element.attributes[key]) {
             onPatchUpdate({ id: patchId, attribute: key, value });
           }
         });
       }
 
       onUpdate(index, finalElement, true); // Final update with UNDO enabled
+      setLocalElement(finalElement);
       setIsDirty(false);
       onDirtyChange?.(false);
       toast.success("Changes finalized");
     };
 
     const handleDiscard = () => {
+      const reader = imageReader.current;
+      imageReader.current = null;
+      reader?.abort();
+      setIsReadingImage(false);
       setLocalElement(element);
       setIsDirty(false);
       onDirtyChange?.(false);
@@ -233,13 +265,34 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
+      event.target.value = ""; // Allow retrying/replacing with the same file.
       if (!file) return;
+      imageReader.current?.abort();
       const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64 = e.target?.result as string;
+      imageReader.current = reader;
+      setIsReadingImage(true);
+      reader.onload = () => {
+        if (imageReader.current !== reader) return;
+        imageReader.current = null;
+        setIsReadingImage(false);
+        if (typeof reader.result !== 'string') {
+          toast.error("Could not read this image. Please try another file.");
+          return;
+        }
         const blobUrl = URL.createObjectURL(file);
-        imageMap.current[blobUrl] = base64;
-        handleLocalUpdate({ attributes: { ...localElement.attributes, href: blobUrl, 'xlink:href': blobUrl } });
+        imageMap.current[blobUrl] = reader.result;
+        // Preserve any ID/transform edits made while the image was reading.
+        setLocalElement(current => ({ ...current, attributes: {
+          ...current.attributes, href: blobUrl, 'xlink:href': blobUrl,
+        }}));
+        setIsDirty(true);
+        onDirtyChange?.(true);
+      };
+      reader.onerror = () => {
+        if (imageReader.current !== reader) return;
+        imageReader.current = null;
+        setIsReadingImage(false);
+        toast.error("Could not read this image. Please try again.");
       };
       reader.readAsDataURL(file);
     };
@@ -281,7 +334,7 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
                 variant="vibrant" 
                 className="h-7 text-[10px] px-5 font-bold rounded-full" 
                 onClick={handleApply}
-                disabled={!validateSvgId(localElement.id || "").valid}
+                disabled={isReadingImage || !validateSvgId(localElement.id || "").valid}
               >
                 Apply
               </Button>
@@ -381,12 +434,19 @@ const ElementEditor = forwardRef<HTMLDivElement, ElementEditorProps>(
           isTextElement={isTextElement}
         />
 
+        {localElement.tag === 'image' && (
+          <CollapsiblePanel id="element-styling" title="Styling" defaultOpen>
+            <TextMaskSettings element={localElement} elements={allElements} onChange={handleLocalUpdate} />
+          </CollapsiblePanel>
+        )}
+
         <ImageUploadSettings
           localElement={localElement}
           isUploadField={isUploadField}
           currentImageUrl={currentImageUrl}
           index={index}
           handleImageUpload={handleImageUpload}
+          isReadingImage={isReadingImage}
           handleLocalUpdate={handleLocalUpdate}
           isImageElement={isImageElement}
         />

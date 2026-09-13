@@ -131,6 +131,14 @@ export const FIELD_TYPES: ExtensionDefinition[] = [
 // Extensions that can come after field types
 export const EXTENSIONS: ExtensionDefinition[] = [
   {
+    key: "mask",
+    label: "Text mask",
+    helper: "Show this image inside a text layer. Choose its base ID, for example Title. Remove .mask_Title to release the mask.",
+    requiresValue: true,
+    valuePlaceholder: "Text layer ID",
+    allowedAfter: ["upload", "file", "editable", "grayscale"],
+  },
+  {
     key: "depends",
     label: "Depends On",
     helper:
@@ -168,6 +176,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "date",
       "checkbox",
       "upload",
+      "mask",
       "tel",
       "password",
       "range",
@@ -201,6 +210,7 @@ export const EXTENSIONS: ExtensionDefinition[] = [
       "date",
       "checkbox",
       "upload",
+      "mask",
       "tel",
       "password",
       "range",
