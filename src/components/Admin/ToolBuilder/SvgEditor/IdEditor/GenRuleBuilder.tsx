@@ -272,7 +272,7 @@ export default function GenRuleBuilder({
                   rowClassName="p-2 rounded-md border border-white/10 bg-white/5"
                 >
                   {(part, index) => (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-start gap-2">
                     <div className="flex-1 min-w-0">
                       {part.type === 'static' && (
                         <input
@@ -287,12 +287,12 @@ export default function GenRuleBuilder({
                       )}
 
                       {part.type === 'dep' && (
-                        <div className="flex gap-1">
+                        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2">
                           <Select
                             value={part.fieldName}
                             onValueChange={(value) => handleUpdatePart(index, { fieldName: value })}
                           >
-                            <SelectTrigger className="flex-1 h-8 text-xs bg-white/10 border-white/20 text-white focus:ring-0 focus:border-white/40">
+                            <SelectTrigger className="col-span-2 w-full min-w-0 h-8 text-xs bg-white/10 border-white/20 text-white focus:ring-0 focus:border-white/40 [&>span]:truncate">
                               <SelectValue placeholder="Select field..." />
                             </SelectTrigger>
                             <SelectContent className="bg-black/95 border-white/20 z-[101]">
@@ -308,8 +308,21 @@ export default function GenRuleBuilder({
                             value={part.extraction || ''}
                             onChange={(e) => handleUpdatePart(index, { extraction: e.target.value })}
                             placeholder="w1, ch1-4"
-                            className="w-20 px-2 py-1 rounded border border-white/20 bg-white/10 text-white text-xs placeholder:text-white/40 focus:outline-none focus:ring-0 focus:border-white/40"
+                            aria-label="Reference extraction or transform"
+                            className="w-full min-w-0 h-8 px-2 py-1 rounded border border-white/20 bg-white/10 text-white text-xs placeholder:text-white/40 focus:outline-none focus:ring-0 focus:border-white/40"
                           />
+                          <button
+                            type="button"
+                            aria-pressed={part.extraction?.endsWith('reverse') ?? false}
+                            onClick={() => handleUpdatePart(index, {
+                              extraction: part.extraction?.endsWith('reverse')
+                                ? part.extraction.replace(/(?:\]\[)?reverse$/, '')
+                                : part.extraction ? `${part.extraction}][reverse` : 'reverse',
+                            })}
+                            className="h-8 whitespace-nowrap px-3 rounded-full border border-white/20 text-xs text-white transition-colors hover:bg-white/10 aria-pressed:border-primary/50 aria-pressed:bg-primary/15 aria-pressed:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                          >
+                            Reverse text
+                          </button>
                         </div>
                       )}
 

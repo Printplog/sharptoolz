@@ -182,7 +182,7 @@ export default function SvgTemplateEditor() {
         } catch (proxyErr) {
           if (!cancelled) {
             console.error("Failed to load SVG content from all sources", proxyErr);
-            toast.error("Cloud storage sync failed. Please check CORS settings.");
+            toast.error(`Unable to load template SVG. ${errorMessage(proxyErr)}`);
           }
         }
       } finally {

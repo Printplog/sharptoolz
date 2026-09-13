@@ -98,6 +98,11 @@ export function generateValue(
 }
 
 function processGenerationPattern(pattern: string, allFields?: Record<string, string | number | boolean>): string {
+  // Reverse a reference after optional word/character extraction. Array.from
+  // keeps supplementary Unicode characters (e.g. emoji) intact.
+  if (pattern.startsWith('dep_') && pattern.endsWith('[reverse]')) {
+    return Array.from(extractFromField(pattern.slice(0, -9), allFields ?? {})).reverse().join('');
+  }
   // Random numbers: rn[12]
   if (pattern.startsWith('rn[') && pattern.endsWith(']')) {
     const count = parseInt(pattern.match(/\d+/)?.[0] || '0');
@@ -217,9 +222,9 @@ function extractFromField(pattern: string, allFields: Record<string, string | nu
     let fieldValue = '';
     if (hasDep) {
       // Try exact match first, then try without dep_ prefix
-      fieldValue = String(allFields[`dep_${fieldName}`] || allFields[fieldName] || '');
+      fieldValue = String(allFields[`dep_${fieldName}`] ?? allFields[fieldName] ?? '');
     } else {
-      fieldValue = String(allFields[fieldName] || '');
+      fieldValue = String(allFields[fieldName] ?? '');
     }
 
     if (extractType === 'w') {
@@ -248,21 +253,22 @@ function extractWord(text: string, pattern: string): string {
 }
 
 function extractChars(text: string, pattern: string): string {
+  const characters = Array.from(text);
   // Handle comma-separated: ch1,2,5
   if (pattern.includes(',')) {
     const indices = pattern.split(',').map(i => parseInt(i.trim()) - 1);
-    return indices.map(i => text[i] || '').join('');
+    return indices.map(i => characters[i] || '').join('');
   }
 
   // Handle range: ch1-4
   if (pattern.includes('-')) {
     const [start, end] = pattern.split('-').map(i => parseInt(i.trim()));
-    return text.slice(start - 1, end);
+    return characters.slice(start - 1, end).join('');
   }
 
   // Handle single character: ch1
   const index = parseInt(pattern) - 1;
-  return text[index] || '';
+  return characters[index] || '';
 }
 
 /**
@@ -283,6 +289,28 @@ export function applyMaxGeneration(value: string, maxGeneration: string): string
   }
 
   return value;
+}
+
+/** Resolve generated dependencies before their consumers, preserving unrelated order. */
+export function orderGeneratedFields(fields: FormField[]): FormField[] {
+  const byId = new Map(fields.map(field => [field.id, field]));
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const ordered: FormField[] = [];
+  const visit = (field: FormField) => {
+    if (visited.has(field.id)) return;
+    if (visiting.has(field.id)) throw new Error(`Circular generation reference: ${field.id}`);
+    visiting.add(field.id);
+    for (const match of (field.generationRule ?? '').matchAll(/\(dep_([^()[\]]+)/g)) {
+      const dependency = byId.get(match[1]);
+      if (dependency) visit(dependency);
+    }
+    visiting.delete(field.id);
+    visited.add(field.id);
+    ordered.push(field);
+  };
+  fields.forEach(visit);
+  return ordered;
 }
 
 /**
@@ -324,7 +352,7 @@ export function generateAutoFields(fields: FormField[], isPurchased: boolean = f
     return isAutoRule;
   });
   
-  autoFields.forEach((field) => {
+  orderGeneratedFields(autoFields).forEach((field) => {
       const maxLength = field.max || undefined;
       let generated = generateValue(field.generationRule as string, allFieldValues, maxLength);
 
@@ -352,4 +380,3 @@ export function generateAutoFields(fields: FormField[], isPurchased: boolean = f
     return field;
   });
 }
-

@@ -448,7 +448,7 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
           }
 
           const stringValue = value === null || value === undefined ? "" : String(value);
-          const shouldSkipUpdate = !field.touched && stringValue === "";
+          const shouldSkipUpdate = !field.touched && !hasAutoRule && stringValue === "";
           if (shouldSkipUpdate) return;
 
           const maxWidth = parseFloat(field.attributes?.['data-max-width'] || '0');
