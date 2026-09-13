@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { SvgElement } from "@/lib/utils/parseSvgElements";
-import { buildFlipPart, getLiveElementCenter, parseFlipFlags, stripFlipParts } from "./flipTransform";
+import { buildFlipPart, correctFlipDrift, getFlipCenter, parseFlipFlags, stripFlipParts } from "./flipTransform";
 
 export const useElementTransform = (
   localElement: SvgElement,
@@ -146,8 +146,10 @@ export const useElementTransform = (
     const hasCxCy = ["circle", "ellipse"].includes(tag);
 
     const style = localElement.attributes.style || "";
-    const combined = `${style} ${transformAttr}`.replace(/,/g, " ");
-    const hasTranslate = /translate\s*\(/.test(combined);
+    // NOTE: read from the flip-stripped string so our own flip translate does
+    // not count as a user translate (it must never force a translate rebuild).
+    const strippedForTranslate = `${stripFlipParts(style)} ${stripFlipParts(transformAttr)}`.replace(/,/g, " ");
+    const hasTranslate = /translate\s*\(/.test(strippedForTranslate);
 
     const baseX = parseFloat(localElement.attributes.x || localElement.attributes.cx || "0");
     const baseY = parseFloat(localElement.attributes.y || localElement.attributes.cy || "0");
@@ -221,11 +223,29 @@ export const useElementTransform = (
     }
 
     // Mirror about the true on-screen center so the element never jumps:
-    // the live preview box when available, otherwise the attribute-based center.
-    const liveCenter = getLiveElementCenter(localElement.internalId);
+    // live preview box first, measured text geometry for text, attribute
+    // geometry for shapes. A closed-loop drift correction below guarantees the
+    // on-screen box stays put even when the center had to be estimated.
+    const styleAttr = localElement.attributes.style || "";
+    const fontSizeRaw =
+      localElement.attributes["font-size"] || /font-size\s*:\s*([\d.]+)/.exec(styleAttr)?.[1] || "";
+    const fontSizeNum = parseFloat(String(fontSizeRaw));
+    const flipCenter = getFlipCenter(localElement.internalId, {
+      tag: localElement.tag,
+      x: safeBaseX,
+      y: safeBaseY,
+      width: (() => { const v = parseFloat(localElement.attributes.width || ""); return isNaN(v) ? null : v; })(),
+      height: (() => { const v = parseFloat(localElement.attributes.height || ""); return isNaN(v) ? null : v; })(),
+      text: localElement.innerText ?? "",
+      fontSize: isNaN(fontSizeNum) ? null : fontSizeNum,
+      fontFamily:
+        localElement.attributes["font-family"] || /font-family\s*:\s*([^;]+)/.exec(styleAttr)?.[1] || "sans-serif",
+      textAnchor:
+        localElement.attributes["text-anchor"] || /text-anchor\s*:\s*([\w-]+)/.exec(styleAttr)?.[1] || "start",
+    });
     const flipPart = buildFlipPart(
-      liveCenter?.cx ?? center.cx,
-      liveCenter?.cy ?? center.cy,
+      flipCenter.cx,
+      flipCenter.cy,
       newTransformAbsolute.flipH === true,
       newTransformAbsolute.flipV === true
     );
@@ -233,7 +253,10 @@ export const useElementTransform = (
       components.push(flipPart);
     }
 
-    const tStr = components.join(" ");
+    let tStr = components.join(" ");
+    if (key === "flipH" || key === "flipV") {
+      tStr = correctFlipDrift(localElement.internalId, tStr);
+    }
 
     let newStyle = localElement.attributes.style || "";
     // Remove transform-related CSS properties to let the native SVG transform attribute work reliably on all tags (including <use>)
