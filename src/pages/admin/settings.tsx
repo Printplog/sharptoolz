@@ -408,7 +408,7 @@ export default function AdminSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-primary" />
-                    <Label htmlFor="exchange_rate" className="text-white/70 text-xs font-semibold">Dollar/Naira Override</Label>
+                    <Label htmlFor="exchange_rate" className="text-white/70 text-xs font-semibold">Our USDT Rate (NGN per USDT)</Label>
                   </div>
                   <Input
                     id="exchange_rate"

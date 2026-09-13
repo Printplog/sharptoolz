@@ -36,7 +36,7 @@ export default function AddFundsDialog({
     queryFn: getSiteSettings,
   });
 
-  const adminFallbackRate = Number(siteSettings?.exchange_rate_override) || 1650;
+  const adminRate = Number(siteSettings?.exchange_rate_override) || 1650;
   const minTopup = Number(siteSettings?.min_topup_amount) || 5;
 
   // Deposit bonus promo config (falls back to disabled while settings are loading/absent)
@@ -49,19 +49,19 @@ export default function AddFundsDialog({
     deposit_promo_message: siteSettings?.deposit_promo_message ?? '',
   };
   // Amount field holds Naira; convert to the USD-equivalent the promo config is expressed in
-  const depositRate = usdToNgn ?? adminFallbackRate;
+  const depositRate = usdToNgn ?? adminRate;
   const depositUsdValue = (parseFloat(amountUsd) || 0) / depositRate;
   const promoBonus = calcBonus(depositUsdValue, promoCfg);
   const promoGap = amountToUnlock(depositUsdValue, promoCfg);
   const ngnMin = Number(promoCfg.deposit_promo_min_amount) * depositRate;
 
-  // Fetch live exchange rate when naira mode is selected
+  // Admin USDT rate is the source of truth (no live fetch)
   const loadRate = useCallback(async () => {
     setRateLoading(true);
-    const rate = await fetchUsdToNgn(adminFallbackRate);
+    const rate = await fetchUsdToNgn(adminRate);
     setUsdToNgn(rate);
     setRateLoading(false);
-  }, [adminFallbackRate]);
+  }, [adminRate]);
 
   const {
     mutate,

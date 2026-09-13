@@ -24,18 +24,18 @@ const PendingFundingNotice: React.FC = () => {
     queryFn: getSiteSettings,
   });
 
-  const adminFallbackRate = Number(siteSettings?.exchange_rate_override) || 1650;
+  const adminRate = Number(siteSettings?.exchange_rate_override) || 1650;
   const minTopupUsd = Number(siteSettings?.min_topup_amount) || 5;
 
   useEffect(() => {
     const loadRate = async () => {
       setRateLoading(true);
-      const rate = await fetchUsdToNgn(adminFallbackRate);
+      const rate = await fetchUsdToNgn(adminRate);
       setUsdToNgn(rate);
       setRateLoading(false);
     };
     loadRate();
-  }, [adminFallbackRate]);
+  }, [adminRate]);
 
   const { wallet } = useWalletStore();
   const { mutate, isPending } = useMutation({
