@@ -54,10 +54,10 @@ describe('SVG text masks', () => {
     expect(root.querySelectorAll('[data-st-mask-source-style]')).toHaveLength(0);
   });
   it('uses the generated text value before building the mask', () => {
-    const generatedSvg = svg.replace('Title.text', 'Title.gen_AUTO:(dep_Message[reverse])').replace('</svg>', '<text id="Message.text">LOVE</text></svg>');
+    const generatedSvg = svg.replace('Title.text', 'Title.gen_AUTO:(dep_Message[w1])').replace('</svg>', '<text id="Message.text">LOVE YOU</text></svg>');
     const fields = generateAutoFields(parseSvgToFormFields(generatedSvg));
     const root = parse(updateSvgFromFormData(generatedSvg, fields));
-    expect(root.querySelector('mask text')?.textContent).toBe('EVOL');
+    expect(root.querySelector('mask text')?.textContent).toBe('LOVE');
   });
   it('rejects missing and non-text sources', () => {
     expect(() => applyTextMasks(parse(svg.replace('mask_Title','mask_Missing')))).toThrow('one text layer');

@@ -98,11 +98,6 @@ export function generateValue(
 }
 
 function processGenerationPattern(pattern: string, allFields?: Record<string, string | number | boolean>): string {
-  // Reverse a reference after optional word/character extraction. Array.from
-  // keeps supplementary Unicode characters (e.g. emoji) intact.
-  if (pattern.startsWith('dep_') && pattern.endsWith('[reverse]')) {
-    return Array.from(extractFromField(pattern.slice(0, -9), allFields ?? {})).reverse().join('');
-  }
   // Random numbers: rn[12]
   if (pattern.startsWith('rn[') && pattern.endsWith(']')) {
     const count = parseInt(pattern.match(/\d+/)?.[0] || '0');

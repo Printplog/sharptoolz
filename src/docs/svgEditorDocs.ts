@@ -662,11 +662,6 @@ export const svgEditorDocs: DocSection[] = [
         description: "First word from FieldName + 6 random numbers"
       },
       {
-        title: "Reverse Referenced Text",
-        code: "Reversed.gen_AUTO:(dep_Message[reverse])",
-        description: "Reverses Message: LOVE becomes EVOL. Empty values stay empty. Use (dep_Message[w1][reverse]) to reverse just the first word. Reversal preserves Unicode code points; combining marks and joined emoji sequences are not grouped."
-      },
-      {
         title: "Image Inside Text",
         code: "Title.text\nPhoto.upload.mask_Title",
         description: "Select the image, open Styling, choose Text mask, then Title. The text defines the visible shape and stays editable in the layer list. Replacing the image preserves the mask. Choose None to restore both layers. Supports text (including generated text), images and SVG group transforms. The image must overlap the text; use image transforms to position it."

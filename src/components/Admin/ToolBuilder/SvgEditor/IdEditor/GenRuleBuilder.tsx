@@ -308,21 +308,9 @@ export default function GenRuleBuilder({
                             value={part.extraction || ''}
                             onChange={(e) => handleUpdatePart(index, { extraction: e.target.value })}
                             placeholder="w1, ch1-4"
-                            aria-label="Reference extraction or transform"
+                            aria-label="Reference extraction"
                             className="w-full min-w-0 h-8 px-2 py-1 rounded border border-white/20 bg-white/10 text-white text-xs placeholder:text-white/40 focus:outline-none focus:ring-0 focus:border-white/40"
                           />
-                          <button
-                            type="button"
-                            aria-pressed={part.extraction?.endsWith('reverse') ?? false}
-                            onClick={() => handleUpdatePart(index, {
-                              extraction: part.extraction?.endsWith('reverse')
-                                ? part.extraction.replace(/(?:\]\[)?reverse$/, '')
-                                : part.extraction ? `${part.extraction}][reverse` : 'reverse',
-                            })}
-                            className="h-8 whitespace-nowrap px-3 rounded-full border border-white/20 text-xs text-white transition-colors hover:bg-white/10 aria-pressed:border-primary/50 aria-pressed:bg-primary/15 aria-pressed:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                          >
-                            Reverse text
-                          </button>
                         </div>
                       )}
 
