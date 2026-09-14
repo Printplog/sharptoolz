@@ -40,6 +40,32 @@ describe("injectFontsIntoSVG", () => {
     expect(result).toContain('url("https://cdn.test/fonts/inter-bold.ttf")');
   });
 
+  it("keeps sibling faces separate when they share one family and weight", async () => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg">
+      <text style="font-family: Arial;">Regular</text>
+      <text style="font-family: 'Arial Black';">Black</text>
+      <text style="font-family: 'Arial Bold';">Bold</text>
+    </svg>`;
+
+    const result = await injectFontsIntoSVG(
+      svg,
+      [
+        makeFont({ id: "arial", name: "Arial", family: "Arial", weight: "normal", font_url: "/fonts/arial.ttf" }),
+        makeFont({ id: "arial-black", name: "Arial Black", family: "Arial", weight: "normal", font_url: "/fonts/arial-black.ttf" }),
+        makeFont({ id: "arial-bold", name: "Arial Bold", family: "Arial", weight: "normal", font_url: "/fonts/arial-bold.ttf" }),
+      ],
+      "https://cdn.test",
+      true
+    );
+
+    expect(result).toContain('font-family: "Arial";');
+    expect(result).toContain('font-family: "Arial Black";');
+    expect(result).toContain('font-family: "Arial Bold";');
+    expect(result).toContain('url("https://cdn.test/fonts/arial.ttf")');
+    expect(result).toContain('url("https://cdn.test/fonts/arial-black.ttf")');
+    expect(result).toContain('url("https://cdn.test/fonts/arial-bold.ttf")');
+  });
+
   it("does not skip a new same-family variant when one variant already exists", async () => {
     const svgWithRegularFace = `<svg xmlns="http://www.w3.org/2000/svg">
       <defs>

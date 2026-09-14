@@ -3,7 +3,7 @@
  */
 import type { Font } from "@/types";
 
-type FontFaceTuple = { family: string; weight: string; style: string; css: string };
+type FontFaceTuple = { family: string; weight: string; style: string; key: string; css: string };
 
 const buildFontFace = (
   family: string,
@@ -154,9 +154,21 @@ export async function injectFontsIntoSVG(
 
     const weight = font.weight || "normal";
     const style = font.style || "normal";
-    let cssFamily = font.family || "";
 
-    if (!cssFamily) {
+    // A template can reference the full face name ("Arial Black") while the
+    // record only carries the bare family ("Arial"). Emitting every such
+    // record under the bare family collapses all faces onto one @font-face
+    // descriptor, so a single file wins for every text. Emit under the exact
+    // face name the SVG uses when it uses it, and keep the family emission
+    // only when it does not collide with another file.
+    const emitFamilies: string[] = [];
+    const nameKey = normalizeFontKey(font.name);
+    if (nameKey && aliasMap.has(nameKey)) {
+      emitFamilies.push(aliasMap.get(nameKey)!);
+    }
+
+    let familyCandidate = font.family || "";
+    if (!familyCandidate) {
       const candidates = [
         font.name,
         getFileNameStem(font.font_file || font.font_url),
@@ -165,27 +177,42 @@ export async function injectFontsIntoSVG(
       for (const candidate of candidates) {
         const key = normalizeFontKey(candidate);
         if (key && aliasMap.has(key)) {
-          cssFamily = aliasMap.get(key)!;
+          familyCandidate = aliasMap.get(key)!;
           break;
         }
       }
 
-      if (!cssFamily) {
-        cssFamily = font.name || candidates[0] || "CustomFont";
+      if (!familyCandidate) {
+        familyCandidate = font.name || candidates[0] || "CustomFont";
       }
     }
+    if (familyCandidate && !emitFamilies.includes(familyCandidate)) {
+      emitFamilies.push(familyCandidate);
+    }
 
-    fontFaces.push({
-      family: cssFamily,
-      weight,
-      style,
-      css: buildFontFace(cssFamily, fontUrl, fontFormat, weight, style),
-    });
+    for (const cssFamily of emitFamilies) {
+      fontFaces.push({
+        family: cssFamily,
+        weight,
+        style,
+        key: normalizeVariantKey(cssFamily, weight, style),
+        css: buildFontFace(cssFamily, fontUrl, fontFormat, weight, style),
+      });
+    }
   }
 
   if (fontFaces.length === 0) {
     return svgContent;
   }
+
+  // First file wins a descriptor slot so sibling faces can never collapse
+  // onto one @font-face and repeated injections stay deterministic.
+  const seenVariants = new Set<string>();
+  const uniqueFaces = fontFaces.filter(({ key }) => {
+    if (seenVariants.has(key)) return false;
+    seenVariants.add(key);
+    return true;
+  });
 
   const existingStyle = defsEl.querySelector('style[data-font-injector="true"]') as (SVGStyleElement | null);
   const styleEl =
@@ -204,7 +231,7 @@ export async function injectFontsIntoSVG(
 
   // If embedding base64, we might want to replace existing font-faces
   if (embedBase64) {
-    styleEl.textContent = fontFaces.map(({ css }) => css).join("\n");
+    styleEl.textContent = uniqueFaces.map(({ css }) => css).join("\n");
   } else {
     const existingVariants = new Set<string>();
     if (styleEl.textContent) {
@@ -218,8 +245,8 @@ export async function injectFontsIntoSVG(
       });
     }
 
-    const cssToInject = fontFaces
-      .filter(({ family, weight, style }) => !existingVariants.has(normalizeVariantKey(family, weight, style)))
+    const cssToInject = uniqueFaces
+      .filter(({ key }) => !existingVariants.has(key))
       .map(({ css }) => css);
 
     if (cssToInject.length > 0) {
