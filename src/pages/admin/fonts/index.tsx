@@ -1,10 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Trash2, Download, Loader, RefreshCw } from "lucide-react";
+import { Trash2, Download, Loader, Pencil, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
-import { addFont, deleteFont, getFonts } from "@/api/apiEndpoints";
+import { addFont, deleteFont, getFonts, updateFont } from "@/api/apiEndpoints";
 import type { Font } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmAction } from "@/components/ConfirmAction";
@@ -16,6 +16,7 @@ export default function AdminFontsPage() {
   const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingFont, setEditingFont] = useState<Font | null>(null);
 
   const {
     data: fonts = [],
@@ -37,6 +38,30 @@ export default function AdminFontsPage() {
       toast.error("Failed to upload font");
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: FormData }) =>
+      updateFont(id, data),
+    onSuccess: () => {
+      toast.success("Font updated successfully");
+      setEditingFont(null);
+      setDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["fonts"] });
+    },
+    onError: () => {
+      toast.error("Failed to update font");
+    },
+  });
+
+  const handleEdit = useCallback((font: Font) => {
+    setEditingFont(font);
+    setDialogOpen(true);
+  }, []);
+
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    setDialogOpen(open);
+    if (!open) setEditingFont(null);
+  }, []);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteFont(id),
@@ -116,6 +141,14 @@ export default function AdminFontsPage() {
 
           return (
             <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-full border-white/10 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20"
+                onClick={() => handleEdit(row.original)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
               {row.original.font_url && (
                 <a href={row.original.font_url} download>
                   <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-white/10 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20">
@@ -147,7 +180,7 @@ export default function AdminFontsPage() {
         },
       },
     ];
-  }, [deletingId, deleteMutation.isPending, handleDelete]);
+  }, [deletingId, deleteMutation.isPending, handleDelete, handleEdit]);
 
   return (
     <div className="dashboard-content space-y-8">
@@ -179,8 +212,10 @@ export default function AdminFontsPage() {
           </Button>
           <FontUploadDialog
             dialogOpen={dialogOpen}
-            setDialogOpen={setDialogOpen}
+            setDialogOpen={handleDialogOpenChange}
             uploadMutation={uploadMutation}
+            editingFont={editingFont}
+            updateMutation={updateMutation}
           />
         </div>
       </div>

@@ -585,6 +585,15 @@ export const deleteFont = async (id: string): Promise<unknown> => {
   return res.data;
 };
 
+export const updateFont = async (id: string, data: FormData): Promise<Font> => {
+  const res = await apiClient.patch(`/fonts/${id}/`, data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};
+
 // Tutorials API
 export const getTutorials = async (toolId?: string, search?: string): Promise<Tutorial[]> => {
   const params = new URLSearchParams();

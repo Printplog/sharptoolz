@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Input } from "@/components/ui/input";
@@ -14,23 +14,40 @@ import {
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import type { UseMutationResult } from "@tanstack/react-query";
+import type { Font } from "@/types";
 
 interface FontUploadDialogProps {
     dialogOpen: boolean;
     setDialogOpen: (open: boolean) => void;
     uploadMutation: UseMutationResult<unknown, Error, FormData>;
+    editingFont?: Font | null;
+    updateMutation?: UseMutationResult<Font, Error, { id: string; data: FormData }>;
 }
 
 export default function FontUploadDialog({
     dialogOpen,
     setDialogOpen,
     uploadMutation,
+    editingFont = null,
+    updateMutation,
 }: FontUploadDialogProps) {
     const [fontName, setFontName] = useState("");
     const [fontFamily, setFontFamily] = useState("");
     const [fontWeight, setFontWeight] = useState("normal");
     const [fontStyle, setFontStyle] = useState("normal");
     const [fontFile, setFontFile] = useState<File | null>(null);
+
+    const isEditing = editingFont !== null;
+
+    useEffect(() => {
+        if (dialogOpen) {
+            setFontName(editingFont?.name ?? "");
+            setFontFamily(editingFont?.family ?? "");
+            setFontWeight(editingFont?.weight ?? "normal");
+            setFontStyle(editingFont?.style ?? "normal");
+            setFontFile(null);
+        }
+    }, [dialogOpen, editingFont]);
 
     const resetForm = () => {
         setFontName("");
@@ -47,7 +64,7 @@ export default function FontUploadDialog({
             toast.error("Font name is required");
             return;
         }
-        if (!fontFile) {
+        if (!isEditing && !fontFile) {
             toast.error("Choose a font file");
             return;
         }
@@ -59,7 +76,18 @@ export default function FontUploadDialog({
         }
         formData.append("weight", fontWeight.trim() || "normal");
         formData.append("style", fontStyle.trim() || "normal");
-        formData.append("font_file", fontFile);
+        if (fontFile) {
+            formData.append("font_file", fontFile);
+        }
+
+        if (isEditing) {
+            if (!updateMutation) return;
+            updateMutation.mutate(
+                { id: editingFont.id, data: formData },
+                { onSuccess: () => resetForm() }
+            );
+            return;
+        }
 
         uploadMutation.mutate(formData, {
             onSuccess: () => resetForm(),
@@ -76,9 +104,11 @@ export default function FontUploadDialog({
             </DialogTrigger>
             <DialogContent className="max-w-lg p-8">
                 <DialogHeader>
-                    <DialogTitle>Upload a new font</DialogTitle>
+                    <DialogTitle>{isEditing ? `Edit font "${editingFont.name}"` : "Upload a new font"}</DialogTitle>
                     <DialogDescription>
-                        Supported formats: .ttf, .otf, .woff, .woff2
+                        {isEditing
+                            ? "Leave the file empty to keep the current font file. Supported formats: .ttf, .otf, .woff, .woff2"
+                            : "Supported formats: .ttf, .otf, .woff, .woff2"}
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleUpload} className="space-y-4">
@@ -153,8 +183,8 @@ export default function FontUploadDialog({
                         </Button>
                         <PremiumButton
                             type="submit"
-                            isLoading={uploadMutation.isPending}
-                            text="Upload Font"
+                            isLoading={uploadMutation.isPending || updateMutation?.isPending}
+                            text={isEditing ? "Save Changes" : "Upload Font"}
                             icon={Upload}
                         />
                     </div>
