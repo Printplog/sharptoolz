@@ -24,6 +24,7 @@ import {
   type AdminApiCustomerStatus,
   type AdminApiExternalUser,
   type AdminApiKeySummary,
+  type AdminApiRenderJob,
 } from "@/api/apiEndpoints";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 import { Button } from "@/components/ui/button";
@@ -171,6 +172,15 @@ export default function ApiCustomerDetailsPage() {
     { accessorKey: "created_at", header: "Time", cell: ({ row }) => <span className="whitespace-nowrap text-xs text-white/45">{format(new Date(row.original.created_at), "MMM d, HH:mm:ss")}</span> },
   ], []);
 
+  const renderColumns = useMemo<ColumnDef<AdminApiRenderJob>[]>(() => [
+    { accessorKey: "id", header: "Render job", cell: ({ row }) => <span className="font-mono text-xs text-white/70" title={row.original.id}>{row.original.id.slice(0, 8)}…</span> },
+    { accessorKey: "format", header: "Format", cell: ({ row }) => <span className="font-mono text-[10px] font-semibold uppercase text-primary">{row.original.format}</span> },
+    { accessorKey: "status", header: "Status", cell: ({ row }) => <span className={cn("text-xs font-semibold capitalize", row.original.status === "failed" ? "text-red-400" : row.original.status === "completed" ? "text-green-400" : "text-yellow-400")}>{row.original.status}</span> },
+    { accessorKey: "error_code", header: "Error", cell: ({ row }) => <code className="text-xs text-white/55">{row.original.error_code || "—"}</code> },
+    { accessorKey: "output_size", header: "Size", cell: ({ row }) => <span className="font-mono text-xs text-white/45">{row.original.output_size ? `${(row.original.output_size / 1024).toFixed(1)} KB` : "—"}</span> },
+    { accessorKey: "created_at", header: "Created", cell: ({ row }) => <span className="whitespace-nowrap text-xs text-white/45">{format(new Date(row.original.created_at), "MMM d, HH:mm:ss")}</span> },
+  ], []);
+
   if (isLoading) {
     return <div className="flex min-h-[45vh] items-center justify-center text-white/50"><Loader className="mr-3 size-5 animate-spin" />Loading API customer…</div>;
   }
@@ -196,6 +206,7 @@ export default function ApiCustomerDetailsPage() {
     { id: "keys", label: "API keys", icon: KeyRound },
     { id: "users", label: "External users", icon: Braces },
     { id: "activity", label: "Request activity", icon: Activity },
+    { id: "renders", label: "Render jobs", icon: FileText },
   ];
 
   return (
@@ -255,6 +266,9 @@ export default function ApiCustomerDetailsPage() {
       </CustomTabsContent>
       <CustomTabsContent value="activity" activeTab={activeTab}>
         <DataTable columns={activityColumns} data={data.recent_activity} filterKey="external_user_id" searchPlaceholder="Search external user ID..." enableSelection={false} hideColumnToggle emptyMessage="No API requests in this period." />
+      </CustomTabsContent>
+      <CustomTabsContent value="renders" activeTab={activeTab}>
+        <DataTable columns={renderColumns} data={data.recent_renders} filterKey="error_code" searchPlaceholder="Search render error code..." enableSelection={false} hideColumnToggle emptyMessage="No render jobs in this period." />
       </CustomTabsContent>
     </div>
   );

@@ -58,6 +58,67 @@ test("waits over WebSocket and fetches the final signed download URL once", asyn
   assert.deepEqual(calls.map((call) => call.method), ["POST", "GET"]);
 });
 
+test("downloads render bytes with a fresh URL and never sends the API key to it", async () => {
+  const calls = [];
+  const client = new SharpToolz({
+    apiKey: "stz_live_test.key",
+    fetch: async (url, options) => {
+      calls.push({ url, options });
+      if (url === "https://signed.example/file") {
+        return new Response(new Uint8Array([37, 80, 68, 70]), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": 'attachment; filename="document.pdf"',
+          },
+        });
+      }
+      return jsonResponse({
+        id: "job-1",
+        document_id: "document-1",
+        format: "pdf",
+        status: "completed",
+        download_url: "https://signed.example/file",
+      });
+    },
+  });
+
+  const file = await client.renders.download({ id: "job-1", status: "completed" });
+
+  assert.equal(file.filename, "document.pdf");
+  assert.equal(file.contentType, "application/pdf");
+  assert.deepEqual([...file.bytes], [37, 80, 68, 70]);
+  assert.equal(calls[0].url, "https://api.sharptoolz.com/api/v1/renders/job-1");
+  assert.equal(calls[1].url, "https://signed.example/file");
+  assert.equal(calls[1].options.headers.Authorization, undefined);
+});
+
+test("refreshes the render job once when a signed URL expires", async () => {
+  let jobReads = 0;
+  const client = new SharpToolz({
+    apiKey: "stz_live_test.key",
+    fetch: async (url) => {
+      if (url.includes("/renders/job-1")) {
+        jobReads += 1;
+        return jsonResponse({
+          id: "job-1",
+          document_id: "document-1",
+          format: "pdf",
+          status: "completed",
+          download_url: jobReads === 1 ? "https://signed.example/stale" : "https://signed.example/fresh",
+        });
+      }
+      if (url.endsWith("/stale")) return jsonResponse({ detail: "expired" }, 403);
+      return new Response(new Uint8Array([1, 2, 3]), { status: 200 });
+    },
+  });
+
+  const file = await client.renders.download("job-1");
+
+  assert.deepEqual([...file.bytes], [1, 2, 3]);
+  assert.equal(jobReads, 2);
+});
+
 test("uses hosted sessions for creation and editing", async () => {
   const calls = [];
   const client = new SharpToolz({

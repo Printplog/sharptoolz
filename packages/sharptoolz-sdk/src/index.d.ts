@@ -10,12 +10,23 @@ export interface RenderJob {
   error_code: string;
   download_url: string | null;
   download_url_expires_in: number | null;
+  expires_at?: string;
+  created_at?: string;
+  started_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface WaitOptions {
   timeoutMs?: number;
   signal?: AbortSignal;
   pollFallback?: boolean;
+}
+
+export interface DownloadedRender {
+  bytes: Uint8Array;
+  filename: string;
+  contentType: string;
+  job: RenderJob;
 }
 
 export interface SharpToolzOptions {
@@ -104,6 +115,7 @@ export class SharpToolz {
   renders: {
     get(jobId: string): Promise<RenderJob>;
     wait(jobOrId: RenderJob | string, options?: WaitOptions): Promise<RenderJob>;
+    download(jobOrId: RenderJob | string, options?: WaitOptions): Promise<DownloadedRender>;
   };
 }
 

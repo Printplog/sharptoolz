@@ -68,9 +68,10 @@ const SDK_METHODS: Record<ServerLanguage, SdkMethod[]> = {
     { method: "sharp.documents.upgrade(documentId)", purpose: "Charge wallet and make a test document paid", scope: "documents:write" },
     { method: "sharp.documents.delete(documentId)", purpose: "Delete one document", scope: "documents:write" },
     { method: "sharp.documents.render(documentId, options)", purpose: "Queue a PNG or PDF", scope: "documents:read" },
-    { method: "sharp.documents.renderAndWait(documentId, options)", purpose: "Render and wait for the download URL", scope: "documents:read" },
+    { method: "sharp.documents.renderAndWait(documentId, options)", purpose: "Wait for completed render metadata", scope: "documents:read" },
     { method: "sharp.renders.get(jobId)", purpose: "Get one render job", scope: "documents:read" },
     { method: "sharp.renders.wait(jobOrId, options)", purpose: "Wait for a queued render", scope: "documents:read" },
+    { method: "sharp.renders.download(jobOrId, options)", purpose: "Download fresh render bytes", scope: "documents:read" },
   ],
   python: [
     { method: "sharp.templates.list()", purpose: "List available templates", scope: "templates:read" },
@@ -82,9 +83,11 @@ const SDK_METHODS: Record<ServerLanguage, SdkMethod[]> = {
     { method: "sharp.documents.upgrade(document_id)", purpose: "Charge wallet and make a test document paid", scope: "documents:write" },
     { method: "sharp.documents.delete(document_id)", purpose: "Delete one document", scope: "documents:write" },
     { method: "sharp.documents.render(document_id, format=...)", purpose: "Queue a PNG or PDF", scope: "documents:read" },
-    { method: "sharp.documents.render_and_wait(document_id, ...)", purpose: "Render and wait for the download URL", scope: "documents:read" },
+    { method: "sharp.documents.render_and_wait(document_id, ...)", purpose: "Wait for completed render metadata", scope: "documents:read" },
     { method: "sharp.renders.get(job_id)", purpose: "Get one render job", scope: "documents:read" },
     { method: "sharp.renders.wait(job_or_id)", purpose: "Wait for a queued render", scope: "documents:read" },
+    { method: "sharp.renders.download(job_or_id)", purpose: "Download fresh render bytes", scope: "documents:read" },
+    { method: "sharp.renders.download_to(job_or_id, path)", purpose: "Download a render to disk", scope: "documents:read" },
   ],
   bash: [
     { method: "GET /templates", purpose: "List available templates", scope: "templates:read" },
@@ -499,14 +502,17 @@ const THEME_EXAMPLES: CodeExamples = {
 const RENDER_EXAMPLES: CodeExamples = {
   javascript: {
     code: lines(
+      "import { writeFile } from \"node:fs/promises\";",
+      "",
       "const completed = await sharp.documents.renderAndWait(documentId, {",
       "  format: \"pdf\",",
       "  timeoutMs: 120_000,",
       "});",
       "",
-      "console.log(completed.download_url);",
+      "const file = await sharp.renders.download(completed);",
+      "await writeFile(file.filename, file.bytes);",
     ),
-    label: "Render and get the download URL",
+    label: "Render and save the PDF on your server",
     language: "typescript",
   },
   python: {
@@ -517,9 +523,9 @@ const RENDER_EXAMPLES: CodeExamples = {
       "    timeout=120,",
       ")",
       "",
-      "print(completed[\"download_url\"])",
+      "sharp.renders.download_to(completed, \"document.pdf\")",
     ),
-    label: "Render and get the download URL",
+    label: "Render and save the PDF on your server",
     language: "python",
   },
   bash: {
@@ -540,6 +546,11 @@ const RENDER_EXAMPLES: CodeExamples = {
       "    -H \"Authorization: Bearer $SHARPTOOLZ_API_KEY\")",
       "done",
       "",
+      "if [[ $(jq -r '.status' <<<\"$JOB\") != \"completed\" ]]; then",
+      "  jq -r '\"Render failed: \" + (.error_code // \"unknown\")' <<<\"$JOB\" >&2",
+      "  exit 1",
+      "fi",
+      "",
       "curl --fail-with-body -L \"$(jq -r '.download_url' <<<\"$JOB\")\" \\",
       "  --output document.pdf",
     ),
@@ -556,7 +567,8 @@ const MANUAL_RENDER_EXAMPLES: CodeExamples = {
       "const current = await sharp.renders.get(job.id);",
       "const completed = await sharp.renders.wait(current);",
       "",
-      "console.log(completed.download_url);",
+      "const file = await sharp.renders.download(completed);",
+      "console.log(file.filename, file.bytes.byteLength);",
     ),
     label: "Queue and wait separately",
     language: "typescript",
@@ -568,7 +580,8 @@ const MANUAL_RENDER_EXAMPLES: CodeExamples = {
       "current = sharp.renders.get(job[\"id\"])",
       "completed = sharp.renders.wait(current)",
       "",
-      "print(completed[\"download_url\"])",
+      "content = sharp.renders.download(completed)",
+      "print(len(content))",
     ),
     label: "Queue and wait separately",
     language: "python",
@@ -589,6 +602,31 @@ const MANUAL_RENDER_EXAMPLES: CodeExamples = {
     language: "bash",
   },
 };
+
+const BROWSER_DOWNLOAD_EXAMPLE = lines(
+  "// Your backend returns only the fresh signed URL, never the API key.",
+  "const response = await fetch(\"/api/my-document-download\");",
+  "const { downloadUrl } = await response.json();",
+  "",
+  "// A normal navigation works without a CORS fetch.",
+  "window.location.assign(downloadUrl);",
+  "",
+  "// Browser fetch is also supported when this app origin is configured",
+  "// in the SharpToolz API key/customer settings.",
+  "// const file = await fetch(downloadUrl).then((result) => result.blob());",
+);
+
+const RENDER_ERROR_CODES = [
+  ["queue_unavailable", "The API could not enqueue the render. Retry with the same idempotency key."],
+  ["render_timeout", "Rendering exceeded the worker time limit."],
+  ["render_invalid_input", "The assembled SVG is invalid, unsafe, or outside render limits."],
+  ["render_invalid_output", "The renderer produced a file that failed PNG/PDF verification."],
+  ["render_source_missing", "The source document is missing from shared storage."],
+  ["render_source_unreadable", "The worker cannot read the source document."],
+  ["renderer_unavailable", "Chromium could not render the document."],
+  ["render_storage_failed", "The worker could not persist the finished file."],
+  ["render_failed", "An unexpected render failure occurred."],
+] as const;
 
 const ERROR_EXAMPLES: CodeExamples = {
   javascript: {
@@ -906,7 +944,7 @@ export default function ApiDocsPage() {
           <span className="hidden h-5 w-px bg-white/10 sm:block" />
           <span className="hidden text-sm text-white/50 sm:block">SDK docs</span>
           <span className="rounded-full border border-primary/15 bg-primary/[0.07] px-2 py-0.5 font-mono text-[10px] text-primary/75">
-            v0.2.0
+            v0.3.0
           </span>
           <div className="ml-auto flex items-center gap-2">
             <a
@@ -1069,11 +1107,31 @@ export default function ApiDocsPage() {
 
           <section id="rendering" className="scroll-mt-32 border-b border-white/[0.07] py-14 lg:scroll-mt-24">
             <SectionHeading title="Rendering">
-              Use <code className="text-white/70">renderAndWait</code> for the complete flow, or keep the job when you need separate queue and wait steps.
+              Rendering is asynchronous. Use <code className="text-white/70">renderAndWait</code> to reach a completed job, then call <code className="text-white/70">renders.download</code> to retrieve the actual file.
             </SectionHeading>
             <div className="space-y-4">
               <LanguageCodeBlock examples={RENDER_EXAMPLES} language={serverLanguage} />
               <LanguageCodeBlock examples={MANUAL_RENDER_EXAMPLES} language={serverLanguage} />
+              <CodeBlock code={BROWSER_DOWNLOAD_EXAMPLE} label="Deliver a signed download to the browser" language="javascript" />
+              <Note icon={<ShieldCheck className="size-4" />}>
+                Signed download URLs last five minutes. The SDK download helpers retrieve the job first to mint a fresh URL. The underlying artifact lasts 24 hours by default; after that, create a new render. Never put the API key in browser code.
+              </Note>
+              <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
+                <div className="border-b border-white/[0.07] px-4 py-3 text-xs font-semibold text-white/60">Render lifecycle</div>
+                <dl className="grid gap-px bg-white/[0.06] sm:grid-cols-2">
+                  {[
+                    ["queued / running", "Wait over WebSocket or poll GET /renders/{id}."],
+                    ["completed", "Call the SDK download helper or GET download_url."],
+                    ["failed", "Read error_code and create a new render after correcting the cause."],
+                    ["403 / 410 download", "Refresh the job URL, or create a new render if the artifact expired."],
+                  ].map(([term, description]) => (
+                    <div key={term} className="bg-[#0b1118] p-4">
+                      <dt className="font-mono text-xs text-primary/75">{term}</dt>
+                      <dd className="mt-1.5 text-xs leading-5 text-white/42">{description}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
           </section>
 
@@ -1082,6 +1140,14 @@ export default function ApiDocsPage() {
             <div className="space-y-4">
               <LanguageCodeBlock examples={ERROR_EXAMPLES} language={serverLanguage} />
               <LanguageCodeBlock examples={CANCEL_EXAMPLES} language={serverLanguage} />
+              <div className="overflow-hidden rounded-xl border border-white/[0.08]">
+                {RENDER_ERROR_CODES.map(([code, meaning]) => (
+                  <div key={code} className="grid gap-1 border-b border-white/[0.06] px-4 py-3 last:border-0 sm:grid-cols-[190px_1fr] sm:gap-4">
+                    <code className="text-xs text-primary/75">{code}</code>
+                    <span className="text-xs leading-5 text-white/42">{meaning}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 

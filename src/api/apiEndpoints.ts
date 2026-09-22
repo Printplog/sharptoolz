@@ -372,6 +372,19 @@ export interface AdminApiActivityEvent {
   created_at: string;
 }
 
+export interface AdminApiRenderJob {
+  id: string;
+  document_id: string;
+  format: 'png' | 'pdf';
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  output_size: number;
+  error_code: string;
+  expires_at: string;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
 export interface AdminApiCustomerDetailsResponse {
   range_days: number;
   customer: AdminApiCustomer;
@@ -379,6 +392,7 @@ export interface AdminApiCustomerDetailsResponse {
   operations: Array<{ operation: string; method: string; requests: number; errors: number }>;
   external_users: AdminApiExternalUser[];
   recent_activity: AdminApiActivityEvent[];
+  recent_renders: AdminApiRenderJob[];
 }
 
 export const getAdminApiCustomers = async (params: {

@@ -43,6 +43,28 @@ const session = await sharp.hostedForms.edit(documentId, {
 });
 ```
 
-The server SDK also lists templates and documents, revokes sessions, upgrades test documents, and renders PNG or PDF files. Creation and field editing are intentionally iframe-only.
+Render and save a PDF on your server:
+
+```js
+import { writeFile } from "node:fs/promises";
+
+const job = await sharp.documents.renderAndWait(documentId, { format: "pdf" });
+const file = await sharp.renders.download(job);
+await writeFile(file.filename, file.bytes);
+```
+
+`renderAndWait()` returns render metadata. `renders.download()` performs the
+file request, refreshes the five-minute signed URL first, and returns
+`{ bytes, filename, contentType, job }`. Keep both calls on your backend so the
+API key never enters browser code. To let a browser download directly, send
+only `job.download_url` to it and use a normal link; configured API origins may
+also fetch the signed URL with browser JavaScript.
+
+Render artifacts are retained for 24 hours by default. A signed URL lasts five
+minutes, and retrieving the render job creates a fresh one.
+
+The server SDK also lists templates and documents, revokes sessions, and
+upgrades test documents. Creation and field editing are intentionally
+iframe-only.
 
 [Full documentation](https://sharptoolz.com/api-docs)

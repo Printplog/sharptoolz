@@ -26,6 +26,16 @@ function normalizeCursor(cursor) {
   }
 }
 
+function downloadFilename(response, job) {
+  const disposition = response.headers.get("content-disposition") || "";
+  const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  if (encoded) {
+    try { return decodeURIComponent(encoded); } catch { /* use the regular filename */ }
+  }
+  const regular = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+  return regular || `sharptoolz-${job.document_id}.${job.format}`;
+}
+
 function abortError() {
   return new DOMException("The operation was aborted.", "AbortError");
 }
@@ -90,6 +100,7 @@ export class SharpToolz {
     this.renders = Object.freeze({
       get: (jobId) => this.request(`/renders/${encodeURIComponent(jobId)}`),
       wait: (jobOrId, options = {}) => this.waitForRender(jobOrId, options),
+      download: (jobOrId, options = {}) => this.downloadRender(jobOrId, options),
     });
   }
 
@@ -188,6 +199,49 @@ export class SharpToolz {
       interval = Math.min(Math.round(interval * 1.5), 4_000);
     }
     throw new SharpToolzError("Render wait timed out.");
+  }
+
+  async downloadRender(jobOrId, { timeoutMs = 120_000, signal, pollFallback = true } = {}) {
+    const jobId = typeof jobOrId === "string" ? jobOrId : jobOrId?.id;
+    if (!jobId) throw new TypeError("A render job or job ID is required.");
+
+    // Always fetch the job before downloading. This mints a fresh five-minute
+    // URL and avoids trusting a caller-supplied URL.
+    let job = await this.renders.get(jobId);
+    if (!TERMINAL_STATUSES.has(job.status)) {
+      job = await this.renders.wait(job, { timeoutMs, signal, pollFallback });
+    }
+    job = this.finishRender(job);
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (!job.download_url) {
+        throw new SharpToolzError("The completed render did not include a download URL.", { data: job });
+      }
+      const response = await this.fetch(job.download_url, {
+        method: "GET",
+        headers: { Accept: job.format === "png" ? "image/png" : "application/pdf" },
+        signal,
+      });
+      if (response.ok) {
+        return {
+          bytes: new Uint8Array(await response.arrayBuffer()),
+          filename: downloadFilename(response, job),
+          contentType: response.headers.get("content-type") || (
+            job.format === "png" ? "image/png" : "application/pdf"
+          ),
+          job,
+        };
+      }
+      if (response.status === 403 && attempt === 0) {
+        try { await response.body?.cancel(); } catch { /* response already consumed */ }
+        job = this.finishRender(await this.renders.get(jobId));
+        continue;
+      }
+      const data = await response.json().catch(() => null);
+      const message = data?.detail || `SharpToolz download failed with HTTP ${response.status}.`;
+      throw new SharpToolzError(message, { status: response.status, data });
+    }
+    throw new SharpToolzError("SharpToolz could not refresh the download URL.", { data: job });
   }
 
   finishRender(job) {

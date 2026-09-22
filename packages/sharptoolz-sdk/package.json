@@ -1,6 +1,6 @@
 {
   "name": "@sharp-toolz/sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Official JavaScript client and hosted-form loader for the SharpToolz API",
   "type": "module",
   "license": "MIT",
