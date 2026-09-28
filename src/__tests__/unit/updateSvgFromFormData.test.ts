@@ -109,3 +109,44 @@ describe('updateSvgFromFormData — barcode fields', () => {
   });
 });
 
+describe('updateSvgFromFormData — authored text layout', () => {
+  const field: FormField = {
+    id: 'Address',
+    name: 'Address',
+    type: 'textarea',
+    svgElementId: 'Address.textarea',
+    currentValue: '19 Washington Square\nNew York, NY 10011\nUSA',
+    touched: true,
+  };
+
+  it('does not move a mixed direct-text/tspan block down by one line', () => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg">
+      <text id="Address.textarea" transform="matrix(.339 -.02 .02 .339 370 500)">Old line one<tspan x="0" dy="78">Old line two</tspan><tspan x="0" dy="78">Old line three</tspan></text>
+    </svg>`;
+
+    const result = updateSvgFromFormData(svg, [field]);
+    const doc = new DOMParser().parseFromString(result, 'image/svg+xml');
+    const text = doc.getElementById('Address.textarea')!;
+    const spans = Array.from(text.querySelectorAll('tspan'));
+
+    expect(text.getAttribute('transform')).toBe('matrix(.339 -.02 .02 .339 370 500)');
+    expect(text.firstChild?.nodeType).toBe(Node.TEXT_NODE);
+    expect(text.firstChild?.textContent).toBe('19 Washington Square');
+    expect(spans.map((span) => span.textContent)).toEqual(['New York, NY 10011', 'USA']);
+    expect(spans[0].getAttribute('dy')).toBe('78');
+    expect(spans[1].getAttribute('dy')).toBe('78');
+  });
+
+  it('preserves a single authored tspan position for single-line updates', () => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg">
+      <text id="Address.textarea"><tspan x="40" y="90" class="line">Old</tspan></text>
+    </svg>`;
+    const result = updateSvgFromFormData(svg, [{ ...field, currentValue: 'Updated' }]);
+    const span = new DOMParser().parseFromString(result, 'image/svg+xml').querySelector('tspan')!;
+
+    expect(span.textContent).toBe('Updated');
+    expect(span.getAttribute('x')).toBe('40');
+    expect(span.getAttribute('y')).toBe('90');
+    expect(span.getAttribute('class')).toBe('line');
+  });
+});

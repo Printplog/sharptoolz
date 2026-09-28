@@ -64,6 +64,10 @@ describe("injectFontsIntoSVG", () => {
     expect(result).toContain('url("https://cdn.test/fonts/arial.ttf")');
     expect(result).toContain('url("https://cdn.test/fonts/arial-black.ttf")');
     expect(result).toContain('url("https://cdn.test/fonts/arial-bold.ttf")');
+    const faces = result.match(/@font-face\s*\{[^}]+\}/g) || [];
+    expect(faces).toContainEqual(expect.stringMatching(/font-family: "Arial";[\s\S]*arial-black\.ttf[\s\S]*font-weight: 900;/));
+    expect(faces).toContainEqual(expect.stringMatching(/font-family: "Arial";[\s\S]*arial-bold\.ttf[\s\S]*font-weight: 700;/));
+    expect(faces).toContainEqual(expect.stringMatching(/font-family: "Arial Black";[\s\S]*arial-black\.ttf[\s\S]*font-weight: 400;/));
   });
 
   it("does not skip a new same-family variant when one variant already exists", async () => {

@@ -151,15 +151,24 @@ export function applyWrappedText(
     ? linesOrText 
     : (linesOrText || "").split('\n');
 
-  // Some imported SVGs position text on the first tspan instead of <text>.
-  const firstSpan = el.querySelector('tspan');
-  const firstX = firstSpan?.getAttribute('x');
-  const firstY = firstSpan?.getAttribute('y');
-  const firstDy = firstSpan?.getAttribute('dy');
+  // Preserve the authored line model. SVG exports commonly use either:
+  //   <text>first line<tspan dy="...">second line</tspan></text>
+  // or one <tspan> per line. In the mixed form, the first tspan belongs to the
+  // SECOND visual line, so copying its dy onto a rebuilt first line shifts the
+  // entire block down by one line.
+  const originalSpans = Array.from(el.children).filter(
+    (child) => child.localName.toLowerCase() === 'tspan'
+  );
+  const firstSpan = originalSpans[0];
+  const childNodes = Array.from(el.childNodes);
+  const firstSpanIndex = firstSpan ? childNodes.indexOf(firstSpan) : childNodes.length;
+  const hasLeadingDirectText = childNodes
+    .slice(0, firstSpanIndex)
+    .some((node) => node.nodeType === 3 && Boolean(node.textContent?.trim()));
   el.textContent = "";
 
   // Get original coordinates
-  const x = el.getAttribute("x") || firstX || "0";
+  const x = el.getAttribute("x") || firstSpan?.getAttribute('x') || "0";
   
   // Check for saved line height ratio (calculated by Admin browser)
   // This ensures consistent spacing on server-side where canvas metrics might fail
@@ -167,7 +176,14 @@ export function applyWrappedText(
   
   let lineHeight: number;
   
-  if (savedRatio > 0) {
+  const relativeSpans = hasLeadingDirectText ? originalSpans : originalSpans.slice(1);
+  const authoredLineHeight = relativeSpans
+    .map((span) => Number(span.getAttribute('dy')))
+    .find((value) => Number.isFinite(value) && value !== 0);
+
+  if (authoredLineHeight !== undefined) {
+      lineHeight = authoredLineHeight;
+  } else if (savedRatio > 0) {
       lineHeight = fontSize * savedRatio;
   } else {
       // Calculate font-aware line height based on actual font metrics
@@ -177,21 +193,38 @@ export function applyWrappedText(
       lineHeight = metrics.ascent + metrics.descent + padding;
   }
 
-  lines.forEach((line, i) => {
+  if (hasLeadingDirectText) {
+    el.appendChild(doc.createTextNode(lines[0] || "\u00A0"));
+  }
+
+  const renderedLines = hasLeadingDirectText ? lines.slice(1) : lines;
+  renderedLines.forEach((line, renderedIndex) => {
+    const i = hasLeadingDirectText ? renderedIndex + 1 : renderedIndex;
     const tspan = doc.createElementNS("http://www.w3.org/2000/svg", "tspan");
+    const templateIndex = hasLeadingDirectText ? i - 1 : i;
+    const template = templateIndex >= 0 ? originalSpans[templateIndex] : undefined;
+
+    // Keep authored per-line attributes (position, class, fill, etc.) whenever
+    // the corresponding line existed. For newly added lines, do not duplicate
+    // identity attributes from the last authored span.
+    if (template) {
+      Array.from(template.attributes).forEach((attribute) => {
+        tspan.setAttribute(attribute.name, attribute.value);
+      });
+    }
+
     // Use non-breaking space for empty lines to ensure they occupy vertical space
     tspan.textContent = line || "\u00A0";
     
     // x must be set on every tspan to align correctly
-    tspan.setAttribute("x", x);
+    if (!tspan.hasAttribute("x")) tspan.setAttribute("x", x);
     
     // For subsequent lines, add dy
     if (i > 0) {
       // Use unitless value for dy to ensure it uses the local coordinate system (User Units)
-      tspan.setAttribute("dy", String(lineHeight));
-    } else {
-      if (firstY !== null && firstY !== undefined) tspan.setAttribute('y', firstY);
-      if (firstDy !== null && firstDy !== undefined) tspan.setAttribute('dy', firstDy);
+      if (!tspan.hasAttribute('y') && !tspan.hasAttribute('dy')) {
+        tspan.setAttribute("dy", String(lineHeight));
+      }
     }
     
     el.appendChild(tspan);

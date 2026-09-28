@@ -458,7 +458,7 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
           const maxWidth = parseFloat(field.attributes?.['data-max-width'] || '0');
           const { fontSize, fontFamily } = getSvgElementStyle(el, doc);
 
-          if (tagName === 'text' && (stringValue.includes('\n') || maxWidth > 0)) {
+          if (tagName === 'text' && (stringValue.includes('\n') || maxWidth > 0 || el.querySelector('tspan'))) {
             const userLines = stringValue.split('\n');
             let finalLines: string[] = [];
 
