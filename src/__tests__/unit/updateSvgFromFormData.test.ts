@@ -121,7 +121,8 @@ describe('updateSvgFromFormData — authored text layout', () => {
 
   it('does not move a mixed direct-text/tspan block down by one line', () => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg">
-      <text id="Address.textarea" transform="matrix(.339 -.02 .02 .339 370 500)">Old line one<tspan x="0" dy="78">Old line two</tspan><tspan x="0" dy="78">Old line three</tspan></text>
+      <style>.address { font-size: 64px; }</style>
+      <text id="Address.textarea" class="address" transform="matrix(.339 -.02 .02 .339 370 500)">Old line one<tspan x="0" dy="78">Old line two</tspan><tspan x="0" dy="78">Old line three</tspan></text>
     </svg>`;
 
     const result = updateSvgFromFormData(svg, [field]);
@@ -148,5 +149,24 @@ describe('updateSvgFromFormData — authored text layout', () => {
     expect(span.getAttribute('x')).toBe('40');
     expect(span.getAttribute('y')).toBe('90');
     expect(span.getAttribute('class')).toBe('line');
+  });
+
+  it('repairs an authored dy that would overlap multiline text', () => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg">
+      <style>.cls-6 { fill: black; } .cls-6 { font-size: 62.864px; font-family: Arial; }</style>
+      <text id="Address.textarea" class="cls-6" transform="matrix(.345 -.02 .02 .345 400 596)">
+        <tspan x="0">Old line one</tspan><tspan x="0" dy="18.2">Old line two</tspan>
+      </text>
+    </svg>`;
+    const result = updateSvgFromFormData(svg, [{
+      ...field,
+      currentValue: '0000 IDGOD.PH\nIDGOD.PH, WY 00000',
+    }]);
+    const text = new DOMParser().parseFromString(result, 'image/svg+xml').getElementById('Address.textarea')!;
+    const spans = Array.from(text.querySelectorAll('tspan'));
+
+    expect(text.getAttribute('transform')).toBe('matrix(.345 -.02 .02 .345 400 596)');
+    expect(spans[0].hasAttribute('dy')).toBe(false);
+    expect(parseFloat(spans[1].getAttribute('dy')!)).toBeCloseTo(62.864 * 1.2);
   });
 });

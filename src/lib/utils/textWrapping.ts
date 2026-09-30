@@ -143,9 +143,11 @@ export function applyWrappedText(
   el: SVGTextElement | Element, 
   linesOrText: string | string[], 
   fontSize: number = 16,
-  fontFamily: string = 'Arial',
+  _fontFamily: string = 'Arial',
   doc: Document = document
 ) {
+  // Kept for API compatibility; line height is deterministic across clients and server.
+  void _fontFamily;
   // Normalize input to array of lines
   const lines = Array.isArray(linesOrText) 
     ? linesOrText 
@@ -173,24 +175,36 @@ export function applyWrappedText(
   // Check for saved line height ratio (calculated by Admin browser)
   // This ensures consistent spacing on server-side where canvas metrics might fail
   const savedRatio = parseFloat(el.getAttribute('data-lh-ratio') || '0');
+  const minimumSafeLineHeight = fontSize * 0.7;
+  const parseRelativeOffset = (value: string | null): number => {
+    if (!value) return Number.NaN;
+    const normalized = value.trim().toLowerCase();
+    const amount = parseFloat(normalized);
+    if (!Number.isFinite(amount)) return Number.NaN;
+    if (normalized.endsWith('em')) return amount * fontSize;
+    if (/^-?\d*\.?\d+(?:e[-+]?\d+)?(?:px)?$/i.test(normalized)) return amount;
+    return Number.NaN;
+  };
+  const isSafeRelativeOffset = (value: string | null) => {
+    const amount = parseRelativeOffset(value);
+    return Number.isFinite(amount) && amount >= minimumSafeLineHeight;
+  };
   
   let lineHeight: number;
   
   const relativeSpans = hasLeadingDirectText ? originalSpans : originalSpans.slice(1);
   const authoredLineHeight = relativeSpans
-    .map((span) => Number(span.getAttribute('dy')))
-    .find((value) => Number.isFinite(value) && value !== 0);
+    .map((span) => parseRelativeOffset(span.getAttribute('dy')))
+    .find((value) => Number.isFinite(value) && value >= minimumSafeLineHeight);
 
   if (authoredLineHeight !== undefined) {
       lineHeight = authoredLineHeight;
-  } else if (savedRatio > 0) {
+  } else if (savedRatio >= 0.7) {
       lineHeight = fontSize * savedRatio;
   } else {
-      // Calculate font-aware line height based on actual font metrics
-      const metrics = getFontMetrics(fontSize, fontFamily);
-      // Line height = ascent + descent + padding
-      const padding = fontSize * 0.2;
-      lineHeight = metrics.ascent + metrics.descent + padding;
+      // Keep preview and server rendering deterministic. A malformed authored
+      // dy (for example 18.2 on a 62.864px font) must not make lines overlap.
+      lineHeight = fontSize * 1.2;
   }
 
   if (hasLeadingDirectText) {
@@ -222,7 +236,7 @@ export function applyWrappedText(
     // For subsequent lines, add dy
     if (i > 0) {
       // Use unitless value for dy to ensure it uses the local coordinate system (User Units)
-      if (!tspan.hasAttribute('y') && !tspan.hasAttribute('dy')) {
+      if (!tspan.hasAttribute('y') && !isSafeRelativeOffset(tspan.getAttribute('dy'))) {
         tspan.setAttribute("dy", String(lineHeight));
       }
     }
