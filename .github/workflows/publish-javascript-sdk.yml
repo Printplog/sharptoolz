@@ -1,0 +1,47 @@
+name: Publish JavaScript SDK
+
+on:
+  workflow_dispatch:
+
+concurrency: publish-javascript-sdk
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Test and publish to npm
+    runs-on: ubuntu-latest
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@sharp-toolz/sdk
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: packages/sharptoolz-sdk
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install a Trusted Publishing-compatible npm CLI
+        run: npm install --global npm@latest
+
+      - name: Install SDK dependencies
+        run: npm install --ignore-scripts --package-lock=false --no-audit --no-fund
+
+      - name: Run SDK tests
+        run: npm test
+
+      - name: Check package contents
+        run: npm pack --dry-run
+
+      - name: Publish package
+        run: npm publish --access public --provenance
