@@ -4,6 +4,11 @@
   "description": "Official JavaScript client and hosted-form loader for the SharpToolz API",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Printplog/sharptoolz",
+    "directory": "packages/sharptoolz-sdk"
+  },
   "sideEffects": false,
   "engines": {
     "node": ">=18"
