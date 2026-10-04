@@ -554,6 +554,7 @@ export type ApiTheme = {
 
 export type TrackingSupportMessage = {
   id: string;
+  document_id: string;
   tracking_id: string;
   document_name: string;
   source: "parcel_finda" | "flight_lookup";

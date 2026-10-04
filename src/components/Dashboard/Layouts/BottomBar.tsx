@@ -24,7 +24,7 @@ export default function BottomBar() {
 
   const { data: supportMessages } = useQuery({
     queryKey: ["support-messages"],
-    queryFn: getTrackingSupportMessages,
+    queryFn: () => getTrackingSupportMessages(),
     enabled: !!user,
     staleTime: 30_000,
   });

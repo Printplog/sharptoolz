@@ -1,11 +1,11 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface Tab {
   id: string;
   label: string;
   icon?: React.ElementType;
+  count?: number;
 }
 
 interface CustomTabsProps {
@@ -18,8 +18,9 @@ interface CustomTabsProps {
 export function CustomTabs({ tabs, activeTab, onChange, className }: CustomTabsProps) {
   return (
     <div
+      role="tablist"
       className={cn(
-        "flex items-center gap-1 bg-black/40 backdrop-blur-xl border border-white/10 p-1.5 rounded-full w-fit mx-auto lg:mx-0",
+        "flex w-fit items-center gap-6 overflow-x-auto",
         className
       )}
     >
@@ -30,28 +31,20 @@ export function CustomTabs({ tabs, activeTab, onChange, className }: CustomTabsP
         return (
           <button
             key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "relative px-6 py-2.5 rounded-full text-[11px] font-semibold transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/20",
-              isActive ? "text-white" : "text-white/40 hover:text-white/70"
+              "relative flex h-11 shrink-0 items-center gap-2 border-b-2 border-transparent px-0 text-sm font-medium outline-none transition-colors focus-visible:text-white",
+              isActive ? "border-primary text-white" : "text-white/40 hover:text-white/70"
             )}
           >
-            <span className="relative z-10 flex items-center gap-2">
+            <span className="flex items-center gap-2">
               {Icon && <Icon className="h-3.5 w-3.5" />}
               {tab.label}
+              {tab.count !== undefined && <span className="text-xs font-normal text-white/30">{tab.count}</span>}
             </span>
-            
-            {isActive && (
-              <motion.div
-                layoutId="active-tab-bg"
-                className="absolute inset-0 bg-white/5 border border-white/10 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 30,
-                }}
-              />
-            )}
           </button>
         );
       })}
@@ -67,20 +60,7 @@ interface CustomTabsContentProps {
 }
 
 export function CustomTabsContent({ value, activeTab, children, className }: CustomTabsContentProps) {
-  return (
-    <AnimatePresence mode="wait">
-      {activeTab === value && (
-        <motion.div
-          key={value}
-          initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className={cn("w-full outline-none", className)}
-        >
-          {children}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  if (activeTab !== value) return null;
+
+  return <div role="tabpanel" className={cn("w-full outline-none", className)}>{children}</div>;
 }

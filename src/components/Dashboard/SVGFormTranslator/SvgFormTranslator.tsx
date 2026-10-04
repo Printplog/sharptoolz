@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { getAdaptiveDebounce } from "@/lib/utils/deviceDetection";
 import { sanitizeSvgForEmbed } from "@/lib/utils/sanitizeSvgForEmbed";
 import ProtectedCanvasPreview from "./ProtectedCanvasPreview";
+import DocumentSupportMessages from "@/components/Dashboard/Documents/DocumentSupportMessages";
 
 // Component to render action buttons by cloning and connecting to FormPanel buttons
 function ActionButtonsRenderer() {
@@ -142,6 +143,7 @@ import { useAuthStore } from "@/store/authStore";
 
 export default function SvgFormTranslator({ isPurchased, templateId: templateIdProp, hosted }: Props) {
   const user = useAuthStore((state) => state.user);
+  const location = useLocation();
   const hostedSession = hosted?.session;
   const isHosted = Boolean(hostedSession);
   const isEditingDocument = Boolean(isPurchased || hostedSession?.operation === "edit");
@@ -153,7 +155,12 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   const [svgText, setSvgText] = useState<string>("");
   const [debouncedFields, setDebouncedFields] = useState<FormField[]>([]);
   const [livePreview, setLivePreview] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<string>("editor");
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const requestedTab = new URLSearchParams(location.search).get("tab");
+    if (requestedTab === "preview") return "preview";
+    if (requestedTab === "support" && isPurchased && !isHosted) return "support";
+    return "editor";
+  });
   const pendingFieldsRef = useRef<FormField[] | null>(null);
   const baseSvgRef = useRef<string>("");
   const baseSvgDocRef = useRef<Document | null>(null);
@@ -165,9 +172,17 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   const fields = useToolStore((state) => state.fields);
 
   const { id: paramId } = useParams<{ id: string }>();
-  const location = useLocation();
   const startValues = (location.state as DuplicateLocationState | null)?.startValues;
   const id = hostedSession?.template.id ?? templateIdProp ?? paramId;
+
+  useEffect(() => {
+    const requestedTab = new URLSearchParams(location.search).get("tab");
+    if (requestedTab === "editor" || requestedTab === "preview") {
+      setActiveTab(requestedTab);
+    } else if (requestedTab === "support" && isPurchased && !isHosted) {
+      setActiveTab("support");
+    }
+  }, [isHosted, isPurchased, location.search]);
 
   const hostedTemplate = useMemo<Template | undefined>(() => {
     if (!hostedSession) return undefined;
@@ -614,6 +629,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         <TabsList className="bg-white/10 w-full">
           <TabsTrigger value="editor">Editor</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
+          {isPurchased && !isHosted && <TabsTrigger value="support">Support</TabsTrigger>}
         </TabsList>
         {/* Keep editor tab always mounted to prevent re-rendering lag when switching back */}
         <div style={{ display: activeTab === "editor" ? "block" : "none" }}>
@@ -678,6 +694,16 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
             <ActionButtonsRenderer />
           </TabsContent>
         </div>
+
+        {isPurchased && !isHosted && id && (
+          <TabsContent value="support" className="mt-6">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-white">Support messages</h2>
+              <p className="mt-2 text-sm text-white/40">Requests submitted with this document&apos;s tracking ID.</p>
+            </div>
+            <DocumentSupportMessages documentId={id} />
+          </TabsContent>
+        )}
 
       </Tabs>
     </div>

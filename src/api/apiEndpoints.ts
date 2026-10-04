@@ -242,8 +242,8 @@ export const createCryptoPayment = async (ticker: string): Promise<CryptoPayment
   return res.data;
 };
 
-export const getTrackingSupportMessages = async (): Promise<TrackingSupportMessagesResponse> => {
-  const res = await apiClient.get('/support/messages/');
+export const getTrackingSupportMessages = async (params?: { document_id?: string }): Promise<TrackingSupportMessagesResponse> => {
+  const res = await apiClient.get('/support/messages/', { params });
   return res.data;
 };
 
