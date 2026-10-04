@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Inbox, Mail, PackageSearch, Plane } from "lucide-react";
+import { Inbox, PackageSearch, Plane } from "lucide-react";
 
 import { getTrackingSupportMessages } from "@/api/apiEndpoints";
-import { Button } from "@/components/ui/button";
+import { SupportConversation } from "@/components/Dashboard/Support/SupportConversation";
+import { SupportTicketDetailsDialog } from "@/components/Dashboard/Support/SupportTicketDetailsDialog";
 import { cn } from "@/lib/utils";
 import type { TrackingSupportMessage } from "@/types";
 
@@ -54,8 +55,6 @@ export default function DocumentSupportMessages({ documentId }: { documentId: st
   return (
     <div className="divide-y divide-white/10 border-y border-white/10">
       {messages.map((message) => {
-        const replySubject = encodeURIComponent(`Re: ${message.subject} [${message.tracking_id}]`);
-
         return (
           <article key={message.id} className="py-6">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -71,17 +70,10 @@ export default function DocumentSupportMessages({ documentId }: { documentId: st
                   <span>{format(new Date(message.created_at), "MMM d, yyyy 'at' h:mm a")}</span>
                 </div>
                 <h3 className="mt-3 text-lg font-semibold text-white">{message.subject}</h3>
-                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-white/65">{message.message}</p>
-                <p className="mt-4 text-xs text-white/35">
-                  From <span className="text-white/60">{message.customer_name}</span> · {message.customer_email}
-                </p>
               </div>
-              <Button asChild size="sm" className="shrink-0">
-                <a href={`mailto:${message.customer_email}?subject=${replySubject}`}>
-                  <Mail /> Reply by email
-                </a>
-              </Button>
+              <SupportTicketDetailsDialog ticket={message} />
             </div>
+            <SupportConversation ticket={message} />
           </article>
         );
       })}

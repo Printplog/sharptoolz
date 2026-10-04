@@ -8,7 +8,7 @@ import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CustomTabs, CustomTabsContent, type CustomTabItem } from "@/components/ui/custom-tabs";
 import {
   Dialog,
   DialogContent,
@@ -34,12 +34,29 @@ import {
   MessageCircle,
   Gift,
   Link as LinkIcon,
-  Code2
+  Code2,
+  KeyRound
 } from "lucide-react";
 import { toast } from "sonner";
 import type { SiteSettings } from "@/types";
 import SettingsSkeleton from "@/components/Admin/Layouts/SettingsSkeleton";
 import { OtpInput } from "@/components/ui/OtpInput";
+
+const SETTINGS_TABS: CustomTabItem[] = [
+  { id: "support", label: "Contact & Support", icon: Headset },
+  { id: "financial", label: "Financial", icon: Wallet },
+  { id: "toggles", label: "Platform Toggles", icon: Activity },
+  { id: "branding", label: "Branding Defaults", icon: Flag },
+  { id: "referrals", label: "Referral Program", icon: Gift },
+  { id: "api", label: "API Platform", icon: Code2 },
+  { id: "integrations", label: "Integrations", icon: KeyRound },
+];
+
+type SettingsUpdate = Partial<SiteSettings> & {
+  two_factor_code: string;
+  resend_api_key?: string;
+  resend_webhook_secret?: string;
+};
 
 export default function AdminSettings() {
   const queryClient = useQueryClient();
@@ -88,6 +105,11 @@ export default function AdminSettings() {
 
   const [isChallengeOpen, setIsChallengeOpen] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [activeTab, setActiveTab] = useState("support");
+  const [secretInputs, setSecretInputs] = useState({
+    resend_api_key: "",
+    resend_webhook_secret: "",
+  });
 
   const { data: settings, isLoading } = useQuery<SiteSettings>({
     queryKey: ["siteSettings"],
@@ -142,17 +164,22 @@ export default function AdminSettings() {
   }, [settings]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: Partial<SiteSettings> & { two_factor_code: string }) =>
+    mutationFn: (data: SettingsUpdate) =>
       updateSiteSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["siteSettings"] });
       toast.success("Settings updated successfully!");
       setIsChallengeOpen(false);
       setTwoFactorCode("");
+      setSecretInputs({ resend_api_key: "", resend_webhook_secret: "" });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      const msg = error.response?.data?.error || "Failed to update settings.";
+      const responseData = error.response?.data;
+      const firstFieldError = responseData && typeof responseData === "object"
+        ? Object.values(responseData).flat().find((value) => typeof value === "string")
+        : null;
+      const msg = responseData?.error || firstFieldError || "Failed to update settings.";
       toast.error(msg);
     },
   });
@@ -167,8 +194,12 @@ export default function AdminSettings() {
       toast.error("Enter the 6-digit code from your authenticator app.");
       return;
     }
+    const secretChanges = Object.fromEntries(
+      Object.entries(secretInputs).filter(([, value]) => value.trim()),
+    );
     updateMutation.mutate({
       ...formData,
+      ...secretChanges,
       two_factor_code: twoFactorCode,
     });
   };
@@ -191,36 +222,19 @@ export default function AdminSettings() {
         />
       </div>
 
-      <Tabs defaultValue="support" className="space-y-4">
-        <TabsList className="bg-white/5 border border-white/10 p-1.5 rounded-full h-auto flex flex-wrap md:flex-nowrap gap-1">
-          <TabsTrigger value="support" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
-            <Headset className="w-4 h-4" />
-            Contact & Support
-          </TabsTrigger>
-          <TabsTrigger value="financial" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
-            <Wallet className="w-4 h-4" />
-            Financial
-          </TabsTrigger>
-          <TabsTrigger value="toggles" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
-            <Activity className="w-4 h-4" />
-            Platform Toggles
-          </TabsTrigger>
-          <TabsTrigger value="branding" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
-            <Flag className="w-4 h-4" />
-            Branding Defaults
-          </TabsTrigger>
-          <TabsTrigger value="referrals" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
-            <Gift className="w-4 h-4" />
-            Referral Program
-          </TabsTrigger>
-          <TabsTrigger value="api" className="rounded-full px-6 py-3 text-sm font-bold flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-black transition-all duration-300">
-            <Code2 className="w-4 h-4" />
-            API Platform
-          </TabsTrigger>
-        </TabsList>
+      <div className="space-y-4">
+        <div className="border-b border-white/10">
+          <CustomTabs
+            tabs={SETTINGS_TABS}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            ariaLabel="Site settings sections"
+            className="w-full"
+          />
+        </div>
 
         {/* 1. Contact & Support Tab */}
-        <TabsContent value="support" className="space-y-6 focus:outline-none focus-visible:outline-none">
+        <CustomTabsContent value="support" activeTab={activeTab} className="space-y-6">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
@@ -372,10 +386,10 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </CustomTabsContent>
 
         {/* 2. Financial Tab */}
-        <TabsContent value="financial" className="space-y-6 focus:outline-none focus-visible:outline-none">
+        <CustomTabsContent value="financial" activeTab={activeTab} className="space-y-6">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
@@ -448,10 +462,10 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </CustomTabsContent>
 
         {/* 3. Platform Toggles Tab */}
-        <TabsContent value="toggles" className="space-y-6 focus:outline-none focus-visible:outline-none">
+        <CustomTabsContent value="toggles" activeTab={activeTab} className="space-y-6">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-red-500/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -512,10 +526,10 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </CustomTabsContent>
 
         {/* 4. Branding Tab */}
-        <TabsContent value="branding" className="space-y-6 focus:outline-none focus-visible:outline-none">
+        <CustomTabsContent value="branding" activeTab={activeTab} className="space-y-6">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
@@ -572,10 +586,10 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </CustomTabsContent>
  
         {/* 5. Referral Program Tab */}
-        <TabsContent value="referrals" className="space-y-6 focus:outline-none focus-visible:outline-none">
+        <CustomTabsContent value="referrals" activeTab={activeTab} className="space-y-6">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6 relative overflow-hidden">
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
@@ -769,9 +783,9 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </CustomTabsContent>
 
-        <TabsContent value="api" className="space-y-6 focus:outline-none focus-visible:outline-none">
+        <CustomTabsContent value="api" activeTab={activeTab} className="space-y-6">
           <Card className="bg-white/5 border-white/10 backdrop-blur-3xl overflow-hidden rounded-[2rem] border-t-primary/20 py-0 gap-0">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 px-8 pt-8 pb-6">
               <div className="flex items-center gap-4">
@@ -869,8 +883,73 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </CustomTabsContent>
+
+        <CustomTabsContent value="integrations" activeTab={activeTab} className="space-y-6">
+          <Card className="overflow-hidden border-white/10 bg-white/[0.035] py-0">
+            <CardHeader className="border-b border-white/10 px-6 py-6">
+              <CardTitle className="text-xl font-semibold">Integration secrets</CardTitle>
+              <CardDescription className="max-w-2xl text-white/45">
+                Replace provider credentials without redeploying. Stored values are encrypted and are never returned by the API or shown again.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="divide-y divide-white/10 p-0">
+              <div className="grid gap-4 px-6 py-6 lg:grid-cols-[minmax(220px,0.7fr)_minmax(320px,1.3fr)] lg:items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-white">Resend API key</h3>
+                    <span className="text-xs text-white/35">
+                      {settings?.resend_api_key_configured ? "Configured" : "Not configured"}
+                    </span>
+                  </div>
+                  <p className="mt-2 max-w-sm text-xs leading-5 text-white/35">
+                    Used to send support email and retrieve incoming reply content.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="resend_api_key" className="sr-only">New Resend API key</Label>
+                  <Input
+                    id="resend_api_key"
+                    type="password"
+                    autoComplete="new-password"
+                    value={secretInputs.resend_api_key}
+                    onChange={(event) => setSecretInputs((current) => ({ ...current, resend_api_key: event.target.value }))}
+                    placeholder={settings?.resend_api_key_configured ? "Enter a new key to replace the current one" : "re_..."}
+                    className="h-12 border-white/10 bg-black/10"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 px-6 py-6 lg:grid-cols-[minmax(220px,0.7fr)_minmax(320px,1.3fr)] lg:items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-white">Resend webhook secret</h3>
+                    <span className="text-xs text-white/35">
+                      {settings?.resend_webhook_secret_configured ? "Configured" : "Not configured"}
+                    </span>
+                  </div>
+                  <p className="mt-2 max-w-sm text-xs leading-5 text-white/35">
+                    Verifies that inbound and delivery events genuinely came from Resend.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="resend_webhook_secret" className="sr-only">New Resend webhook secret</Label>
+                  <Input
+                    id="resend_webhook_secret"
+                    type="password"
+                    autoComplete="new-password"
+                    value={secretInputs.resend_webhook_secret}
+                    onChange={(event) => setSecretInputs((current) => ({ ...current, resend_webhook_secret: event.target.value }))}
+                    placeholder={settings?.resend_webhook_secret_configured ? "Enter a new secret to replace the current one" : "whsec_..."}
+                    className="h-12 border-white/10 bg-black/10"
+                  />
+                  <p className="mt-2 text-xs text-white/30">Leaving this blank keeps the current stored value.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </CustomTabsContent>
+      </div>
 
       {/* Security Challenge Dialog */}
       <Dialog

@@ -537,6 +537,8 @@ export type SiteSettings = {
   owner_name_obfuscated: string;
   updated_at: string;
   template_cache_version?: number;
+  resend_api_key_configured?: boolean;
+  resend_webhook_secret_configured?: boolean;
 };
 
 export type ApiTheme = {
@@ -566,6 +568,16 @@ export type TrackingSupportMessage = {
   status: "new" | "read" | "closed";
   created_at: string;
   updated_at: string;
+  conversation: TrackingSupportConversationEntry[];
+};
+
+export type TrackingSupportConversationEntry = {
+  id: string;
+  direction: "customer" | "owner";
+  body: string;
+  sender_email: string;
+  delivery_status: "received" | "queued" | "sent" | "delivered" | "delayed" | "bounced" | "failed" | "suppressed" | "complained";
+  created_at: string;
 };
 
 export type TrackingSupportMessagesResponse = {

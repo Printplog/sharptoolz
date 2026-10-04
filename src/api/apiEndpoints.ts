@@ -255,6 +255,14 @@ export const updateTrackingSupportMessageStatus = async (
   return res.data;
 };
 
+export const sendTrackingSupportReply = async (
+  id: string,
+  body: string,
+): Promise<TrackingSupportMessage['conversation'][number]> => {
+  const res = await apiClient.post(`/support/messages/${id}/replies/`, { body });
+  return res.data;
+};
+
 export const getWallet = async (): Promise<WalletData> => {
   const res = await apiClient.get('/wallet/');
   return res.data;
