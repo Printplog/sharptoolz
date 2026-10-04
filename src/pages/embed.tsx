@@ -4,6 +4,7 @@ import { CheckCircle2, Clock3, Loader2, ShieldAlert } from "lucide-react";
 
 import { BASE_URL } from "@/api/apiClient";
 import SvgFormTranslator from "@/components/Dashboard/SVGFormTranslator/SvgFormTranslator";
+import { readableTextColor } from "@/lib/apiTheme";
 import useToolStore from "@/store/formStore";
 import type { EmbedSessionData, FormField } from "@/types";
 
@@ -42,6 +43,7 @@ export default function HostedEmbedPage() {
   const tokenRef = useRef("");
   const parentOriginRef = useRef("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastHeightRef = useRef(0);
   const [session, setSession] = useState<EmbedSessionData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -90,17 +92,27 @@ export default function HostedEmbedPage() {
     const container = containerRef.current;
     if (!parentOrigin || !container) return;
 
+    let frame = 0;
     const sendHeight = () => {
-      window.parent.postMessage(
-        { type: "sharptoolz:resize", height: Math.ceil(container.scrollHeight) },
-        parentOrigin,
-      );
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const height = Math.ceil(container.getBoundingClientRect().height);
+        if (height === lastHeightRef.current) return;
+        lastHeightRef.current = height;
+        window.parent.postMessage(
+          { type: "sharptoolz:resize", height },
+          parentOrigin,
+        );
+      });
     };
     const observer = new ResizeObserver(sendHeight);
     observer.observe(container);
     sendHeight();
     if (!loading) window.parent.postMessage({ type: "sharptoolz:ready" }, parentOrigin);
-    return () => observer.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [loading, session, error, completedDocumentId]);
 
   const submit = useCallback(async () => {
@@ -148,33 +160,111 @@ export default function HostedEmbedPage() {
   }, [session, submitting]);
 
   const theme = session?.theme;
+  const onPrimary = theme ? readableTextColor(theme.primaryColor) : "#09090b";
+
+  useEffect(() => {
+    if (!theme) return;
+    const root = document.documentElement;
+    const properties = {
+      "--stz-primary": theme.primaryColor,
+      "--stz-on-primary": readableTextColor(theme.primaryColor),
+      "--stz-bg": theme.backgroundColor,
+      "--stz-text": theme.textColor,
+      "--stz-input": theme.inputBackground,
+      "--stz-border": theme.borderColor,
+      "--stz-radius": theme.borderRadius,
+      "--background": theme.backgroundColor,
+      "--foreground": theme.textColor,
+      "--card": theme.backgroundColor,
+      "--card-foreground": theme.textColor,
+      "--primary": theme.primaryColor,
+      "--primary-foreground": readableTextColor(theme.primaryColor),
+      "--muted": theme.inputBackground,
+      "--muted-foreground": theme.textColor,
+      "--border": theme.borderColor,
+      "--input": theme.borderColor,
+      "--ring": theme.primaryColor,
+      "--radius": theme.borderRadius,
+    };
+    const previous = Object.fromEntries(
+      Object.keys(properties).map((property) => [property, root.style.getPropertyValue(property)]),
+    );
+    Object.entries(properties).forEach(([property, value]) => root.style.setProperty(property, value));
+
+    return () => {
+      Object.entries(previous).forEach(([property, value]) => {
+        if (value) root.style.setProperty(property, value);
+        else root.style.removeProperty(property);
+      });
+    };
+  }, [theme]);
+
   const style = theme ? {
     backgroundColor: theme.backgroundColor,
     color: theme.textColor,
     fontFamily: `${theme.fontFamily}, ui-sans-serif, system-ui, sans-serif`,
     "--stz-primary": theme.primaryColor,
+    "--stz-on-primary": onPrimary,
+    "--stz-bg": theme.backgroundColor,
     "--stz-text": theme.textColor,
     "--stz-input": theme.inputBackground,
     "--stz-border": theme.borderColor,
     "--stz-radius": theme.borderRadius,
+    "--background": theme.backgroundColor,
+    "--foreground": theme.textColor,
+    "--card": theme.backgroundColor,
+    "--card-foreground": theme.textColor,
+    "--primary": theme.primaryColor,
+    "--primary-foreground": onPrimary,
+    "--muted": theme.inputBackground,
+    "--muted-foreground": theme.textColor,
+    "--border": theme.borderColor,
+    "--input": theme.borderColor,
+    "--ring": theme.primaryColor,
+    "--radius": theme.borderRadius,
   } as React.CSSProperties : undefined;
 
   return (
-    <div ref={containerRef} className="stz-hosted-shell min-h-screen p-4 sm:p-6" style={style}>
+    <div ref={containerRef} className="stz-hosted-shell p-4 sm:p-6" style={style}>
       <style>{`
-        @layer base {
-        .stz-hosted-shell .stz-hosted-workspace .text-white { color: var(--stz-text) !important; }
-        .stz-hosted-shell .stz-hosted-workspace .text-gray-400 { color: color-mix(in srgb, var(--stz-text) 58%, transparent) !important; }
+        .stz-hosted-shell .stz-hosted-workspace .text-white,
+        .stz-hosted-shell .stz-hosted-workspace [class*="text-white/"] {
+          color: var(--stz-text) !important;
+        }
+        .stz-hosted-shell .stz-hosted-workspace .text-gray-400,
+        .stz-hosted-shell .stz-hosted-workspace .text-muted-foreground {
+          color: color-mix(in srgb, var(--stz-text) 62%, transparent) !important;
+        }
+        .stz-hosted-shell .stz-hosted-workspace label,
+        .stz-hosted-shell .stz-hosted-workspace h2,
+        .stz-hosted-shell .stz-hosted-workspace h3 {
+          color: var(--stz-text) !important;
+        }
         #root .stz-hosted-shell .stz-hosted-workspace input,
         #root .stz-hosted-shell .stz-hosted-workspace textarea,
-        #root .stz-hosted-shell .stz-hosted-workspace button[role="combobox"] {
+        #root .stz-hosted-shell .stz-hosted-workspace button[role="combobox"],
+        #root .stz-hosted-shell .stz-hosted-workspace .stz-hosted-secondary-control {
           background: var(--stz-input) !important;
           border-color: var(--stz-border) !important;
           border-radius: var(--stz-radius) !important;
           color: var(--stz-text) !important;
         }
-        .stz-hosted-shell .stz-hosted-workspace [data-form-panel-user] > div {
+        #root .stz-hosted-shell .stz-hosted-workspace button[class*="bg-white/"]:not([role="tab"]):not([role="combobox"]):not(.stz-hosted-submit) {
+          background: var(--stz-input) !important;
           border-color: var(--stz-border) !important;
+          color: var(--stz-text) !important;
+        }
+        .stz-hosted-shell .stz-hosted-workspace input::placeholder,
+        .stz-hosted-shell .stz-hosted-workspace textarea::placeholder {
+          color: color-mix(in srgb, var(--stz-text) 48%, transparent) !important;
+        }
+        .stz-hosted-shell .stz-hosted-workspace [data-form-panel-user] > div {
+          background: color-mix(in srgb, var(--stz-text) 4%, var(--stz-bg)) !important;
+          border-color: var(--stz-border) !important;
+          border-radius: var(--stz-radius) !important;
+        }
+        .stz-hosted-shell .stz-hosted-workspace [data-slot="tabs-list"] {
+          background: color-mix(in srgb, var(--stz-text) 8%, var(--stz-bg)) !important;
           border-radius: var(--stz-radius) !important;
         }
         .stz-hosted-shell .stz-hosted-workspace [role="tab"] {
@@ -183,14 +273,39 @@ export default function HostedEmbedPage() {
         }
         .stz-hosted-shell .stz-hosted-workspace [role="tab"][data-state="active"] {
           background: var(--stz-primary) !important;
-          color: #09090b !important;
+          color: var(--stz-on-primary) !important;
           opacity: 1;
+        }
+        .stz-hosted-shell .stz-hosted-workspace .stz-hosted-preview-frame {
+          background: var(--stz-input) !important;
+          border-color: var(--stz-border) !important;
+          border-radius: var(--stz-radius) !important;
+        }
+        .stz-hosted-shell .stz-hosted-workspace .border-white\\/20,
+        .stz-hosted-shell .stz-hosted-workspace .border-white\\/10 {
+          border-color: var(--stz-border) !important;
         }
         .stz-hosted-shell .stz-hosted-workspace .stz-hosted-submit {
           background: var(--stz-primary) !important;
           border-radius: var(--stz-radius) !important;
-          color: #09090b !important;
+          color: var(--stz-on-primary) !important;
+          border-color: color-mix(in srgb, var(--stz-on-primary) 24%, transparent) !important;
         }
+        .stz-hosted-shell .stz-hosted-workspace .stz-hosted-submit > div > div {
+          border-color: color-mix(in srgb, var(--stz-on-primary) 35%, transparent) !important;
+        }
+        [data-slot="select-content"] {
+          background: var(--stz-input) !important;
+          border-color: var(--stz-border) !important;
+          color: var(--stz-text) !important;
+          border-radius: var(--stz-radius) !important;
+        }
+        [data-slot="select-item"] {
+          color: var(--stz-text) !important;
+        }
+        [data-slot="select-item"]:focus,
+        [data-slot="select-item"]:hover {
+          background: color-mix(in srgb, var(--stz-primary) 18%, var(--stz-input)) !important;
         }
       `}</style>
 
@@ -222,10 +337,12 @@ export default function HostedEmbedPage() {
           <>
             <header className="mb-5 flex flex-wrap items-start justify-between gap-4 border-b pb-5" style={{ borderColor: theme?.borderColor }}>
               <div>
-                <p className="text-xs font-bold" style={{ color: theme?.primaryColor }}>
-                  SharpToolz hosted translator
-                </p>
-                <h1 className="mt-1 text-2xl font-black">{session.template.name}</h1>
+                {theme?.showSharpToolzBranding ? (
+                  <p className="text-xs font-bold" style={{ color: theme.primaryColor }}>
+                    SharpToolz hosted translator
+                  </p>
+                ) : null}
+                <h1 className={theme?.showSharpToolzBranding ? "mt-1 text-2xl font-black" : "text-2xl font-black"}>{session.template.name}</h1>
               </div>
               <div className="flex items-center gap-2 text-xs opacity-60">
                 <Clock3 className="h-4 w-4" /> Expires {new Date(session.expires_at).toLocaleTimeString()}

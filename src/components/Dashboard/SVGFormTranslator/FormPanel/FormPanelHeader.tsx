@@ -32,7 +32,7 @@ export function FormPanelHeader({
           onClick={onReset}
           variant="outline"
           size="sm"
-          className="bg-white/10 border-white/20 text-white hover:text-white hover:bg-white/20"
+          className="stz-hosted-secondary-control bg-white/10 border-white/20 text-white hover:text-white hover:bg-white/20"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           Reset
@@ -44,7 +44,7 @@ export function FormPanelHeader({
           <a href={tutorial.url} target="_blank" rel="noopener noreferrer">
             <Button
               variant="outline"
-              className="gap-2 bg-white/10 border-white/20 text-white hover:text-white hover:bg-white/20"
+              className="stz-hosted-secondary-control gap-2 bg-white/10 border-white/20 text-white hover:text-white hover:bg-white/20"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
@@ -96,4 +96,3 @@ export function FormPanelHeader({
     </>
   );
 }
-

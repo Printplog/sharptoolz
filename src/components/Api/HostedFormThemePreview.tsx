@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { Clock3, RotateCcw, Upload } from "lucide-react";
 
-import { DEFAULT_API_THEME } from "@/lib/apiTheme";
+import { DEFAULT_API_THEME, readableTextColor } from "@/lib/apiTheme";
 import type { ApiTheme } from "@/types";
 
 type HostedFormThemePreviewProps = {
@@ -80,10 +80,12 @@ export default function HostedFormThemePreview({
       <div className={compact ? "p-4" : "p-4 sm:p-5"}>
         <header className="flex items-start justify-between gap-3 border-b pb-4" style={{ borderColor: theme.borderColor }}>
           <div className="min-w-0 text-left">
-            <p className="text-[11px] font-bold" style={{ color: theme.primaryColor }}>
-              SharpToolz hosted translator
-            </p>
-            <p className="mt-1 truncate text-base font-black">Boarding Pass1_Fixed</p>
+            {theme.showSharpToolzBranding ? (
+              <p className="text-[11px] font-bold" style={{ color: theme.primaryColor }}>
+                SharpToolz hosted translator
+              </p>
+            ) : null}
+            <p className={`${theme.showSharpToolzBranding ? "mt-1 " : ""}truncate text-base font-black`}>Boarding Pass1_Fixed</p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 text-[9px] opacity-60">
             <Clock3 className="size-3" /> Expires 3:42 PM
@@ -104,7 +106,7 @@ export default function HostedFormThemePreview({
                 style={selected ? {
                   backgroundColor: theme.primaryColor,
                   borderRadius: theme.borderRadius,
-                  color: "#09090b",
+                  color: readableTextColor(theme.primaryColor),
                 } : { color: theme.textColor, opacity: 0.58 }}
               >
                 {tab}
@@ -137,7 +139,7 @@ export default function HostedFormThemePreview({
             </div>
 
             <div className="flex justify-end border-t pt-4" style={{ borderColor: theme.borderColor }}>
-              <button type="button" className="flex min-h-10 w-full items-center justify-center gap-2 px-5 text-xs font-bold text-[#09090b] sm:w-auto" style={{ backgroundColor: theme.primaryColor, borderRadius: theme.borderRadius }}>
+              <button type="button" className="flex min-h-10 w-full items-center justify-center gap-2 px-5 text-xs font-bold sm:w-auto" style={{ backgroundColor: theme.primaryColor, borderRadius: theme.borderRadius, color: readableTextColor(theme.primaryColor) }}>
                 {theme.buttonText || "Create document"} <Upload className="size-3.5" />
               </button>
             </div>

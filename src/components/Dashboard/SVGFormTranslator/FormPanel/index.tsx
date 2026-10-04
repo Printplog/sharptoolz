@@ -503,7 +503,7 @@ const FormPanel = React.memo(function FormPanel({
         </div>
       )}
 
-      <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-6">
+      <div className="stz-hosted-form-panel bg-white/5 border border-white/10 rounded-lg p-4 sm:p-6 space-y-6">
         <FormPanelHeader
           isPurchased={isPurchased}
           tutorial={tutorial}
