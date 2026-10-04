@@ -303,6 +303,16 @@ export default function HostedEmbedPage() {
         [data-slot="select-item"] {
           color: var(--stz-text) !important;
         }
+        .stz-hosted-shell [data-slot="select-trigger"] svg,
+        [data-slot="select-content"] > [data-slot="select-scroll-up-button"] svg,
+        [data-slot="select-content"] > [data-slot="select-scroll-down-button"] svg {
+          color: color-mix(in srgb, var(--stz-text) 70%, transparent) !important;
+          stroke: currentColor !important;
+        }
+        [data-slot="select-item"] svg {
+          color: var(--stz-primary) !important;
+          stroke: currentColor !important;
+        }
         [data-slot="select-item"]:focus,
         [data-slot="select-item"]:hover {
           background: color-mix(in srgb, var(--stz-primary) 18%, var(--stz-input)) !important;
