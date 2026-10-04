@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getSiteSettings } from "@/api/apiEndpoints";
+import { getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
 import { getReferralStats } from "@/api/referralEndpoints";
 import {
   LayoutDashboard,
@@ -11,6 +11,7 @@ import {
   Wallet,
   ArrowRight,
   MessageSquare,
+  MessagesSquare,
   Users,
   Plus
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo";
 import { useAuthStore } from "@/store/authStore";
 import useChatStore from "@/store/chatStore";
+import type { ChatSession } from "@/store/chatStore";
 import { isAdminOrStaff } from "@/lib/constants/roles";
 
 export default function Sidebar() {
@@ -35,6 +37,13 @@ export default function Sidebar() {
     queryKey: ["referralStats"],
     queryFn: getReferralStats,
     enabled: !!user,
+  });
+
+  const { data: supportMessages } = useQuery({
+    queryKey: ["support-messages"],
+    queryFn: getTrackingSupportMessages,
+    enabled: !!user,
+    staleTime: 30_000,
   });
 
   const canAccessAdmin = isAdminOrStaff(user?.role);
@@ -68,6 +77,12 @@ export default function Sidebar() {
       to: "/documents",
     },
     {
+      icon: <MessagesSquare className="h-4 w-4" />,
+      label: "Support Messages",
+      to: "/support",
+      badge: supportMessages?.unread_count ?? 0,
+    },
+    {
       icon: <Wallet className="h-4 w-4" />,
       label: "Wallet",
       to: "/wallet",
@@ -89,7 +104,7 @@ export default function Sidebar() {
     }] : []),
   ];
 
-  const handleSessionClick = (session: any) => {
+  const handleSessionClick = (session: ChatSession) => {
     if (session.template) {
       navigate(`/tools/${session.template}?session_id=${session.id}`);
     } else if (session.purchased_template) {
@@ -146,6 +161,11 @@ export default function Sidebar() {
                 {item.to === "/referrals" && refStats && refStats.pending_referrals > 0 && (
                   <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-black text-black animate-pulse shrink-0">
                     {refStats.pending_referrals}
+                  </span>
+                )}
+                {item.to === "/support" && (item.badge ?? 0) > 0 && (
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-black text-black">
+                    {(item.badge ?? 0) > 99 ? "99+" : item.badge}
                   </span>
                 )}
               </button>

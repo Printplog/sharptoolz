@@ -552,6 +552,26 @@ export type ApiTheme = {
   showSharpToolzBranding: boolean;
 };
 
+export type TrackingSupportMessage = {
+  id: string;
+  tracking_id: string;
+  document_name: string;
+  source: "parcel_finda" | "flight_lookup";
+  source_label: string;
+  customer_name: string;
+  customer_email: string;
+  subject: string;
+  message: string;
+  status: "new" | "read" | "closed";
+  created_at: string;
+  updated_at: string;
+};
+
+export type TrackingSupportMessagesResponse = {
+  results: TrackingSupportMessage[];
+  unread_count: number;
+};
+
 export type ApiKeyRecord = {
   id: string;
   name: string;

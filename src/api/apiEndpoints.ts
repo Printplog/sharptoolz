@@ -1,4 +1,4 @@
-import type { Tool, Tutorial, CryptoPaymentData, CryptoPaymentConfirmation, CryptoPaymentStatus, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme, WalletData } from "@/types";
+import type { Tool, Tutorial, CryptoPaymentData, CryptoPaymentConfirmation, CryptoPaymentStatus, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme, WalletData, TrackingSupportMessage, TrackingSupportMessagesResponse } from "@/types";
 import { apiClient } from "./apiClient";
 export const getApi = apiClient.get;
 export const postApi = apiClient.post;
@@ -239,6 +239,19 @@ export const getPurchasedTemplate = async (id: string): Promise<PurchasedTemplat
 
 export const createCryptoPayment = async (ticker: string): Promise<CryptoPaymentData> => {
   const res = await apiClient.post('/create-payment/', ticker);
+  return res.data;
+};
+
+export const getTrackingSupportMessages = async (): Promise<TrackingSupportMessagesResponse> => {
+  const res = await apiClient.get('/support/messages/');
+  return res.data;
+};
+
+export const updateTrackingSupportMessageStatus = async (
+  id: string,
+  status: TrackingSupportMessage['status'],
+): Promise<TrackingSupportMessage> => {
+  const res = await apiClient.patch(`/support/messages/${id}/`, { status });
   return res.data;
 };
 

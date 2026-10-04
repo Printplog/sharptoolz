@@ -52,6 +52,7 @@ export type Path =
   | `/settings/api/appearance`
   | `/sharp-guy`
   | `/sub`
+  | `/support`
   | `/svg-test-render`
   | `/terms`
   | `/tools`

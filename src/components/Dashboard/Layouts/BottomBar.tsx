@@ -1,6 +1,6 @@
-import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, ArrowRight, Users } from "lucide-react";
+import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, ArrowRight, Users, MessagesSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getSiteSettings } from "@/api/apiEndpoints";
+import { getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
 import { getReferralStats } from "@/api/referralEndpoints";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,13 @@ export default function BottomBar() {
     queryKey: ["referralStats"],
     queryFn: getReferralStats,
     enabled: !!user,
+  });
+
+  const { data: supportMessages } = useQuery({
+    queryKey: ["support-messages"],
+    queryFn: getTrackingSupportMessages,
+    enabled: !!user,
+    staleTime: 30_000,
   });
 
   const canAccessAdmin = isAdminOrStaff(user?.role);
@@ -45,6 +52,12 @@ export default function BottomBar() {
       icon: <ClipboardList className="w-5 h-5 mb-[2px]" />,
       label: "Documents",
       to: "/documents",
+    },
+    {
+      icon: <MessagesSquare className="w-5 h-5 mb-[2px]" />,
+      label: "Support",
+      to: "/support",
+      badge: supportMessages?.unread_count ?? 0,
     },
     {
       icon: <Wallet className="w-5 h-5 mb-[2px]" />,
@@ -74,7 +87,7 @@ export default function BottomBar() {
     : baseNavigationItems;
 
   return (
-    <nav className="fixed bottom-0 z-50 w-full bg-background border-t border-white/10 flex justify-around items-center py-4 lg:hidden">
+    <nav className="fixed bottom-0 z-50 flex w-full items-center justify-start overflow-x-auto border-t border-white/10 bg-background py-4 lg:hidden">
       {navigationItems.map((item) => {
         // Special handling for "Switch to Admin" link - only active if pathname starts with /admin/
         let isActive = false;
@@ -90,7 +103,7 @@ export default function BottomBar() {
             key={item.to}
             to={item.to}
             className={cn(
-              "flex flex-col items-center text-xs text-muted-foreground hover:text-primary transition-all",
+              "flex min-w-[68px] flex-1 flex-col items-center text-xs text-muted-foreground hover:text-primary transition-all",
               isActive && "text-primary"
             )}
           >
@@ -99,6 +112,11 @@ export default function BottomBar() {
               {item.to === "/referrals" && refStats && refStats.pending_referrals > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary text-[8px] font-black text-black animate-pulse">
                   {refStats.pending_referrals}
+                </span>
+              )}
+              {item.to === "/support" && "badge" in item && typeof item.badge === "number" && item.badge > 0 && (
+                <span className="absolute -right-2 -top-1 flex h-3 min-w-3 items-center justify-center rounded-full bg-primary px-0.5 text-[8px] font-black text-black">
+                  {item.badge > 9 ? "9+" : item.badge}
                 </span>
               )}
             </div>
