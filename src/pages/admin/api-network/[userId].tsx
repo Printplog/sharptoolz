@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 import {
   getAdminApiCustomer,
-  revokeAdminApiKey,
+  deleteAdminApiKey,
   updateAdminApiCustomerStatus,
   type AdminApiActivityEvent,
   type AdminApiCustomerStatus,
@@ -79,19 +79,19 @@ export default function ApiCustomerDetailsPage() {
     onError: (mutationError) => toast.error(readableError(mutationError, "Could not update API access.")),
   });
 
-  const revokeKeyMutation = useMutation({
-    mutationFn: (keyId: string) => revokeAdminApiKey(Number(userId), keyId),
+  const deleteKeyMutation = useMutation({
+    mutationFn: (keyId: string) => deleteAdminApiKey(Number(userId), keyId),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["admin-api-customer", userId] }),
         queryClient.invalidateQueries({ queryKey: ["admin-api-customers"] }),
       ]);
-      toast.success("API key revoked.");
+      toast.success("API key deleted.");
     },
-    onError: (mutationError) => toast.error(readableError(mutationError, "Could not revoke API key.")),
+    onError: (mutationError) => toast.error(readableError(mutationError, "Could not delete API key.")),
   });
-  const revokeKey = revokeKeyMutation.mutate;
-  const isRevokingKey = revokeKeyMutation.isPending;
+  const deleteKey = deleteKeyMutation.mutate;
+  const isDeletingKey = deleteKeyMutation.isPending;
 
   const keyColumns = useMemo<ColumnDef<AdminApiKeySummary>[]>(() => [
     {
@@ -140,19 +140,19 @@ export default function ApiCustomerDetailsPage() {
         <Button
           variant="outline"
           size="sm"
-          disabled={!row.original.is_active || isRevokingKey}
+          disabled={isDeletingKey}
           onClick={() => {
-            if (window.confirm(`Revoke ${row.original.name}? This cannot be undone.`)) {
-              revokeKey(row.original.id);
+            if (window.confirm(`Delete ${row.original.name}? This permanently removes the key and stops its pending hosted forms.`)) {
+              deleteKey(row.original.id);
             }
           }}
           className="border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 hover:text-red-300"
         >
-          Revoke
+          Delete
         </Button>
       ),
     },
-  ], [isRevokingKey, revokeKey]);
+  ], [deleteKey, isDeletingKey]);
 
   const externalUserColumns = useMemo<ColumnDef<AdminApiExternalUser>[]>(() => [
     { accessorKey: "external_user_id", header: "External user ID", cell: ({ row }) => <span className="font-mono text-xs text-white/75">{row.original.external_user_id}</span> },

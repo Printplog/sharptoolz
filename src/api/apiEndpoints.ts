@@ -425,7 +425,7 @@ export const updateAdminApiCustomerStatus = async (
   return res.data;
 };
 
-export const revokeAdminApiKey = async (userId: number, keyId: string): Promise<void> => {
+export const deleteAdminApiKey = async (userId: number, keyId: string): Promise<void> => {
   await apiClient.delete(`/admin/api-customers/${userId}/keys/${keyId}/`);
 };
 
@@ -671,8 +671,13 @@ export const createApiKey = async (data: {
   return res.data;
 };
 
-export const revokeApiKey = async (id: string): Promise<void> => {
+export const deleteApiKey = async (id: string): Promise<void> => {
   await apiClient.delete(`/api-access/keys/${id}/`);
+};
+
+export const rotateApiKey = async (id: string): Promise<ApiKeyRecord> => {
+  const res = await apiClient.post(`/api-access/keys/${id}/rotate/`, {});
+  return res.data;
 };
 
 import type { TransformVariable } from "@/types";

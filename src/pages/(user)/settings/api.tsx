@@ -23,8 +23,9 @@ import { toast } from "sonner";
 import {
   activateApiAccess,
   createApiKey,
+  deleteApiKey,
   getApiAccessStatus,
-  revokeApiKey,
+  rotateApiKey,
   updateApiConfiguration,
 } from "@/api/apiEndpoints";
 import HostedFormThemePreview from "@/components/Api/HostedFormThemePreview";
@@ -236,13 +237,23 @@ export default function ApiSettingsPage() {
     onError: (error) => toast.error(apiError(error, "Could not create API key.")),
   });
 
-  const revokeKeyMutation = useMutation({
-    mutationFn: revokeApiKey,
+  const deleteKeyMutation = useMutation({
+    mutationFn: deleteApiKey,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["api-access"] });
-      toast.success("API key revoked.");
+      toast.success("API key deleted.");
     },
-    onError: (error) => toast.error(apiError(error, "Could not revoke API key.")),
+    onError: (error) => toast.error(apiError(error, "Could not delete API key.")),
+  });
+
+  const rotateKeyMutation = useMutation({
+    mutationFn: rotateApiKey,
+    onSuccess: (key) => {
+      setNewKey(key);
+      queryClient.invalidateQueries({ queryKey: ["api-access"] });
+      toast.success("API key rotated. Copy the replacement now.");
+    },
+    onError: (error) => toast.error(apiError(error, "Could not rotate API key.")),
   });
 
   const copySecret = async () => {
@@ -482,14 +493,14 @@ export default function ApiSettingsPage() {
             <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>API keys</DialogTitle>
-                <DialogDescription>Keys belong on your backend and are shown only once.</DialogDescription>
+                <DialogDescription>Keys belong on your backend. Rotate a key to replace its secret without changing its settings.</DialogDescription>
               </DialogHeader>
 
               {newKey?.secret ? (
                 <div className="space-y-3 rounded-xl border border-amber-300/20 bg-amber-300/[0.04] p-4">
                   <div>
                     <p className="text-sm font-medium text-amber-100">Copy this key now</p>
-                    <p className="mt-1 text-xs text-amber-100/50">It cannot be recovered later.</p>
+                    <p className="mt-1 text-xs text-amber-100/50">{newKey.warning || "It cannot be recovered later."}</p>
                   </div>
                   <div className="flex gap-2">
                     <Input readOnly value={newKey.secret} className="rounded-xl border-amber-300/15 bg-black/20 font-mono" />
@@ -523,23 +534,39 @@ export default function ApiSettingsPage() {
                       <p className="truncate text-sm font-medium text-white">{key.name}</p>
                       <p className="mt-1 font-mono text-xs text-white/35">{key.prefix}•••••••• · {key.active ? "active" : "revoked"}</p>
                     </div>
+                    <div className="flex items-center gap-2">
                     {key.active ? (
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="text-red-300 hover:text-red-200"
-                        loading={revokeKeyMutation.isPending}
-                        disabled={revokeKeyMutation.isPending}
+                        loading={rotateKeyMutation.isPending}
+                        disabled={rotateKeyMutation.isPending || deleteKeyMutation.isPending}
                         onClick={() => {
-                          if (window.confirm(`Revoke ${key.name}? Pending hosted forms created by this key will stop working immediately.`)) {
-                            revokeKeyMutation.mutate(key.id);
+                          if (window.confirm(`Rotate ${key.name}? The current server key will stop working immediately.`)) {
+                            rotateKeyMutation.mutate(key.id);
                           }
                         }}
                       >
-                        <Trash2 /> Revoke
+                        <RotateCcw /> Rotate
                       </Button>
                     ) : null}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-300 hover:text-red-200"
+                        loading={deleteKeyMutation.isPending}
+                        disabled={rotateKeyMutation.isPending || deleteKeyMutation.isPending}
+                        onClick={() => {
+                          if (window.confirm(`Delete ${key.name}? This permanently removes the key and stops its pending hosted forms.`)) {
+                            deleteKeyMutation.mutate(key.id);
+                          }
+                        }}
+                      >
+                        <Trash2 /> Delete
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
