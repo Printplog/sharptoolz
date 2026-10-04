@@ -49,6 +49,7 @@ export type Path =
   | `/referrals`
   | `/settings`
   | `/settings/api`
+  | `/settings/api/appearance`
   | `/sharp-guy`
   | `/sub`
   | `/svg-test-render`

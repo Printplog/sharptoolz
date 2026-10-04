@@ -126,9 +126,13 @@
     max-width: 100%;
   }
 
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
-  select {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([data-preview-control]),
+  select:not([data-preview-control]) {
     border-radius: 9999px !important;
+  }
+
+  [data-hosted-form-theme-preview] [data-preview-control] {
+    border-radius: var(--stz-preview-radius) !important;
   }
 }
 

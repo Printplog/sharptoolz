@@ -17,7 +17,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 import {
@@ -28,7 +28,6 @@ import {
   rotateApiKey,
   updateApiConfiguration,
 } from "@/api/apiEndpoints";
-import HostedFormThemePreview from "@/components/Api/HostedFormThemePreview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,8 +43,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { API_THEME_COLORS, DEFAULT_API_THEME, type ApiThemeColorKey } from "@/lib/apiTheme";
+import { DEFAULT_API_THEME } from "@/lib/apiTheme";
 import { correctWebsiteInput, normalizeWebsiteOrigin } from "@/lib/utils/normalizeWebsiteOrigin";
 import type { ApiKeyRecord, ApiTheme } from "@/types";
 
@@ -67,16 +65,6 @@ const EMBED_SNIPPET = `<!-- Keep your stz_live key on your backend. -->
     onComplete: ({ documentId }) => console.log(documentId)
   });
 </script>`;
-
-const LIGHT_THEME: ApiTheme = {
-  ...DEFAULT_API_THEME,
-  primaryColor: "#b6d957",
-  backgroundColor: "#f7f8f3",
-  textColor: "#171a14",
-  inputBackground: "#ffffff",
-  borderColor: "#d9dfcf",
-  appearance: "light",
-};
 
 function apiError(error: unknown, fallback: string) {
   if (typeof error === "object" && error && "response" in error) {
@@ -140,62 +128,13 @@ const SettingsRow = forwardRef<HTMLButtonElement, {
   );
 });
 
-function ThemeColorField({ theme, colorKey, label, onChange }: {
-  theme: ApiTheme;
-  colorKey: ApiThemeColorKey;
-  label: string;
-  onChange: (value: string) => void;
-}) {
-  const value = theme[colorKey];
-  const [draft, setDraft] = useState(value.toUpperCase());
-
-  useEffect(() => setDraft(value.toUpperCase()), [value]);
-
-  const commitDraft = () => {
-    const normalized = draft.trim();
-    if (/^#[0-9a-fA-F]{6}$/.test(normalized)) {
-      onChange(normalized.toLowerCase());
-      return;
-    }
-    setDraft(value.toUpperCase());
-  };
-
-  return (
-    <label className="space-y-2 text-xs text-white/55">
-      <span>{label}</span>
-      <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-2">
-        <input
-          type="color"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="size-8 cursor-pointer rounded-lg border-0 bg-transparent p-0"
-          aria-label={`${label} color`}
-        />
-        <input
-          value={draft}
-          onChange={(event) => {
-            const nextValue = event.target.value;
-            setDraft(nextValue);
-            if (/^#[0-9a-fA-F]{6}$/.test(nextValue)) onChange(nextValue.toLowerCase());
-          }}
-          onBlur={commitDraft}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              commitDraft();
-            }
-          }}
-          maxLength={7}
-          className="min-w-0 flex-1 bg-transparent font-mono text-[11px] text-white/65 outline-none"
-          aria-label={`${label} hex value`}
-          spellCheck={false}
-        />
-      </span>
-    </label>
-  );
+export default function ApiSettingsRoute() {
+  const location = useLocation();
+  if (location.pathname !== "/settings/api") return <Outlet />;
+  return <ApiSettingsPage />;
 }
 
-export default function ApiSettingsPage() {
+function ApiSettingsPage() {
   const queryClient = useQueryClient();
   const [origins, setOrigins] = useState<string[]>([]);
   const [originDraft, setOriginDraft] = useState("");
@@ -410,8 +349,6 @@ export default function ApiSettingsPage() {
 
   const activeKeyCount = data.keys.filter((key) => key.active).length;
   const toolDiscount = Number(data.tool_discount_percentage);
-  const radiusValue = Number.parseInt(theme.borderRadius, 10) || 0;
-
   return (
     <ApiPageShell>
       <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.025] p-5">
@@ -580,109 +517,19 @@ export default function ApiSettingsPage() {
             </DialogContent>
           </Dialog>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <SettingsRow icon={<Palette className="size-5" />} title="Form appearance" detail={`${theme.appearance === "dark" ? "Dark" : "Light"} · ${theme.fontFamily}`} />
-            </DialogTrigger>
-            <DialogContent className="max-h-[92vh] max-w-5xl overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Form appearance</DialogTitle>
-                <DialogDescription>Customize the hosted form and see every change instantly. Saved styles apply to new sessions.</DialogDescription>
-              </DialogHeader>
-
-              <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(420px,1.18fr)]">
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <Label>Starting style</Label>
-                      <Button type="button" variant="ghost" size="sm" className="h-8 text-white/45" onClick={() => setTheme(DEFAULT_API_THEME)}>
-                        <RotateCcw className="size-3.5" /> Reset
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setTheme(DEFAULT_API_THEME)}
-                        className={`rounded-xl border px-3 py-2.5 text-left text-xs transition ${theme.appearance === "dark" ? "border-primary/45 bg-primary/[0.06] text-white" : "border-white/10 text-white/45 hover:border-white/20"}`}
-                      >
-                        <span className="mb-2 block h-3 rounded-full bg-[#10120f]"><span className="block h-3 w-1/3 rounded-full bg-[#cee88c]" /></span>
-                        Dark
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTheme(LIGHT_THEME)}
-                        className={`rounded-xl border px-3 py-2.5 text-left text-xs transition ${theme.appearance === "light" ? "border-primary/45 bg-primary/[0.06] text-white" : "border-white/10 text-white/45 hover:border-white/20"}`}
-                      >
-                        <span className="mb-2 block h-3 rounded-full bg-[#f7f8f3]"><span className="block h-3 w-1/3 rounded-full bg-[#b6d957]" /></span>
-                        Light
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
-                    {API_THEME_COLORS.map(({ key, label }) => (
-                      <ThemeColorField key={key} theme={theme} colorKey={key} label={label} onChange={(value) => setTheme((current) => ({ ...current, [key]: value }))} />
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <Label htmlFor="theme-radius">Corner radius</Label>
-                      <span className="font-mono text-xs text-white/45">{radiusValue}px</span>
-                    </div>
-                    <input
-                      id="theme-radius"
-                      type="range"
-                      min="0"
-                      max="32"
-                      value={radiusValue}
-                      onChange={(event) => setTheme((current) => ({ ...current, borderRadius: `${event.target.value}px` }))}
-                      className="w-full accent-primary"
-                    />
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                    <div className="space-y-2">
-                      <Label htmlFor="theme-font">Font family</Label>
-                      <Input id="theme-font" value={theme.fontFamily} maxLength={80} onChange={(event) => setTheme((current) => ({ ...current, fontFamily: event.target.value }))} className="rounded-xl border-white/10 bg-white/5" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="theme-button">Submit button text</Label>
-                      <Input id="theme-button" value={theme.buttonText} maxLength={80} onChange={(event) => setTheme((current) => ({ ...current, buttonText: event.target.value }))} className="rounded-xl border-white/10 bg-white/5" />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-xl border border-white/10 p-4">
-                    <div>
-                      <Label htmlFor="theme-branding">SharpToolz branding</Label>
-                      <p className="mt-1 text-xs text-white/35">Show “Powered securely by SharpToolz”.</p>
-                    </div>
-                    <Switch id="theme-branding" checked={theme.showSharpToolzBranding} onCheckedChange={(checked) => setTheme((current) => ({ ...current, showSharpToolzBranding: checked }))} />
-                  </div>
-                </div>
-
-                <div className="lg:sticky lg:top-0">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium text-white">Live hosted-form preview</p>
-                      <p className="mt-0.5 text-xs text-white/35">This updates before you save.</p>
-                    </div>
-                    <span className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/[0.06] px-2.5 py-1 text-[10px] font-semibold text-primary/75">
-                      <span className="size-1.5 rounded-full bg-primary" /> Live
-                    </span>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-2 sm:p-3">
-                    <HostedFormThemePreview theme={theme} />
-                  </div>
-                  <p className="mt-3 text-xs leading-5 text-white/35">This changes the hosted form interface. The purchased document keeps the colours defined by its template.</p>
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild><Button variant="ghost">Close</Button></DialogClose>
-                <Button onClick={() => saveConfiguration.mutate(origins)} loading={saveConfiguration.isPending} disabled={saveConfiguration.isPending}><Save /> Save appearance</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Link
+            to="/settings/api/appearance"
+            className="flex w-full items-center gap-4 px-4 py-4 text-left transition hover:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-white/50">
+              <Palette className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-medium text-white">Form appearance</span>
+              <span className="mt-0.5 block truncate text-xs text-white/40">{theme.appearance === "dark" ? "Dark" : "Light"} · {theme.fontFamily}</span>
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-white/20" />
+          </Link>
 
           <Dialog>
             <DialogTrigger asChild>

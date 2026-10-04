@@ -242,6 +242,10 @@ export default function HostedEmbedPage() {
         }
         #root .stz-hosted-shell .stz-hosted-workspace input,
         #root .stz-hosted-shell .stz-hosted-workspace textarea,
+        #root .stz-hosted-shell .stz-hosted-workspace [data-slot="input"],
+        #root .stz-hosted-shell .stz-hosted-workspace [data-slot="textarea"],
+        #root .stz-hosted-shell .stz-hosted-workspace [data-slot="select-trigger"],
+        #root .stz-hosted-shell .stz-hosted-workspace [data-slot="checkbox"],
         #root .stz-hosted-shell .stz-hosted-workspace button[role="combobox"],
         #root .stz-hosted-shell .stz-hosted-workspace .stz-hosted-secondary-control {
           background: var(--stz-input) !important;
