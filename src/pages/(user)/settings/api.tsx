@@ -57,6 +57,13 @@ const EMBED_SNIPPET = `<!-- Keep your stz_live key on your backend. -->
   SharpToolz.mount("#document-form", {
     embedUrl,
     autoResize: true,
+    loading: {
+      text: "Preparing your document…",
+      logoUrl: "/your-logo.svg",
+      backgroundColor: "#ffffff",
+      textColor: "#17362f",
+      accentColor: "#176b5b"
+    },
     onComplete: ({ documentId }) => console.log(documentId)
   });
 </script>`;

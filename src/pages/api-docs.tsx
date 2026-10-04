@@ -52,6 +52,7 @@ const NAV_ITEMS = [
   { id: "edit-form", label: "Edit form" },
   { id: "documents", label: "Documents" },
   { id: "appearance", label: "Appearance" },
+  { id: "loading-screen", label: "Loading screen" },
   { id: "rendering", label: "Rendering" },
   { id: "errors", label: "Errors" },
   { id: "methods", label: "SDK methods" },
@@ -317,6 +318,39 @@ const HOSTED_BROWSER_EXAMPLE = lines(
   "",
   "// Remove it when your page unmounts",
   "form.destroy();",
+);
+
+const LOADING_SCREEN_EXAMPLE = lines(
+  "import { mountHostedForm } from \"@sharp-toolz/sdk/browser\";",
+  "",
+  "mountHostedForm(\"#document-form\", {",
+  "  embedUrl,",
+  "  loading: {",
+  "    text: \"Preparing your document…\",",
+  "    logoUrl: \"/brand/acme-mark.svg\",",
+  "    logoAlt: \"Acme\",",
+  "    logoWidth: \"56px\",",
+  "    backgroundColor: \"#ffffff\",",
+  "    textColor: \"#17362f\",",
+  "    accentColor: \"#176b5b\",",
+  "    fontFamily: \"Inter, sans-serif\",",
+  "    textSize: \"14px\",",
+  "  },",
+  "});",
+);
+
+const CUSTOM_LOADING_SCREEN_EXAMPLE = lines(
+  "const skeleton = document.createElement(\"div\");",
+  "skeleton.className = \"document-form-skeleton\";",
+  "skeleton.textContent = \"Opening your workspace…\";",
+  "",
+  "mountHostedForm(\"#document-form\", {",
+  "  embedUrl,",
+  "  loading: { element: skeleton },",
+  "});",
+  "",
+  "// To show the iframe immediately instead:",
+  "// mountHostedForm(\"#document-form\", { embedUrl, loading: false });",
 );
 
 const REVOKE_SESSION_EXAMPLES: CodeExamples = {
@@ -944,7 +978,7 @@ export default function ApiDocsPage() {
           <span className="hidden h-5 w-px bg-white/10 sm:block" />
           <span className="hidden text-sm text-white/50 sm:block">SDK docs</span>
           <span className="rounded-full border border-primary/15 bg-primary/[0.07] px-2 py-0.5 font-mono text-[10px] text-primary/75">
-            v0.3.0
+            v0.4.0
           </span>
           <div className="ml-auto flex items-center gap-2">
             <a
@@ -1103,6 +1137,41 @@ export default function ApiDocsPage() {
             <Button asChild variant="outline" size="sm" className="mt-4 border-white/10 bg-transparent text-white/65 hover:bg-white/5 hover:text-white">
               <a href="https://sharptoolz.com/settings/api">Open style editor <ArrowRight className="size-3.5" /></a>
             </Button>
+          </section>
+
+          <section id="loading-screen" className="scroll-mt-32 border-b border-white/[0.07] py-14 lg:scroll-mt-24">
+            <SectionHeading title="Loading screen">
+              The browser SDK shows a neutral, unbranded loader until the hosted form sends a trusted ready event. Style it with your product identity, replace it with your own element, or turn it off.
+            </SectionHeading>
+            <div className="space-y-4">
+              <CodeBlock code={LOADING_SCREEN_EXAMPLE} label="Brand the built-in loader" language="javascript" />
+              <CodeBlock code={CUSTOM_LOADING_SCREEN_EXAMPLE} label="Use your own loader or disable it" language="javascript" />
+              <div className="overflow-hidden rounded-2xl border border-white/[0.08]">
+                <div className="grid grid-cols-[minmax(130px,0.7fr)_1.3fr] gap-4 border-b border-white/[0.07] px-4 py-3 text-[11px] font-bold text-white/30 sm:px-5">
+                  <span>Option</span>
+                  <span>Purpose</span>
+                </div>
+                {[
+                  ["text", "Status copy. Defaults to “Loading form…”. It is announced by screen readers."],
+                  ["logoUrl / logoAlt", "A customer-owned logo and its accessible alternative text."],
+                  ["logoWidth", "Any valid CSS width, such as 48px or 3rem."],
+                  ["backgroundColor", "The overlay background. Defaults to transparent."],
+                  ["textColor", "Loading-copy colour. Defaults to neutral grey."],
+                  ["accentColor", "Spinner colour. Defaults to the text colour."],
+                  ["fontFamily / textSize", "CSS font-family and font-size values for the status copy."],
+                  ["element", "Your HTMLElement. The SDK moves it into the overlay and removes it when the form is ready."],
+                  ["false", "Disables the SDK loader and reveals the iframe immediately."],
+                ].map(([option, description]) => (
+                  <div key={option} className="grid grid-cols-[minmax(130px,0.7fr)_1.3fr] gap-4 border-b border-white/[0.06] px-4 py-3.5 last:border-0 sm:px-5">
+                    <code className="break-all text-xs text-primary/75">{option}</code>
+                    <span className="text-xs leading-5 text-white/45">{description}</span>
+                  </div>
+                ))}
+              </div>
+              <Note icon={<ShieldCheck className="size-4" />}>
+                Loader content stays in your page; no API key, form values, or template data is passed to it. The SDK accepts ready messages only from the exact hosted-form origin and iframe window. The loader setting is separate from <code className="text-white/70">showSharpToolzBranding</code>, which controls branding inside the loaded form.
+              </Note>
+            </div>
           </section>
 
           <section id="rendering" className="scroll-mt-32 border-b border-white/[0.07] py-14 lg:scroll-mt-24">

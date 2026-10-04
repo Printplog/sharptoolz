@@ -30,9 +30,55 @@ import { mountHostedForm } from "@sharp-toolz/sdk/browser";
 
 const form = mountHostedForm("#sharptoolz-form", {
   embedUrl,
+  loading: {
+    text: "Preparing your document…",
+    logoUrl: "/brand/acme-mark.svg",
+    logoAlt: "Acme",
+    backgroundColor: "#ffffff",
+    textColor: "#17362f",
+    accentColor: "#176b5b",
+  },
   onComplete: ({ documentId }) => console.log(documentId),
 });
 ```
+
+## Loading-screen styling
+
+The browser SDK displays a neutral, unbranded loading screen until it receives
+a trusted `sharptoolz:ready` message from the hosted iframe. The iframe stays
+hidden and unavailable to keyboard or assistive-technology users during that
+time.
+
+The `loading` object supports:
+
+- `text`: status copy; defaults to `Loading form…`.
+- `logoUrl`, `logoAlt`, and `logoWidth`: a customer-owned logo and its size.
+- `backgroundColor`, `textColor`, and `accentColor`: overlay, copy, and spinner colours.
+- `fontFamily` and `textSize`: CSS values for the status copy.
+- `element`: your own `HTMLElement`. The SDK moves it into the overlay and removes it when ready.
+
+Use `loading: false` to reveal the iframe immediately:
+
+```js
+mountHostedForm("#sharptoolz-form", { embedUrl, loading: false });
+```
+
+To provide a completely custom loader:
+
+```js
+const skeleton = document.createElement("div");
+skeleton.className = "document-form-skeleton";
+skeleton.textContent = "Opening your workspace…";
+
+mountHostedForm("#sharptoolz-form", {
+  embedUrl,
+  loading: { element: skeleton },
+});
+```
+
+Loader content stays in the customer's page and receives no API key, template
+data, or form values. `loading` is independent of the session theme's
+`showSharpToolzBranding` option, which controls branding inside the loaded form.
 
 Open an existing document in the same hosted UI:
 

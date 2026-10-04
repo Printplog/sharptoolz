@@ -119,4 +119,8 @@ export class SharpToolz {
   };
 }
 
-export { mountHostedForm } from "./browser.js";
+export {
+  mountHostedForm,
+  type HostedFormLoadingOptions,
+  type HostedFormOptions,
+} from "./browser.js";
