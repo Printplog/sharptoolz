@@ -71,14 +71,14 @@ export function SupportConversation({ ticket }: { ticket: TrackingSupportMessage
           />
           <div className="flex items-center justify-between gap-3 px-1 pb-1">
             <p className="min-w-0 truncate pl-2 text-[11px] text-white/30">
-              Sends by email from {ticket.source_label}
+              {ticket.customer_email ? `Sends by email from ${ticket.source_label}` : "Sends live in this conversation"}
             </p>
             <Button type="submit" size="sm" className="shrink-0 rounded-lg" disabled={!body.trim() || replyMutation.isPending}>
               <Send className="size-4" /> {replyMutation.isPending ? "Sending…" : "Send"}
             </Button>
           </div>
         </form>
-        {replyMutation.isError && <p className="mt-2 px-3 text-xs text-red-300">The reply could not be sent. Check the Resend configuration and try again.</p>}
+        {replyMutation.isError && <p className="mt-2 px-3 text-xs text-red-300">The reply could not be sent. Try again.</p>}
       </div>
     </div>
   );

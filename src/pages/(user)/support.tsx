@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { ArrowLeft, Check, Inbox, MessageSquareText, PackageSearch, Plane, Search, X } from "lucide-react";
@@ -11,6 +11,7 @@ import { CustomTabs } from "@/components/ui/custom-tabs";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { TrackingSupportMessage } from "@/types";
+import { useSupportRealtime } from "@/hooks/useSupportRealtime";
 
 type Filter = "all" | TrackingSupportMessage["status"];
 
@@ -37,6 +38,14 @@ export default function SupportMessagesPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["support-messages"],
     queryFn: () => getTrackingSupportMessages(),
+  });
+  const refreshMessages = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["support-messages"] });
+  }, [queryClient]);
+  useSupportRealtime({
+    config: data?.realtime,
+    channel: data?.channel,
+    onUpdate: refreshMessages,
   });
 
   const messages = useMemo(() => {
@@ -67,6 +76,7 @@ export default function SupportMessagesPage() {
     mutationFn: ({ id, status }: { id: string; status: TrackingSupportMessage["status"] }) => updateTrackingSupportMessageStatus(id, status),
     onSuccess: (updated) => {
       queryClient.setQueryData(["support-messages"], (current: typeof data) => current ? {
+        ...current,
         results: current.results.map((message) => message.id === updated.id ? updated : message),
         unread_count: current.results.filter((message) => (message.id === updated.id ? updated : message).status === "new").length,
       } : current);

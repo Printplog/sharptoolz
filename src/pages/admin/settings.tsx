@@ -56,6 +56,10 @@ type SettingsUpdate = Partial<SiteSettings> & {
   two_factor_code: string;
   resend_api_key?: string;
   resend_webhook_secret?: string;
+  pusher_app_id?: string;
+  pusher_key?: string;
+  pusher_secret?: string;
+  pusher_cluster?: string;
 };
 
 export default function AdminSettings() {
@@ -109,6 +113,10 @@ export default function AdminSettings() {
   const [secretInputs, setSecretInputs] = useState({
     resend_api_key: "",
     resend_webhook_secret: "",
+    pusher_app_id: "",
+    pusher_key: "",
+    pusher_secret: "",
+    pusher_cluster: "",
   });
 
   const { data: settings, isLoading } = useQuery<SiteSettings>({
@@ -171,7 +179,14 @@ export default function AdminSettings() {
       toast.success("Settings updated successfully!");
       setIsChallengeOpen(false);
       setTwoFactorCode("");
-      setSecretInputs({ resend_api_key: "", resend_webhook_secret: "" });
+      setSecretInputs({
+        resend_api_key: "",
+        resend_webhook_secret: "",
+        pusher_app_id: "",
+        pusher_key: "",
+        pusher_secret: "",
+        pusher_cluster: "",
+      });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
@@ -946,6 +961,40 @@ export default function AdminSettings() {
                   <p className="mt-2 text-xs text-white/30">Leaving this blank keeps the current stored value.</p>
                 </div>
               </div>
+
+              <div className="px-6 py-5">
+                <h3 className="font-medium text-white">Pusher Channels</h3>
+                <p className="mt-1 text-xs leading-5 text-white/35">Powers private realtime support updates. Copy these four values from the Pusher Channels app credentials page.</p>
+              </div>
+
+              {([
+                ["pusher_app_id", "App ID", settings?.pusher_app_id_configured, "Your Pusher application ID"],
+                ["pusher_key", "Public key", settings?.pusher_key_configured, "Used by browsers to connect; authorization remains private"],
+                ["pusher_secret", "Secret", settings?.pusher_secret_configured, "Signs channel authorization and server events"],
+                ["pusher_cluster", "Cluster", settings?.pusher_cluster_configured, "For example: eu, us2, ap1, or mt1"],
+              ] as const).map(([field, label, configured, description]) => (
+                <div key={field} className="grid gap-4 px-6 py-6 lg:grid-cols-[minmax(220px,0.7fr)_minmax(320px,1.3fr)] lg:items-start">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-white">{label}</h3>
+                      <span className="text-xs text-white/35">{configured ? "Configured" : "Not configured"}</span>
+                    </div>
+                    <p className="mt-2 max-w-sm text-xs leading-5 text-white/35">{description}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor={field} className="sr-only">New Pusher {label}</Label>
+                    <Input
+                      id={field}
+                      type="password"
+                      autoComplete="new-password"
+                      value={secretInputs[field]}
+                      onChange={(event) => setSecretInputs((current) => ({ ...current, [field]: event.target.value }))}
+                      placeholder={configured ? `Enter a new ${label.toLowerCase()} to replace it` : label}
+                      className="h-12 border-white/10 bg-black/10"
+                    />
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </CustomTabsContent>

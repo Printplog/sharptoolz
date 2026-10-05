@@ -263,6 +263,17 @@ export const sendTrackingSupportReply = async (
   return res.data;
 };
 
+export const authorizeOwnerSupportRealtime = async (
+  socketId: string,
+  channelName: string,
+): Promise<{ auth: string }> => {
+  const res = await apiClient.post('/support/realtime-auth/', {
+    socket_id: socketId,
+    channel_name: channelName,
+  });
+  return res.data;
+};
+
 export const getWallet = async (): Promise<WalletData> => {
   const res = await apiClient.get('/wallet/');
   return res.data;

@@ -17,7 +17,7 @@ const DETAIL_ROWS: Array<{
   value: (ticket: TrackingSupportMessage) => string;
 }> = [
   { label: "Customer", value: (ticket) => ticket.customer_name },
-  { label: "Email", value: (ticket) => ticket.customer_email },
+  { label: "Email", value: (ticket) => ticket.customer_email || "Not provided" },
   { label: "Tracking ID", value: (ticket) => ticket.tracking_id },
   { label: "Document", value: (ticket) => ticket.document_name || "Untitled document" },
   { label: "Source", value: (ticket) => ticket.source_label },

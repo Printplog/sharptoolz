@@ -539,6 +539,10 @@ export type SiteSettings = {
   template_cache_version?: number;
   resend_api_key_configured?: boolean;
   resend_webhook_secret_configured?: boolean;
+  pusher_app_id_configured?: boolean;
+  pusher_key_configured?: boolean;
+  pusher_secret_configured?: boolean;
+  pusher_cluster_configured?: boolean;
 };
 
 export type ApiTheme = {
@@ -583,6 +587,14 @@ export type TrackingSupportConversationEntry = {
 export type TrackingSupportMessagesResponse = {
   results: TrackingSupportMessage[];
   unread_count: number;
+  channel: string;
+  realtime: SupportRealtimeConfig;
+};
+
+export type SupportRealtimeConfig = {
+  enabled: boolean;
+  key: string;
+  cluster: string;
 };
 
 export type ApiKeyRecord = {
