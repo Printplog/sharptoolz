@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { ArrowLeft, Check, Inbox, MessageSquareText, PackageSearch, Plane, Search, X } from "lucide-react";
@@ -6,14 +6,23 @@ import { ArrowLeft, Check, Inbox, MessageSquareText, PackageSearch, Plane, Searc
 import { getTrackingSupportMessages, updateTrackingSupportMessageStatus } from "@/api/apiEndpoints";
 import { Button } from "@/components/ui/button";
 import { SupportConversation } from "@/components/Dashboard/Support/SupportConversation";
+import { SupportHowItWorksDialog } from "@/components/Dashboard/Support/SupportHowItWorksDialog";
 import { SupportTicketDetailsDialog } from "@/components/Dashboard/Support/SupportTicketDetailsDialog";
 import { CustomTabs } from "@/components/ui/custom-tabs";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { TrackingSupportMessage } from "@/types";
 import { useSupportRealtime } from "@/hooks/useSupportRealtime";
 
 type Filter = "all" | TrackingSupportMessage["status"];
+type ConversationType = "all" | "live" | "email";
 
 const FILTERS: Array<{ value: Filter; label: string }> = [
   { value: "all", label: "All" },
@@ -21,6 +30,56 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
   { value: "read", label: "Read" },
   { value: "closed", label: "Closed" },
 ];
+
+const CONVERSATION_TYPES: Array<{ value: ConversationType; label: string }> = [
+  { value: "all", label: "All messages" },
+  { value: "live", label: "Live chat" },
+  { value: "email", label: "Email support" },
+];
+
+function isConversationType(message: TrackingSupportMessage, type: ConversationType) {
+  if (type === "all") return true;
+  return type === "email" ? Boolean(message.customer_email) : !message.customer_email;
+}
+
+function useNotificationSound() {
+  const audioContext = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    const enableSound = () => {
+      const AudioContextClass = window.AudioContext
+        ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) return;
+      audioContext.current ??= new AudioContextClass();
+      if (audioContext.current.state === "suspended") void audioContext.current.resume();
+    };
+    window.addEventListener("pointerdown", enableSound, { once: true });
+    window.addEventListener("keydown", enableSound, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", enableSound);
+      window.removeEventListener("keydown", enableSound);
+      if (audioContext.current) void audioContext.current.close();
+    };
+  }, []);
+
+  return useCallback(() => {
+    const context = audioContext.current;
+    if (!context || context.state !== "running") return;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const now = context.currentTime;
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(660, now);
+    oscillator.frequency.setValueAtTime(880, now + 0.08);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.065, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.2);
+  }, []);
+}
 
 function SourceIcon({ source }: { source: TrackingSupportMessage["source"] }) {
   return source === "parcel_finda" ? <PackageSearch className="size-4" /> : <Plane className="size-4" />;
@@ -34,7 +93,9 @@ export default function SupportMessagesPage() {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
+  const [conversationType, setConversationType] = useState<ConversationType>("all");
   const [search, setSearch] = useState("");
+  const playNotification = useNotificationSound();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["support-messages"],
     queryFn: () => getTrackingSupportMessages(),
@@ -46,25 +107,40 @@ export default function SupportMessagesPage() {
     config: data?.realtime,
     channel: data?.channel,
     onUpdate: refreshMessages,
+    onIncomingMessage: playNotification,
   });
+
+  const messagesForType = useMemo(
+    () => (data?.results ?? []).filter((message) => isConversationType(message, conversationType)),
+    [conversationType, data?.results],
+  );
 
   const messages = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return (data?.results ?? []).filter((message) => {
+    return messagesForType.filter((message) => {
       const matchesFilter = filter === "all" || message.status === filter;
       const matchesSearch = !query || [message.tracking_id, message.customer_name, message.customer_email, message.subject, message.document_name]
         .some((value) => value.toLowerCase().includes(query));
       return matchesFilter && matchesSearch;
     });
-  }, [data?.results, filter, search]);
+  }, [filter, messagesForType, search]);
 
   const counts = useMemo(() => {
-    const all = data?.results ?? [];
+    const all = messagesForType;
     return {
       all: all.length,
       new: all.filter((message) => message.status === "new").length,
       read: all.filter((message) => message.status === "read").length,
       closed: all.filter((message) => message.status === "closed").length,
+    };
+  }, [messagesForType]);
+
+  const typeCounts = useMemo(() => {
+    const all = data?.results ?? [];
+    return {
+      all: all.length,
+      live: all.filter((message) => !message.customer_email).length,
+      email: all.filter((message) => Boolean(message.customer_email)).length,
     };
   }, [data?.results]);
 
@@ -95,23 +171,48 @@ export default function SupportMessagesPage() {
           <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Support Messages</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">Requests from ParcelFinda and MyFlightLookup for tracking IDs you created.</p>
         </div>
+        <SupportHowItWorksDialog />
       </header>
 
       <div className={cn("flex flex-col gap-4 border-b border-white/10 sm:flex-row sm:items-end sm:justify-between", selectedId && "hidden lg:flex")}>
           <CustomTabs
-            tabs={FILTERS.map((item) => ({ id: item.value, label: item.label, count: counts[item.value] }))}
-            activeTab={filter}
-            onChange={(value) => setFilter(value as Filter)}
+            tabs={CONVERSATION_TYPES.map((item) => ({ id: item.value, label: item.label, count: typeCounts[item.value] }))}
+            activeTab={conversationType}
+            onChange={(value) => {
+              setConversationType(value as ConversationType);
+              setSelectedId(null);
+            }}
+            ariaLabel="Support message type"
             className="max-w-full"
           />
-          <div className="relative mb-3 w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/25" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search messages" className="h-9 border-white/10 bg-transparent pl-9" />
+          <div className="mb-3 flex w-full gap-2 sm:w-auto">
+            <Select
+              value={filter}
+              onValueChange={(value) => {
+                setFilter(value as Filter);
+                setSelectedId(null);
+              }}
+            >
+              <SelectTrigger aria-label="Filter by status" className="h-9 w-[132px] shrink-0 border-white/10 bg-transparent text-white/70">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FILTERS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label} ({counts[item.value]})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative min-w-0 flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/25" />
+              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search messages" className="h-9 border-white/10 bg-transparent pl-9" />
+            </div>
           </div>
       </div>
 
-      <div className="grid h-[calc(100dvh-96px)] min-h-[560px] lg:h-[calc(100dvh-220px)] lg:min-h-[620px] lg:max-h-[820px] lg:grid-cols-[360px_minmax(0,1fr)]">
-        <section className={cn("min-h-[420px] flex-col border-b border-white/10 lg:flex lg:min-h-[620px] lg:border-b-0 lg:border-r", selectedId ? "hidden" : "flex")}>
+      <div className="grid h-[calc(100dvh-166px)] min-h-[480px] lg:h-[calc(100dvh-226px)] lg:min-h-[480px] lg:grid-cols-[360px_minmax(0,1fr)]">
+        <section className={cn("min-h-[420px] flex-col border-b border-white/10 lg:flex lg:min-h-0 lg:border-b-0 lg:border-r", selectedId ? "hidden" : "flex")}>
 
           {isLoading ? <MessageListSkeleton /> : isError ? (
             <div className="py-10 pr-6 text-sm text-red-300">Support messages could not be loaded.</div>
@@ -128,7 +229,7 @@ export default function SupportMessagesPage() {
           )}
         </section>
 
-        <section className={cn("h-full min-h-0 min-w-0 flex-col lg:flex lg:pl-8", selectedId ? "flex" : "hidden")}>
+        <section className={cn("h-full min-h-0 min-w-0 flex-col overflow-hidden lg:flex lg:pl-8", selectedId ? "flex" : "hidden")}>
           {selected ? (
             <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)]">
               <div className="border-b border-white/10 py-6">
@@ -144,7 +245,7 @@ export default function SupportMessagesPage() {
                 </div>
               </div>
 
-              <div className="min-h-0">
+              <div className="h-full min-h-0 overflow-hidden">
                 <SupportConversation ticket={selected} />
               </div>
             </div>

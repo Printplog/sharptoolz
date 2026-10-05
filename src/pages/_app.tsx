@@ -11,6 +11,7 @@ export default function App() {
   const isDeveloperHost = window.location.hostname.toLowerCase() === 'developer.sharptoolz.com'
   const isHostedEmbed = location.pathname === '/embed'
   const isApiDocs = isDeveloperHost || location.pathname === '/api-docs'
+  const isSupportInbox = location.pathname === '/support'
 
   if (isDeveloperHost && location.pathname !== '/') {
     return <Navigate to="/" replace />
@@ -20,7 +21,7 @@ export default function App() {
     <HelmetProvider>
       {!isHostedEmbed && <SEO />}
       {!isHostedEmbed && <ScrollToTop />}
-      {!isHostedEmbed && !isApiDocs && <WhatsAppButton />}
+      {!isHostedEmbed && !isApiDocs && !isSupportInbox && <WhatsAppButton />}
       <ErrorBoundary>
         {isDeveloperHost ? <ApiDocsPage /> : <Outlet />}
       </ErrorBoundary>

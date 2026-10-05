@@ -8,9 +8,10 @@ type SupportRealtimeOptions = {
   config?: SupportRealtimeConfig;
   channel?: string;
   onUpdate: () => void;
+  onIncomingMessage?: () => void;
 };
 
-export function useSupportRealtime({ config, channel, onUpdate }: SupportRealtimeOptions) {
+export function useSupportRealtime({ config, channel, onUpdate, onIncomingMessage }: SupportRealtimeOptions) {
   useEffect(() => {
     if (!config?.enabled || !config.key || !config.cluster || !channel) return;
 
@@ -29,7 +30,12 @@ export function useSupportRealtime({ config, channel, onUpdate }: SupportRealtim
       },
     });
     const subscription = pusher.subscribe(channel);
-    subscription.bind("support.created", onUpdate);
+    const handleIncomingMessage = () => {
+      onIncomingMessage?.();
+      onUpdate();
+    };
+    subscription.bind("support.created", handleIncomingMessage);
+    subscription.bind("support.customer_message", handleIncomingMessage);
     subscription.bind("support.updated", onUpdate);
 
     return () => {
@@ -37,5 +43,5 @@ export function useSupportRealtime({ config, channel, onUpdate }: SupportRealtim
       pusher.unsubscribe(channel);
       pusher.disconnect();
     };
-  }, [channel, config?.cluster, config?.enabled, config?.key, onUpdate]);
+  }, [channel, config?.cluster, config?.enabled, config?.key, onIncomingMessage, onUpdate]);
 }

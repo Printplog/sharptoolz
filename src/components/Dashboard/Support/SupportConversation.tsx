@@ -47,7 +47,7 @@ export function SupportConversation({ ticket }: { ticket: TrackingSupportMessage
         })}
       </div>
 
-      <div className="mt-auto shrink-0 bg-[#0e1722]/95 pb-1 pt-4 backdrop-blur-md">
+      <div className="sticky bottom-0 z-10 mt-auto shrink-0 bg-[#0e1722]/95 pb-1 pt-4 backdrop-blur-md">
         <form
           className="rounded-2xl border border-white/10 bg-white/[0.045] p-2 shadow-[0_-12px_40px_rgba(4,10,18,0.18)] transition focus-within:border-white/20 focus-within:bg-white/[0.06]"
           onSubmit={(event) => {
