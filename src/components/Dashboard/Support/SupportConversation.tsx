@@ -28,7 +28,7 @@ export function SupportConversation({ ticket }: { ticket: TrackingSupportMessage
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="flex-1 space-y-5 overflow-y-auto py-6 pr-2">
+      <div className="flex-1 space-y-5 overflow-y-auto py-6 pb-40 pr-2 lg:pb-6">
         {ticket.conversation.map((entry) => {
           const fromOwner = entry.direction === "owner";
           return (
@@ -47,7 +47,7 @@ export function SupportConversation({ ticket }: { ticket: TrackingSupportMessage
         })}
       </div>
 
-      <div className="sticky bottom-0 z-10 mt-auto shrink-0 bg-[#0e1722]/95 pb-1 pt-4 backdrop-blur-md">
+      <div data-testid="support-composer" className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-3 right-3 z-40 shrink-0 bg-[#0e1722]/95 pb-1 pt-3 backdrop-blur-md lg:static lg:z-10 lg:mt-auto lg:bg-[#0e1722]/95 lg:pt-4">
         <form
           className="rounded-2xl border border-white/10 bg-white/[0.045] p-2 shadow-[0_-12px_40px_rgba(4,10,18,0.18)] transition focus-within:border-white/20 focus-within:bg-white/[0.06]"
           onSubmit={(event) => {
@@ -59,7 +59,7 @@ export function SupportConversation({ ticket }: { ticket: TrackingSupportMessage
             value={body}
             onChange={(event) => setBody(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
+              if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault();
                 submitReply();
               }
