@@ -128,7 +128,7 @@ export function mountHostedForm(target, options = {}) {
   instances.get(container)?.destroy();
 
   const iframe = document.createElement("iframe");
-  iframe.title = options.title || "SharpToolz document form";
+  iframe.title = options.title || "Document form";
   iframe.src = embedUrl.toString();
   iframe.referrerPolicy = "strict-origin";
   iframe.setAttribute("sandbox", "allow-scripts allow-forms allow-same-origin");

@@ -79,6 +79,9 @@ mountHostedForm("#sharptoolz-form", {
 Loader content stays in the customer's page and receives no API key, template
 data, or form values. `loading` is independent of the session theme's
 `showSharpToolzBranding` option, which controls branding inside the loaded form.
+Hosted-form branding is off by default and appears only when
+`showSharpToolzBranding` is explicitly set to `true`. Per-session theme fields
+override the saved appearance; omitted fields continue to use the saved values.
 
 Open an existing document in the same hosted UI:
 

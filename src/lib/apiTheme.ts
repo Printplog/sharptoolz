@@ -10,7 +10,7 @@ export const DEFAULT_API_THEME: ApiTheme = {
   fontFamily: "Inter",
   buttonText: "Create document",
   appearance: "dark",
-  showSharpToolzBranding: true,
+  showSharpToolzBranding: false,
 };
 
 export type ApiThemeColorKey = keyof Pick<

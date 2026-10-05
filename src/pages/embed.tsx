@@ -58,7 +58,7 @@ export default function HostedEmbedPage() {
     tokenRef.current = token;
     parentOriginRef.current = parentOrigin;
     if (!token.startsWith("stz_embed_") || !parentOrigin) {
-      setError("Open this form through the website that created the SharpToolz session.");
+      setError("Open this form through the website that created the secure session.");
       setLoading(false);
       return;
     }

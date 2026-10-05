@@ -1,7 +1,7 @@
 (function (global) {
   "use strict";
 
-  var VERSION = "1.1.0";
+  var VERSION = "1.1.1";
   var instances = new WeakMap();
   var SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
@@ -145,7 +145,7 @@
     if (existing) existing.destroy();
 
     var iframe = document.createElement("iframe");
-    iframe.title = settings.title || "SharpToolz document form";
+    iframe.title = settings.title || "Document form";
     iframe.src = embedUrl.toString();
     iframe.referrerPolicy = "strict-origin";
     iframe.setAttribute("sandbox", "allow-scripts allow-forms allow-same-origin");

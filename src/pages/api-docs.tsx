@@ -473,7 +473,7 @@ const THEME_EXAMPLES: CodeExamples = {
       "    fontFamily: \"Inter\",",
       "    buttonText: \"Create document\",",
       "    appearance: \"dark\",",
-      "    showSharpToolzBranding: true,",
+      "    showSharpToolzBranding: false,",
       "  },",
       "});",
     ),
@@ -496,7 +496,7 @@ const THEME_EXAMPLES: CodeExamples = {
       "        \"fontFamily\": \"Inter\",",
       "        \"buttonText\": \"Create document\",",
       "        \"appearance\": \"dark\",",
-      "        \"showSharpToolzBranding\": True,",
+      "        \"showSharpToolzBranding\": False,",
       "    },",
       ")",
     ),
@@ -523,7 +523,7 @@ const THEME_EXAMPLES: CodeExamples = {
       "    \"fontFamily\": \"Inter\",",
       "    \"buttonText\": \"Create document\",",
       "    \"appearance\": \"dark\",",
-      "    \"showSharpToolzBranding\": true",
+      "    \"showSharpToolzBranding\": false",
       "  }",
       "}",
       "JSON",
@@ -1169,7 +1169,7 @@ export default function ApiDocsPage() {
                 ))}
               </div>
               <Note icon={<ShieldCheck className="size-4" />}>
-                Loader content stays in your page; no API key, form values, or template data is passed to it. The SDK accepts ready messages only from the exact hosted-form origin and iframe window. The loader setting is separate from <code className="text-white/70">showSharpToolzBranding</code>, which controls branding inside the loaded form.
+                Loader content stays in your page; no API key, form values, or template data is passed to it. The SDK accepts ready messages only from the exact hosted-form origin and iframe window. The loader setting is separate from <code className="text-white/70">showSharpToolzBranding</code>, which is off by default and must be explicitly enabled. Per-session theme fields override the saved appearance while omitted fields keep their saved values.
               </Note>
             </div>
           </section>
