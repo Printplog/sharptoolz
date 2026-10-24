@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ImageOff, Loader2, ShieldCheck } from "lucide-react";
 
-import { formatDate } from "@/lib/utils/dateFormatter";
 import useToolStore from "@/store/formStore";
 import type { FormField, ProtectedPreview, ProtectedPreviewLayer } from "@/types";
 
@@ -33,9 +32,7 @@ async function fetchImage(url: string, embedToken: string, parentOrigin: string)
 function fieldText(field: FormField | undefined) {
   if (!field) return "";
   const value = field.currentValue ?? "";
-  if (field.dateFormat && typeof value === "string" && value) {
-    return formatDate(value, field.dateFormat) || value;
-  }
+  // Date pickers already store the formatted text, same as the regular SVG preview
   return String(value);
 }
 

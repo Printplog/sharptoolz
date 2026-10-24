@@ -14,6 +14,7 @@ import { RotateCcw, Calendar, Plus } from "lucide-react";
 import useToolStore from "@/store/formStore";
 import type { FormField, Tutorial } from "@/types";
 import FieldHelper from "./FieldHelper";
+import { parseDate, toLocalIsoDate } from "@/lib/utils/dateFormatter";
 
 // Extended FormField type for signature fields
 interface ExtendedFormField extends FormField {
@@ -30,7 +31,7 @@ import CustomDateTimePicker from "@/components/ui/CustomDateTimePicker";
 import QRCodeInputField, { type QRCodeInputFieldRef } from "@/components/ui/QRCodeInputField";
 import BarcodeInputField, { type BarcodeInputFieldRef } from "@/components/ui/BarcodeInputField";
 import { generateValue, applyMaxGeneration } from "@/lib/utils/fieldGenerator";
-import { extractFromDependency } from "@/lib/utils/fieldExtractor";
+import { extractFromDependency, dateFormatsOf } from "@/lib/utils/fieldExtractor";
 
 const FormFieldComponent: React.FC<{
   field: FormField;
@@ -60,16 +61,12 @@ const FormFieldComponent: React.FC<{
         if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
           return value;
         }
-        try {
-          const parsed = new Date(value);
-          if (!isNaN(parsed.getTime())) {
-            return parsed.toISOString().split("T")[0];
-          }
-        } catch {
-          // ignore
+        const parsed = parseDate(value, field.dateFormat);
+        if (parsed) {
+          return toLocalIsoDate(parsed);
         }
       }
-      return new Date().toISOString().split("T")[0];
+      return toLocalIsoDate(new Date());
     });
 
     // Generate value based on generation rule or fallback to simple random
@@ -171,8 +168,12 @@ const FormFieldComponent: React.FC<{
       if (!hasGeneration || isPurchased) return;
 
       const isAutoMode = field.generationMode === "auto" || field.isTrackingId;
+      // Tracking IDs are unique across all documents, so the template's sample ID
+      // can't be reused; replace it unless the user typed it themselves
+      const isUntouchedSample =
+        !!field.isTrackingId && !fieldFromStore?.touched && value === field.defaultValue;
 
-      if (isAutoMode && !value) {
+      if (isAutoMode && (!value || isUntouchedSample)) {
         updateField(field.id, generateFieldValue());
         return;
       }
@@ -186,6 +187,8 @@ const FormFieldComponent: React.FC<{
       field.generationRule,
       field.generationMode,
       field.isTrackingId,
+      field.defaultValue,
+      fieldFromStore?.touched,
       value,
       updateField,
       isPurchased,
@@ -214,7 +217,7 @@ const FormFieldComponent: React.FC<{
         }
       });
 
-      const extractedValue = extractFromDependency(field.dependsOn, allFieldValues);
+      const extractedValue = extractFromDependency(field.dependsOn, allFieldValues, dateFormatsOf(fieldsForDependencies));
 
       if (extractedValue !== value && extractedValue !== "") {
         updateField(field.id, extractedValue);
@@ -561,6 +564,7 @@ const FormFieldComponent: React.FC<{
                 value={value as string}
                 onChange={handleChange}
                 format={field.dateFormat}
+                sample={typeof field.defaultValue === "string" ? field.defaultValue : undefined}
                 disabled={isFieldDisabled}
               />
             ) : (

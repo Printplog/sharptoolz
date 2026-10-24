@@ -13,10 +13,18 @@
  */
 
 import { format } from "date-fns";
+import { parseDate } from "./dateFormatter";
+
+/** Map of field id -> its date format, for reading date dependencies correctly */
+export function dateFormatsOf(fields: { id: string; dateFormat?: string }[]): Record<string, string | undefined> {
+  return Object.fromEntries(fields.map((f) => [f.id, f.dateFormat]));
+}
 
 export function extractFromDependency(
   dependsOn: string,
-  allFields: Record<string, string | number | boolean | unknown>
+  allFields: Record<string, string | number | boolean | unknown>,
+  /** Source fields' date formats, so "05/03/2025" in a DD/MM/YYYY field reads as 5 March */
+  dateFormats: Record<string, string | undefined> = {}
 ): string {
   // Check if pattern contains extraction syntax
   // Updated regex to support date extraction: [date:FORMAT] or [w1] or [ch1]
@@ -44,7 +52,7 @@ export function extractFromDependency(
       return extractChars(stringValue, extractPattern);
     } else if (extractType === 'date') {
       // Date reformatting
-      return extractDate(stringValue, extractPattern);
+      return extractDate(stringValue, extractPattern, dateFormats[fieldName]);
     }
   }
 
@@ -85,18 +93,15 @@ function extractChars(text: string, pattern: string): string {
   return text[index] || '';
 }
 
-function extractDate(text: string, formatString: string): string {
+function extractDate(text: string, formatString: string, sourceFormat?: string): string {
   if (!text) return '';
   try {
     // clean text to handle "9th January, 2026" -> "9 January, 2026"
     // Remove ordinal suffixes (st, nd, rd, th) from numbers
     const cleanedText = text.replace(/(\d+)(st|nd|rd|th)/gi, '$1');
 
-    // Try parsing
-    const date = new Date(cleanedText);
-
-    // Check if valid
-    if (isNaN(date.getTime())) return text; // Return original if invalid date
+    const date = parseDate(cleanedText, sourceFormat);
+    if (!date) return text; // Return original if invalid date
 
     return format(date, formatString || 'MM/dd/yyyy');
   } catch {

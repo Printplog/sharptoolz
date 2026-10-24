@@ -1,6 +1,6 @@
 /**
- * Format a date according to a custom format string
- * 
+ * Format and parse dates using a custom format string
+ *
  * Supported format codes:
  * - YYYY: Full year (2025)
  * - YY: Short year (25)
@@ -22,126 +22,270 @@
  * - s: Seconds no zero (1, 59)
  * - A: AM/PM uppercase
  * - a: am/pm lowercase
+ *
+ * Underscores become spaces. Wrap literal text in brackets, e.g. "MMM D [at] h:mm A".
  */
 
-export function formatDate(date: Date | string, format: string): string {
-  // Convert string to Date if needed
-  const d = typeof date === 'string' ? new Date(date) : date;
-  
-  if (isNaN(d.getTime())) {
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const DAY_NAMES = [
+  'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+];
+
+const TOKENS = [
+  'YYYY', 'YY', 'MMMM', 'MMM', 'MM', 'M', 'DD', 'D', 'dddd', 'ddd',
+  'HH', 'H', 'hh', 'h', 'mm', 'm', 'ss', 's', 'A', 'a'
+] as const;
+
+type Token = typeof TOKENS[number];
+type Part = { token: Token } | { literal: string };
+
+export type DateFormatOptions = {
+  /** Render month and weekday names in capitals (JAN, MON) */
+  uppercase?: boolean;
+};
+
+/** Split a format string into tokens and literal text (longest token wins). */
+function tokenize(format: string): Part[] {
+  const parts: Part[] = [];
+  let i = 0;
+  const pushLiteral = (text: string) => {
+    const last = parts[parts.length - 1];
+    if (last && 'literal' in last) last.literal += text;
+    else parts.push({ literal: text });
+  };
+
+  while (i < format.length) {
+    const ch = format[i];
+    if (ch === '[') {
+      const end = format.indexOf(']', i + 1);
+      if (end !== -1) {
+        pushLiteral(format.slice(i + 1, end));
+        i = end + 1;
+        continue;
+      }
+    }
+    const token = TOKENS.find((t) => format.startsWith(t, i));
+    if (token) {
+      parts.push({ token });
+      i += token.length;
+    } else {
+      pushLiteral(ch === '_' ? ' ' : ch);
+      i += 1;
+    }
+  }
+  return parts;
+}
+
+export function formatDate(date: Date | string, format: string, options: DateFormatOptions = {}): string {
+  const d = typeof date === 'string' ? parseDate(date, format) : date;
+
+  if (!d || isNaN(d.getTime())) {
     return '';
   }
-
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-  
-  const monthNamesShort = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
-  
-  const dayNames = [
-    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
-  ];
-  
-  const dayNamesShort = [
-    'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
-  ];
 
   const year = d.getFullYear();
   const month = d.getMonth();
   const day = d.getDate();
-  const dayOfWeek = d.getDay();
   const hours = d.getHours();
-  const minutes = d.getMinutes();
-  const seconds = d.getSeconds();
-
-  // Helper to pad with zero
-  const pad = (num: number) => num.toString().padStart(2, '0');
-  
-  // Use unique placeholders that won't conflict with any text
-  // Use characters that won't appear in format strings or inserted text
-  const placeholders: Record<string, string> = {};
-  let counter = 0;
-  const getPlaceholder = (key: string) => {
-    if (!placeholders[key]) {
-      // Use a unique marker that won't appear in dates or format strings
-      placeholders[key] = `\u0001${counter++}\u0002`;
-    }
-    return placeholders[key];
-  };
-  
-  let result = format;
-  
-  // Step 1: Replace single-character tokens with placeholders FIRST
-  // Use word boundaries and negative lookahead to match only standalone tokens
-  // Match M only if not part of MM, MMM, or MMMM
-  result = result.replace(/(?<![M])M(?!M)/g, getPlaceholder('M'));
-  // Match D only if not part of DD
-  result = result.replace(/(?<![D])D(?!D)/g, getPlaceholder('D'));
-  // Match H only if not part of HH
-  result = result.replace(/(?<![H])H(?!H)/g, getPlaceholder('H'));
-  // Match h only if not part of hh
-  result = result.replace(/(?<![h])h(?!h)/g, getPlaceholder('h'));
-  // Match m only if not part of mm
-  result = result.replace(/(?<![m])m(?!m)/g, getPlaceholder('m'));
-  // Match s only if not part of ss
-  result = result.replace(/(?<![s])s(?!s)/g, getPlaceholder('s'));
-  // Match A only if not part of AM (but we handle AM/PM separately)
-  result = result.replace(/(?<![A])A(?!M)/g, getPlaceholder('A'));
-  // Match a only if not part of am
-  result = result.replace(/(?<![a])a(?!m)/g, getPlaceholder('a'));
-  
-  // Step 2: Replace multi-character tokens (safe, no conflicts)
-  result = result.replace(/YYYY/g, year.toString());
-  result = result.replace(/YY/g, year.toString().slice(-2));
-  result = result.replace(/MMMM/g, monthNames[month]);
-  result = result.replace(/MMM/g, monthNamesShort[month]);
-  result = result.replace(/MM/g, pad(month + 1));
-  result = result.replace(/DD/g, pad(day));
-  result = result.replace(/dddd/g, dayNames[dayOfWeek]);
-  result = result.replace(/ddd/g, dayNamesShort[dayOfWeek]);
-  result = result.replace(/HH/g, pad(hours));
   const hours12 = hours % 12 || 12;
-  result = result.replace(/hh/g, pad(hours12));
-  result = result.replace(/mm/g, pad(minutes));
-  result = result.replace(/ss/g, pad(seconds));
-  
-  // Step 3: Replace placeholders with actual values
-  const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  
-  if (placeholders['M']) {
-    result = result.replace(new RegExp(escapeRegex(placeholders['M']), 'g'), (month + 1).toString());
-  }
-  if (placeholders['D']) {
-    result = result.replace(new RegExp(escapeRegex(placeholders['D']), 'g'), day.toString());
-  }
-  if (placeholders['H']) {
-    result = result.replace(new RegExp(escapeRegex(placeholders['H']), 'g'), hours.toString());
-  }
-  if (placeholders['h']) {
-    result = result.replace(new RegExp(escapeRegex(placeholders['h']), 'g'), hours12.toString());
-  }
-  if (placeholders['m']) {
-    result = result.replace(new RegExp(escapeRegex(placeholders['m']), 'g'), minutes.toString());
-  }
-  if (placeholders['s']) {
-    result = result.replace(new RegExp(escapeRegex(placeholders['s']), 'g'), seconds.toString());
-  }
   const ampm = hours >= 12 ? 'PM' : 'AM';
-  if (placeholders['A']) {
-    result = result.replace(new RegExp(escapeRegex(placeholders['A']), 'g'), ampm);
-  }
-  if (placeholders['a']) {
-    result = result.replace(new RegExp(escapeRegex(placeholders['a']), 'g'), ampm.toLowerCase());
+
+  const pad = (num: number) => num.toString().padStart(2, '0');
+  const name = (value: string) => (options.uppercase ? value.toUpperCase() : value);
+
+  const values: Record<Token, () => string> = {
+    YYYY: () => year.toString(),
+    YY: () => year.toString().slice(-2),
+    MMMM: () => name(MONTH_NAMES[month]),
+    MMM: () => name(MONTH_NAMES[month].slice(0, 3)),
+    MM: () => pad(month + 1),
+    M: () => (month + 1).toString(),
+    DD: () => pad(day),
+    D: () => day.toString(),
+    dddd: () => name(DAY_NAMES[d.getDay()]),
+    ddd: () => name(DAY_NAMES[d.getDay()].slice(0, 3)),
+    HH: () => pad(hours),
+    H: () => hours.toString(),
+    hh: () => pad(hours12),
+    h: () => hours12.toString(),
+    mm: () => pad(d.getMinutes()),
+    m: () => d.getMinutes().toString(),
+    ss: () => pad(d.getSeconds()),
+    s: () => d.getSeconds().toString(),
+    A: () => ampm,
+    a: () => ampm.toLowerCase(),
+  };
+
+  return tokenize(format)
+    .map((part) => ('literal' in part ? part.literal : values[part.token]()))
+    .join('');
+}
+
+const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const TOKEN_PATTERNS: Record<Token, string> = {
+  YYYY: '(\\d{4})',
+  YY: '(\\d{2})',
+  MMMM: '([A-Za-z]{3,})\\.?',
+  MMM: '([A-Za-z]{3,})\\.?',
+  MM: '(\\d{1,2})',
+  M: '(\\d{1,2})',
+  DD: '(\\d{1,2})',
+  D: '(\\d{1,2})',
+  dddd: '[A-Za-z]+\\.?',
+  ddd: '[A-Za-z]+\\.?',
+  HH: '(\\d{1,2})',
+  H: '(\\d{1,2})',
+  hh: '(\\d{1,2})',
+  h: '(\\d{1,2})',
+  mm: '(\\d{1,2})',
+  m: '(\\d{1,2})',
+  ss: '(\\d{1,2})',
+  s: '(\\d{1,2})',
+  A: '([AaPp]\\.?[Mm]\\.?)',
+  a: '([AaPp]\\.?[Mm]\\.?)',
+};
+
+function monthFromName(text: string): number {
+  const lower = text.toLowerCase();
+  // Accepts "Jan", "January", "Sept", etc.
+  return MONTH_NAMES.findIndex((m) => m.toLowerCase().startsWith(lower) && lower.length >= 3);
+}
+
+// Be forgiving about spacing and commas between components, so "4 Jun 2025, 08:25"
+// still reads with "D MMM YYYY  HH:mm"
+function literalPattern(literal: string): string {
+  if (/^[\s,]+$/.test(literal)) return '[\\s,]+';
+  return literal
+    .split(/(\s+)/)
+    .map((chunk) => (/^\s+$/.test(chunk) ? '\\s+' : escapeRegex(chunk).replace(/,/g, ',?')))
+    .join('');
+}
+
+function parseWithFormat(value: string, format: string): Date | null {
+  const parts = tokenize(format);
+  const groups: Token[] = [];
+  let pattern = '';
+  for (const part of parts) {
+    if ('literal' in part) {
+      pattern += literalPattern(part.literal);
+    } else {
+      pattern += TOKEN_PATTERNS[part.token];
+      if (TOKEN_PATTERNS[part.token].startsWith('(')) groups.push(part.token);
+    }
   }
 
-  // Replace underscores with spaces (after all token replacements)
-  result = result.replace(/_/g, ' ');
+  // Allow trailing extras such as a stray "pm" after a 24-hour time
+  const match = new RegExp(`^\\s*${pattern}`, 'i').exec(value);
+  if (!match) return null;
 
+  const now = new Date();
+  let year = now.getFullYear();
+  let month = 0;
+  let day = 1;
+  let hours = 0;
+  let minutes = 0;
+  let seconds = 0;
+  let meridiem: 'AM' | 'PM' | null = null;
+  let twelveHour = false;
+
+  groups.forEach((token, index) => {
+    const raw = match[index + 1];
+    const num = parseInt(raw, 10);
+    switch (token) {
+      case 'YYYY': year = num; break;
+      // Up to 10 years ahead reads as 20xx (expiry dates), anything later as 19xx (birth dates)
+      case 'YY': year = num + (num > (now.getFullYear() % 100) + 10 ? 1900 : 2000); break;
+      case 'MMMM':
+      case 'MMM': month = monthFromName(raw); break;
+      case 'MM':
+      case 'M': month = num - 1; break;
+      case 'DD':
+      case 'D': day = num; break;
+      case 'HH':
+      case 'H': hours = num; break;
+      case 'hh':
+      case 'h': hours = num; twelveHour = true; break;
+      case 'mm':
+      case 'm': minutes = num; break;
+      case 'ss':
+      case 's': seconds = num; break;
+      case 'A':
+      case 'a': meridiem = raw.toLowerCase().startsWith('p') ? 'PM' : 'AM'; break;
+    }
+  });
+
+  // A trailing am/pm that the format doesn't mention (e.g. "14:55 pm")
+  if (!meridiem) {
+    const rest = value.slice(match[0].length).trim().toLowerCase();
+    if (/^p\.?m\.?$/.test(rest)) meridiem = 'PM';
+    else if (/^a\.?m\.?$/.test(rest)) meridiem = 'AM';
+  }
+
+  if (meridiem && (twelveHour || hours <= 12)) {
+    if (meridiem === 'PM' && hours < 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+  }
+
+  if (month < 0 || month > 11 || day < 1 || day > 31 || hours > 23 || minutes > 59 || seconds > 59) {
+    return null;
+  }
+
+  const result = new Date(year, month, day, hours, minutes, seconds);
+  // Reject roll-overs like 31 Feb
+  if (result.getMonth() !== month || result.getDate() !== day) return null;
   return result;
 }
 
+/**
+ * Parse a date string, preferring the given format so day/month order and
+ * month names are read correctly. Falls back to ISO and native parsing.
+ * Returns null when the value can't be understood.
+ */
+export function parseDate(value: string, format?: string): Date | null {
+  if (!value || typeof value !== 'string') return null;
+  const trimmed = value.trim();
 
+  if (format) {
+    const parsed = parseWithFormat(trimmed, format);
+    if (parsed) return parsed;
+  }
+
+  // ISO date-only strings are treated as local dates (not UTC midnight)
+  const iso = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(trimmed);
+  if (iso) {
+    const [, y, mo, da, h = '0', mi = '0', se = '0'] = iso;
+    const d = new Date(+y, +mo - 1, +da, +h, +mi, +se);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // Ambiguous numeric dates (01/02/2025) are only trusted via the format above
+  if (/^\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}/.test(trimmed)) return null;
+
+  // Native parsing guesses wildly ("Ma 10" -> 2001), so only trust it with a full year
+  if (!/\b\d{4}\b/.test(trimmed)) return null;
+  const native = new Date(trimmed);
+  return isNaN(native.getTime()) ? null : native;
+}
+
+/** True when a sample value writes month/weekday names in capitals (e.g. "10 JAN 2025"). */
+export function usesUppercaseNames(sample: unknown): boolean {
+  if (typeof sample !== 'string') return false;
+  const words = sample.match(/[A-Za-z]{3,}/g) || [];
+  return words.some((word) => {
+    if (word !== word.toUpperCase()) return false;
+    const lower = word.toLowerCase();
+    return MONTH_NAMES.some((m) => m.toLowerCase().startsWith(lower)) ||
+      DAY_NAMES.some((d) => d.toLowerCase().startsWith(lower));
+  });
+}
+
+/** Local YYYY-MM-DD (toISOString shifts the day in non-UTC timezones). */
+export function toLocalIsoDate(date: Date): string {
+  const pad = (num: number) => num.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}

@@ -1,5 +1,5 @@
 import type { FormField } from "@/types";
-import { extractFromDependency } from "./fieldExtractor";
+import { extractFromDependency, dateFormatsOf } from "./fieldExtractor";
 import updateSvgFromFormData from "./updateSvgFromFormData";
 
 /**
@@ -87,7 +87,7 @@ export function applyMaskedTestContentToSvg(svgContent: string, fields: FormFiel
 
     const maskedFields = fields.flatMap((field) => {
         const resolvedValue = field.dependsOn
-            ? extractFromDependency(field.dependsOn, maskedFieldValues)
+            ? extractFromDependency(field.dependsOn, maskedFieldValues, dateFormatsOf(fields))
             : String(maskedFieldValues[field.id] ?? "");
 
         if (!shouldMaskField(field, resolvedValue)) {

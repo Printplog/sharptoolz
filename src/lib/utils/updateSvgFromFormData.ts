@@ -1,5 +1,5 @@
 import { applyTextMasks, clearTextMasks } from "./svgTextMasks";
-import { extractFromDependency } from "./fieldExtractor";
+import { extractFromDependency, dateFormatsOf } from "./fieldExtractor";
 import { applyWrappedText, getSvgElementStyle } from "./textWrapping";
 import { generateQrDataUrlSync } from "./qrGenerator";
 import { generateBarcodeDataUrlSync } from "./barcodeGenerator";
@@ -30,6 +30,7 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
   // Pre-compute once — reused by all fields with dependsOn (avoids O(n²) rebuilding)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allFieldValues: Record<string, string | number | boolean | unknown> = {};
+  const dateFormats = dateFormatsOf(fields);
   fields.forEach((f) => {
     if (f.type === "select" && f.options && f.options.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -249,7 +250,7 @@ export default function updateSvgFromFormData(svgSource: string | Document, fiel
       value = String(field.currentValue);
     } else if ("dependsOn" in field && field.dependsOn) {
       // Fallback to simple dependency extraction
-      value = extractFromDependency(field.dependsOn, allFieldValues);
+      value = extractFromDependency(field.dependsOn, allFieldValues, dateFormats);
     } else {
       // Use direct current value or default
       value = String(field.currentValue ?? "");

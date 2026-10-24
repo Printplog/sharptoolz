@@ -10,6 +10,7 @@ import { BASE_URL } from "@/api/apiClient";
 import { addWatermarkToSvg } from "@/lib/utils/svgWatermark";
 import { sanitizeSvgGradients, svgNamespace } from "@/lib/utils/sanitizeSvgGradients";
 import { generateAutoFields } from "@/lib/utils/fieldGenerator";
+import { readDuplicate } from "@/lib/duplicateHandoff";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "react-router-dom";
 import {
@@ -134,7 +135,7 @@ interface Props {
 }
 
 type DuplicateLocationState = {
-  startValues?: Record<string, string | number | boolean>;
+  duplicateId?: string;
 };
 
 import { FilePen } from "lucide-react";
@@ -172,7 +173,9 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
   const fields = useToolStore((state) => state.fields);
 
   const { id: paramId } = useParams<{ id: string }>();
-  const startValues = (location.state as DuplicateLocationState | null)?.startValues;
+  const duplicate = readDuplicate((location.state as DuplicateLocationState | null)?.duplicateId);
+  const startValues = duplicate?.startValues;
+  const startFieldProps = duplicate?.startFieldProps;
   const id = hostedSession?.template.id ?? templateIdProp ?? paramId;
 
   useEffect(() => {
@@ -354,6 +357,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
 
       return {
         ...field,
+        ...(startFieldProps?.[field.id] ?? {}),
         currentValue,
         // If it came from startValues, mark it as touched so it's treated as "provided" data
         touched: hasHostedPrefill || (startValues ? (startValues[field.id] !== undefined) : false)
@@ -399,7 +403,7 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
     // Store fields in ref to apply changes once SVG loads
     pendingFieldsRef.current = initializedFields;
 
-  }, [data, isLoading, setName, setFields, isPurchased, isEditingDocument, startValues, hostedSession, isHosted, id, user?.is_staff, user?.role]);
+  }, [data, isLoading, setName, setFields, isPurchased, isEditingDocument, startValues, startFieldProps, hostedSession, isHosted, id, user?.is_staff, user?.role]);
 
   const hasSyncedRef = useRef<string | null>(null);
 

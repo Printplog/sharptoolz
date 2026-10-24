@@ -1,5 +1,5 @@
 import type { FormField } from "@/types";
-import { extractFromDependency } from "./fieldExtractor";
+import { extractFromDependency, dateFormatsOf } from "./fieldExtractor";
 import { generateQrDataUrlSync } from "./qrGenerator";
 import { generateBarcodeDataUrlSync } from "./barcodeGenerator";
 import { isFixedAspect } from "./barcodeSymbologies";
@@ -64,7 +64,7 @@ export default function updateSvgFromFormDataOptimized(
 
     if ("dependsOn" in field && field.dependsOn) {
       // Use extraction utility to handle dependencies with patterns
-      value = extractFromDependency(field.dependsOn, allFieldValues);
+      value = extractFromDependency(field.dependsOn, allFieldValues, dateFormatsOf(allFields));
     } else {
       value = String(field.currentValue ?? "");
     }

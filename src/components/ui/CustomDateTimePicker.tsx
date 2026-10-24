@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { formatDate } from "@/lib/utils/dateFormatter";
+import { useState, useEffect, useRef } from "react";
+import { formatDate, parseDate, usesUppercaseNames } from "@/lib/utils/dateFormatter";
 import {
   Select,
   SelectContent,
@@ -13,87 +13,72 @@ interface CustomDateTimePickerProps {
   onChange: (value: string) => void;
   format: string;
   disabled?: boolean;
+  /** Template default, used to copy its style (e.g. "10 JAN 2025" keeps capitals) */
+  sample?: string;
 }
 
 export default function CustomDateTimePicker({
   value,
   onChange,
   format,
-  disabled = false
+  disabled = false,
+  sample
 }: CustomDateTimePickerProps) {
-  // Parse the format to determine what components are needed
-  // Check in order of most specific to least specific to avoid conflicts
-  // Check for components using standard format tokens
-  const hasDate = /[YMD]/.test(format);
-  // Minute: mm or m
-  const hasMinute = /mm?/.test(format);
-  // Second: ss or s
-  const hasSecond = /ss?/.test(format);
-  // Hour: HH, H (24-hour) or hh, h (12-hour)
-  const hasHour = /[Hh]/.test(format);
-  // Check if it's 12-hour format (lowercase h or presence of AM/PM markers A/a)
-  const is12Hour = /h/.test(format) || /[Aa]/.test(format);
-  const hasMeridian = /[Aa]/.test(format);
+  // Strip [literal] text so letters inside it aren't mistaken for tokens
+  const tokens = format.replace(/\[[^\]]*\]/g, "");
+  const hasDate = /[YMD]/.test(tokens);
+  const hasMinute = /m/.test(tokens);
+  const hasSecond = /s/.test(tokens);
+  const hasHour = /[Hh]/.test(tokens);
+  const is12Hour = /h/.test(tokens) || /[Aa]/.test(tokens);
+  const hasMeridian = /[Aa]/.test(tokens);
+  const uppercase = usesUppercaseNames(value) || usesUppercaseNames(sample);
 
-  // Parse initial value or use current date/time
-  const getInitialDate = () => {
-    if (value && typeof value === 'string') {
-      try {
-        const parsed = new Date(value);
-        if (!isNaN(parsed.getTime())) {
-          return parsed;
-        }
-      } catch {
-        // ignore
-      }
-    }
-    return new Date();
+  const [dateTime, setDateTime] = useState<Date>(() => parseDate(value, format) ?? new Date());
+  // Last value this picker showed/stored; starts as the incoming value
+  const lastEmittedRef = useRef<string | null>(value || null);
+
+  const emit = (next: Date) => {
+    setDateTime(next);
+    const formatted = formatDate(next, format, { uppercase });
+    lastEmittedRef.current = formatted;
+    onChange(formatted);
   };
 
-  const [dateTime, setDateTime] = useState<Date>(getInitialDate());
-  const [meridian, setMeridian] = useState<'AM' | 'PM'>(() => {
-    return dateTime.getHours() >= 12 ? 'PM' : 'AM';
-  });
-
-  // Update parent when dateTime or meridian changes
+  // Follow values set from outside (duplicate, dependencies, reset). An empty value —
+  // on first render or cleared later — is filled with the shown date, so the picker
+  // never displays a date the document doesn't have. Existing values are never rewritten.
   useEffect(() => {
-    const formatted = formatDate(dateTime, format);
-    onChange(formatted);
+    if (value === lastEmittedRef.current) return;
+    if (!value) {
+      emit(dateTime);
+      return;
+    }
+    const parsed = parseDate(value, format);
+    if (parsed) setDateTime(parsed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateTime, meridian, format]);
+  }, [value, format]);
+
+  const meridian: 'AM' | 'PM' = dateTime.getHours() >= 12 ? 'PM' : 'AM';
 
   const handleDateChange = (value: string, component: 'year' | 'month' | 'day') => {
     const numValue = parseInt(value);
     if (isNaN(numValue)) return;
 
-    const newDate = new Date(dateTime);
+    const year = component === 'year' ? numValue : dateTime.getFullYear();
+    const month = component === 'month' ? numValue - 1 : dateTime.getMonth();
+    const wantedDay = component === 'day' ? numValue : dateTime.getDate();
+    // Clamp the day to the new month's length (31 Jan -> Feb 28/29)
+    const daysInNewMonth = new Date(year, month + 1, 0).getDate();
 
-    if (component === 'year') {
-      newDate.setFullYear(numValue);
-    } else if (component === 'month') {
-      newDate.setMonth(numValue - 1);
-    } else if (component === 'day') {
-      newDate.setDate(numValue);
-    }
-
-    // Validate day after year/month changes (handle leap years and month lengths)
-    const daysInNewMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0).getDate();
-    if (newDate.getDate() > daysInNewMonth) {
-      newDate.setDate(daysInNewMonth);
-    }
-
-    // Preserve time components when updating date
-    if (hasHour || hasMinute || hasSecond) {
-      newDate.setHours(dateTime.getHours());
-      newDate.setMinutes(dateTime.getMinutes());
-      newDate.setSeconds(dateTime.getSeconds());
-    }
-
-    setDateTime(newDate);
-    // Update meridian if needed
-    if (hasMeridian && !is12Hour) {
-      setMeridian(newDate.getHours() >= 12 ? 'PM' : 'AM');
-    }
+    emit(new Date(
+      year,
+      month,
+      Math.min(wantedDay, daysInNewMonth),
+      dateTime.getHours(),
+      dateTime.getMinutes(),
+      dateTime.getSeconds()
+    ));
   };
 
   const handleTimeChange = (value: string, component: 'hour' | 'minute' | 'second') => {
@@ -121,14 +106,11 @@ export default function CustomDateTimePicker({
       newDateTime.setSeconds(numValue);
     }
 
-    setDateTime(newDateTime);
+    emit(newDateTime);
   };
 
   const handleMeridianChange = (value: string) => {
     const newMeridian = value as 'AM' | 'PM';
-    setMeridian(newMeridian);
-
-    // Update hours when meridian changes
     const currentHour = dateTime.getHours();
     const newDateTime = new Date(dateTime);
 
@@ -138,7 +120,7 @@ export default function CustomDateTimePicker({
       newDateTime.setHours(currentHour - 12);
     }
 
-    setDateTime(newDateTime);
+    emit(newDateTime);
   };
 
   // Get display values for 12-hour format
@@ -153,10 +135,12 @@ export default function CustomDateTimePicker({
   const month = dateTime.getMonth() + 1;
   const day = dateTime.getDate();
 
-  // Generate options for years (current year ± 50 years)
+  // Generate options for years (100 back for birth dates, 50 ahead), always including the selected year
   const yearOptions = [];
   const currentYear = new Date().getFullYear();
-  for (let i = currentYear - 50; i <= currentYear + 50; i++) {
+  const firstYear = Math.min(currentYear - 100, year);
+  const lastYear = Math.max(currentYear + 50, year);
+  for (let i = firstYear; i <= lastYear; i++) {
     yearOptions.push(i);
   }
 
