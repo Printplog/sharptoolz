@@ -10,6 +10,11 @@ export const fetchCurrentUser = async (): Promise<User> => {
   return res.data;
 };
 
+export const markUpdateSeen = async (releaseId: string): Promise<User> => {
+  const res = await apiClient.patch('/accounts/user/', { last_seen_update: releaseId });
+  return res.data;
+};
+
 export const login = async (data: LoginPayload): Promise<LoginResponse> => {
   const res = await apiClient.post('/accounts/login/', data);
   return res.data;
