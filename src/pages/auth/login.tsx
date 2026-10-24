@@ -41,6 +41,7 @@ import { isAdminOrStaff } from "@/lib/constants/roles";
 import { ArrowLeft, Check, Copy, Eye, EyeOff, KeyRound, Lock, ShieldCheck, User, UserPlus } from "lucide-react";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { OtpInput } from "@/components/ui/OtpInput";
+import { useClipboardOtp } from "@/hooks/useClipboardOtp";
 import { QRCodeSVG } from "qrcode.react";
 
 const loginSchema = z.object({
@@ -184,6 +185,16 @@ export default function Login({ dialog = false }: AuthDialogProps) {
     if (twoFactorChallenge?.setup_required && !twoFactorSetup) return;
     verifyMutation.mutate(code);
   };
+
+  // A code already copied from the authenticator is filled in and sent on its own
+  useClipboardOtp({
+    enabled: !!twoFactorChallenge && !useRecoveryCode && !recoveryCodes.length,
+    onCode: (code) => {
+      if (verifyMutation.isPending || (twoFactorChallenge?.setup_required && !twoFactorSetup)) return;
+      setTwoFactorCode(code);
+      submitCode(code);
+    },
+  });
 
   const copyText = async (text: string, target: "key" | "recovery") => {
     try {
