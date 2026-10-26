@@ -9,7 +9,7 @@ import { injectImagesIntoSVG } from "@/lib/utils/imageInjector";
 import { BASE_URL } from "@/api/apiClient";
 import { addWatermarkToSvg } from "@/lib/utils/svgWatermark";
 import { sanitizeSvgGradients, svgNamespace } from "@/lib/utils/sanitizeSvgGradients";
-import { generateAutoFields } from "@/lib/utils/fieldGenerator";
+import { forgetGeneratedValues, generateAutoFields } from "@/lib/utils/fieldGenerator";
 import { readDuplicate } from "@/lib/duplicateHandoff";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "react-router-dom";
@@ -369,6 +369,8 @@ export default function SvgFormTranslator({ isPurchased, templateId: templateIdP
         ? hostedSession?.document_name || `My ${data.name}`
         : data.name as string,
     );
+    // Fresh page: nothing generated yet, so template values get new IDs
+    forgetGeneratedValues();
     const fieldsWithAuto = generateAutoFields(initializedFields, isEditingDocument);
     setFields(fieldsWithAuto, isEditingDocument);
 

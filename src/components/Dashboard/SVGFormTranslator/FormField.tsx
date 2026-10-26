@@ -70,7 +70,8 @@ const FormFieldComponent: React.FC<{
     });
 
     // Generate value based on generation rule or fallback to simple random
-    const generateFieldValue = useCallback(() => {
+    // fresh: a "regenerate" click picks new random parts; otherwise the page's are reused
+    const generateFieldValue = useCallback((fresh = false) => {
       const fieldMap: Record<string, string | number | boolean> = {};
       allFields.forEach((f) => {
         // Use display text for selects if available, consistent with generateAutoFields
@@ -87,7 +88,7 @@ const FormFieldComponent: React.FC<{
       if (field.generationRule) {
         const maxLength = field.max || undefined;
         console.log(`[FormField] Generating value for ${field.id} with rule: ${field.generationRule}`);
-        const generated = generateValue(field.generationRule, fieldMap, maxLength);
+        const generated = generateValue(field.generationRule, fieldMap, maxLength, { keepRandomFor: field.id, fresh });
 
         if (field.maxGeneration) {
           return applyMaxGeneration(generated, field.maxGeneration);
@@ -103,7 +104,7 @@ const FormFieldComponent: React.FC<{
         result += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       return result;
-    }, [field.generationRule, field.max, field.maxGeneration, allFields]);
+    }, [field.id, field.generationRule, field.max, field.maxGeneration, allFields]);
 
     const dependencies = useMemo(() => {
       const deps = new Set<string>();
@@ -352,7 +353,7 @@ const FormFieldComponent: React.FC<{
                 />
                 <Button
                   type="button"
-                  onClick={() => handleChange(generateFieldValue())}
+                  onClick={() => handleChange(generateFieldValue(true))}
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full px-4"
                   disabled={isFieldDisabled}
                   title="Regenerate value"
@@ -707,7 +708,7 @@ const FormFieldComponent: React.FC<{
               />
               <Button
                 type="button"
-                onClick={() => handleChange(generateFieldValue())}
+                onClick={() => handleChange(generateFieldValue(true))}
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full px-4"
                 disabled={isFieldDisabled}
                 title="Regenerate value"
@@ -776,7 +777,7 @@ const FormFieldComponent: React.FC<{
                   <Button
                     type="button"
                     size="sm"
-                    onClick={() => handleChange(generateFieldValue())}
+                    onClick={() => handleChange(generateFieldValue(true))}
                     className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full h-8 px-3"
                     disabled={isFieldDisabled}
                     title="Regenerate QR content"
@@ -826,7 +827,7 @@ const FormFieldComponent: React.FC<{
                   <Button
                     type="button"
                     size="sm"
-                    onClick={() => handleChange(generateFieldValue())}
+                    onClick={() => handleChange(generateFieldValue(true))}
                     className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full h-8 px-3"
                     disabled={isFieldDisabled}
                     title="Regenerate barcode content"
