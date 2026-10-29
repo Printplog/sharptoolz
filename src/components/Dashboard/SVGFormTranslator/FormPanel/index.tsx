@@ -16,7 +16,7 @@ import {
 import { toast } from "sonner";
 import FormFieldComponent from "../FormField";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { purchaseTemplate, updatePurchasedTemplate } from "@/api/apiEndpoints";
+import { purchaseTemplate, suggestDocumentName, updatePurchasedTemplate, type NamingField } from "@/api/apiEndpoints";
 import type { PurchasedTemplate, FieldUpdate } from "@/types";
 import errorMessage from "@/lib/utils/errorMessage";
 import { DownloadDocDialog } from "../../Documents/DownloadDoc/index";
@@ -125,6 +125,10 @@ const FormPanel = React.memo(function FormPanel({
   const [documentProgress, setDocumentProgress] = useState(0);
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  // Name for a new document, confirmed in the Create dialog (prefilled with our best guess)
+  const [documentName, setDocumentName] = useState("");
+  const [suggestingName, setSuggestingName] = useState(false);
+  const documentNameEdited = useRef(false);
   const { isAuthenticated } = useAuthStore();
 
   // Memoize touched fields check to avoid recalculating on every render
@@ -237,7 +241,32 @@ const FormPanel = React.memo(function FormPanel({
     },
   });
 
-  const createDocument = async (isTest: boolean) => {
+  const openCreateDialog = async () => {
+    setShowTestDialog(true);
+    if (documentNameEdited.current || !id) return;
+    // Only plain text fields can hold a name; skip images and other heavy values
+    const namingFields: NamingField[] = (fields ?? [])
+      .filter((f) => typeof f.currentValue === "string" && f.currentValue.length <= 200)
+      .map((f) => ({
+        id: f.id,
+        name: f.name,
+        type: f.type,
+        currentValue: f.currentValue,
+        dependsOn: f.dependsOn,
+        ...(f.options?.length ? { options: true } : {}),
+      }));
+    setSuggestingName(true);
+    try {
+      const { name: suggested } = await suggestDocumentName(id, namingFields);
+      if (!documentNameEdited.current) setDocumentName(suggested);
+    } catch {
+      if (!documentNameEdited.current) setDocumentName((current) => current || `My ${name}`);
+    } finally {
+      setSuggestingName(false);
+    }
+  };
+
+  const createDocument = async (isTest: boolean, newDocumentName?: string) => {
     const mutateFn = isPurchased ? updateAsync : createAsync;
     if (!isAuthenticated) {
       navigate("/auth/login?dialog=register");
@@ -380,7 +409,9 @@ const FormPanel = React.memo(function FormPanel({
       field_updates?: FieldUpdate[];
     } = {
       id: id,
-      ...(!isPurchased ? { template: id ?? undefined } : { name }),
+      ...(!isPurchased
+        ? { template: id ?? undefined, ...(newDocumentName ? { name: newDocumentName } : {}) }
+        : { name }),
       tracking_id: finalTrackingId as string,
       test: isTest,
       toastMessage,
@@ -612,7 +643,7 @@ const FormPanel = React.memo(function FormPanel({
                   toast.info("Please login to continue");
                   navigate("?dialog=register");
                 } else {
-                  setShowTestDialog(true);
+                  void openCreateDialog();
                 }
               }}
               text={createPending || isCreatingDocument ? "Creating Document" : "Create Document"}
@@ -691,12 +722,18 @@ const FormPanel = React.memo(function FormPanel({
                   setShowTestDialog(open);
                 }
               }}
+              documentName={documentName}
+              onDocumentNameChange={(value) => {
+                documentNameEdited.current = true;
+                setDocumentName(value);
+              }}
+              suggestingName={suggestingName}
               onCreateTest={() => {
-                void createDocument(true);
+                void createDocument(true, documentName.trim());
                 // Don't close dialog here - it will close after successful creation
               }}
               onCreatePaid={() => {
-                void createDocument(false);
+                void createDocument(false, documentName.trim());
                 // Don't close dialog here - it will close after successful creation
               }}
               isSubmitting={createPending || updatePending || isCreatingDocument}

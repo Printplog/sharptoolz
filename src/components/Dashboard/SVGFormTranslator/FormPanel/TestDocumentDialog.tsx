@@ -1,7 +1,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FancyProgress } from "@/components/ui/FancyProgress";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CreditCard, TestTube, CheckCircle2 } from "lucide-react";
+import { Sparkles, CreditCard, TestTube, CheckCircle2, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type TestDocumentDialogProps = {
@@ -12,6 +12,10 @@ type TestDocumentDialogProps = {
   isSubmitting: boolean;
   price?: number;
   error?: string | null;
+  /** Name for the new document, prefilled with our guess (e.g. "Jane Doe - USA Passport") */
+  documentName?: string;
+  onDocumentNameChange?: (name: string) => void;
+  suggestingName?: boolean;
 };
 
 export function TestDocumentDialog({
@@ -22,6 +26,9 @@ export function TestDocumentDialog({
   isSubmitting,
   price = 5,
   error,
+  documentName,
+  onDocumentNameChange,
+  suggestingName = false,
 }: TestDocumentDialogProps) {
   const [progress, setProgress] = useState(0);
 
@@ -154,6 +161,31 @@ export function TestDocumentDialog({
                     </p>
                   )}
                 </div>
+
+                {onDocumentNameChange && (
+                  <div className="space-y-2">
+                    <label htmlFor="new-document-name" className="text-xs font-medium text-white/60">
+                      Name your document
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="new-document-name"
+                        type="text"
+                        value={documentName ?? ""}
+                        onChange={(event) => onDocumentNameChange(event.target.value)}
+                        maxLength={255}
+                        placeholder={suggestingName ? "Finding the name on your document..." : "e.g. Jane Doe - USA Passport"}
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 pr-10 text-sm text-white placeholder:text-white/30 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      {suggestingName && (
+                        <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/40" />
+                      )}
+                    </div>
+                    <p className="text-[11px] leading-4 text-white/35">
+                      We picked this from the name on your document. Change it if you like.
+                    </p>
+                  </div>
+                )}
 
                 <div className="grid gap-3">
                   {/* Test Option */}

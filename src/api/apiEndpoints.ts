@@ -1,4 +1,4 @@
-import type { Tool, Tutorial, CryptoPaymentData, CryptoPaymentConfirmation, CryptoPaymentStatus, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme, WalletData, TrackingSupportMessage, TrackingSupportMessagesResponse } from "@/types";
+import type { FormField, Tool, Tutorial, CryptoPaymentData, CryptoPaymentConfirmation, CryptoPaymentStatus, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme, WalletData, TrackingSupportMessage, TrackingSupportMessagesResponse } from "@/types";
 import { apiClient } from "./apiClient";
 export const getApi = apiClient.get;
 export const postApi = apiClient.post;
@@ -593,6 +593,14 @@ export const createTool = async (data: ToolPayload): Promise<Tool> => {
 
 export const updateTool = async (id: string, data: Partial<ToolPayload>): Promise<Tool> => {
   const res = await apiClient.put(`/tools/${id}/`, data);
+  return res.data;
+};
+
+export type NamingField = Pick<FormField, "id" | "name" | "type" | "currentValue" | "dependsOn"> & { options?: boolean };
+
+/** The name a new document would get by default, e.g. "Jane Doe - USA Passport". */
+export const suggestDocumentName = async (templateId: string, fields: NamingField[]): Promise<{ name: string }> => {
+  const res = await apiClient.post('/purchased-templates/suggest-name/', { template: templateId, fields });
   return res.data;
 };
 
