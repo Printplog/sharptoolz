@@ -140,6 +140,26 @@ export default function AdminTools() {
       },
     },
     {
+      accessorKey: "templates_count",
+      header: "Templates",
+      cell: ({ row }) => {
+        const count = row.original.templates_count ?? 0;
+        return (
+          <Link
+            to={`/admin/tools/${row.original.id}/templates`}
+            className={`inline-flex min-w-9 items-center justify-center rounded-full border px-2.5 py-1 font-mono text-xs transition-colors ${
+              count
+                ? "border-white/15 bg-white/5 text-white hover:bg-white/10"
+                : "border-white/10 text-white/35 hover:text-white/60"
+            }`}
+            title={`${count} template${count === 1 ? "" : "s"} in this tool`}
+          >
+            {count}
+          </Link>
+        );
+      },
+    },
+    {
       accessorKey: "price",
       header: "Price",
       cell: ({ row }) => (

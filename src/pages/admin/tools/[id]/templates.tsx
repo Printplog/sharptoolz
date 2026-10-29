@@ -1,16 +1,27 @@
 import { getAllTemplatesForAdmin, getTool } from "@/api/apiEndpoints";
 import ToolCard from "@/components/Admin/Tools/ToolCard";
+import AddTemplatesDialog from "@/components/Admin/Tools/AddTemplatesDialog";
 import ToolGridSkeleton from "@/components/ToolGridSkeleton";
 import type { Tool } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Plus, Search } from "lucide-react";
+import { useParams, Link, useSearchParams } from "react-router-dom";
+import { ArrowLeft, FolderInput, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 
 export default function ToolTemplates() {
   const { id } = useParams<{ id: string }>();
   const [searchInput, setSearchInput] = useState("");
+  // "?add=1" (from the Edit Tool dialog) opens the picker straight away
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [addOpen, setAddOpenState] = useState(searchParams.get("add") === "1");
+  const setAddOpen = (open: boolean) => {
+    setAddOpenState(open);
+    if (!open && searchParams.has("add")) {
+      searchParams.delete("add");
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
   const debouncedSearchQuery = useDebounce(searchInput, 300);
 
   // Fetch tool data
@@ -74,11 +85,23 @@ export default function ToolTemplates() {
             </p>
           </div>
         </div>
-        <Link to="?dialog=toolBuilder" className="button rounded-full">
-          <Plus className="h-4 w-4" />
-          New Template
-        </Link>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+          >
+            <FolderInput className="h-4 w-4" />
+            Add existing templates
+          </button>
+          <Link to="?dialog=toolBuilder" className="button rounded-full">
+            <Plus className="h-4 w-4" />
+            New Template
+          </Link>
+        </div>
       </div>
+
+      <AddTemplatesDialog tool={tool} open={addOpen} onOpenChange={setAddOpen} />
 
       {/* Search Bar */}
       {(templates.length > 0 || searchInput) && (
@@ -137,10 +160,20 @@ export default function ToolTemplates() {
             This tool doesn't have any templates yet. Create first template for
             this tool.
           </p>
-          <Link to="?dialog=toolBuilder" className="button w-fit rounded-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Template
-          </Link>
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+            >
+              <FolderInput className="h-4 w-4" />
+              Add existing templates
+            </button>
+            <Link to="?dialog=toolBuilder" className="button w-fit rounded-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Template
+            </Link>
+          </div>
         </div>
       )}
     </div>

@@ -13,7 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Play, Plus, Save } from "lucide-react";
+import { FolderInput, Play, Plus, Save } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { Tool } from "@/types";
 
 interface ToolDialogProps {
@@ -171,6 +172,24 @@ export default function ToolDialog({
               The amount users will be charged to remove the watermark from templates in this tool.
             </div>
           </div>
+
+          {/* Templates in this tool */}
+          {tool && (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3">
+              <div className="text-sm">
+                <span className="font-medium text-white">{tool.templates_count ?? 0}</span>
+                <span className="text-white/60"> template{tool.templates_count === 1 ? "" : "s"} in this tool</span>
+              </div>
+              <Link
+                to={`/admin/tools/${tool.id}/templates?add=1`}
+                onClick={() => onOpenChange(false)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10"
+              >
+                <FolderInput className="h-3.5 w-3.5" />
+                Add templates
+              </Link>
+            </div>
+          )}
 
           {/* Tool Tutorial */}
           <div className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4">

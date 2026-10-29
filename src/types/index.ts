@@ -168,6 +168,7 @@ export type Tool = {
   description?: string;
   price: number;
   tutorial?: Pick<Tutorial, "id" | "url" | "title" | "is_featured"> | null;
+  templates_count?: number;
   created_at: string;
 };
 

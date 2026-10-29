@@ -596,6 +596,14 @@ export const updateTool = async (id: string, data: Partial<ToolPayload>): Promis
   return res.data;
 };
 
+export const addTemplatesToTool = async (
+  toolId: string,
+  templateIds: string[],
+): Promise<{ moved: number; already_in_tool: number; templates_count: number }> => {
+  const res = await apiClient.post(`/tools/${toolId}/add-templates/`, { template_ids: templateIds });
+  return res.data;
+};
+
 export const deleteTool = async (id: string): Promise<unknown> => {
   const res = await apiClient.delete(`/tools/${id}/`);
   return res.data;
