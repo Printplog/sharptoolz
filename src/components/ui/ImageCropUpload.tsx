@@ -3,8 +3,18 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Dialog as ShadcnDialog, DialogContent as ShadcnDialogContent } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Upload, Check, Loader2, Sparkles, RefreshCcw } from "lucide-react";
 import { annotationDetector } from "@/lib/utils/annotationDetector";
+import { hasTransparentEdges } from "@/lib/utils/imageTransparency";
 import useToolStore from "@/store/formStore";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
@@ -47,6 +57,9 @@ export default function ImageCropUpload({
 
   // Post-crop state: set after "Done" in the crop editor
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  // Cropped image already has no background (e.g. a transparent PNG), so don't nudge
+  const [croppedIsTransparent, setCroppedIsTransparent] = useState(false);
+  const [confirmKeepBackground, setConfirmKeepBackground] = useState(false);
 
   // Initial crop selection for the cropper
   const [initialCrop, setInitialCrop] = useState<{ x: number, y: number, w: number, h: number } | undefined>(undefined);
@@ -61,6 +74,8 @@ export default function ImageCropUpload({
   useEffect(() => {
     if (!isDialogOpen) {
       setCroppedImage(null);
+      setCroppedIsTransparent(false);
+      setConfirmKeepBackground(false);
       setBgRemovedImage(null);
       setBgProgress(0);
     }
@@ -159,6 +174,8 @@ export default function ImageCropUpload({
   // Called by the cropper when "Done" is clicked — stores result, shows postCrop phase
   const handleApplyCrop = useCallback((croppedDataUrl: string) => {
     setCroppedImage(croppedDataUrl);
+    setCroppedIsTransparent(false);
+    void hasTransparentEdges(croppedDataUrl).then(setCroppedIsTransparent);
   }, []);
 
   // Final insertion — closes dialog, applies grayscale, calls onImageSelect
@@ -176,6 +193,16 @@ export default function ImageCropUpload({
       setIsInserting(false);
     }
   }, [applyGrayscaleToImage, onImageSelect, fieldId, annotationResult]);
+
+  // Most templates are designed for photos without a background, so check first
+  const handleSaveAsIs = () => {
+    if (!croppedImage) return;
+    if (croppedIsTransparent) {
+      finalizeAndClose(croppedImage);
+      return;
+    }
+    setConfirmKeepBackground(true);
+  };
 
   const computeAspectRatioCrop = (dataUrl: string) => {
     if (!targetAspectRatio) return;
@@ -404,29 +431,48 @@ export default function ImageCropUpload({
                     </div>
                   </div>
 
+                  {phase === 'postCrop' && !croppedIsTransparent && (
+                    <p className="mt-2 flex items-center gap-1.5 px-4 text-center text-xs text-white/60">
+                      <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+                      Most templates are designed for photos without a background. Remove it for the best result.
+                    </p>
+                  )}
+
                   {/* Action bar */}
                   <div className="mt-[5px] z-50 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3 w-auto pb-2">
                     <div className="flex items-center gap-1 p-1 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl">
                       {phase === 'postCrop' ? (
                         <div className="flex items-center gap-1">
-                          <Button
-                            onClick={handleMagicMask}
-                            disabled={isRemovingBackground}
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 md:h-10 px-4 text-primary text-[11px] md:text-[11px] font-semibold hover:bg-primary/10 rounded-lg group"
-                          >
-                            <Sparkles className="h-3 w-3 mr-2 group-hover:scale-125 transition-transform" />
-                            Remove Background
-                          </Button>
+                          <span className="relative inline-flex">
+                            {!croppedIsTransparent && (
+                              <span
+                                aria-hidden="true"
+                                className="pointer-events-none absolute -inset-1 rounded-xl bg-primary/40 blur-md motion-safe:animate-pulse"
+                              />
+                            )}
+                            <Button
+                              onClick={handleMagicMask}
+                              disabled={isRemovingBackground}
+                              size="sm"
+                              className="relative h-9 md:h-10 px-4 md:px-5 bg-primary text-black text-[11px] md:text-xs font-bold hover:bg-primary/90 rounded-lg group shadow-[0_0_24px_rgba(206,232,140,0.35)]"
+                            >
+                              <Sparkles className="h-3.5 w-3.5 mr-1.5 group-hover:scale-125 transition-transform" />
+                              Remove Background
+                              {!croppedIsTransparent && (
+                                <span className="ml-1.5 rounded-full bg-black/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide">
+                                  Recommended
+                                </span>
+                              )}
+                            </Button>
+                          </span>
                           <div className="w-[1px] h-5 md:h-6 bg-white/10 mx-1 md:mx-2" />
                           <Button
-                            onClick={() => finalizeAndClose(croppedImage!)}
+                            onClick={handleSaveAsIs}
                             variant="ghost"
                             size="sm"
-                            className="h-9 md:h-10 px-4 text-green-400 text-[11px] md:text-[11px] font-semibold hover:bg-green-400/10 rounded-lg"
+                            className="h-9 md:h-10 px-3 md:px-4 text-white/55 text-[11px] font-medium hover:text-white hover:bg-white/10 rounded-lg"
                           >
-                            <Check className="h-3 w-3 mr-2" />
+                            <Check className="h-3 w-3 mr-1.5" />
                             Save As-Is
                           </Button>
                         </div>
@@ -491,6 +537,44 @@ export default function ImageCropUpload({
           )}
         </ShadcnDialogContent>
       </ShadcnDialog>
+
+      <AlertDialog open={confirmKeepBackground} onOpenChange={setConfirmKeepBackground}>
+        <AlertDialogContent
+          className="max-w-md rounded-xl border-white/10 bg-[#101721]"
+          onOpenAutoFocus={(event) => {
+            // Enter should pick the recommended choice, not "Keep it anyway"
+            event.preventDefault();
+            (event.currentTarget as HTMLElement).querySelector<HTMLElement>("[data-recommended]")?.focus();
+          }}
+        >
+          <AlertDialogHeader className="text-left">
+            <AlertDialogTitle className="text-white">Keep the background?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm leading-6 text-white/55">
+              This template is designed for a photo without a background. Removing it makes the
+              photo blend in and look right on the document.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <AlertDialogCancel
+              onClick={() => croppedImage && finalizeAndClose(croppedImage)}
+              className="border-white/10 bg-transparent text-white/60 hover:bg-white/10 hover:text-white"
+            >
+              Keep it anyway
+            </AlertDialogCancel>
+            <Button
+              data-recommended
+              onClick={() => {
+                setConfirmKeepBackground(false);
+                handleMagicMask();
+              }}
+              className="bg-primary font-semibold text-black hover:bg-primary/90"
+            >
+              <Sparkles className="h-4 w-4" />
+              Remove background
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
