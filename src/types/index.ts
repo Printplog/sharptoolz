@@ -172,6 +172,15 @@ export type Tool = {
   created_at: string;
 };
 
+export type Country = {
+  id: string;
+  /** ISO 3166-1 alpha-2, e.g. "US" */
+  code: string;
+  name: string;
+  templates_count?: number;
+  created_at: string;
+};
+
 export type Tutorial = {
   id: string;
   template: string | null;
@@ -207,6 +216,7 @@ export type Template = {
   form_fields: FormField[];
   type: "tool" | "design";
   tool?: string | Tool;
+  country?: string | null;
   hot: boolean;
   category?: string;
   tutorial?: Tutorial;

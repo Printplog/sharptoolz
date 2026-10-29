@@ -101,7 +101,7 @@ export default function ToolTemplates() {
         </div>
       </div>
 
-      <AddTemplatesDialog tool={tool} open={addOpen} onOpenChange={setAddOpen} />
+      <AddTemplatesDialog group={tool} open={addOpen} onOpenChange={setAddOpen} />
 
       {/* Search Bar */}
       {(templates.length > 0 || searchInput) && (

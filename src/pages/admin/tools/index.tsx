@@ -9,20 +9,31 @@ import { ConfirmAction } from "@/components/ConfirmAction";
 import ToolDialog from "@/components/Admin/Tools/ToolDialog";
 import {
   getTools,
+  getCountries,
   createTool,
   updateTool,
   deleteTool,
   type ToolPayload,
 } from "@/api/apiEndpoints";
-import type { Tool } from "@/types";
+import type { Country, Tool } from "@/types";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Loader, Eye } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Plus, Edit, Trash2, Loader, Eye, Wrench, Globe2 } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { CustomTabs } from "@/components/ui/custom-tabs";
+import CountriesPanel from "@/components/Admin/Countries/CountriesPanel";
 import { DataTable } from "@/components/ui/data-table";
 import TableSkeleton from "@/components/Admin/Layouts/TableSkeleton";
 
 export default function AdminTools() {
   const queryClient = useQueryClient();
+  // "?tab=countries" keeps the tab across reloads and back navigation
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "countries" ? "countries" : "tools";
+  const setTab = (next: string) => {
+    if (next === "countries") searchParams.set("tab", "countries");
+    else searchParams.delete("tab");
+    setSearchParams(searchParams, { replace: true });
+  };
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTool, setEditingTool] = useState<Tool | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -31,6 +42,11 @@ export default function AdminTools() {
   const { data: tools = [], isLoading } = useQuery<Tool[]>({
     queryKey: ["tools"],
     queryFn: getTools,
+  });
+
+  const { data: countries } = useQuery<Country[]>({
+    queryKey: ["countries"],
+    queryFn: getCountries,
   });
 
   // Create tool mutation
@@ -113,8 +129,6 @@ export default function AdminTools() {
       onSettled: () => setDeletingId(null),
     });
   };
-
-  if (isLoading) return <TableSkeleton />;
 
   const columns: ColumnDef<Tool>[] = [
     {
@@ -233,20 +247,42 @@ export default function AdminTools() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tighter italic flex items-center gap-2">
-            Tool <span className="text-primary">Categories</span>
+            {tab === "countries" ? (
+              <>Template <span className="text-primary">Countries</span></>
+            ) : (
+              <>Tool <span className="text-primary">Categories</span></>
+            )}
           </h1>
           <p className="text-white/60 mt-1">
-            Manage tools to organize your templates
+            Manage tools and countries to organize your templates
           </p>
         </div>
-        <PremiumButton 
-          onClick={handleAddTool} 
-          text="Add Tool"
-          icon={Plus}
-          className="h-11 px-6"
-        />
+        {tab === "tools" && (
+          <PremiumButton
+            onClick={handleAddTool}
+            text="Add Tool"
+            icon={Plus}
+            className="h-11 px-6"
+          />
+        )}
       </div>
 
+      <CustomTabs
+        ariaLabel="Group templates by"
+        activeTab={tab}
+        onChange={setTab}
+        className="border-b border-white/10"
+        tabs={[
+          { id: "tools", label: "Tools", icon: Wrench, count: tools.length },
+          { id: "countries", label: "Countries", icon: Globe2, count: countries?.length },
+        ]}
+      />
+
+      {tab === "countries" ? (
+        <CountriesPanel />
+      ) : isLoading ? (
+        <TableSkeleton />
+      ) : (
       <DataTable
         columns={columns}
         data={tools}
@@ -287,6 +323,7 @@ export default function AdminTools() {
           );
         }}
       />
+      )}
 
       {/* Tool Dialog */}
       <ToolDialog

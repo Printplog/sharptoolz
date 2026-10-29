@@ -1,4 +1,4 @@
-import type { FormField, Tool, Tutorial, CryptoPaymentData, CryptoPaymentConfirmation, CryptoPaymentStatus, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme, WalletData, TrackingSupportMessage, TrackingSupportMessagesResponse } from "@/types";
+import type { Country, FormField, Tool, Tutorial, CryptoPaymentData, CryptoPaymentConfirmation, CryptoPaymentStatus, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme, WalletData, TrackingSupportMessage, TrackingSupportMessagesResponse } from "@/types";
 import { apiClient } from "./apiClient";
 export const getApi = apiClient.get;
 export const postApi = apiClient.post;
@@ -108,6 +108,8 @@ type TemplateListParams = {
   page?: number;
   search?: string;
   tool?: string;
+  /** Country id, or "none" for templates without a country */
+  country?: string;
   hot?: boolean;
   page_size?: number;
 };
@@ -137,6 +139,7 @@ export const getTemplates = async (params?: TemplateListParams): Promise<Templat
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.search) searchParams.append('search', params.search);
   if (params?.tool && params.tool !== 'all') searchParams.append('tool', params.tool);
+  if (params?.country && params.country !== 'all') searchParams.append('country', params.country);
   if (params?.hot) searchParams.append('hot', 'true');
   if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
 
@@ -149,6 +152,7 @@ export const getTemplatesForAdmin = async (params?: TemplateListParams): Promise
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.search) searchParams.append('search', params.search);
   if (params?.tool && params.tool !== 'all') searchParams.append('tool', params.tool);
+  if (params?.country && params.country !== 'all') searchParams.append('country', params.country);
   if (params?.hot) searchParams.append('hot', 'true');
   if (params?.page_size) searchParams.append('page_size', params.page_size.toString());
 
@@ -609,6 +613,43 @@ export const addTemplatesToTool = async (
   templateIds: string[],
 ): Promise<{ moved: number; already_in_tool: number; templates_count: number }> => {
   const res = await apiClient.post(`/tools/${toolId}/add-templates/`, { template_ids: templateIds });
+  return res.data;
+};
+
+// Countries templates are grouped under (alongside tools)
+export const getCountries = async (): Promise<Country[]> => {
+  const res = await apiClient.get('/countries/');
+  return res.data;
+};
+
+export const getCountry = async (id: string): Promise<Country> => {
+  const res = await apiClient.get(`/countries/${id}/`);
+  return res.data;
+};
+
+export const createCountry = async (data: { code: string; name: string }): Promise<Country> => {
+  const res = await apiClient.post('/countries/', data);
+  return res.data;
+};
+
+export const deleteCountry = async (id: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/countries/${id}/`);
+  return res.data;
+};
+
+export const addTemplatesToCountry = async (
+  countryId: string,
+  templateIds: string[],
+): Promise<{ moved: number; already_in_country: number; templates_count: number }> => {
+  const res = await apiClient.post(`/countries/${countryId}/add-templates/`, { template_ids: templateIds });
+  return res.data;
+};
+
+export const removeTemplatesFromCountry = async (
+  countryId: string,
+  templateIds: string[],
+): Promise<{ removed: number; templates_count: number }> => {
+  const res = await apiClient.post(`/countries/${countryId}/remove-templates/`, { template_ids: templateIds });
   return res.data;
 };
 

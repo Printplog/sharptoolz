@@ -23,6 +23,7 @@ export type Path =
   | `/admin/templates/:id`
   | `/admin/tools`
   | `/admin/tools/:id/templates`
+  | `/admin/tools/countries/:id`
   | `/admin/traffic-sources`
   | `/admin/transactions`
   | `/admin/tutorials`
@@ -64,6 +65,7 @@ export type Params = {
   '/admin/api-network/:userId': { userId: string }
   '/admin/templates/:id': { id: string }
   '/admin/tools/:id/templates': { id: string }
+  '/admin/tools/countries/:id': { id: string }
   '/admin/users/:id': { id: string }
   '/all-tools/:id': { id: string }
   '/documents/:id': { id: string }

@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { getTemplates, getTools } from "@/api/apiEndpoints";
+import { getCountries, getTemplates, getTools } from "@/api/apiEndpoints";
 import { Input } from "@/components/ui/input";
 import ToolGridSkeleton from "../../ToolGridSkeleton";
 import DashboardToolCard from "./DashboardToolCard";
 import type { Template, Tool } from "@/types";
-import { Search, Loader2, X } from "lucide-react";
+import { Search, Loader2, X, Globe2 } from "lucide-react";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   Select,
@@ -34,6 +35,7 @@ export default function ToolsList({ hot }: Props) {
   // Use raw query immediately when empty to reset search instantly
   const activeSearch = query === "" ? "" : debouncedQuery;
   const [selectedTool, setSelectedTool] = useState<string>("all");
+  const [selectedCountry, setSelectedCountry] = useState<string>("all");
   const observerTarget = useRef<HTMLDivElement>(null);
 
   // Categories for the filter dropdown
@@ -42,6 +44,18 @@ export default function ToolsList({ hot }: Props) {
     queryFn: () => getTools(),
     staleTime: 10 * 60 * 1000,
   });
+
+  // Only countries that have templates are worth filtering by
+  const { data: allCountries } = useQuery({
+    queryKey: ["countries"],
+    queryFn: () => getCountries(),
+    staleTime: 10 * 60 * 1000,
+    enabled: !hot,
+  });
+  const countries = useMemo(
+    () => (allCountries ?? []).filter((country) => (country.templates_count ?? 0) > 0),
+    [allCountries],
+  );
 
   // Infinite Query for templates with backend search and category filtering
   const {
@@ -53,11 +67,12 @@ export default function ToolsList({ hot }: Props) {
     isError,
     refetch
   } = useInfiniteQuery({
-    queryKey: ["tools", { hot, search: activeSearch, tool: selectedTool }],
+    queryKey: ["tools", { hot, search: activeSearch, tool: selectedTool, country: selectedCountry }],
     queryFn: ({ pageParam = 1 }) => getTemplates({ 
       page: pageParam as number, 
       search: activeSearch, 
       tool: selectedTool, 
+      country: selectedCountry,
       hot 
     }),
     getNextPageParam: (lastPage) => {
@@ -162,6 +177,32 @@ export default function ToolsList({ hot }: Props) {
                   ))}
                 </SelectContent>
               </Select>
+              {countries.length > 0 && (
+                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                  <SelectTrigger
+                    aria-label="Filter by country"
+                    className="w-full sm:w-[200px] rounded-xl bg-white/[0.03] border-white/5 text-white h-12 text-sm focus:ring-primary/20"
+                  >
+                    <SelectValue placeholder="Country" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-950 border-white/10 text-white max-h-80">
+                    <SelectItem value="all">
+                      <span className="flex items-center gap-2">
+                        <Globe2 className="h-4 w-4 text-white/50" />
+                        All Countries
+                      </span>
+                    </SelectItem>
+                    {countries.map((country) => (
+                      <SelectItem key={country.id} value={country.id}>
+                        <span className="flex items-center gap-2">
+                          <CountryFlag code={country.code} />
+                          {country.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           <div className="text-white/40 text-[11px] font-semibold shrink-0 hidden md:block">
