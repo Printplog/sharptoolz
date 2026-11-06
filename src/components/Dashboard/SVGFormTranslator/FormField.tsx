@@ -37,9 +37,11 @@ const FormFieldComponent: React.FC<{
   field: FormField;
   allFields?: FormField[];
   isPurchased?: boolean;
+  /** Admins may change fields a saved document normally locks (not marked .editable) */
+  canEditLocked?: boolean;
   tutorial?: Tutorial;
 }> = React.memo(
-  ({ field, allFields = [], isPurchased = false, tutorial }) => {
+  ({ field, allFields = [], isPurchased = false, canEditLocked = false, tutorial }) => {
     // 1. Hooks MUST be at the top level
     const updateField = useToolStore((state) => state.updateField);
     const notifyDependents = useToolStore((state) => state.notifyDependents);
@@ -249,7 +251,7 @@ const FormFieldComponent: React.FC<{
       }
     }, [value, isTextInput]);
 
-    const isFieldDisabled = isPurchased && !field.editable;
+    const isFieldDisabled = isPurchased && !field.editable && !canEditLocked;
 
     const handleChange = useCallback(
       (newValue: string | number | boolean) => {
@@ -859,7 +861,8 @@ const FormFieldComponent: React.FC<{
       prevProps.field.id !== nextProps.field.id ||
       prevProps.field.currentValue !== nextProps.field.currentValue ||
       prevProps.field.touched !== nextProps.field.touched ||
-      prevProps.isPurchased !== nextProps.isPurchased;
+      prevProps.isPurchased !== nextProps.isPurchased ||
+      prevProps.canEditLocked !== nextProps.canEditLocked;
 
     if (fieldChanged) return false;
 

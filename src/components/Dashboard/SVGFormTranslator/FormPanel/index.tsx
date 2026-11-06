@@ -25,6 +25,7 @@ import { storeDuplicate } from "@/lib/duplicateHandoff";
 import { generateBarcodeDataUrl } from "@/lib/utils/barcodeGenerator";
 import React, { useEffect, useMemo, useState, useRef, useContext, useCallback } from "react";
 import { useAuthStore } from "@/store/authStore";
+import { isAdmin } from "@/lib/constants/roles";
 import type { Tutorial } from "@/types";
 import { FormPanelHeader } from "./FormPanelHeader";
 import { TestDocumentDialog } from "./TestDocumentDialog";
@@ -129,7 +130,9 @@ const FormPanel = React.memo(function FormPanel({
   const [documentName, setDocumentName] = useState("");
   const [suggestingName, setSuggestingName] = useState(false);
   const documentNameEdited = useRef(false);
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+  // Admins can change every field of a saved document, not just the ones marked .editable
+  const canEditLocked = !hosted && isPurchased && isAdmin(user?.role);
 
   // Memoize touched fields check to avoid recalculating on every render
   const touchedFieldsCount = useMemo(
@@ -170,6 +173,9 @@ const FormPanel = React.memo(function FormPanel({
       ) ?? [],
     [fields]
   );
+
+  // Fields shown in the form that users can't change after creating (admins can)
+  const lockedFieldsCount = canEditLocked ? nonStatusFields.filter((f) => !f.editable).length : 0;
 
   const trackingIdValue = trackingField
     ? (() => {
@@ -550,6 +556,12 @@ const FormPanel = React.memo(function FormPanel({
           onNameChange={setName}
         />
 
+        {lockedFieldsCount > 0 && (
+          <p className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-200/90">
+            Admin: all fields are unlocked for you, including {lockedFieldsCount} that users can&apos;t change after creating.
+          </p>
+        )}
+
         <div className="space-y-3">
           {statusFields.map((field) => (
             <FormFieldComponent
@@ -566,6 +578,7 @@ const FormPanel = React.memo(function FormPanel({
                 field={field}
                 allFields={fields}
                 isPurchased={isPurchased}
+                canEditLocked={canEditLocked}
                 tutorial={tutorial}
               />
             ))}
