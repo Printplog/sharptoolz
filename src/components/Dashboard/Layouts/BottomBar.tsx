@@ -2,6 +2,7 @@ import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, ArrowRight, U
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
 import { getReferralStats } from "@/api/referralEndpoints";
+import { REFERRALS_VISIBLE } from "@/lib/constants/features";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -19,7 +20,7 @@ export default function BottomBar() {
   const { data: refStats } = useQuery({
     queryKey: ["referralStats"],
     queryFn: getReferralStats,
-    enabled: !!user,
+    enabled: !!user && REFERRALS_VISIBLE,
   });
 
   const { data: supportMessages } = useQuery({
@@ -64,11 +65,11 @@ export default function BottomBar() {
       label: "Wallet",
       to: "/wallet",
     },
-    {
+    ...(REFERRALS_VISIBLE ? [{
       icon: <Users className="w-5 h-5 mb-[2px]" />,
       label: "Refer",
       to: "/referrals",
-    },
+    }] : []),
     {
       icon: <Settings className="w-5 h-5 mb-[2px]" />,
       label: "Settings",

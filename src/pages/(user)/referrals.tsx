@@ -14,6 +14,9 @@ import { Gift, Sparkles, ArrowRight, Copy, Check, Wallet, X, Loader2, AlertTrian
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Navigate } from "react-router-dom";
+
+import { REFERRALS_VISIBLE } from "@/lib/constants/features";
 
 function WithdrawalModal({ 
   isOpen, 
@@ -126,6 +129,12 @@ function WithdrawalModal({
 }
 
 export default function ReferralsPage() {
+  // Hidden for now: send direct visits to the dashboard (see REFERRALS_VISIBLE)
+  if (!REFERRALS_VISIBLE) return <Navigate to="/dashboard" replace />;
+  return <ReferralsContent />;
+}
+
+function ReferralsContent() {
   const [copiedHero, setCopiedHero] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const { data: stats, isLoading: statsLoading } = useQuery({

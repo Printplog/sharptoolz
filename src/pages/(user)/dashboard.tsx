@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/authStore";
 import { StatsCards, type StatData } from "@/components/Admin/Shared/StatsCards";
 import { FileText, Wallet, CloudDownload, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { REFERRALS_VISIBLE } from "@/lib/constants/features";
 
 
 export default function Dashboard() {
@@ -41,7 +42,7 @@ export default function Dashboard() {
       iconBg: "bg-violet-500/10",
       iconColor: "text-violet-400",
     },
-    {
+    ...(REFERRALS_VISIBLE ? [{
       title: "Referral Program",
       value: "Ongoing",
       label: "Affiliate System",
@@ -56,7 +57,7 @@ export default function Dashboard() {
         icon: ArrowRight,
         onClick: () => navigate("/referrals")
       }
-    }
+    }] : []),
   ];
 
   return (
@@ -69,7 +70,7 @@ export default function Dashboard() {
       </div>
 
       {/* Analytics Cards */}
-      <StatsCards stats={userStats} />
+      <StatsCards stats={userStats} className={REFERRALS_VISIBLE ? undefined : "lg:grid-cols-3"} />
 
       {/* Quick Actions */}
       <QuickActions />

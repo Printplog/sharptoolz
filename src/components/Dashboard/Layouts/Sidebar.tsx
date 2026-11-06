@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
 import { getReferralStats } from "@/api/referralEndpoints";
+import { REFERRALS_VISIBLE } from "@/lib/constants/features";
 import {
   LayoutDashboard,
   Hammer,
@@ -36,7 +37,7 @@ export default function Sidebar() {
   const { data: refStats } = useQuery({
     queryKey: ["referralStats"],
     queryFn: getReferralStats,
-    enabled: !!user,
+    enabled: !!user && REFERRALS_VISIBLE,
   });
 
   const { data: supportMessages } = useQuery({
@@ -87,11 +88,11 @@ export default function Sidebar() {
       label: "Wallet",
       to: "/wallet",
     },
-    {
+    ...(REFERRALS_VISIBLE ? [{
       icon: <Users className="h-4 w-4" />,
       label: "Refer & Earn",
       to: "/referrals",
-    },
+    }] : []),
     {
       icon: <Settings className="h-4 w-4" />,
       label: "Settings",
