@@ -168,6 +168,31 @@ export default function RevenueDistributionPage() {
     hasHydratedForm.current = true;
   }, [data]);
 
+  // Edits to recipients or settings stay on this page until saved with an authenticator code
+  const hasUnsavedChanges = useMemo(() => {
+    if (!data || !hasHydratedForm.current) return false;
+    const shape = (list: Recipient[]) => JSON.stringify(list.map((r) => [
+      r.id ?? '', r.name.trim(), r.email.trim().toLowerCase(), r.bep20_address.trim().toLowerCase(), Number(r.percentage),
+    ]));
+    return enabled !== data.configuration.enabled
+      || Number(threshold) !== Number(data.configuration.threshold_amount)
+      || shape(recipients) !== shape(data.recipients);
+  }, [data, enabled, threshold, recipients]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [hasUnsavedChanges]);
+
+  const discardChanges = () => {
+    if (!data) return;
+    setEnabled(data.configuration.enabled);
+    setThreshold(data.configuration.threshold_amount);
+    setRecipients(data.recipients);
+  };
+
   const allocationTotal = useMemo(
     () => recipients.reduce((sum, recipient) => sum + (Number(recipient.percentage) || 0), 0),
     [recipients],
@@ -263,6 +288,7 @@ export default function RevenueDistributionPage() {
       ? [...current, nextRecipient]
       : current.map((recipient, index) => index === editingRecipientIndex ? nextRecipient : recipient));
     setRecipientDialogOpen(false);
+    toast.info(`${editingRecipientIndex === null ? 'Recipient added' : 'Recipient updated'}. Click "Save changes" to apply it.`);
   };
 
   const removeRecipient = (index: number) => {
@@ -765,6 +791,33 @@ export default function RevenueDistributionPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {hasUnsavedChanges && (
+        <div
+          role="status"
+          className="sticky bottom-4 z-30 flex flex-col gap-3 rounded-2xl border border-amber-400/25 bg-[#17150f]/95 p-4 shadow-2xl backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="flex items-start gap-2 text-sm leading-5 text-amber-100/90">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-300" />
+            You have unsaved changes. They aren&apos;t applied until you save them with your authenticator code.
+          </p>
+          <div className="flex shrink-0 gap-2">
+            <Button
+              variant="outline"
+              onClick={discardChanges}
+              className="h-10 flex-1 rounded-full border-white/10 bg-white/[0.03] px-5 text-white hover:bg-white/10 hover:text-white sm:flex-none"
+            >
+              Discard
+            </Button>
+            <Button
+              onClick={requestSave}
+              className="h-10 flex-1 rounded-full bg-primary px-5 font-bold text-black hover:bg-primary/90 sm:flex-none"
+            >
+              <Save className="mr-2 size-4" /> Save changes
+            </Button>
+          </div>
+        </div>
+      )}
 
       {(isFetching || isTreasuryFetching) && !isLoading && (
         <div className="fixed bottom-6 right-6 flex items-center gap-2 rounded-full border border-white/10 bg-[#111214]/95 px-4 py-2 text-xs text-white/45 shadow-2xl backdrop-blur-xl">
