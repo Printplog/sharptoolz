@@ -1,13 +1,15 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getFernwayAccounts, getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
+import { useSupportRealtime } from "@/hooks/useSupportRealtime";
 import { getReferralStats } from "@/api/referralEndpoints";
 import { REFERRALS_VISIBLE } from "@/lib/constants/features";
 import {
   LayoutDashboard,
   Hammer,
   FileText,
+  Landmark,
   Settings,
   Wallet,
   ArrowRight,
@@ -47,6 +49,30 @@ export default function Sidebar() {
     staleTime: 30_000,
   });
 
+  const { data: bankingSummary } = useQuery({
+    queryKey: ["fernway-accounts"],
+    queryFn: getFernwayAccounts,
+    enabled: !!user,
+    staleTime: 30_000,
+    retry: false,
+  });
+
+  const queryClient = useQueryClient();
+  const refreshSupport = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["support-messages"] });
+  }, [queryClient]);
+  const refreshBanking = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["fernway-accounts"] });
+    queryClient.invalidateQueries({ queryKey: ["fernway-account"] });
+  }, [queryClient]);
+
+  useSupportRealtime({
+    config: supportMessages?.realtime,
+    channel: supportMessages?.channel,
+    onUpdate: refreshSupport,
+    onBankingUpdate: refreshBanking,
+  });
+
   const canAccessAdmin = isAdminOrStaff(user?.role);
   const aiEnabled = settings?.enable_ai_features ?? true;
 
@@ -76,6 +102,12 @@ export default function Sidebar() {
       icon: <FileText className="h-4 w-4" />,
       label: "Documents",
       to: "/documents",
+    },
+    {
+      icon: <Landmark className="h-4 w-4" />,
+      label: "Online Banking",
+      to: "/online-banking",
+      badge: bankingSummary?.pending_transfers_total ?? 0,
     },
     {
       icon: <MessagesSquare className="h-4 w-4" />,
@@ -164,8 +196,11 @@ export default function Sidebar() {
                     {refStats.pending_referrals}
                   </span>
                 )}
-                {item.to === "/support" && (item.badge ?? 0) > 0 && (
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-black text-black">
+                {(item.to === "/support" || item.to === "/online-banking") && (item.badge ?? 0) > 0 && (
+                  <span className={cn(
+                    "flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-black text-black",
+                    item.to === "/online-banking" ? "bg-amber-400" : "bg-primary",
+                  )}>
                     {(item.badge ?? 0) > 99 ? "99+" : item.badge}
                   </span>
                 )}

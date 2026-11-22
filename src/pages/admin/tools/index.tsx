@@ -77,6 +77,8 @@ export default function AdminTools() {
       queryClient.invalidateQueries({ queryKey: ["tool-categories"] });
       queryClient.invalidateQueries({ queryKey: ["tutorials"] });
       queryClient.invalidateQueries({ queryKey: ["adminTutorials"] });
+      queryClient.invalidateQueries({ queryKey: ["fernway-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["fernway-new-defaults"] });
       setDialogOpen(false);
       setEditingTool(null);
     },
@@ -113,6 +115,7 @@ export default function AdminTools() {
     name: string;
     description?: string;
     price: number;
+    is_active: boolean;
     tutorial_url: string;
     tutorial_title: string;
   }) => {
@@ -136,7 +139,14 @@ export default function AdminTools() {
       header: "Tool / Category",
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5 py-1">
-          <div className="font-bold text-white tracking-tight">{row.original.name}</div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-white tracking-tight">{row.original.name}</span>
+            {row.original.is_active === false && (
+              <span className="rounded-full border border-amber-500/35 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                Hidden
+              </span>
+            )}
+          </div>
           {row.original.description && (
              <div className="text-[10px] text-white/40 italic line-clamp-1 max-w-[250px]" title={row.original.description}>
                {row.original.description}

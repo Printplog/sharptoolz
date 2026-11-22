@@ -121,12 +121,12 @@
   html, body {
     @apply bg-background text-foreground;
     font-family: "Nunito Sans";
-    overflow-x: hidden;
+    overflow-x: clip;
     position: relative;
     max-width: 100%;
   }
 
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([data-preview-control]),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([data-preview-control]):not([data-pin-box]),
   select:not([data-preview-control]) {
     border-radius: 9999px !important;
   }

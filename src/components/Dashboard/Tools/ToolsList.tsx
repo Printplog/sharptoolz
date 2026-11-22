@@ -4,6 +4,7 @@ import { getCountries, getTemplates, getTools } from "@/api/apiEndpoints";
 import { Input } from "@/components/ui/input";
 import ToolGridSkeleton from "../../ToolGridSkeleton";
 import DashboardToolCard from "./DashboardToolCard";
+import FernwayToolCard from "./FernwayToolCard";
 import type { Template, Tool } from "@/types";
 import { Search, Loader2, X, Globe2 } from "lucide-react";
 import { CountryFlag } from "@/components/ui/CountryFlag";
@@ -109,6 +110,28 @@ export default function ToolsList({ hot }: Props) {
 
   const totalCount = infiniteData?.pages?.[0]?.count ?? 0;
 
+  const fernwayTool = useMemo(
+    () => toolCategories?.find((t) => t.slug === "fernway"),
+    [toolCategories],
+  );
+  const isFernwayEnabled = fernwayTool ? fernwayTool.is_active !== false : true;
+
+  const showFernwaySection = useMemo(() => {
+    if (hot || !isFernwayEnabled) return false;
+    if (selectedCountry !== "all") return false;
+    const selectedCategory = toolCategories?.find((t) => t.id === selectedTool);
+    const categoryMatches =
+      selectedTool === "all" ||
+      selectedCategory?.slug === "fernway" ||
+      selectedCategory?.name.toLowerCase().includes("bank");
+    if (!categoryMatches) return false;
+    if (!activeSearch) return true;
+    const haystack = `${fernwayTool?.name || "fernway online banking"} ${fernwayTool?.description || ""} bank simulator debit card`.toLowerCase();
+    return haystack.includes(activeSearch.trim().toLowerCase());
+  }, [hot, isFernwayEnabled, selectedCountry, selectedTool, toolCategories, activeSearch, fernwayTool]);
+
+  const displayedTotalCount = totalCount + (showFernwaySection ? 1 : 0);
+
   // Group templates by category for the regular view
   const groupedTools = useMemo(() => {
     const groups: GroupedTools = {};
@@ -206,7 +229,7 @@ export default function ToolsList({ hot }: Props) {
             </div>
           </div>
           <div className="text-white/40 text-[11px] font-semibold shrink-0 hidden md:block">
-            {totalCount} tool{totalCount !== 1 ? 's' : ''} Found
+            {displayedTotalCount} tool{displayedTotalCount !== 1 ? 's' : ''} Found
           </div>
         </div>
       )}
@@ -224,17 +247,38 @@ export default function ToolsList({ hot }: Props) {
       ) : (
         <>
           {/* Hot Tools View (Flat Grid) */}
-          {hot && templates.length > 0 && (
+          {hot && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {templates.map((template) => (
-                <DashboardToolCard key={template.id} template={template} />
+              {isFernwayEnabled && <FernwayToolCard delay={0} tool={fernwayTool} />}
+              {templates.map((template, idx) => (
+                <DashboardToolCard key={template.id} template={template} delay={(idx + 1) * 0.05} />
               ))}
             </div>
           )}
 
           {/* Regular Tools View (Grouped by Category) */}
-          {!hot && Object.keys(groupedTools).length > 0 && (
+          {!hot && (showFernwaySection || Object.keys(groupedTools).length > 0) && (
             <div className="space-y-16">
+              {showFernwaySection && (
+                <div className="space-y-8">
+                  <div className="relative pb-4">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-1 bg-gradient-to-b from-primary via-primary/80 to-primary/60 rounded-full"></div>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Online Banking</h2>
+                      </div>
+                      <p className="text-sm text-white/40 ml-5 italic font-medium leading-relaxed max-w-[800px]">
+                        {fernwayTool?.description ||
+                          "Create and manage an interactive online banking account with custom balances, debit cards, and transaction history."}
+                      </p>
+                    </div>
+                    <div className="mt-3 h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <FernwayToolCard delay={0} tool={fernwayTool} />
+                  </div>
+                </div>
+              )}
               {Object.entries(groupedTools).map(([toolId, { tool, templates }]) => (
                 <div key={toolId} className="space-y-8">
                   <div className="relative pb-4">
@@ -252,8 +296,12 @@ export default function ToolsList({ hot }: Props) {
                     <div className="mt-3 h-[1px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {templates.map((template) => (
-                      <DashboardToolCard key={template.id} template={template} />
+                    {templates.map((template, idx) => (
+                      <DashboardToolCard
+                        key={template.id}
+                        template={template}
+                        delay={idx * 0.05}
+                      />
                     ))}
                   </div>
                 </div>
@@ -262,7 +310,7 @@ export default function ToolsList({ hot }: Props) {
           )}
 
           {/* Empty State */}
-          {templates.length === 0 && (
+          {templates.length === 0 && !showFernwaySection && (
             <div className="text-center py-20 border border-white/5 rounded-xl bg-white/[0.02] backdrop-blur-sm">
               <p className="text-white/40 italic font-medium">No tools found matching your criteria.</p>
             </div>

@@ -12,6 +12,7 @@ import {
   Link as LinkIcon,
   ShieldAlert,
   FileText,
+  Landmark,
   Wallet,
   ArrowLeftRight,
   HandCoins,
@@ -123,6 +124,11 @@ export default function Sidebar() {
       to: "/admin/documents",
     },
     {
+      icon: <Landmark className="h-4 w-4" />,
+      label: "Online Banking",
+      to: "/admin/online-banking",
+    },
+    {
       icon: <Type className="h-4 w-4" />,
       label: "Fonts",
       to: "/admin/fonts",
@@ -214,7 +220,7 @@ export default function Sidebar() {
           const isAdmin = role === ROLES.ADMIN;
 
           if (isStaff) {
-            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Tutorials", "Purchased Templates", "Switch to User", "Docs"];
+            const allowedForStaff = ["Dashboard", "Tools", "Templates", "Fonts", "Tutorials", "Purchased Templates", "Online Banking", "Switch to User", "Docs"];
             return allowedForStaff.includes(item.label);
           }
           if (isAdmin) return true;

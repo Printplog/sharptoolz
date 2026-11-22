@@ -36,10 +36,10 @@ export default function AdminLayout() {
     <ProtectedLayout isAdmin={true}>
       <div className="flex h-screen text-white">
         <Sidebar />
-        <main className="flex-1 overflow-auto bg-background pb-30 transition-all duration-500 ease-in-out relative">
+        <main className="flex-1 overflow-auto bg-background transition-all duration-500 ease-in-out relative">
           <GlobalAnnouncement />
           <Navbar />
-          <div className="px-3 sm:px-6 md:px-10 py-5">
+          <div className="px-3 sm:px-6 md:px-10 pt-5 pb-16">
             <Outlet />
             <Disclaimer />
           </div>

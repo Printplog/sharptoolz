@@ -251,7 +251,7 @@ export const createCryptoPayment = async (ticker: string): Promise<CryptoPayment
   return res.data;
 };
 
-export const getTrackingSupportMessages = async (params?: { document_id?: string }): Promise<TrackingSupportMessagesResponse> => {
+export const getTrackingSupportMessages = async (params?: { document_id?: string; fernway_profile_id?: string }): Promise<TrackingSupportMessagesResponse> => {
   const res = await apiClient.get('/support/messages/', { params });
   return res.data;
 };
@@ -586,6 +586,8 @@ export type ToolPayload = {
   name: string;
   description?: string;
   price: number;
+  is_active?: boolean;
+  badge?: string;
   tutorial_url?: string;
   tutorial_title?: string;
 };
@@ -797,5 +799,397 @@ export const submitContactForm = async (data: {
   message: string;
 }): Promise<{ message: string }> => {
   const res = await apiClient.post('/contact/', data);
+  return res.data;
+};
+
+// Fernway Bank Simulator Management Endpoints
+export interface FernwayTransaction {
+  id: string;
+  account_id: string;
+  direction: 'credit' | 'debit';
+  amount: number;
+  fee: number;
+  counterparty: string;
+  counterparty_detail?: string;
+  bank_name?: string;
+  recipient_account_number?: string;
+  recipient_routing_number?: string;
+  narration?: string;
+  category: string;
+  channel: string;
+  status: 'completed' | 'pending' | 'failed';
+  reference: string;
+  occurred_at: string;
+  created_at: string;
+}
+
+export interface FernwayCard {
+  id: string;
+  label: string;
+  kind: 'physical' | 'virtual';
+  brand: 'visa' | 'mastercard';
+  card_number: string;
+  last4: string;
+  expiry: string;
+  cvv: string;
+  pin?: string;
+  holder_name: string;
+  monthly_limit: number;
+  is_frozen: boolean;
+  online_payments: boolean;
+  created_at: string;
+}
+
+export interface FernwayAccount {
+  id: string;
+  account_type: 'checking' | 'savings';
+  name: string;
+  account_number: string;
+  routing_number: string;
+  balance: number;
+  apy_bps: number;
+  transactions?: FernwayTransaction[];
+  created_at: string;
+}
+
+export interface FernwayProfile {
+  id: string | null;
+  first_name: string;
+  last_name: string;
+  email: string;
+  email_verified?: boolean;
+  email_verified_at?: string | null;
+  phone: string;
+  address: string;
+  password: string;
+  transaction_pin?: string;
+  theme: string;
+  auth_token: string;
+  is_created?: boolean;
+  is_test?: boolean;
+  is_live?: boolean;
+  subscription_status?: 'test' | 'active' | 'expired';
+  subscription_started_at?: string | null;
+  subscription_expires_at?: string | null;
+  days_remaining?: number;
+  needs_renewal_reminder?: boolean;
+  tool_price?: number;
+  monthly_price?: number;
+  wallet_balance?: number;
+  existing_accounts_count?: number;
+  accounts: FernwayAccount[];
+  cards: FernwayCard[];
+  recent_transactions: FernwayTransaction[];
+  pending_transfers?: FernwayTransaction[];
+  pending_transfers_count?: number;
+  total_balance: number;
+  owner?: {
+    id: number;
+    username: string;
+    email: string;
+  } | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface FernwayAdminAccountsResponse {
+  results: FernwayProfile[];
+  count: number;
+  monthly_price: number;
+  online_banking_url?: string;
+  stats: {
+    total_accounts: number;
+    live_accounts: number;
+    test_accounts: number;
+    expired_accounts: number;
+    pending_transfers_total: number;
+  };
+}
+
+export interface FernwayAccountsListResponse {
+  results: FernwayProfile[];
+  count: number;
+  active_subscriptions_count: number;
+  monthly_total_due: number;
+  expiring_soon_count: number;
+  expired_count: number;
+  pending_transfers_total?: number;
+  monthly_price: number;
+  wallet_balance: number;
+  online_banking_url?: string;
+}
+
+export interface FernwayEmailVerificationChallenge {
+  challenge_id: string;
+  email_hint: string;
+  expires_in: number;
+}
+
+export interface FernwayEmailVerificationGrant {
+  verification_token: string;
+  email: string;
+}
+
+export const requestFernwayEmailVerification = async (data: {
+  email: string;
+  profile_id?: string | null;
+}): Promise<FernwayEmailVerificationChallenge> => {
+  const res = await apiClient.post('/fernway/email-verification/request/', data);
+  return res.data;
+};
+
+export const confirmFernwayEmailVerification = async (data: {
+  challenge_id: string;
+  code: string;
+}): Promise<FernwayEmailVerificationGrant> => {
+  const res = await apiClient.post('/fernway/email-verification/confirm/', data);
+  return res.data;
+};
+
+export const getFernwayAccounts = async (): Promise<FernwayAccountsListResponse> => {
+  const res = await apiClient.get('/fernway/accounts/');
+  return res.data;
+};
+
+export const getFernwayAccountById = async (profileId: string): Promise<FernwayProfile> => {
+  const res = await apiClient.get(`/fernway/accounts/${profileId}/`);
+  return res.data;
+};
+
+export const updateFernwayAccountById = async (
+  profileId: string,
+  data: Record<string, unknown>
+): Promise<FernwayProfile> => {
+  const res = await apiClient.put(`/fernway/accounts/${profileId}/`, data);
+  return res.data;
+};
+
+export const deleteFernwayAccount = async (profileId: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/fernway/accounts/${profileId}/`);
+  return res.data;
+};
+
+export const upgradeFernwayAccountById = async (profileId: string): Promise<FernwayProfile> => {
+  const res = await apiClient.post(`/fernway/accounts/${profileId}/upgrade/`);
+  return res.data;
+};
+
+export const renewFernwayAccount = async (profileId: string): Promise<FernwayProfile> => {
+  const res = await apiClient.post(`/fernway/accounts/${profileId}/renew/`);
+  return res.data;
+};
+
+export const resetFernwayAccountById = async (profileId: string): Promise<FernwayProfile> => {
+  const res = await apiClient.post(`/fernway/accounts/${profileId}/reset/`);
+  return res.data;
+};
+
+export const createFernwayAccountTransaction = async (
+  profileId: string,
+  data: {
+    account_id?: string;
+    direction: 'credit' | 'debit';
+    amount: number;
+    counterparty: string;
+    narration?: string;
+    category?: string;
+    channel?: string;
+    occurred_at?: string;
+    adjust_balance?: boolean;
+  }
+): Promise<FernwayTransaction> => {
+  const res = await apiClient.post(`/fernway/accounts/${profileId}/transaction/`, data);
+  return res.data;
+};
+
+export const deleteFernwayAccountTransaction = async (
+  profileId: string,
+  transactionId: string
+): Promise<unknown> => {
+  const res = await apiClient.delete(`/fernway/accounts/${profileId}/transaction/${transactionId}/`);
+  return res.data;
+};
+
+export const approveFernwayTransfer = async (
+  profileId: string,
+  transactionId: string
+): Promise<FernwayProfile> => {
+  const res = await apiClient.post(
+    `/fernway/accounts/${profileId}/transaction/${transactionId}/approve/`
+  );
+  return res.data;
+};
+
+export const declineFernwayTransfer = async (
+  profileId: string,
+  transactionId: string
+): Promise<FernwayProfile> => {
+  const res = await apiClient.post(
+    `/fernway/accounts/${profileId}/transaction/${transactionId}/decline/`
+  );
+  return res.data;
+};
+
+export const getFernwayProfile = async (): Promise<FernwayProfile> => {
+  const res = await apiClient.get('/fernway/manage/');
+  return res.data;
+};
+
+export const updateFernwayProfile = async (data: Partial<FernwayProfile>): Promise<FernwayProfile> => {
+  const res = await apiClient.put('/fernway/manage/', data);
+  return res.data;
+};
+
+export const updateFernwayAccount = async (
+  accountId: string,
+  data: Partial<FernwayAccount>
+): Promise<FernwayAccount> => {
+  const res = await apiClient.put(`/fernway/manage/account/${accountId}/`, data);
+  return res.data;
+};
+
+export const createFernwayTransaction = async (data: {
+  account_id?: string;
+  direction: 'credit' | 'debit';
+  amount: number;
+  counterparty: string;
+  narration?: string;
+  category?: string;
+  channel?: string;
+  occurred_at?: string;
+  adjust_balance?: boolean;
+}): Promise<FernwayTransaction> => {
+  const res = await apiClient.post('/fernway/manage/transaction/', data);
+  return res.data;
+};
+
+export const deleteFernwayTransaction = async (transactionId: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/fernway/manage/transaction/${transactionId}/`);
+  return res.data;
+};
+
+export const updateFernwayCard = async (
+  cardId: string,
+  data: Partial<FernwayCard>
+): Promise<FernwayCard> => {
+  const res = await apiClient.put(`/fernway/manage/card/${cardId}/`, data);
+  return res.data;
+};
+
+export const resetFernwayProfile = async (): Promise<FernwayProfile> => {
+  const res = await apiClient.post('/fernway/manage/reset/');
+  return res.data;
+};
+
+export const createFernwayAccount = async (data: Record<string, unknown>): Promise<FernwayProfile> => {
+  const res = await apiClient.post('/fernway/accounts/', data);
+  return res.data;
+};
+
+export const upgradeFernwayAccount = async (): Promise<FernwayProfile> => {
+  const res = await apiClient.post('/fernway/manage/upgrade/');
+  return res.data;
+};
+
+// SharpToolz Admin Fernway Management Endpoints
+export const getAdminFernwaySettings = async (): Promise<{ online_banking_url: string }> => {
+  const res = await apiClient.get('/fernway/admin/settings/');
+  return res.data;
+};
+
+export const updateAdminFernwaySettings = async (
+  online_banking_url: string,
+): Promise<{ online_banking_url: string }> => {
+  const res = await apiClient.patch('/fernway/admin/settings/', { online_banking_url });
+  return res.data;
+};
+
+export const getAdminFernwayAccounts = async (params?: {
+  search?: string;
+  status?: 'all' | 'active' | 'test' | 'expired' | 'pending_transfers';
+  include_drafts?: boolean;
+}): Promise<FernwayAdminAccountsResponse> => {
+  const res = await apiClient.get('/fernway/admin/accounts/', { params });
+  return res.data;
+};
+
+export const getAdminFernwayAccountById = async (profileId: string): Promise<FernwayProfile> => {
+  const res = await apiClient.get(`/fernway/admin/accounts/${profileId}/`);
+  return res.data;
+};
+
+export const updateAdminFernwayAccount = async (
+  profileId: string,
+  data: Record<string, unknown>
+): Promise<FernwayProfile> => {
+  const res = await apiClient.put(`/fernway/admin/accounts/${profileId}/`, data);
+  return res.data;
+};
+
+export const deleteAdminFernwayAccount = async (profileId: string): Promise<unknown> => {
+  const res = await apiClient.delete(`/fernway/admin/accounts/${profileId}/`);
+  return res.data;
+};
+
+export const updateAdminFernwaySubscription = async (
+  profileId: string,
+  action: 'activate' | 'extend' | 'set_test' | 'expire',
+  days = 30
+): Promise<FernwayProfile> => {
+  const res = await apiClient.post(`/fernway/admin/accounts/${profileId}/subscription/`, {
+    action,
+    days,
+  });
+  return res.data;
+};
+
+export const resetAdminFernwayAccount = async (profileId: string): Promise<FernwayProfile> => {
+  const res = await apiClient.post(`/fernway/admin/accounts/${profileId}/reset/`);
+  return res.data;
+};
+
+export const createAdminFernwayTransaction = async (
+  profileId: string,
+  data: {
+    account_id?: string;
+    direction: 'credit' | 'debit';
+    amount: number;
+    counterparty: string;
+    narration?: string;
+    category?: string;
+    channel?: string;
+    occurred_at?: string;
+    adjust_balance?: boolean;
+  }
+): Promise<FernwayTransaction> => {
+  const res = await apiClient.post(`/fernway/admin/accounts/${profileId}/transaction/`, data);
+  return res.data;
+};
+
+export const deleteAdminFernwayTransaction = async (
+  profileId: string,
+  transactionId: string
+): Promise<unknown> => {
+  const res = await apiClient.delete(`/fernway/admin/accounts/${profileId}/transaction/${transactionId}/`);
+  return res.data;
+};
+
+export const approveAdminFernwayTransfer = async (
+  profileId: string,
+  transactionId: string
+): Promise<FernwayProfile> => {
+  const res = await apiClient.post(
+    `/fernway/admin/accounts/${profileId}/transaction/${transactionId}/approve/`
+  );
+  return res.data;
+};
+
+export const declineAdminFernwayTransfer = async (
+  profileId: string,
+  transactionId: string
+): Promise<FernwayProfile> => {
+  const res = await apiClient.post(
+    `/fernway/admin/accounts/${profileId}/transaction/${transactionId}/decline/`
+  );
   return res.data;
 };

@@ -1,6 +1,6 @@
-import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, ArrowRight, Users, MessagesSquare } from "lucide-react";
+import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, Landmark, ArrowRight, Users, MessagesSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
+import { getFernwayAccounts, getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
 import { getReferralStats } from "@/api/referralEndpoints";
 import { REFERRALS_VISIBLE } from "@/lib/constants/features";
 import { Link, useLocation } from "react-router-dom";
@@ -30,6 +30,14 @@ export default function BottomBar() {
     staleTime: 30_000,
   });
 
+  const { data: bankingSummary } = useQuery({
+    queryKey: ["fernway-accounts"],
+    queryFn: getFernwayAccounts,
+    enabled: !!user,
+    staleTime: 30_000,
+    retry: false,
+  });
+
   const canAccessAdmin = isAdminOrStaff(user?.role);
   const aiEnabled = settings?.enable_ai_features ?? true;
 
@@ -53,6 +61,12 @@ export default function BottomBar() {
       icon: <ClipboardList className="w-5 h-5 mb-[2px]" />,
       label: "Documents",
       to: "/documents",
+    },
+    {
+      icon: <Landmark className="w-5 h-5 mb-[2px]" />,
+      label: "Banking",
+      to: "/online-banking",
+      badge: bankingSummary?.pending_transfers_total ?? 0,
     },
     {
       icon: <MessagesSquare className="w-5 h-5 mb-[2px]" />,
@@ -115,8 +129,11 @@ export default function BottomBar() {
                   {refStats.pending_referrals}
                 </span>
               )}
-              {item.to === "/support" && "badge" in item && typeof item.badge === "number" && item.badge > 0 && (
-                <span className="absolute -right-2 -top-1 flex h-3 min-w-3 items-center justify-center rounded-full bg-primary px-0.5 text-[8px] font-black text-black">
+              {(item.to === "/support" || item.to === "/online-banking") && "badge" in item && typeof item.badge === "number" && item.badge > 0 && (
+                <span className={cn(
+                  "absolute -right-2 -top-1 flex h-3 min-w-3 items-center justify-center rounded-full px-0.5 text-[8px] font-black text-black",
+                  item.to === "/online-banking" ? "bg-amber-400" : "bg-primary",
+                )}>
                   {item.badge > 9 ? "9+" : item.badge}
                 </span>
               )}

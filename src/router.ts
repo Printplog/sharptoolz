@@ -15,6 +15,8 @@ export type Path =
   | `/admin/documents`
   | `/admin/fonts`
   | `/admin/fonts/FontUploadDialog`
+  | `/admin/online-banking`
+  | `/admin/online-banking/:id`
   | `/admin/payouts`
   | `/admin/revenue-distribution`
   | `/admin/settings`
@@ -46,6 +48,8 @@ export type Path =
   | `/documents`
   | `/documents/:id`
   | `/embed`
+  | `/online-banking`
+  | `/online-banking/:id`
   | `/privacy`
   | `/referrals`
   | `/settings`
@@ -58,17 +62,20 @@ export type Path =
   | `/terms`
   | `/tools`
   | `/tools/:id`
+  | `/tools/fernway`
   | `/tutorials`
   | `/wallet`
 
 export type Params = {
   '/admin/api-network/:userId': { userId: string }
+  '/admin/online-banking/:id': { id: string }
   '/admin/templates/:id': { id: string }
   '/admin/tools/:id/templates': { id: string }
   '/admin/tools/countries/:id': { id: string }
   '/admin/users/:id': { id: string }
   '/all-tools/:id': { id: string }
   '/documents/:id': { id: string }
+  '/online-banking/:id': { id: string }
   '/tools/:id': { id: string }
 }
 

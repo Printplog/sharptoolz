@@ -169,6 +169,10 @@ export type Tool = {
   price: number;
   tutorial?: Pick<Tutorial, "id" | "url" | "title" | "is_featured"> | null;
   templates_count?: number;
+  is_active?: boolean;
+  is_pinned?: boolean;
+  slug?: string;
+  badge?: string;
   created_at: string;
 };
 
@@ -528,6 +532,7 @@ export type SiteSettings = {
   global_announcement_text: string;
   global_announcement_link: string;
   enable_global_announcement: boolean;
+  online_banking_url?: string;
   
   // 5. Referral Program Configs
   enable_referrals: boolean;
@@ -572,10 +577,11 @@ export type ApiTheme = {
 
 export type TrackingSupportMessage = {
   id: string;
-  document_id: string;
+  document_id?: string | null;
+  fernway_profile_id?: string | null;
   tracking_id: string;
   document_name: string;
-  source: "parcel_finda" | "flight_lookup";
+  source: "parcel_finda" | "flight_lookup" | "fernway";
   source_label: string;
   customer_name: string;
   customer_email: string;

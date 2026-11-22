@@ -13,10 +13,25 @@ function restartWhenPageRoutesChange(): Plugin {
     configureServer(server) {
       let restartTimer: ReturnType<typeof setTimeout> | undefined;
 
+      // Never let browsers immutably cache @generouted/react-router (its import.meta.glob
+      // route table changes whenever files are added/removed under src/pages/).
+      server.middlewares.use((req, res, next) => {
+        if (req.url && req.url.includes("generouted")) {
+          const origSetHeader = res.setHeader.bind(res);
+          res.setHeader = ((name: string, value: number | string | readonly string[]) => {
+            if (name.toLowerCase() === "cache-control") {
+              return origSetHeader(name, "no-store");
+            }
+            return origSetHeader(name, value);
+          }) as typeof res.setHeader;
+        }
+        next();
+      });
+
       const restart = (file: string) => {
         if (!file.startsWith(`${pagesDirectory}${path.sep}`) || !routeFile.test(file)) return;
         clearTimeout(restartTimer);
-        restartTimer = setTimeout(() => void server.restart(), 150);
+        restartTimer = setTimeout(() => void server.restart(true), 150);
       };
 
       server.watcher.on("add", restart);

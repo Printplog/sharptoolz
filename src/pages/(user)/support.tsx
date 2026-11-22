@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import { ArrowLeft, Check, Inbox, MessageSquareText, PackageSearch, Plane, Search, X } from "lucide-react";
+import { ArrowLeft, Check, Inbox, Landmark, MessageSquareText, PackageSearch, Plane, Search, X } from "lucide-react";
 
 import { getTrackingSupportMessages, updateTrackingSupportMessageStatus } from "@/api/apiEndpoints";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,7 @@ function useNotificationSound() {
 }
 
 function SourceIcon({ source }: { source: TrackingSupportMessage["source"] }) {
+  if (source === "fernway") return <Landmark className="size-4" />;
   return source === "parcel_finda" ? <PackageSearch className="size-4" /> : <Plane className="size-4" />;
 }
 
@@ -169,7 +170,7 @@ export default function SupportMessagesPage() {
       <header className={cn("flex flex-col justify-between gap-4 pb-6 sm:flex-row sm:items-end", selectedId && "hidden lg:flex")}>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Support Messages</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">Requests from ParcelFinda and MyFlightLookup for tracking IDs you created.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">Requests from ParcelFinda, MyFlightLookup, and Fernway Banking.</p>
         </div>
         <SupportHowItWorksDialog />
       </header>
@@ -237,7 +238,7 @@ export default function SupportMessagesPage() {
                   <ArrowLeft className="size-4" /> Back to messages
                 </button>
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-                  <div className="min-w-0"><div className="flex flex-wrap items-center gap-2 text-xs text-white/40"><span className={cn("flex items-center gap-1.5", selected.source === "parcel_finda" ? "text-emerald-300" : "text-sky-300")}><SourceIcon source={selected.source} />{selected.source_label}</span><span>·</span><span className="capitalize">{selected.status}</span></div><h2 className="mt-3 text-xl font-semibold text-white sm:text-2xl">{selected.subject}</h2><p className="mt-2 text-xs text-white/35">Received {format(new Date(selected.created_at), "MMM d, yyyy 'at' h:mm a")}</p></div>
+                  <div className="min-w-0"><div className="flex flex-wrap items-center gap-2 text-xs text-white/40"><span className={cn("flex items-center gap-1.5", selected.source === "fernway" ? "text-emerald-400" : selected.source === "parcel_finda" ? "text-emerald-300" : "text-sky-300")}><SourceIcon source={selected.source} />{selected.source_label}</span><span>·</span><span className="capitalize">{selected.status}</span></div><h2 className="mt-3 text-xl font-semibold text-white sm:text-2xl">{selected.subject}</h2><p className="mt-2 text-xs text-white/35">Received {format(new Date(selected.created_at), "MMM d, yyyy 'at' h:mm a")}</p></div>
                   <div className="flex shrink-0 flex-wrap gap-2">
                     <SupportTicketDetailsDialog ticket={selected} />
                     {selected.status === "closed" ? <Button variant="outline" onClick={() => statusMutation.mutate({ id: selected.id, status: "read" })}><Check /> Reopen</Button> : <Button variant="outline" onClick={() => statusMutation.mutate({ id: selected.id, status: "closed" })}><X /> Close</Button>}

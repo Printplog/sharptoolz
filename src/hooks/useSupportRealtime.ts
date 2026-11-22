@@ -9,9 +9,16 @@ type SupportRealtimeOptions = {
   channel?: string;
   onUpdate: () => void;
   onIncomingMessage?: () => void;
+  onBankingUpdate?: () => void;
 };
 
-export function useSupportRealtime({ config, channel, onUpdate, onIncomingMessage }: SupportRealtimeOptions) {
+export function useSupportRealtime({
+  config,
+  channel,
+  onUpdate,
+  onIncomingMessage,
+  onBankingUpdate,
+}: SupportRealtimeOptions) {
   useEffect(() => {
     if (!config?.enabled || !config.key || !config.cluster || !channel) return;
 
@@ -37,11 +44,16 @@ export function useSupportRealtime({ config, channel, onUpdate, onIncomingMessag
     subscription.bind("support.created", handleIncomingMessage);
     subscription.bind("support.customer_message", handleIncomingMessage);
     subscription.bind("support.updated", onUpdate);
+    if (onBankingUpdate) {
+      subscription.bind("banking.transfer_requested", onBankingUpdate);
+      subscription.bind("banking.card_added", onBankingUpdate);
+      subscription.bind("banking.card_updated", onBankingUpdate);
+    }
 
     return () => {
       subscription.unbind_all();
       pusher.unsubscribe(channel);
       pusher.disconnect();
     };
-  }, [channel, config?.cluster, config?.enabled, config?.key, onIncomingMessage, onUpdate]);
+  }, [channel, config?.cluster, config?.enabled, config?.key, onBankingUpdate, onIncomingMessage, onUpdate]);
 }

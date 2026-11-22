@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Inbox, PackageSearch, Plane } from "lucide-react";
+import { Inbox, Landmark, PackageSearch, Plane } from "lucide-react";
 
 import { getTrackingSupportMessages } from "@/api/apiEndpoints";
 import { SupportConversation } from "@/components/Dashboard/Support/SupportConversation";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { TrackingSupportMessage } from "@/types";
 
 function SourceIcon({ source }: { source: TrackingSupportMessage["source"] }) {
+  if (source === "fernway") return <Landmark className="size-4" />;
   return source === "parcel_finda"
     ? <PackageSearch className="size-4" />
     : <Plane className="size-4" />;
@@ -73,7 +74,9 @@ export default function DocumentSupportMessages({ documentId }: { documentId: st
               </div>
               <SupportTicketDetailsDialog ticket={message} />
             </div>
-            <SupportConversation ticket={message} />
+            <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-[#0d131a]/70">
+              <SupportConversation ticket={message} embedded />
+            </div>
           </article>
         );
       })}

@@ -1,6 +1,7 @@
 // Tool Add/Edit Dialog Component
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,7 @@ interface ToolDialogProps {
     name: string;
     description?: string;
     price: number;
+    is_active: boolean;
     tutorial_url: string;
     tutorial_title: string;
   }) => void;
@@ -41,6 +43,7 @@ export default function ToolDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<string>("5");
+  const [isActive, setIsActive] = useState<boolean>(true);
   const [tutorialUrl, setTutorialUrl] = useState("");
   const [tutorialTitle, setTutorialTitle] = useState("");
 
@@ -52,12 +55,14 @@ export default function ToolDialog({
       setName(tool?.name || "");
       setDescription(tool?.description || "");
       setPrice(tool?.price?.toString() || "5");
+      setIsActive(tool?.is_active ?? true);
       setTutorialUrl(tool?.tutorial?.url || "");
       setTutorialTitle(tool?.tutorial?.title || "");
     } else {
       setName("");
       setDescription("");
       setPrice("5");
+      setIsActive(true);
       setTutorialUrl("");
       setTutorialTitle("");
     }
@@ -83,6 +88,7 @@ export default function ToolDialog({
       name: name.trim(),
       description: description.trim() || undefined,
       price: parseFloat(price) || 0,
+      is_active: isActive,
       // Empty string clears the tool's tutorial on the backend
       tutorial_url: tutorialUrl.trim(),
       tutorial_title: tutorialTitle.trim(),
@@ -169,8 +175,27 @@ export default function ToolDialog({
               required
             />
             <div className="text-xs text-white/60">
-              The amount users will be charged to remove the watermark from templates in this tool.
+              The amount users will be charged to remove the watermark from templates in this tool (or monthly subscription price for Online Banking).
             </div>
+          </div>
+
+          {/* Active / Visible Toggle */}
+          <div
+            onClick={() => setIsActive((prev) => !prev)}
+            className="flex items-center justify-between px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-colors"
+          >
+            <div>
+              <span className="text-sm font-medium text-white block">Active &amp; Visible to Users</span>
+              <span className="text-xs text-white/50">
+                Uncheck to hide this tool from the user dashboard without deleting it.
+              </span>
+            </div>
+            <Checkbox
+              checked={isActive}
+              onCheckedChange={(checked) => setIsActive(Boolean(checked))}
+              onClick={(e) => e.stopPropagation()}
+              className="size-5 border-white/25 data-[state=checked]:bg-primary data-[state=checked]:text-black shrink-0"
+            />
           </div>
 
           {/* Templates in this tool */}
