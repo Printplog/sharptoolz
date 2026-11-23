@@ -859,6 +859,8 @@ export interface FernwayProfile {
   email: string;
   email_verified?: boolean;
   email_verified_at?: string | null;
+  owner_email?: string;
+  owner_email_verified?: boolean;
   phone: string;
   address: string;
   password: string;
@@ -917,6 +919,8 @@ export interface FernwayAccountsListResponse {
   monthly_price: number;
   wallet_balance: number;
   online_banking_url?: string;
+  owner_email?: string;
+  owner_email_verified?: boolean;
 }
 
 export interface FernwayEmailVerificationChallenge {
@@ -929,6 +933,28 @@ export interface FernwayEmailVerificationGrant {
   verification_token: string;
   email: string;
 }
+
+export interface OwnerEmailVerificationRequestResponse {
+  already_verified?: boolean;
+  challenge_id?: string;
+  email_hint?: string;
+  expires_in?: number;
+  owner_email?: string;
+  owner_email_verified?: boolean;
+}
+
+export const requestOwnerEmailVerification = async (): Promise<OwnerEmailVerificationRequestResponse> => {
+  const res = await apiClient.post('/accounts/email-verification/request/');
+  return res.data;
+};
+
+export const confirmOwnerEmailVerification = async (data: {
+  challenge_id: string;
+  code: string;
+}): Promise<{ owner_email: string; owner_email_verified: boolean }> => {
+  const res = await apiClient.post('/accounts/email-verification/confirm/', data);
+  return res.data;
+};
 
 export const requestFernwayEmailVerification = async (data: {
   email: string;

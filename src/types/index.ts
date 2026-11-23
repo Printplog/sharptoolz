@@ -2,6 +2,8 @@ export type User = {
   pk: number;
   username: string;
   email: string;
+  email_verified?: boolean;
+  email_verified_at?: string | null;
   role?: string;
   total_purchases: number;
   downloads: number;
@@ -607,6 +609,8 @@ export type TrackingSupportMessagesResponse = {
   unread_count: number;
   channel: string;
   realtime: SupportRealtimeConfig;
+  owner_email?: string;
+  owner_email_verified?: boolean;
 };
 
 export type SupportRealtimeConfig = {

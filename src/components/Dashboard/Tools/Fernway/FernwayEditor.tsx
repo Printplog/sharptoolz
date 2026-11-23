@@ -45,11 +45,13 @@ import {
   type FernwayEmailVerificationGrant,
 } from "@/api/apiEndpoints";
 import SvgFormTranslatorSkeleton from "@/components/Dashboard/SVGFormTranslator/SvgFormTranslatorSkeleton";
+import { VerifyAccountEmailBanner } from "@/components/Dashboard/VerifyAccountEmailBanner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuthStore } from "@/store/authStore";
 import {
   CreateAccountDialog,
   SubscriptionBillingDialog,
@@ -130,6 +132,8 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
   const [emailGrant, setEmailGrant] = useState<FernwayEmailVerificationGrant | null>(null);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isConfirmingCode, setIsConfirmingCode] = useState(false);
+  const [ownerVerifiedOverride, setOwnerVerifiedOverride] = useState(false);
+  const authUser = useAuthStore((state) => state.user);
   const fernwayHomeUrl = useFernwayAppBaseUrl();
 
   useEffect(() => {
@@ -227,7 +231,10 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
   );
   const isEmailVerified = isAlreadyVerifiedOnProfile || hasMatchingEmailGrant;
   const emailChangedFromSaved = Boolean(isProfileCreated && normalizedEmail !== savedProfileEmail);
-  const needsEmailVerification = !adminMode && (!isProfileCreated || emailChangedFromSaved) && !isEmailVerified;
+  const isOwnerEmailVerified = Boolean(
+    adminMode || ownerVerifiedOverride || profile?.owner_email_verified || authUser?.email_verified
+  );
+  const ownerEmailAddress = profile?.owner_email || authUser?.email || "";
 
   const handleRequestEmailCode = async () => {
     const email = form.email.trim().toLowerCase();
@@ -302,12 +309,12 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
     const password = form.password.trim();
     const cardDigits = form.card_number.replace(/\D/g, "");
     const cvvDigits = form.card_cvv.replace(/\D/g, "");
-    if (!email || !email.includes("@")) {
-      toast.error("Please enter a valid sign-in email before continuing.");
+    if (!isProfileCreated && !isOwnerEmailVerified) {
+      toast.error("Verify your SharpToolz account email first so you can receive notifications.");
       return false;
     }
-    if (needsEmailVerification) {
-      toast.error("Verify the sign-in email with a 4-digit code before continuing.");
+    if (!email || !email.includes("@")) {
+      toast.error("Please enter a valid sign-in email before continuing.");
       return false;
     }
     if (password.length < 4) {
@@ -1018,6 +1025,15 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
               </div>
             )}
 
+            {/* Required one-time SharpToolz owner email verification (shared with Support) */}
+            {!adminMode && !isOwnerEmailVerified && (
+              <VerifyAccountEmailBanner
+                email={ownerEmailAddress}
+                onVerified={() => setOwnerVerifiedOverride(true)}
+                className="mb-6"
+              />
+            )}
+
             {/* Form Fields — single-column stack matching FormField.tsx */}
             <div className="space-y-6">
               {/* Account & Sign-In Setup */}
@@ -1030,7 +1046,25 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                     id="fw-first-name"
                     type="text"
                     value={form.first_name}
-                    onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                    onChange={(e) => {
+                      const nextFirst = e.target.value;
+                      setForm((prev) => {
+                        const prevFull = [prev.first_name.trim(), prev.last_name.trim()]
+                          .filter(Boolean)
+                          .join(" ");
+                        const nextFull = [nextFirst.trim(), prev.last_name.trim()]
+                          .filter(Boolean)
+                          .join(" ");
+                        const shouldSyncCard =
+                          !prev.card_holder_name.trim() ||
+                          prev.card_holder_name.trim().toLowerCase() === prevFull.toLowerCase();
+                        return {
+                          ...prev,
+                          first_name: nextFirst,
+                          card_holder_name: shouldSyncCard ? nextFull : prev.card_holder_name,
+                        };
+                      });
+                    }}
                     placeholder="e.g. Alexander"
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
                   />
@@ -1044,7 +1078,25 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                     id="fw-last-name"
                     type="text"
                     value={form.last_name}
-                    onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                    onChange={(e) => {
+                      const nextLast = e.target.value;
+                      setForm((prev) => {
+                        const prevFull = [prev.first_name.trim(), prev.last_name.trim()]
+                          .filter(Boolean)
+                          .join(" ");
+                        const nextFull = [prev.first_name.trim(), nextLast.trim()]
+                          .filter(Boolean)
+                          .join(" ");
+                        const shouldSyncCard =
+                          !prev.card_holder_name.trim() ||
+                          prev.card_holder_name.trim().toLowerCase() === prevFull.toLowerCase();
+                        return {
+                          ...prev,
+                          last_name: nextLast,
+                          card_holder_name: shouldSyncCard ? nextFull : prev.card_holder_name,
+                        };
+                      });
+                    }}
                     placeholder="e.g. Hamilton"
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
                   />
@@ -1058,12 +1110,11 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                     {isEmailVerified ? (
                       <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/35 bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
                         <CheckCircle2 className="size-3" />
-                        Verified
+                        Verified · Client alerts on
                       </span>
                     ) : normalizedEmail ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/35 bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-amber-200">
-                        <AlertTriangle className="size-3" />
-                        {needsEmailVerification ? "Verification required" : "Not verified"}
+                      <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[11px] font-medium text-white/60">
+                        Optional · Client alerts off
                       </span>
                     ) : null}
                   </div>
@@ -1083,7 +1134,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                           setEmailCode("");
                         }
                       }}
-                      placeholder="Enter a real email (e.g. name@gmail.com)"
+                      placeholder="e.g. name@fernwaybank.com or client@gmail.com"
                       className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 flex-1"
                     />
                     {!isEmailVerified && (
@@ -1099,7 +1150,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                         ) : (
                           <MailCheck className="w-4 h-4 mr-2" />
                         )}
-                        {emailChallenge ? "Resend Code" : "Verify Email"}
+                        {emailChallenge ? "Resend Code" : "Verify Email (Optional)"}
                       </Button>
                     )}
                   </div>
@@ -1141,8 +1192,8 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
 
                   <p className="text-xs text-white/40">
                     {isEmailVerified
-                      ? "Verified email — login alerts, transfer receipts, card updates, and support replies will be sent here."
-                      : "Use a real email address and verify it with a 4-digit code so Fernway security, transfer, card, and support emails can be delivered."}
+                      ? "Verified — your client will receive Fernway login, transfer, card, and support emails at this address."
+                      : "Optional — you can create or save without verifying. Verify with a 4-digit code only if you want your client to receive Fernway login, transfer, card, and support emails (your SharpToolz email still receives owner alerts)."}
                   </p>
                 </div>
 

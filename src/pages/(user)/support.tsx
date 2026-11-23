@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SupportConversation } from "@/components/Dashboard/Support/SupportConversation";
 import { SupportHowItWorksDialog } from "@/components/Dashboard/Support/SupportHowItWorksDialog";
 import { SupportTicketDetailsDialog } from "@/components/Dashboard/Support/SupportTicketDetailsDialog";
+import { VerifyAccountEmailBanner } from "@/components/Dashboard/VerifyAccountEmailBanner";
 import { CustomTabs } from "@/components/ui/custom-tabs";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 import type { TrackingSupportMessage } from "@/types";
 import { useSupportRealtime } from "@/hooks/useSupportRealtime";
 
@@ -92,6 +94,7 @@ function MessageListSkeleton() {
 
 export default function SupportMessagesPage() {
   const queryClient = useQueryClient();
+  const authUser = useAuthStore((state) => state.user);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [conversationType, setConversationType] = useState<ConversationType>("all");
@@ -174,6 +177,13 @@ export default function SupportMessagesPage() {
         </div>
         <SupportHowItWorksDialog />
       </header>
+
+      {data && data.owner_email_verified === false && !authUser?.email_verified && (
+        <VerifyAccountEmailBanner
+          email={data.owner_email || authUser?.email}
+          className={cn("mb-5", selectedId && "hidden lg:block")}
+        />
+      )}
 
       <div className={cn("flex flex-col gap-4 border-b border-white/10 sm:flex-row sm:items-end sm:justify-between", selectedId && "hidden lg:flex")}>
           <CustomTabs
