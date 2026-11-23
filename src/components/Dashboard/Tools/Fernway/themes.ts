@@ -3,8 +3,19 @@ import { getSiteSettings } from "@/api/apiEndpoints";
 import { resolveApiBaseUrl } from "@/api/resolveApiBaseUrl";
 import type { SiteSettings } from "@/types";
 
-const CONFIGURED_FERNWAY_URL =
-  import.meta.env.VITE_FERNWAY_APP_URL || "http://localhost:4729";
+const DEFAULT_PRODUCTION_FERNWAY_URL = "https://fernway.sharptoolz.com";
+
+function getFallbackFernwayUrl(): string {
+  const configured = (import.meta.env.VITE_FERNWAY_APP_URL || "").trim().replace(/\/+$/, "");
+  if (configured) return configured;
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return DEFAULT_PRODUCTION_FERNWAY_URL;
+    }
+  }
+  return "http://localhost:4729";
+}
 
 export function normalizeFernwayBaseUrl(raw?: string | null): string {
   const trimmed = (raw || "").trim().replace(/\/+$/, "");
@@ -13,7 +24,7 @@ export function normalizeFernwayBaseUrl(raw?: string | null): string {
 }
 
 export function getFernwayAppBaseUrl(overrideUrl?: string | null): string {
-  const preferred = normalizeFernwayBaseUrl(overrideUrl) || CONFIGURED_FERNWAY_URL;
+  const preferred = normalizeFernwayBaseUrl(overrideUrl) || getFallbackFernwayUrl();
   return resolveApiBaseUrl(
     preferred,
     typeof window !== "undefined" ? window.location.href : undefined,

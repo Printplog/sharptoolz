@@ -859,6 +859,9 @@ export interface FernwayProfile {
   email: string;
   email_verified?: boolean;
   email_verified_at?: string | null;
+  credentials_email_sent_at?: string | null;
+  credentials_email_sent?: boolean;
+  credentials_email_error?: string;
   owner_email?: string;
   owner_email_verified?: boolean;
   phone: string;
@@ -987,6 +990,27 @@ export const updateFernwayAccountById = async (
   data: Record<string, unknown>
 ): Promise<FernwayProfile> => {
   const res = await apiClient.put(`/fernway/accounts/${profileId}/`, data);
+  return res.data;
+};
+
+export interface FernwaySendCredentialsResponse {
+  sent: boolean;
+  recipient: string;
+  credentials_email_sent_at: string | null;
+  profile: FernwayProfile;
+}
+
+export const sendFernwayCredentialsEmail = async (
+  profileId: string
+): Promise<FernwaySendCredentialsResponse> => {
+  const res = await apiClient.post(`/fernway/accounts/${profileId}/send-credentials/`);
+  return res.data;
+};
+
+export const sendAdminFernwayCredentialsEmail = async (
+  profileId: string
+): Promise<FernwaySendCredentialsResponse> => {
+  const res = await apiClient.post(`/fernway/admin/accounts/${profileId}/send-credentials/`);
   return res.data;
 };
 

@@ -16,6 +16,7 @@ import {
   MailCheck,
   RefreshCw,
   RotateCcw,
+  Send,
   Shield,
   Upload,
   User as UserIcon,
@@ -37,6 +38,8 @@ import {
   getTrackingSupportMessages,
   renewFernwayAccount,
   requestFernwayEmailVerification,
+  sendAdminFernwayCredentialsEmail,
+  sendFernwayCredentialsEmail,
   updateAdminFernwayAccount,
   updateAdminFernwaySubscription,
   updateFernwayAccountById,
@@ -54,6 +57,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStore } from "@/store/authStore";
 import {
   CreateAccountDialog,
+  SendCredentialsDialog,
   SubscriptionBillingDialog,
 } from "./FernwayAccountDialogs";
 import { FernwayLaunchMenu } from "./FernwayLaunchMenu";
@@ -122,6 +126,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [showPassword, setShowPassword] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showSendCredentialsModal, setShowSendCredentialsModal] = useState(false);
   const [billingModalMode, setBillingModalMode] = useState<"upgrade" | "renew" | null>(null);
   const [creationError, setCreationError] = useState<string | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
@@ -371,22 +376,31 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
   };
 
   const createMutation = useMutation({
-    mutationFn: (isTest: boolean) =>
+    mutationFn: ({ isTest, sendEmail }: { isTest: boolean; sendEmail: boolean }) =>
       createFernwayAccount({
         test: isTest,
+        send_credentials_email: sendEmail,
         ...buildPayload(),
       }),
-    onSuccess: (created) => {
+    onSuccess: (created, variables) => {
       queryClient.invalidateQueries({ queryKey: ["fernway-accounts"] });
       if (created.id) {
         queryClient.setQueryData(["fernway-account", created.id], created);
       }
       setCreationError(null);
-      toast.success(
-        created.is_test
-          ? "Test account created. A simulation notice will show on Fernway until you go live."
-          : "Live monthly account activated!"
-      );
+      if (variables.sendEmail && created.credentials_email_sent) {
+        toast.success(`Account created and login details emailed to ${created.email}.`);
+      } else if (variables.sendEmail && created.credentials_email_error) {
+        toast.warning(
+          `Account created, but the credentials email could not be sent (${created.credentials_email_error}). You can resend it below.`
+        );
+      } else {
+        toast.success(
+          created.is_test
+            ? "Test account created. A simulation notice will show on Fernway until you go live."
+            : "Live monthly account activated!"
+        );
+      }
       setTimeout(() => {
         setShowCreateModal(false);
         if (created.id) {
@@ -399,6 +413,29 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
         (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
         "Failed to create account.";
       setCreationError(msg);
+      toast.error(msg);
+    },
+  });
+
+  const sendCredentialsMutation = useMutation({
+    mutationFn: () => {
+      if (!profileId) throw new Error("Missing account ID");
+      return adminMode
+        ? sendAdminFernwayCredentialsEmail(profileId)
+        : sendFernwayCredentialsEmail(profileId);
+    },
+    onSuccess: (res) => {
+      queryClient.setQueryData(detailQueryKey, res.profile);
+      queryClient.invalidateQueries({ queryKey: ["fernway-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-fernway-accounts"] });
+      setShowSendCredentialsModal(false);
+      toast.success(`Sign-in details emailed to ${res.recipient}.`);
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { error?: string; detail?: string } } })?.response?.data?.error ||
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        "Could not send login details email. Try again.";
       toast.error(msg);
     },
   });
@@ -947,6 +984,29 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                       </Button>
                     </div>
                   </div>
+
+                  {profileId && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={sendCredentialsMutation.isPending}
+                      onClick={() => setShowSendCredentialsModal(true)}
+                      className="rounded-full bg-emerald-500/10 border-emerald-400/30 text-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-200 shrink-0 w-fit"
+                    >
+                      {profile.credentials_email_sent_at ? (
+                        <>
+                          <RefreshCw className="size-3.5 mr-1.5" />
+                          Resend Login Email
+                        </>
+                      ) : (
+                        <>
+                          <Send className="size-3.5 mr-1.5" />
+                          Email Login Details
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
 
                 {/* Actionable Subscription Notice (only when expiring soon, expired, or test mode) */}
@@ -1496,13 +1556,27 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
       <CreateAccountDialog
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
-        onCreateTest={() => createMutation.mutate(true)}
-        onCreateLive={() => createMutation.mutate(false)}
+        onCreateTest={(sendEmail) => createMutation.mutate({ isTest: true, sendEmail })}
+        onCreateLive={(sendEmail) => createMutation.mutate({ isTest: false, sendEmail })}
         isSubmitting={createMutation.isPending}
         price={monthlyPrice}
         walletBalance={walletBalance}
+        recipientEmail={form.email.trim()}
         error={creationError}
       />
+
+      {isCreated && profileId && (
+        <SendCredentialsDialog
+          open={showSendCredentialsModal}
+          onOpenChange={setShowSendCredentialsModal}
+          onConfirm={() => sendCredentialsMutation.mutate()}
+          isSubmitting={sendCredentialsMutation.isPending}
+          accountEmail={profile.email}
+          accountHolder={`${profile.first_name} ${profile.last_name}`.trim() || "Account Holder"}
+          portalUrl={fernwayHomeUrl}
+          lastSentAt={profile.credentials_email_sent_at}
+        />
+      )}
 
       <SubscriptionBillingDialog
         mode={billingModalMode ?? "upgrade"}

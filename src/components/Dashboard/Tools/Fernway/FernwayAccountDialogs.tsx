@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowLeft,
   BadgeCheck,
   CheckCircle2,
   CreditCard,
+  Mail,
+  MailX,
   RefreshCw,
+  Send,
   ShieldCheck,
   TestTube,
   Wallet,
@@ -16,11 +20,12 @@ import { FancyProgress } from "@/components/ui/FancyProgress";
 interface CreateAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateTest: () => void;
-  onCreateLive: () => void;
+  onCreateTest: (sendCredentialsEmail: boolean) => void;
+  onCreateLive: (sendCredentialsEmail: boolean) => void;
   isSubmitting: boolean;
   price: number;
   walletBalance: number;
+  recipientEmail?: string;
   error?: string | null;
 }
 
@@ -32,9 +37,12 @@ export function CreateAccountDialog({
   isSubmitting,
   price,
   walletBalance,
+  recipientEmail,
   error,
 }: CreateAccountDialogProps) {
   const [progress, setProgress] = useState(0);
+  const [step, setStep] = useState<"delivery" | "plan">("delivery");
+  const [sendCredentialsEmail, setSendCredentialsEmail] = useState(false);
 
   useEffect(() => {
     if (isSubmitting) {
@@ -51,8 +59,17 @@ export function CreateAccountDialog({
   }, [isSubmitting, error]);
 
   useEffect(() => {
-    if (!open) setProgress(0);
+    if (!open) {
+      setProgress(0);
+      setStep("delivery");
+      setSendCredentialsEmail(false);
+    }
   }, [open]);
+
+  const handleChooseDelivery = (shouldEmail: boolean) => {
+    setSendCredentialsEmail(shouldEmail);
+    setStep("plan");
+  };
 
   const isInsufficientFunds = error?.toLowerCase().includes("insufficient");
 
@@ -121,14 +138,105 @@ export function CreateAccountDialog({
                   <FancyProgress value={100} isComplete={true} statusText="Success" noShadow />
                 </div>
               </motion.div>
+            ) : step === "delivery" && recipientEmail ? (
+              <motion.div
+                key="delivery"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
+                className="space-y-7"
+              >
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
+                    <Mail className="size-3" />
+                    Step 1 of 2
+                  </div>
+                  <h2 className="text-2xl font-bold text-white tracking-tight">
+                    Email sign-in details?
+                  </h2>
+                  <p className="text-white/50 text-sm leading-relaxed">
+                    Would you like us to email the banking portal link, login email, password, and transaction PIN directly to{" "}
+                    <span className="font-mono text-emerald-300 break-all">{recipientEmail}</span> instead of sending in DMs?
+                  </p>
+                </div>
+
+                <div className="grid gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleChooseDelivery(true)}
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/15 hover:bg-primary/10 transition-all text-left group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform shrink-0">
+                      <Send className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-primary font-semibold">Yes, email sign-in details</h3>
+                      <p className="text-primary/65 text-xs">
+                        Send directly to their inbox as soon as the account is created
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleChooseDelivery(false)}
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] transition-all text-left group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform shrink-0">
+                      <MailX className="w-5 h-5 text-white/55" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white/90 font-medium">No, I&apos;ll share it myself</h3>
+                      <p className="text-white/45 text-xs">
+                        Skip for now — you can still send or resend it anytime later
+                      </p>
+                    </div>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => onOpenChange(false)}
+                  className="w-full py-3 rounded-xl border border-white/5 bg-white/2 text-white/40 hover:text-white/80 hover:bg-white/5 font-medium transition-all active:scale-95 text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </motion.div>
             ) : (
               <motion.div
                 key="choice"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
                 className="space-y-7"
               >
                 <div className="space-y-3">
+                  {recipientEmail && (
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setStep("delivery")}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-white/55 hover:text-white transition-colors cursor-pointer"
+                      >
+                        <ArrowLeft className="size-3.5" />
+                        Back
+                      </button>
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] text-white/70">
+                        {sendCredentialsEmail ? (
+                          <>
+                            <Mail className="size-3 text-emerald-400" />
+                            Emailing details to client
+                          </>
+                        ) : (
+                          <>
+                            <MailX className="size-3 text-white/45" />
+                            Not emailing now
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="space-y-1">
                     <h2 className="text-2xl font-bold text-white tracking-tight">Select option</h2>
                     <p className="text-white/45 text-sm">
@@ -162,7 +270,7 @@ export function CreateAccountDialog({
                   {/* Test Option */}
                   <button
                     type="button"
-                    onClick={onCreateTest}
+                    onClick={() => onCreateTest(sendCredentialsEmail)}
                     className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-all text-left group cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">
@@ -182,7 +290,7 @@ export function CreateAccountDialog({
                   {/* Paid Live Monthly Option */}
                   <button
                     type="button"
-                    onClick={onCreateLive}
+                    onClick={() => onCreateLive(sendCredentialsEmail)}
                     className="flex items-center gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-all text-left group relative cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform">
@@ -332,6 +440,122 @@ export function SubscriptionBillingDialog({
                 : isRenew
                   ? `Pay $${price.toFixed(2)} & Renew 30 Days`
                   : `Pay $${price.toFixed(2)} & Go Live`}
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+              className="w-full py-3 rounded-xl border border-white/5 bg-white/2 text-white/40 hover:text-white/80 hover:bg-white/5 font-medium transition-all active:scale-95 text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </motion.div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface SendCredentialsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isSubmitting: boolean;
+  accountEmail: string;
+  accountHolder: string;
+  portalUrl: string;
+  lastSentAt?: string | null;
+}
+
+export function SendCredentialsDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+  isSubmitting,
+  accountEmail,
+  accountHolder,
+  portalUrl,
+  lastSentAt,
+}: SendCredentialsDialogProps) {
+  const isResend = Boolean(lastSentAt);
+  const formattedLastSent = lastSentAt
+    ? new Date(lastSentAt).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : null;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!isSubmitting) onOpenChange(next);
+      }}
+    >
+      <DialogContent
+        className="max-w-md p-0 overflow-hidden bg-transparent border-none shadow-none"
+        showCloseButton={false}
+        noShadow
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          className="bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 relative overflow-hidden space-y-6"
+        >
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
+              <Mail className="size-3" />
+              {isResend ? "Resend Sign-In Email" : "Email Sign-In Details"}
+            </div>
+            <h2 className="text-2xl font-bold text-white tracking-tight pt-1">
+              {isResend ? "Resend account login details?" : "Send login details by email?"}
+            </h2>
+            <p className="text-white/50 text-sm leading-relaxed">
+              We&apos;ll send a Fernway-branded email directly to the recipient&apos;s inbox so you don&apos;t have to paste credentials in DMs.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2.5 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-white/45">Recipient</span>
+              <span className="font-mono text-emerald-300 truncate">{accountEmail}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-2">
+              <span className="text-white/45">Account Holder</span>
+              <span className="text-white font-medium truncate">{accountHolder}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-2">
+              <span className="text-white/45">Portal Link</span>
+              <span className="font-mono text-white/80 truncate">{portalUrl}/sign-in</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-2">
+              <span className="text-white/45">Included</span>
+              <span className="text-white/80">Portal link, email, password &amp; PIN</span>
+            </div>
+            {formattedLastSent && (
+              <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-2">
+                <span className="text-white/45">Last Sent</span>
+                <span className="text-white/65">{formattedLastSent}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={onConfirm}
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isResend ? <RefreshCw className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+              {isSubmitting
+                ? "Sending email..."
+                : isResend
+                  ? "Resend Login Email"
+                  : "Send Login Details Email"}
             </button>
             <button
               type="button"
