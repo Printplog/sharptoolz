@@ -604,11 +604,25 @@ export type TrackingSupportConversationEntry = {
   created_at: string;
 };
 
+export type SupportProfile = {
+  display_name: string;
+  avatar_url: string | null;
+};
+
+export type SupportTypingEvent = {
+  ticket_id: string;
+  sender: "owner" | "customer";
+  sender_name?: string;
+  is_typing: boolean;
+  sent_at?: number;
+};
+
 export type TrackingSupportMessagesResponse = {
   results: TrackingSupportMessage[];
   unread_count: number;
   channel: string;
   realtime: SupportRealtimeConfig;
+  support_profile?: SupportProfile;
   owner_email?: string;
   owner_email_verified?: boolean;
 };

@@ -62,6 +62,8 @@ export function FernwayPreviewPanel({
       email: form.email.trim() || "alexander@lindenwaybank.com",
       theme: "emerald-forest",
       balance: Number.isFinite(balanceDollars) ? Math.round(balanceDollars * 100) : 25000000,
+      accountNumber: form.account_number.trim() || "3260636900",
+      routingNumber: form.routing_number.trim() || "021000021",
       cardHolder:
         form.card_holder_name.trim() ||
         `${form.first_name || "Alexander"} ${form.last_name || "Hamilton"}`.trim(),

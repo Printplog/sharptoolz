@@ -1,4 +1,4 @@
-import type { Country, FormField, Tool, Tutorial, CryptoPaymentData, CryptoPaymentConfirmation, CryptoPaymentStatus, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme, WalletData, TrackingSupportMessage, TrackingSupportMessagesResponse } from "@/types";
+import type { Country, FormField, Tool, Tutorial, CryptoPaymentData, CryptoPaymentConfirmation, CryptoPaymentStatus, DownloadData, Font, LoginPayload, LoginResponse, AdminTwoFactorSetup, AdminTwoFactorVerification, PurchasedTemplate, RegisterPayload, Template, User, SiteSettings, AuditLog, TrafficAttribution, ApiAccessStatus, ApiKeyRecord, ApiTheme, WalletData, SupportProfile, TrackingSupportMessage, TrackingSupportMessagesResponse } from "@/types";
 import { apiClient } from "./apiClient";
 export const getApi = apiClient.get;
 export const postApi = apiClient.post;
@@ -269,6 +269,38 @@ export const sendTrackingSupportReply = async (
   body: string,
 ): Promise<TrackingSupportMessage['conversation'][number]> => {
   const res = await apiClient.post(`/support/messages/${id}/replies/`, { body });
+  return res.data;
+};
+
+export const sendTrackingSupportTyping = async (
+  id: string,
+  isTyping: boolean,
+): Promise<void> => {
+  await apiClient.post(`/support/messages/${id}/typing/`, { is_typing: isTyping });
+};
+
+export const getOwnerSupportSettings = async (): Promise<SupportProfile> => {
+  const res = await apiClient.get('/support/settings/');
+  return res.data;
+};
+
+export const updateOwnerSupportSettings = async (input: {
+  display_name?: string;
+  avatar?: File | null;
+  remove_avatar?: boolean;
+}): Promise<SupportProfile> => {
+  const formData = new FormData();
+  if (input.display_name !== undefined) {
+    formData.append('display_name', input.display_name);
+  }
+  if (input.avatar) {
+    formData.append('avatar', input.avatar);
+  } else if (input.remove_avatar) {
+    formData.append('remove_avatar', 'true');
+  }
+  const res = await apiClient.patch('/support/settings/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return res.data;
 };
 
@@ -1041,6 +1073,9 @@ export const createFernwayAccountTransaction = async (
     direction: 'credit' | 'debit';
     amount: number;
     counterparty: string;
+    bank_name?: string;
+    recipient_account_number?: string;
+    recipient_routing_number?: string;
     narration?: string;
     category?: string;
     channel?: string;
@@ -1205,6 +1240,9 @@ export const createAdminFernwayTransaction = async (
     direction: 'credit' | 'debit';
     amount: number;
     counterparty: string;
+    bank_name?: string;
+    recipient_account_number?: string;
+    recipient_routing_number?: string;
     narration?: string;
     category?: string;
     channel?: string;

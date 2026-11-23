@@ -72,6 +72,8 @@ export interface FernwayFormState {
   transaction_pin: string;
   theme: string;
   account_balance: string;
+  account_number: string;
+  routing_number: string;
   card_holder_name: string;
   card_number: string;
   card_expiry: string;
@@ -79,6 +81,14 @@ export interface FernwayFormState {
   card_pin: string;
   card_limit: string;
   card_is_frozen: boolean;
+}
+
+export function generateAccountNumber(): string {
+  const bytes = new Uint32Array(10);
+  crypto.getRandomValues(bytes);
+  const first = String((bytes[0] % 9) + 1);
+  const rest = Array.from(bytes.slice(1), (b) => String(b % 10)).join("");
+  return `${first}${rest}`;
 }
 
 export function formatCardNumber(value: string): string {
