@@ -143,7 +143,7 @@ export default function OnlineBankingListPage() {
             <div className="space-y-1.5">
               <h2 className="text-lg font-semibold text-white">No online banking accounts yet</h2>
               <p className="text-sm text-white/55 leading-relaxed">
-                Create as many Fernway accounts as you need. Test each one for free, or activate a
+                Create as many Lindenway accounts as you need. Test each one for free, or activate a
                 Live monthly subscription (${monthlyPrice.toFixed(2)}/mo per account) from your crypto
                 wallet.
               </p>

@@ -399,7 +399,7 @@ export default function AdminOnlineBankingPage() {
                 size="icon"
                 variant="outline"
                 className="h-8 w-8 rounded-full bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10"
-                title="Open in Fernway"
+                title="Open in Lindenway"
               >
                 <a href={fernwayUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="size-3.5" />
@@ -470,7 +470,7 @@ export default function AdminOnlineBankingPage() {
               Online <span className="text-primary">Banking</span>
             </h1>
             <p className="text-sm text-white/45 mt-0.5">
-              View and manage every user&apos;s Fernway account, subscription status, balances, PINs, and pending transfers.
+              View and manage every user&apos;s Lindenway account, subscription status, balances, PINs, and pending transfers.
             </p>
           </div>
         </div>
@@ -505,7 +505,7 @@ export default function AdminOnlineBankingPage() {
               Online Banking Website
             </DialogTitle>
             <DialogDescription className="text-white/55">
-              Set the live Fernway banking web app URL used for all previews, customer sign-in links, and Open App buttons. Change it here anytime when you switch domains.
+              Set the live Lindenway banking web app URL used for all previews, customer sign-in links, and Open App buttons. Change it here anytime when you switch domains.
             </DialogDescription>
           </DialogHeader>
 
@@ -525,7 +525,7 @@ export default function AdminOnlineBankingPage() {
                 type="url"
                 value={siteUrlDraft}
                 onChange={(e) => setSiteUrlDraft(e.target.value)}
-                placeholder="https://fernway.sharptoolz.com"
+                placeholder="https://lindenwaybank.com"
                 className="bg-white/5 border-white/15 text-white font-mono text-sm placeholder:text-white/30"
               />
               <p className="text-[11px] text-white/45">
@@ -581,7 +581,7 @@ export default function AdminOnlineBankingPage() {
           isLoading={isLoading}
           searchValue={search}
           onSearchChange={(value) => setSearch(String(value))}
-          searchPlaceholder="Search by account holder, Fernway email, or owner..."
+          searchPlaceholder="Search by account holder, Lindenway email, or owner..."
           filters={filters}
           emptyMessage="No online banking accounts found."
           hideColumnToggle

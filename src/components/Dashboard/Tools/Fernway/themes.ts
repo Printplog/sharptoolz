@@ -53,7 +53,7 @@ export interface FernwayThemeOption {
 
 export const FERNWAY_GREEN_THEME: FernwayThemeOption = {
   id: "emerald-forest",
-  label: "Fernway Green",
+  label: "Lindenway Green",
   tagline: "Unified private banking emerald and forest green",
   primary: "#059669",
   brand: "#065f46",

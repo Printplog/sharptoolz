@@ -103,7 +103,7 @@ export function FernwayLogo({
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <FernwayMark className={cn("size-6 text-emerald-400", markClassName)} />
       <span className={cn("font-semibold tracking-tight text-white text-base", textClassName)}>
-        Fernway
+        Lindenway
       </span>
     </span>
   );

@@ -89,7 +89,7 @@ function FernwayCardArtwork({ large = false }: { large?: boolean }) {
               large ? "text-xs" : "text-[9px]"
             }`}
           >
-            <span>FERNWAY MEMBER</span>
+            <span>LINDENWAY MEMBER</span>
             <span>12/28</span>
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function FernwayToolCard({ delay = 0, tool }: Props) {
   const navigate = useNavigate();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const title = tool?.name || "Fernway Online Banking";
+  const title = tool?.name || "Lindenway Online Banking";
   const description =
     tool?.description ||
     "Set up a custom online banking account with balances, debit card & transactions";
@@ -190,7 +190,7 @@ export default function FernwayToolCard({ delay = 0, tool }: Props) {
       {/* Full Preview Modal — matches BannerPreviewModal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden bg-transparent border-none shadow-none focus:outline-none">
-          <DialogTitle className="sr-only">Fernway Online Banking Preview</DialogTitle>
+          <DialogTitle className="sr-only">Lindenway Online Banking Preview</DialogTitle>
           <div className="relative bg-[#0a0a0a] rounded-3xl border border-white/10 overflow-hidden">
             <button
               type="button"

@@ -173,7 +173,7 @@ export default function SupportMessagesPage() {
       <header className={cn("flex flex-col justify-between gap-4 pb-6 sm:flex-row sm:items-end", selectedId && "hidden lg:flex")}>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Support Messages</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">Requests from ParcelFinda, MyFlightLookup, and Fernway Banking.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">Requests from ParcelFinda, MyFlightLookup, and Lindenway Banking.</p>
         </div>
         <SupportHowItWorksDialog />
       </header>

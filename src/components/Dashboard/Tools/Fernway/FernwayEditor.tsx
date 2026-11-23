@@ -294,7 +294,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
             });
         queryClient.setQueryData(detailQueryKey, updated);
         queryClient.invalidateQueries({ queryKey: ["fernway-accounts"] });
-        toast.success("Email verified — Fernway notifications are now active!");
+        toast.success("Email verified — Lindenway notifications are now active!");
       } else {
         toast.success("Email verified! You can now save or create this account.");
       }
@@ -397,7 +397,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
       } else {
         toast.success(
           created.is_test
-            ? "Test account created. A simulation notice will show on Fernway until you go live."
+            ? "Test account created. A simulation notice will show on Lindenway until you go live."
             : "Live monthly account activated!"
         );
       }
@@ -580,7 +580,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
       queryClient.setQueryData(detailQueryKey, updatedProfile);
       queryClient.invalidateQueries({ queryKey: ["fernway-accounts"] });
       queryClient.invalidateQueries({ queryKey: ["admin-fernway-accounts"] });
-      toast.success("Transfer approved and marked completed in Fernway.");
+      toast.success("Transfer approved and marked completed in Lindenway.");
     },
     onError: (err: unknown) => {
       const msg =
@@ -664,7 +664,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
             Error loading {isEditingExisting ? "online banking account" : "tool"}
           </h2>
           <p className="text-sm text-gray-400">
-            {error instanceof Error ? error.message : "Could not load Fernway Online Banking."}
+            {error instanceof Error ? error.message : "Could not load Lindenway Online Banking."}
           </p>
           <div className="flex items-center gap-3">
             <Button onClick={() => refetch()} variant="outline">
@@ -1194,7 +1194,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                           setEmailCode("");
                         }
                       }}
-                      placeholder="e.g. name@fernwaybank.com or client@gmail.com"
+                      placeholder="e.g. name@lindenwaybank.com or client@gmail.com"
                       className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 flex-1"
                     />
                     {!isEmailVerified && (
@@ -1252,8 +1252,8 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
 
                   <p className="text-xs text-white/40">
                     {isEmailVerified
-                      ? "Verified — your client will receive Fernway login, transfer, card, and support emails at this address."
-                      : "Optional — you can create or save without verifying. Verify with a 4-digit code only if you want your client to receive Fernway login, transfer, card, and support emails (your SharpToolz email still receives owner alerts)."}
+                      ? "Verified — your client will receive Lindenway login, transfer, card, and support emails at this address."
+                      : "Optional — you can create or save without verifying. Verify with a 4-digit code only if you want your client to receive Lindenway login, transfer, card, and support emails (your SharpToolz email still receives owner alerts)."}
                   </p>
                 </div>
 
@@ -1268,7 +1268,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                         type={showPassword ? "text" : "password"}
                         value={form.password}
                         onChange={(e) => setForm({ ...form, password: e.target.value })}
-                        placeholder="Create a password for Fernway"
+                        placeholder="Create a password for Lindenway"
                         className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 pr-10"
                       />
                       <button
@@ -1309,7 +1309,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                     }
                   />
                   <p className="text-xs text-white/40">
-                    Required inside Fernway before sending any outgoing bank transfer.
+                    Required inside Lindenway before sending any outgoing bank transfer.
                   </p>
                 </div>
               </div>
@@ -1465,7 +1465,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                     }
                   />
                   <p className="text-xs text-white/40">
-                    4-digit physical debit card PIN shown inside Fernway card details.
+                    4-digit physical debit card PIN shown inside Lindenway card details.
                   </p>
                 </div>
 
@@ -1494,7 +1494,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                       Freeze Physical Card
                     </span>
                     <span className="text-xs text-white/40">
-                      Show this card as temporarily frozen inside Fernway
+                      Show this card as temporarily frozen inside Lindenway
                     </span>
                   </div>
                   <Checkbox

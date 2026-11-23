@@ -109,7 +109,7 @@ export function CreateAccountDialog({
                   <h2 className="text-xl font-semibold text-white tracking-tight">
                     Creating account
                   </h2>
-                  <p className="text-white/40 text-xs">Setting up your Fernway banking portal</p>
+                  <p className="text-white/40 text-xs">Setting up your Lindenway banking portal</p>
                 </div>
                 <div className="px-4">
                   <FancyProgress
@@ -261,7 +261,7 @@ export function CreateAccountDialog({
 
                   {!error && (
                     <p className="text-xs text-amber-300/85 font-medium leading-relaxed text-left">
-                      Test accounts show a simulation notice at the top of Fernway. Live accounts renew monthly — we&apos;ll send a reminder before each renewal date.
+                      Test accounts show a simulation notice at the top of Lindenway. Live accounts renew monthly — we&apos;ll send a reminder before each renewal date.
                     </p>
                   )}
                 </div>
@@ -282,7 +282,7 @@ export function CreateAccountDialog({
                         <span className="text-xs font-semibold text-white/50">Free</span>
                       </div>
                       <p className="text-white/40 text-xs">
-                        Shows simulation notice at top of Fernway
+                        Shows simulation notice at top of Lindenway
                       </p>
                     </div>
                   </button>
@@ -387,8 +387,8 @@ export function SubscriptionBillingDialog({
             </h2>
             <p className="text-white/45 text-sm">
               {isRenew
-                ? "Add 30 more days of live access with no simulation notice on Fernway."
-                : "Remove the simulation notice from Fernway for 30 days. We'll remind you before renewal."}
+                ? "Add 30 more days of live access with no simulation notice on Lindenway."
+                : "Remove the simulation notice from Lindenway for 30 days. We'll remind you before renewal."}
             </p>
             {accountEmail && (
               <p className="text-xs font-mono text-primary pt-1">{accountEmail}</p>
@@ -514,7 +514,7 @@ export function SendCredentialsDialog({
               {isResend ? "Resend account login details?" : "Send login details by email?"}
             </h2>
             <p className="text-white/50 text-sm leading-relaxed">
-              We&apos;ll send a Fernway-branded email directly to the recipient&apos;s inbox so you don&apos;t have to paste credentials in DMs.
+              We&apos;ll send a Lindenway-branded email directly to the recipient&apos;s inbox so you don&apos;t have to paste credentials in DMs.
             </p>
           </div>
 

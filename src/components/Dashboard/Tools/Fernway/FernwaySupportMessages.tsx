@@ -122,7 +122,7 @@ export function FernwaySupportMessages({ profileId }: { profileId: string }) {
         </span>
         <p className="mt-4 text-sm font-semibold text-white/85">No support conversations yet</p>
         <p className="mt-1.5 max-w-md text-xs leading-5 text-white/45">
-          When someone opens the bottom-right Support widget inside Fernway for this account, their live chat will appear here and in your Support Messages inbox.
+          When someone opens the bottom-right Support widget inside Lindenway for this account, their live chat will appear here and in your Support Messages inbox.
         </p>
       </div>
     );

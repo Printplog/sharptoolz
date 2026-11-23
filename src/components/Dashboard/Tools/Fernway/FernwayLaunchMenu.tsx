@@ -40,7 +40,7 @@ export function FernwayLaunchMenu({
 
   const handleCopyWebsiteLink = () => {
     navigator.clipboard.writeText(homeUrl);
-    toast.success("Fernway website link copied!");
+    toast.success("Lindenway website link copied!");
   };
 
   const menuItems = (includeMainSite: boolean) => (
@@ -113,7 +113,7 @@ export function FernwayLaunchMenu({
                   : "w-full pl-6 pr-2 py-1.5 text-sm md:text-base",
               )}
             >
-              <span className="whitespace-nowrap">Open Fernway</span>
+              <span className="whitespace-nowrap">Open Lindenway</span>
               {isSmall ? (
                 <ChevronDown className="size-3.5 shrink-0" />
               ) : (
@@ -143,7 +143,7 @@ export function FernwayLaunchMenu({
             isSmall ? "pl-3 pr-2.5" : "pl-6 pr-4 py-2.5",
           )}
         >
-          <span>Open Fernway</span>
+          <span>Open Lindenway</span>
           <ExternalLink className={isSmall ? "size-3.5" : "size-4"} />
         </a>
 
@@ -153,7 +153,7 @@ export function FernwayLaunchMenu({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="More Fernway options"
+              aria-label="More Lindenway options"
               title="Open Logged In, Login Page, or Copy Website Link"
               className={cn(
                 "inline-flex items-center justify-center transition-colors hover:bg-white/25 cursor-pointer",

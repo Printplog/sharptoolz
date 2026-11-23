@@ -136,9 +136,9 @@ export function FernwayTransactionsTab({
                 Pending Transfer Approvals ({pendingTransfers.length})
               </h2>
               <p className="text-xs text-white/55 mt-0.5 leading-relaxed">
-                Submitted from Fernway. Review the recipient details below, send the money manually,
+                Submitted from Lindenway. Review the recipient details below, send the money manually,
                 then click <strong className="text-white">Approve</strong> to mark it completed in
-                Fernway — or <strong className="text-white">Decline &amp; Refund</strong> to return
+                Lindenway — or <strong className="text-white">Decline &amp; Refund</strong> to return
                 the funds to their balance.
               </p>
             </div>
@@ -288,7 +288,7 @@ export function FernwayTransactionsTab({
               Transaction Ledger ({transactions.length})
             </h2>
             <p className="text-xs text-white/45 mt-0.5">
-              Entries shown here appear immediately in your Fernway online banking history.
+              Entries shown here appear immediately in your Lindenway online banking history.
             </p>
           </div>
           <Button type="button" size="sm" onClick={() => setDialogOpen(true)} className="shrink-0">
@@ -410,7 +410,7 @@ export function FernwayTransactionsTab({
               Add Transaction
             </DialogTitle>
             <DialogDescription className="text-white/50 text-xs">
-              Add a deposit or expense to your Fernway account history.
+              Add a deposit or expense to your Lindenway account history.
             </DialogDescription>
           </DialogHeader>
 

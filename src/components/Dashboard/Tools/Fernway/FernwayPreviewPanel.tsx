@@ -59,7 +59,7 @@ export function FernwayPreviewPanel({
     return encodeBase64Url({
       firstName: form.first_name.trim() || "Alexander",
       lastName: form.last_name.trim() || "Hamilton",
-      email: form.email.trim() || "alexander@fernwaybank.com",
+      email: form.email.trim() || "alexander@lindenwaybank.com",
       theme: "emerald-forest",
       balance: Number.isFinite(balanceDollars) ? Math.round(balanceDollars * 100) : 25000000,
       cardHolder:
@@ -222,7 +222,7 @@ export function FernwayPreviewPanel({
           {!isLoaded && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[#0c111a]/90 text-white/70">
               <Loader2 className="size-6 animate-spin text-primary" />
-              <span className="text-xs font-medium">Loading live Fernway preview...</span>
+              <span className="text-xs font-medium">Loading live Lindenway preview...</span>
             </div>
           )}
 
@@ -230,7 +230,7 @@ export function FernwayPreviewPanel({
             ref={iframeRef}
             key={`${route}-${reloadNonce}`}
             src={iframeSrc}
-            title="Fernway Online Banking Live Preview"
+            title="Lindenway Online Banking Live Preview"
             onLoad={() => setIsLoaded(true)}
             className="w-full h-full border-0 bg-white"
             allow="clipboard-write"
