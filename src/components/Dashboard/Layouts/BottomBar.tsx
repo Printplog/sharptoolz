@@ -1,21 +1,28 @@
-import { LayoutDashboard, Wallet, Settings, Hammer, ClipboardList, Landmark, ArrowRight, Users, MessagesSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getFernwayAccounts, getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
-import { getReferralStats } from "@/api/referralEndpoints";
-import { REFERRALS_VISIBLE } from "@/lib/constants/features";
+import { FileText, Hammer, Home, MessagesSquare } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+
+import { getFernwayAccounts, getTrackingSupportMessages } from "@/api/apiEndpoints";
+import { getReferralStats } from "@/api/referralEndpoints";
+import { BentoMenuIcon } from "@/components/Dashboard/Layouts/NavIcons";
+import { REFERRALS_VISIBLE } from "@/lib/constants/features";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
-import { isAdminOrStaff } from "@/lib/constants/roles";
+import { useSidebarStore } from "@/store/sidebarStore";
+
+const DRAWER_ONLY_PREFIXES = [
+  "/sharp-guy",
+  "/online-banking",
+  "/wallet",
+  "/referrals",
+  "/settings",
+  "/admin",
+];
 
 export default function BottomBar() {
   const { pathname } = useLocation();
   const { user } = useAuthStore();
-
-  const { data: settings } = useQuery({
-    queryKey: ["siteSettings"],
-    queryFn: getSiteSettings,
-  });
+  const { isOpen, toggle } = useSidebarStore();
 
   const { data: refStats } = useQuery({
     queryKey: ["referralStats"],
@@ -38,110 +45,102 @@ export default function BottomBar() {
     retry: false,
   });
 
-  const canAccessAdmin = isAdminOrStaff(user?.role);
-  const aiEnabled = settings?.enable_ai_features ?? true;
+  const unreadSupport = supportMessages?.unread_count ?? 0;
+  const pendingBanking = bankingSummary?.pending_transfers_total ?? 0;
+  const pendingReferrals = REFERRALS_VISIBLE ? (refStats?.pending_referrals ?? 0) : 0;
+  const moreAlerts = pendingBanking + pendingReferrals;
 
-  const baseNavigationItems = [
+  const isDrawerRouteActive = DRAWER_ONLY_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  const isMenuActive = isOpen || isDrawerRouteActive;
+
+  const pinnedItems = [
     {
-      icon: <LayoutDashboard className="w-5 h-5 mb-[2px]" />,
       label: "Home",
       to: "/dashboard",
+      icon: <Home className="size-5" />,
+      badge: 0,
     },
-    ...(aiEnabled ? [{
-      icon: <img src="/sharpguy.png" className="w-5 h-5 mb-[2px] object-contain" alt="Sharp Guy" />,
-      label: "Sharp Guy",
-      to: "/sharp-guy",
-    }] : []),
     {
-      icon: <Hammer className="w-5 h-5 mb-[2px]" />,
       label: "Tools",
       to: "/tools",
+      icon: <Hammer className="size-5" />,
+      badge: 0,
     },
     {
-      icon: <ClipboardList className="w-5 h-5 mb-[2px]" />,
-      label: "Documents",
+      label: "Docs",
       to: "/documents",
+      icon: <FileText className="size-5" />,
+      badge: 0,
     },
     {
-      icon: <Landmark className="w-5 h-5 mb-[2px]" />,
-      label: "Banking",
-      to: "/online-banking",
-      badge: bankingSummary?.pending_transfers_total ?? 0,
-    },
-    {
-      icon: <MessagesSquare className="w-5 h-5 mb-[2px]" />,
       label: "Support",
       to: "/support",
-      badge: supportMessages?.unread_count ?? 0,
-    },
-    {
-      icon: <Wallet className="w-5 h-5 mb-[2px]" />,
-      label: "Wallet",
-      to: "/wallet",
-    },
-    ...(REFERRALS_VISIBLE ? [{
-      icon: <Users className="w-5 h-5 mb-[2px]" />,
-      label: "Refer",
-      to: "/referrals",
-    }] : []),
-    {
-      icon: <Settings className="w-5 h-5 mb-[2px]" />,
-      label: "Settings",
-      to: "/settings",
+      icon: <MessagesSquare className="size-5" />,
+      badge: unreadSupport,
     },
   ];
 
-  const adminNavigationItem = {
-    icon: <ArrowRight className="w-5 h-5 mb-[2px]" />,
-    label: "Admin",
-    to: "/admin/dashboard",
-  };
-
-  const navigationItems = canAccessAdmin
-    ? [...baseNavigationItems, adminNavigationItem]
-    : baseNavigationItems;
-
   return (
-    <nav className="fixed bottom-0 z-50 flex w-full items-center justify-start overflow-x-auto border-t border-white/10 bg-background py-4 lg:hidden">
-      {navigationItems.map((item) => {
-        // Special handling for "Switch to Admin" link - only active if pathname starts with /admin/
-        let isActive = false;
-        if (item.to === "/admin/dashboard" || item.to.startsWith("/admin/")) {
-          isActive = pathname.startsWith("/admin/");
-        } else {
-          // For user routes, check if pathname includes the route but not /admin/
-          isActive = pathname.includes(item.to) && !pathname.startsWith("/admin/");
-        }
+    <nav
+      aria-label="Primary mobile navigation"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.08] bg-[#0c121b]/92 px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
+    >
+      <div className="mx-auto grid max-w-lg grid-cols-5 items-center gap-1">
+        {pinnedItems.map((item) => {
+          const isActive =
+            !isOpen && pathname.includes(item.to) && !pathname.startsWith("/admin/");
 
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            className={cn(
-              "flex min-w-[68px] flex-1 flex-col items-center text-xs text-muted-foreground hover:text-primary transition-all",
-              isActive && "text-primary"
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "relative flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium transition-colors",
+                isActive ? "text-primary" : "text-white/50 hover:text-white/85",
+              )}
+            >
+              {isActive && (
+                <span className="absolute top-0 h-[2px] w-6 rounded-full bg-primary" />
+              )}
+              <span className="relative flex items-center justify-center">
+                {item.icon}
+                {item.badge > 0 && (
+                  <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-[#0b1118] ring-2 ring-[#0c121b]">
+                    {item.badge > 9 ? "9+" : item.badge}
+                  </span>
+                )}
+              </span>
+              <span className="leading-none">{item.label}</span>
+            </Link>
+          );
+        })}
+
+        {/* 5th slot — Bespoke Bento Menu Drawer Trigger */}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? "Close all menu" : "Open all tools and menu"}
+          className={cn(
+            "relative flex min-h-[52px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium transition-colors",
+            isMenuActive ? "text-primary" : "text-white/50 hover:text-white/85",
+          )}
+        >
+          {isMenuActive && (
+            <span className="absolute top-0 h-[2px] w-6 rounded-full bg-primary" />
+          )}
+          <span className="relative flex items-center justify-center">
+            <BentoMenuIcon active={isMenuActive} />
+            {moreAlerts > 0 && (
+              <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-400 px-1 text-[9px] font-bold text-[#0b1118] ring-2 ring-[#0c121b]">
+                {moreAlerts > 9 ? "9+" : moreAlerts}
+              </span>
             )}
-          >
-            <div className="relative">
-              {item.icon}
-              {item.to === "/referrals" && refStats && refStats.pending_referrals > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary text-[8px] font-black text-black animate-pulse">
-                  {refStats.pending_referrals}
-                </span>
-              )}
-              {(item.to === "/support" || item.to === "/online-banking") && "badge" in item && typeof item.badge === "number" && item.badge > 0 && (
-                <span className={cn(
-                  "absolute -right-2 -top-1 flex h-3 min-w-3 items-center justify-center rounded-full px-0.5 text-[8px] font-black text-black",
-                  item.to === "/online-banking" ? "bg-amber-400" : "bg-primary",
-                )}>
-                  {item.badge > 9 ? "9+" : item.badge}
-                </span>
-              )}
-            </div>
-            {item.label}
-          </Link>
-        );
-      })}
+          </span>
+          <span className="leading-none">Menu</span>
+        </button>
+      </div>
     </nav>
   );
 }

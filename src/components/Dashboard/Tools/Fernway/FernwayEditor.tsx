@@ -72,6 +72,7 @@ import {
   FERNWAY_GREEN_THEME,
   formatCardExpiry,
   formatCardNumber,
+  generateAccountNumber,
   generateCardNumber,
   generateCvv,
   generateTransactionPin,
@@ -156,6 +157,8 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
     transaction_pin: "1234",
     theme: FERNWAY_GREEN_THEME.id,
     account_balance: "250000.00",
+    account_number: generateAccountNumber(),
+    routing_number: "021000021",
     card_holder_name: "Alexander Hamilton",
     card_number: "4532 9182 7364 8892",
     card_expiry: "12/28",
@@ -197,6 +200,7 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
       profile.accounts && profile.accounts.length > 0
         ? profile.accounts.reduce((sum, a) => sum + (a.balance || 0), 0)
         : 25000000;
+    const primaryAccount = profile.accounts?.[0];
     const card = profile.cards?.[0];
 
     setForm((prev) => ({
@@ -208,6 +212,8 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
       transaction_pin: profile.transaction_pin || prev.transaction_pin || "1234",
       theme: FERNWAY_GREEN_THEME.id,
       account_balance: (totalCents / 100).toFixed(2),
+      account_number: primaryAccount?.account_number || prev.account_number,
+      routing_number: primaryAccount?.routing_number || prev.routing_number || "021000021",
       card_holder_name:
         card?.holder_name ||
         `${profile.first_name} ${profile.last_name}`.trim() ||
@@ -330,6 +336,16 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
       toast.error("Transaction PIN must be exactly 4 digits.");
       return false;
     }
+    const acctDigits = form.account_number.replace(/\D/g, "");
+    const routingDigits = form.routing_number.replace(/\D/g, "");
+    if (acctDigits.length < 6) {
+      toast.error("Account number must be at least 6 digits.");
+      return false;
+    }
+    if (routingDigits.length < 6) {
+      toast.error("Routing number must be at least 6 digits.");
+      return false;
+    }
     if (cardDigits.length !== 16) {
       toast.error("Card number must be 16 digits.");
       return false;
@@ -363,6 +379,9 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
       transaction_pin: form.transaction_pin.replace(/\D/g, "").slice(0, 4) || "1234",
       theme: FERNWAY_GREEN_THEME.id,
       account_balance: normalizeDollarString(form.account_balance, "250000.00"),
+      account_number: form.account_number.replace(/\D/g, "").slice(0, 30),
+      checking_account_number: form.account_number.replace(/\D/g, "").slice(0, 30),
+      routing_number: form.routing_number.replace(/\D/g, "").slice(0, 30) || "021000021",
       card_holder_name:
         form.card_holder_name.trim() || `${form.first_name} ${form.last_name}`.trim(),
       card_number: formattedNumber,
@@ -623,6 +642,8 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
       transaction_pin: "1234",
       theme: FERNWAY_GREEN_THEME.id,
       account_balance: "250000.00",
+      account_number: profile?.accounts?.[0]?.account_number || generateAccountNumber(),
+      routing_number: profile?.accounts?.[0]?.routing_number || "021000021",
       card_holder_name: `${profile?.first_name || "Alexander"} ${profile?.last_name || "Hamilton"}`.trim(),
       card_number: "4532 9182 7364 8892",
       card_expiry: "12/28",
@@ -1351,6 +1372,66 @@ export function FernwayEditor({ profileId, adminMode = false }: FernwayEditorPro
                       {preset.label}
                     </Button>
                   ))}
+                </div>
+
+                <div className="space-y-2 w-full pt-2">
+                  <label htmlFor="fw-account-number" className="text-sm font-medium text-white">
+                    Account Number
+                    <span className="text-gray-400 ml-1">(for Add Money / Direct Deposit)</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="fw-account-number"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={30}
+                      value={form.account_number}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          account_number: e.target.value.replace(/\D/g, "").slice(0, 30),
+                        })
+                      }
+                      placeholder="e.g. 3260636900"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 font-mono"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        setForm((prev) => ({ ...prev, account_number: generateAccountNumber() }))
+                      }
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 rounded-full px-4"
+                      title="Generate random account number"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Generate
+                    </Button>
+                  </div>
+                  <p className="text-xs text-white/40">
+                    Shown inside Lindenway under &ldquo;Add Money&rdquo; for receiving bank transfers and direct deposits.
+                  </p>
+                </div>
+
+                <div className="space-y-2 w-full">
+                  <label htmlFor="fw-routing-number" className="text-sm font-medium text-white">
+                    Routing Number
+                    <span className="text-gray-400 ml-1">(9 digits)</span>
+                  </label>
+                  <Input
+                    id="fw-routing-number"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={15}
+                    value={form.routing_number}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        routing_number: e.target.value.replace(/\D/g, "").slice(0, 15),
+                      })
+                    }
+                    placeholder="e.g. 021000021"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 font-mono"
+                  />
                 </div>
               </div>
 

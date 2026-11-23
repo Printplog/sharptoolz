@@ -1,10 +1,7 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getFernwayAccounts, getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
-import { useSupportRealtime } from "@/hooks/useSupportRealtime";
-import { getReferralStats } from "@/api/referralEndpoints";
-import { REFERRALS_VISIBLE } from "@/lib/constants/features";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   LayoutDashboard,
   Hammer,
@@ -16,26 +13,50 @@ import {
   MessageSquare,
   MessagesSquare,
   Users,
-  Plus
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+import { getFernwayAccounts, getSiteSettings, getTrackingSupportMessages } from "@/api/apiEndpoints";
+import { getReferralStats } from "@/api/referralEndpoints";
 import Logo from "@/components/Logo";
-import { useAuthStore } from "@/store/authStore";
-import useChatStore from "@/store/chatStore";
-import type { ChatSession } from "@/store/chatStore";
+import { useSupportRealtime } from "@/hooks/useSupportRealtime";
+import { REFERRALS_VISIBLE } from "@/lib/constants/features";
 import { isAdminOrStaff } from "@/lib/constants/roles";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
+import useChatStore, { type ChatSession } from "@/store/chatStore";
+import { useSidebarStore } from "@/store/sidebarStore";
+
+interface NavItem {
+  icon: ReactNode;
+  label: string;
+  to: string;
+  badge?: number;
+  badgeTone?: "primary" | "amber";
+  pulseBadge?: boolean;
+}
+
+interface NavGroup {
+  id: string;
+  title: string;
+  items: NavItem[];
+}
 
 export default function Sidebar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { sessions, currentSessionId, fetchSessions, newChat, loadSession } = useChatStore();
+  const { isOpen, isCollapsed, toggleCollapsed, close } = useSidebarStore();
 
   const { data: settings } = useQuery({
     queryKey: ["siteSettings"],
     queryFn: getSiteSettings,
   });
-  
+
   const { data: refStats } = useQuery({
     queryKey: ["referralStats"],
     queryFn: getReferralStats,
@@ -82,59 +103,109 @@ export default function Sidebar() {
     }
   }, [user, fetchSessions, aiEnabled]);
 
-  const navigationItems = [
+  // Close mobile drawer on route change
+  useEffect(() => {
+    close();
+  }, [pathname, close]);
+
+  // Close mobile drawer on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, close]);
+
+  const navGroups: NavGroup[] = [
     {
-      icon: <LayoutDashboard className="h-4 w-4" />,
-      label: "Dashboard",
-      to: "/dashboard",
-    },
-    ...(aiEnabled ? [{
-      icon: <img src="/sharpguy.png" className="h-4 w-4 object-contain" alt="Sharp Guy" />,
-      label: "Sharp Guy",
-      to: "/sharp-guy",
-    }] : []),
-    {
-      icon: <Hammer className="h-4 w-4" />,
-      label: "All Tools",
-      to: "/tools",
-    },
-    {
-      icon: <FileText className="h-4 w-4" />,
-      label: "Documents",
-      to: "/documents",
-    },
-    {
-      icon: <Landmark className="h-4 w-4" />,
-      label: "Online Banking",
-      to: "/online-banking",
-      badge: bankingSummary?.pending_transfers_total ?? 0,
+      id: "overview",
+      title: "Overview",
+      items: [
+        {
+          icon: <LayoutDashboard className="size-4" />,
+          label: "Dashboard",
+          to: "/dashboard",
+        },
+        ...(aiEnabled
+          ? [
+              {
+                icon: <img src="/sharpguy.png" className="size-4 object-contain" alt="Sharp Guy" />,
+                label: "Sharp Guy",
+                to: "/sharp-guy",
+              },
+            ]
+          : []),
+      ],
     },
     {
-      icon: <MessagesSquare className="h-4 w-4" />,
-      label: "Support Messages",
-      to: "/support",
-      badge: supportMessages?.unread_count ?? 0,
+      id: "workspace",
+      title: "Tools & Workspace",
+      items: [
+        {
+          icon: <Hammer className="size-4" />,
+          label: "All Tools",
+          to: "/tools",
+        },
+        {
+          icon: <FileText className="size-4" />,
+          label: "Documents",
+          to: "/documents",
+        },
+        {
+          icon: <Landmark className="size-4" />,
+          label: "Online Banking",
+          to: "/online-banking",
+          badge: bankingSummary?.pending_transfers_total ?? 0,
+          badgeTone: "amber",
+        },
+        {
+          icon: <MessagesSquare className="size-4" />,
+          label: "Support Messages",
+          to: "/support",
+          badge: supportMessages?.unread_count ?? 0,
+          badgeTone: "primary",
+        },
+      ],
     },
     {
-      icon: <Wallet className="h-4 w-4" />,
-      label: "Wallet",
-      to: "/wallet",
+      id: "account",
+      title: "Account",
+      items: [
+        {
+          icon: <Wallet className="size-4" />,
+          label: "Wallet",
+          to: "/wallet",
+        },
+        ...(REFERRALS_VISIBLE
+          ? [
+              {
+                icon: <Users className="size-4" />,
+                label: "Refer & Earn",
+                to: "/referrals",
+                badge: refStats?.pending_referrals ?? 0,
+                badgeTone: "primary" as const,
+                pulseBadge: true,
+              },
+            ]
+          : []),
+        {
+          icon: <Settings className="size-4" />,
+          label: "Settings",
+          to: "/settings",
+        },
+        ...(canAccessAdmin
+          ? [
+              {
+                icon: <ArrowRight className="size-4" />,
+                label: "Switch to Admin",
+                to: "/admin/dashboard",
+              },
+            ]
+          : []),
+      ],
     },
-    ...(REFERRALS_VISIBLE ? [{
-      icon: <Users className="h-4 w-4" />,
-      label: "Refer & Earn",
-      to: "/referrals",
-    }] : []),
-    {
-      icon: <Settings className="h-4 w-4" />,
-      label: "Settings",
-      to: "/settings",
-    },
-    ...(canAccessAdmin ? [{
-      icon: <ArrowRight className="h-4 w-4" />,
-      label: "Switch to Admin",
-      to: "/admin/dashboard",
-    }] : []),
   ];
 
   const handleSessionClick = (session: ChatSession) => {
@@ -146,117 +217,212 @@ export default function Sidebar() {
       navigate(`/sharp-guy?session_id=${session.id}`);
     }
     loadSession(session.id);
+    close();
   };
 
   const handleNewChat = () => {
     newChat();
     navigate("/sharp-guy");
+    close();
   };
 
-  return (
-    <aside
-      className={cn(
-        "w-64 bg-white/5 border-r border-white/10 h-full lg:flex hidden flex-col py-10 relative z-[60]"
-      )}
-    >
-      {/* Header */}
-      <div className="flex pl-6">
-        <Logo />
+  const renderSidebarBody = (compact: boolean, isMobileDrawer: boolean) => (
+    <>
+      {/* Brand header */}
+      <div
+        className={cn(
+          "flex items-center px-5 pt-6 pb-4",
+          compact ? "justify-center px-0" : "justify-between",
+        )}
+      >
+        <Logo showText={!compact} size={compact ? 28 : 30} />
+        {isMobileDrawer && (
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close navigation menu"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
 
-      {/* Navigation */}
-      <nav className="space-y-0.5 mt-[20px] overflow-y-auto pr-2 px-2">
-        {navigationItems.map((item) => {
-          let isActive = false;
-          if (item.to === "/admin/dashboard" || item.to.startsWith("/admin/")) {
-            isActive = pathname.startsWith("/admin/");
-          } else {
-            isActive = pathname.includes(item.to) && !pathname.startsWith("/admin/");
-          }
-
-          return (
-            <Link to={item.to} key={item.to} className="block">
-              <button
-                className={cn(
-                  "w-full justify-start transition-colors py-2 px-4 flex items-center text-sm relative overflow-hidden",
-                  isActive
-                    ? "rounded-r-full bg-primary/10 text-primary"
-                    : "text-foreground/70 hover:bg-white/5 hover:text-foreground hover:rounded-r-full"
-                )}
-              >
-                {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] animate-in fade-in duration-500" />
-                )}
-                <div className="flex items-center gap-2 flex-1">
-                   {item.icon}
-                   <span>{item.label}</span>
-                </div>
-                {item.to === "/referrals" && refStats && refStats.pending_referrals > 0 && (
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-black text-black animate-pulse shrink-0">
-                    {refStats.pending_referrals}
-                  </span>
-                )}
-                {(item.to === "/support" || item.to === "/online-banking") && (item.badge ?? 0) > 0 && (
-                  <span className={cn(
-                    "flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-black text-black",
-                    item.to === "/online-banking" ? "bg-amber-400" : "bg-primary",
-                  )}>
-                    {(item.badge ?? 0) > 99 ? "99+" : item.badge}
-                  </span>
-                )}
-              </button>
-            </Link>
-          );
-        })}
-
-        {/* Recent Chats Section */}
-        {aiEnabled && (
-          <>
-            <div className="mt-8 mb-2 px-4 flex items-center justify-between">
-              <span className="text-[11px] font-bold text-foreground/40">
-                Recent Chats
-              </span>
-              <button 
-                onClick={handleNewChat}
-                className="p-1 hover:bg-white/10 rounded-md transition-colors text-foreground/40 hover:text-primary"
-                title="New Global Chat"
-              >
-                <Plus className="h-3 w-3" />
-              </button>
-            </div>
-
-            <div className="space-y-0.5 max-h-[300px] overflow-y-auto custom-scrollbar">
-              {sessions.length === 0 ? (
-                <div className="px-4 py-2 text-xs text-foreground/30 italic">
-                  No recent chats
+      {/* Scrollable Navigation */}
+      <nav aria-label="Dashboard navigation" className="flex-1 overflow-y-auto px-2.5 pb-6">
+        <div className="space-y-5">
+          {navGroups.map((group, groupIndex) => (
+            <div key={group.id}>
+              {!compact ? (
+                <div className="mb-1.5 px-3 text-[10px] font-semibold tracking-[0.12em] text-white/35 uppercase">
+                  {group.title}
                 </div>
               ) : (
-                sessions.map((session) => (
-                  <button
-                    key={session.id}
-                    onClick={() => handleSessionClick(session)}
-                    className={cn(
-                      "w-full text-left py-2 px-4 flex items-center text-xs transition-all group relative overflow-hidden",
-                      currentSessionId === session.id
-                        ? "rounded-r-full bg-primary/10 text-primary"
-                        : "text-foreground/60 hover:bg-white/5 hover:text-foreground hover:rounded-r-full"
-                    )}
-                  >
-                    {currentSessionId === session.id && (
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)] animate-in fade-in duration-500" />
-                    )}
-                    <MessageSquare className={cn(
-                      "h-3 w-3 mr-2 shrink-0",
-                      currentSessionId === session.id ? "text-primary" : "text-foreground/30 group-hover:text-foreground/60"
-                    )} />
-                    <span className="truncate flex-1">{session.title}</span>
-                  </button>
-                ))
+                groupIndex > 0 && <div className="mx-3 my-3 h-px bg-white/[0.08]" />
+              )}
+
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const isActive =
+                    item.to === "/admin/dashboard" || item.to.startsWith("/admin/")
+                      ? pathname.startsWith("/admin/")
+                      : pathname.includes(item.to) && !pathname.startsWith("/admin/");
+                  const count = item.badge ?? 0;
+
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => {
+                        if (isMobileDrawer) close();
+                      }}
+                      title={compact ? item.label : undefined}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "group relative flex items-center rounded-xl text-[13.5px] font-medium transition-colors",
+                        compact ? "mx-auto size-10 justify-center px-0" : "gap-3 px-3 py-2.5",
+                        isActive
+                          ? "bg-primary/[0.12] text-primary"
+                          : "text-white/68 hover:bg-white/[0.05] hover:text-white",
+                      )}
+                    >
+                      {isActive && !compact && (
+                        <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-primary" />
+                      )}
+
+                      <span className="relative flex shrink-0 items-center justify-center">
+                        {item.icon}
+                        {compact && count > 0 && (
+                          <span
+                            className={cn(
+                              "absolute -top-1.5 -right-1.5 size-2 rounded-full ring-2 ring-[#0d131c]",
+                              item.badgeTone === "amber" ? "bg-amber-400" : "bg-primary",
+                            )}
+                          />
+                        )}
+                      </span>
+
+                      {!compact && <span className="flex-1 truncate">{item.label}</span>}
+
+                      {!compact && count > 0 && (
+                        <span
+                          className={cn(
+                            "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-[#0b1118]",
+                            item.badgeTone === "amber" ? "bg-amber-400" : "bg-primary",
+                            item.pulseBadge && "animate-pulse",
+                          )}
+                        >
+                          {count > 99 ? "99+" : count}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Recent Chats Section */}
+        {aiEnabled && !compact && (
+          <div className="mt-6 border-t border-white/[0.07] pt-5">
+            <div className="mb-2 flex items-center justify-between px-3">
+              <span className="text-[10px] font-semibold tracking-[0.12em] text-white/35 uppercase">
+                Recent Chats
+              </span>
+              <button
+                type="button"
+                onClick={handleNewChat}
+                className="flex size-6 cursor-pointer items-center justify-center rounded-lg text-white/45 transition-colors hover:bg-white/10 hover:text-primary"
+                title="New Global Chat"
+                aria-label="Start new Sharp Guy chat"
+              >
+                <Plus className="size-3.5" />
+              </button>
+            </div>
+
+            <div className="max-h-[240px] space-y-0.5 overflow-y-auto">
+              {sessions.length === 0 ? (
+                <div className="px-3 py-2 text-xs text-white/30">No recent chats yet</div>
+              ) : (
+                sessions.map((session) => {
+                  const isCurrent = currentSessionId === session.id;
+                  return (
+                    <button
+                      type="button"
+                      key={session.id}
+                      onClick={() => handleSessionClick(session)}
+                      className={cn(
+                        "group relative flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs transition-colors",
+                        isCurrent
+                          ? "bg-primary/[0.12] text-primary"
+                          : "text-white/58 hover:bg-white/[0.05] hover:text-white",
+                      )}
+                    >
+                      <MessageSquare
+                        className={cn(
+                          "size-3.5 shrink-0",
+                          isCurrent ? "text-primary" : "text-white/30 group-hover:text-white/60",
+                        )}
+                      />
+                      <span className="flex-1 truncate">{session.title}</span>
+                    </button>
+                  );
+                })
               )}
             </div>
-          </>
+          </div>
         )}
       </nav>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile & Tablet Slide-Out Drawer (< lg) */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={close}
+              className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-sm lg:hidden"
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              aria-label="Mobile sidebar"
+              className="fixed inset-y-0 left-0 z-[110] flex h-full w-[288px] max-w-[84vw] flex-col border-r border-white/[0.09] bg-[#0d131c] shadow-2xl lg:hidden"
+            >
+              {renderSidebarBody(false, true)}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Collapsible Sidebar (lg+) */}
+      <aside
+        className={cn(
+          "relative z-[60] hidden h-full shrink-0 flex-col border-r border-white/[0.08] bg-[#0d131c]/95 transition-[width] duration-300 ease-out lg:flex",
+          isCollapsed ? "w-[76px]" : "w-[260px]",
+        )}
+      >
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="absolute top-7 -right-3 z-[70] flex size-6 cursor-pointer items-center justify-center rounded-full border border-white/12 bg-[#111926] text-white/60 shadow-md transition-colors hover:border-primary/40 hover:text-white"
+        >
+          {isCollapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
+        </button>
+
+        {renderSidebarBody(isCollapsed, false)}
+      </aside>
+    </>
   );
 }

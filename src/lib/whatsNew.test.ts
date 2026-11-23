@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { unseenReleases, type Release } from "./whatsNew";
+import { RELEASES as PROD_RELEASES, unseenReleases, type Release } from "./whatsNew";
 
 const release = (id: string, date: string): Release => ({ id, date, title: id, summary: "", highlights: [] });
 const RELEASES = [release("c", "2026-12-01"), release("b", "2026-11-01"), release("a", "2026-10-01")];
@@ -27,5 +27,16 @@ describe("unseenReleases", () => {
 
   it("treats an unknown seen id as nothing seen", () => {
     expect(unseenReleases({ ...oldUser, last_seen_update: "gone" }, RELEASES)).toHaveLength(3);
+  });
+
+  it("keeps production releases uniquely identified and ordered newest-first", () => {
+    const ids = PROD_RELEASES.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (let i = 1; i < PROD_RELEASES.length; i += 1) {
+      expect(PROD_RELEASES[i - 1].date >= PROD_RELEASES[i].date).toBe(true);
+    }
+    for (const item of PROD_RELEASES) {
+      expect(item.highlights.length).toBeGreaterThan(0);
+    }
   });
 });

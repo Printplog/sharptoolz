@@ -25,7 +25,7 @@ export default function DashboardLayout() {
         <main className="flex-1 overflow-auto bg-background">
           <GlobalAnnouncement />
           <Navbar />
-          <div className="px-3 sm:px-6 md:px-10 pt-5 pb-28 lg:pb-8">
+          <div className="px-3 sm:px-6 md:px-10 pt-5 pb-24 lg:pb-8">
             <Outlet />
             <Disclaimer />
           </div>

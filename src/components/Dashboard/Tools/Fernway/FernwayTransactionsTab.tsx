@@ -35,6 +35,9 @@ export interface NewFernwayTransactionInput {
   direction: "credit" | "debit";
   amount: number;
   counterparty: string;
+  bank_name?: string;
+  recipient_account_number?: string;
+  recipient_routing_number?: string;
   narration: string;
   category: string;
   channel: string;
@@ -57,6 +60,9 @@ const DEFAULT_TX = {
   direction: "credit" as "credit" | "debit",
   amount: "5000.00",
   counterparty: "Direct Deposit Payroll",
+  bank_name: "",
+  recipient_account_number: "",
+  recipient_routing_number: "",
   narration: "Monthly salary deposit",
   category: "income",
   channel: "wire",
@@ -110,6 +116,13 @@ export function FernwayTransactionsTab({
         direction: newTx.direction,
         amount: Number(amount.toFixed(2)),
         counterparty: newTx.counterparty.trim(),
+        ...(newTx.bank_name.trim() ? { bank_name: newTx.bank_name.trim() } : {}),
+        ...(newTx.recipient_account_number.trim()
+          ? { recipient_account_number: newTx.recipient_account_number.trim() }
+          : {}),
+        ...(newTx.recipient_routing_number.trim()
+          ? { recipient_routing_number: newTx.recipient_routing_number.trim() }
+          : {}),
         narration: newTx.narration.trim(),
         category: newTx.category,
         channel: newTx.channel,
@@ -508,6 +521,55 @@ export function FernwayTransactionsTab({
                     </SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2 flex flex-col">
+                <label htmlFor="tx-bank-name" className="text-sm font-medium text-white">
+                  Bank Name <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <Input
+                  id="tx-bank-name"
+                  type="text"
+                  value={newTx.bank_name}
+                  onChange={(e) => setNewTx((prev) => ({ ...prev, bank_name: e.target.value }))}
+                  placeholder="e.g. Chase Bank"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2 flex flex-col">
+                  <label htmlFor="tx-account-number" className="text-sm font-medium text-white">
+                    Account Number <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <Input
+                    id="tx-account-number"
+                    type="text"
+                    inputMode="numeric"
+                    value={newTx.recipient_account_number}
+                    onChange={(e) =>
+                      setNewTx((prev) => ({ ...prev, recipient_account_number: e.target.value }))
+                    }
+                    placeholder="e.g. 4829103847"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 font-mono"
+                  />
+                </div>
+                <div className="space-y-2 flex flex-col">
+                  <label htmlFor="tx-routing-number" className="text-sm font-medium text-white">
+                    Routing Number <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <Input
+                    id="tx-routing-number"
+                    type="text"
+                    inputMode="numeric"
+                    value={newTx.recipient_routing_number}
+                    onChange={(e) =>
+                      setNewTx((prev) => ({ ...prev, recipient_routing_number: e.target.value }))
+                    }
+                    placeholder="e.g. 021000021"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 outline-0 font-mono"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2 flex flex-col">

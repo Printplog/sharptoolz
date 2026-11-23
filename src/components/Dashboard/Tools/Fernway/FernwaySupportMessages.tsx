@@ -8,8 +8,10 @@ import {
   updateTrackingSupportMessageStatus,
 } from "@/api/apiEndpoints";
 import { SupportConversation } from "@/components/Dashboard/Support/SupportConversation";
+import { SupportSettingsDialog } from "@/components/Dashboard/Support/SupportSettingsDialog";
 import { Button } from "@/components/ui/button";
-import { useSupportRealtime } from "@/hooks/useSupportRealtime";
+import { useSupportRealtime, type SupportUpdatePayload } from "@/hooks/useSupportRealtime";
+import { useSupportTypingState } from "@/hooks/useSupportTyping";
 import { cn } from "@/lib/utils";
 import type { TrackingSupportMessage } from "@/types";
 
@@ -48,19 +50,26 @@ export function FernwaySupportMessages({ profileId }: { profileId: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const { handleTypingEvent, clearTicketTyping, getCustomerTyping } = useSupportTypingState();
   const { data, isLoading, isError } = useQuery({
     queryKey,
     queryFn: () => getTrackingSupportMessages({ fernway_profile_id: profileId }),
+    refetchInterval: (query) => (query.state.data?.realtime?.enabled ? false : 8_000),
   });
 
-  const refreshMessages = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["support-messages"] });
-  }, [queryClient]);
+  const refreshMessages = useCallback(
+    (payload?: SupportUpdatePayload) => {
+      if (payload?.ticket_id) clearTicketTyping(payload.ticket_id);
+      queryClient.invalidateQueries({ queryKey: ["support-messages"] });
+    },
+    [clearTicketTyping, queryClient],
+  );
 
   useSupportRealtime({
     config: data?.realtime,
     channel: data?.channel,
     onUpdate: refreshMessages,
+    onTyping: handleTypingEvent,
   });
 
   const statusMutation = useMutation({
@@ -124,6 +133,9 @@ export function FernwaySupportMessages({ profileId }: { profileId: string }) {
         <p className="mt-1.5 max-w-md text-xs leading-5 text-white/45">
           When someone opens the bottom-right Support widget inside Lindenway for this account, their live chat will appear here and in your Support Messages inbox.
         </p>
+        <div className="mt-4">
+          <SupportSettingsDialog compact initialProfile={data?.support_profile} />
+        </div>
       </div>
     );
   }
@@ -139,25 +151,29 @@ export function FernwaySupportMessages({ profileId }: { profileId: string }) {
           mobileOpen ? "hidden lg:flex" : "flex",
         )}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3.5">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-4 py-3.5">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-white">Conversations</span>
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/70">
               {messages.length}
             </span>
           </div>
-          {realtimeEnabled && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-400">
-              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Live
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {realtimeEnabled && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400">
+                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live
+              </span>
+            )}
+            <SupportSettingsDialog compact initialProfile={data?.support_profile} />
+          </div>
         </div>
 
         <div className="flex-1 divide-y divide-white/[0.06] overflow-y-auto">
           {messages.map((ticket) => {
             const isSelected = selected?.id === ticket.id;
             const lastEntry = ticket.conversation[ticket.conversation.length - 1];
+            const rowTyping = getCustomerTyping(ticket.id);
             return (
               <button
                 key={ticket.id}
@@ -180,11 +196,18 @@ export function FernwaySupportMessages({ profileId }: { profileId: string }) {
                   <StatusPill status={ticket.status} />
                 </div>
 
-                {lastEntry && (
-                  <p className="line-clamp-1 text-xs text-white/45">
-                    {lastEntry.direction === "owner" ? "You: " : `${ticket.customer_name}: `}
-                    {lastEntry.body}
+                {rowTyping.active ? (
+                  <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-400">
+                    <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                    {rowTyping.name} is typing...
                   </p>
+                ) : (
+                  lastEntry && (
+                    <p className="line-clamp-1 text-xs text-white/45">
+                      {lastEntry.direction === "owner" ? "You: " : `${ticket.customer_name}: `}
+                      {lastEntry.body}
+                    </p>
+                  )
                 )}
 
                 <div className="flex items-center justify-between gap-2 text-[11px] text-white/35">
@@ -231,8 +254,16 @@ export function FernwaySupportMessages({ profileId }: { profileId: string }) {
                     <StatusPill status={selected.status} />
                   </div>
                   <p className="mt-0.5 truncate text-xs text-white/45">
-                    {selected.customer_name} · Started{" "}
-                    {format(new Date(selected.created_at), "MMM d, h:mm a")}
+                    {getCustomerTyping(selected.id).active ? (
+                      <span className="font-medium text-emerald-400">
+                        {getCustomerTyping(selected.id).name} is typing...
+                      </span>
+                    ) : (
+                      <>
+                        {selected.customer_name} · Started{" "}
+                        {format(new Date(selected.created_at), "MMM d, h:mm a")}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -270,7 +301,13 @@ export function FernwaySupportMessages({ profileId }: { profileId: string }) {
             </header>
 
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <SupportConversation ticket={selected} embedded />
+              <SupportConversation
+                ticket={selected}
+                embedded
+                customerTyping={getCustomerTyping(selected.id)}
+                realtimeEnabled={realtimeEnabled}
+                supportProfile={data?.support_profile}
+              />
             </div>
           </>
         ) : (
